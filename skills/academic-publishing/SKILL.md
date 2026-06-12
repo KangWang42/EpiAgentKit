@@ -1,15 +1,17 @@
 ---
 name: academic-publishing
 description: |
-  学术期刊论文与投稿材料生成技能（中英双语）。基于项目的分析代码、结果汇总、表图，生成投稿质量的
-  完整论文（中文按 GB/T 7713 国标 / 英文按 IMRaD）或任一独立部件（引言、方法、结果、讨论、摘要、
-  题名），以及投稿配套材料（Cover Letter 投稿信、Response to Reviewers 审稿回复、Highlights/
+  学术论文与投稿材料生成技能（中英双语），覆盖中文期刊论著、中文学位论文、英文期刊三条线。基于项目的
+  分析代码、结果汇总、表图，生成投稿/答辩质量的完整论文（中文期刊按 GB/T 7713.2 / 中文学位论文按
+  GB/T 7713.1 国标分部件长文 / 英文按 IMRaD）或任一独立部件（引言、方法、结果、讨论、摘要、题名、
+  综述、致谢、附录），以及投稿配套材料（Cover Letter 投稿信、Response to Reviewers 审稿回复、Highlights/
   Graphical Abstract）。逐部分写作→自检→批准→下一部分，最终拼装为格式规范的 Word。
-  触发场景：(1) 用户说"写论文""生成论文""论文初稿""写英文论文""paper""manuscript"；
+  触发场景：(1) 用户说"写论文""生成论文""论文初稿""写英文论文""paper""manuscript"，或"写学位论文/
+  硕士论文/博士论文/毕业论文/学硕论文/答辩稿""综述章节""致谢"；
   (2) 要求生成或润色任一论文部件（引言/introduction、方法/methods、结果、讨论/discussion、
   摘要/abstract、题名/title）；(3) 要求写 cover letter/投稿信、response to reviewers/审稿回复/
   rebuttal、highlights/研究亮点、graphical abstract；(4) 根据 0_result_summaries.md 或分析结果
-  起草稿件；(5) 投稿前论文与材料的逻辑/语言/格式/合规自查。覆盖中文期刊与英文期刊两条线。
+  起草稿件；(5) 投稿前论文与材料的逻辑/语言/格式/合规自查。
 ---
 
 # 学术期刊论文与投稿材料生成（中英双语 · Publication-Ready）
@@ -43,12 +45,15 @@ description: |
 
 ### 1.1 语言
 
-| 信号 | 语言 | 主参考 |
+| 信号 | 语言 × 文体 | 主参考 |
 |------|------|--------|
-| 用户用中文要"写论文/中文论文"、目标是中文期刊（中国食品卫生杂志、中华预防医学杂志、卫生研究…） | **中文** | `references/chinese-paper.md` + `references/chinese-anti-ai.md` |
+| 中文 + **期刊/论著**（投某杂志、≤5000 字、Guide for Authors、投稿版面费…） | **中文期刊论著** | `references/chinese-paper.md` + `references/section-content-playbook.md` + `references/chinese-academic-style.md` + `references/chinese-anti-ai.md` |
+| 中文 + **学位论文**（学位论文/硕士论文/博士论文/毕业论文/学硕/专硕/博论/答辩稿/综述章/致谢/80–120 页长文） | **中文学位论文** | `references/chinese-thesis.md` + `references/thesis-formatting.md` + `references/section-content-playbook.md` + `references/chinese-academic-style.md` + `references/chinese-anti-ai.md` |
 | 用户提"英文论文 / English / manuscript / 投 SCI / 投某英文期刊" | **英文** | `references/english-writing.md` + `references/english-phrasebank.md` |
 
-不确定就问（§六）。中英文不混写：一篇稿子一种语言。
+期刊论著与学位论文**篇幅/结构/排版/字数完全不同**（详 `chinese-thesis.md` §9 差异表）：分不清就问（§六）。
+中英文不混写：一篇稿子一种语言。**学位论文是长文**——逐部件写、各存独立 md、按学校规范排版、需人补处加亮占位
+（见 `chinese-thesis.md` §8 + `thesis-formatting.md`）。
 
 ### 1.2 部件（决定走整篇流程还是单部件）
 
@@ -173,8 +178,11 @@ description: |
 
 | 文件 | 何时读 | 内容 |
 |------|--------|------|
-| `references/chinese-paper.md` | 写中文论文/部件 | GB/T 国标流程、各部件结构+字数+自检清单、中文期刊投稿适配、排版规范 |
+| `references/chinese-paper.md` | 写中文**期刊论著**/部件 | GB/T 7713.2 流程、各部件结构+字数+自检清单、中文期刊投稿适配、排版规范 |
+| `references/chinese-thesis.md` | 写中文**学位论文**（硕/博）/部件 | 长文结构与 sections/ 分文件、各部件页数字数目标、前后置部件（封面/双声明/中英摘要/缩略语/综述/致谢/在读成果/附录）写法、长文门控工作流、需人补加亮约定、与期刊论著差异表、学位论文自检 |
+| `references/thesis-formatting.md` | 学位论文**排版/拼装** | 页面设置、逐部件字体字号表、按章图表公式编号、三级目录自动生成、双页码段、python-docx 拼装差异点、黄色高亮占位实现 |
 | `references/section-content-playbook.md` | **写中文学位论文/论著前必读** | 从真实论文反推的"各部分到底写什么、怎么写"：章节骨架、摘要四段、统计分析=编号清单（最常写错）、量表工具五要素、讨论影响因素逐个成节、结论逐条无统计量、真论文vsAI味对照 |
+| `references/chinese-academic-style.md` | **写任何中文稿前的文风标尺** | 学术中文文风正向规范：严肃度标定（不随意不繁复）、视角人称、句子（句长突发性/一句一意/慎用显著与因果词）、段落（主题句/一段一论点/衔接靠语义）、该写vs不该写速查、用词、期刊vs学位论文文风差异、GOOD/BAD微例、文风自检 |
 | `references/chinese-anti-ai.md` | 中文稿写作/润色/查 AI 味 | AI 套话黑名单、困惑度/突发性操作、GOOD/BAD 范例、grep 自检正则 |
 | `references/english-writing.md` | 写英文论文/部件 | IMRaD 框架、CRGP 引言、文献综述、Aims/Significance/Scope、Methods、LOC-KD-COM 结果、Discussion 七段、Conclusion、Abstract、Title |
 | `references/english-phrasebank.md` | 写/润色英文 | 按章节×功能分类的句式库、时态规范、连接词、hedging、over-claim 黑名单、连贯性原则 |
