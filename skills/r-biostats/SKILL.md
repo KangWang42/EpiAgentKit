@@ -169,7 +169,7 @@ library(ggpubr)      # P 值标注
 
 ```
 project/
-├── CLAUDE.md / SESSION_LOG.md / DECISIONS.md
+├── CLAUDE.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md
 ├── 01_data/rawdata/      # 只读
 ├── 02_code/NN_xxx.R      # 编号脚本
 ├── 03_tables/TableN.xlsx # 最终表
@@ -323,6 +323,11 @@ ggsave(fig_path("xxx", "png"), p, width = 180, height = 120, units = "mm",
 **放弃方案**: 逻辑回归（作为敏感性分析保留）
 ```
 
+**D. 分析中冒出"还能补"的想法 → 追加 `BACKLOG.md`**：
+还能加哪个敏感性/亚组分析、缺哪项协变量数据、某方法能强化但本轮没做、下一步设想——
+当轮就写进项目根 `BACKLOG.md` 待办表（类别+内容+执行方+优先级+日期，见全局 CLAUDE.md §2），
+不靠记忆、不只在回复里口头提。
+
 ---
 
 ## 九、R 代码风格（PREFERENCE）
@@ -434,5 +439,6 @@ save_fig(p_forest, "forest")
 - [ ] `SESSION_LOG.md` 已追加本次操作
 - [ ] 若结果变化 → `07_paper/0_result_summaries.md` 已同步
 - [ ] 若方法变化 → `DECISIONS.md` 已同步
+- [ ] 若冒出"还能补"的想法（待做分析/缺数据/下一步）→ `BACKLOG.md` 已追加
 - [ ] 根目录无临时文件残留，旧版已入 `09_backup/`
 - [ ] 若是咨询任务 → `consulting-delivery` 终检也通过

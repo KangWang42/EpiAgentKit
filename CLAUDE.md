@@ -59,6 +59,12 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 - **NEVER** 只改分享包（`05_reports/<包>`）而不回写主流程源 + `conventions.R`（分享包 = 主流程派生导出）；确需脱离主流程的定制版在包内 `00_说明.md` 与 `DECISIONS.md` 注明"未回写"。详见 `/consulting-delivery`。
 - 中间表格化数据存 xlsx；仅跨脚本传**非表格 R 对象**（拟合模型 / MCA / ggplot 对象）才用 `.RData`；交付物（05_reports）零 rds/RData。`06_results/` 按内容命名不编号。
 
+### 待补清单 BACKLOG.md（发现即记，不靠记忆）
+- 任何阶段（清洗 / 分析 / 出图 / 写作 / 审查 / 讨论）一旦冒出缺口或想法——缺哪篇文献、缺哪项数据、还能补哪个方法/分析、下一步该规划什么——**立即追加一行到项目根 `BACKLOG.md` 待办表顶部**，当轮就写，**NEVER** 想着"等会儿再记"或只在回复里口头提一句（口头提的过两轮就丢，正是用户要解决的痛点）。
+- 每行带：类别（文献/数据/方法/分析/写作/规划）+ 待补内容 + 执行方（agent 可直接做 / 我需找数据或决策）+ 优先级（高/中/低）+ 记录日期。
+- **只增不删**：做完移到「已完成」并注完成日期，作废移「已放弃」并注原因；**NEVER** 直接删行（删了就查不到"补过没"）。
+- 规划/接新任务/开新会话时**先扫 BACKLOG.md 待办表**：挑「执行方=agent」的高优先级项作为下一步候选，「执行方=我」的提示用户去找数据/做决策。该文件不是结果源（数字仍以 `0_result_summaries.md` 为准），只装"还没做的事"。
+
 ### 报错与 warning（不可放任）
 - **NEVER** 遇到缺失值 / 空值 / NA / NR 就默认按"不全数据"处理或带过；**必须先回到最早的原始/提取数据（含源文献全文）核实是"真的没有"还是"上游提取/链路丢了/只取了摘要"**。确认确实缺失后**先向用户汇报**（哪条、缺什么、可否回填、影响范围），由用户决定，**不擅自填补、丢弃或继续往下算**。
 - **NEVER** 把 error / warning / NaN / 缺数当"正常率 / 比例小"带过（如"256/257 仅 1 个失败"）；每一个都定位具体原因：数据本身缺、脚本 bug、上游 stale、还是阈值过严。
@@ -82,7 +88,7 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 06_results/        中间对象，按内容命名不编号
 07_paper/          论文文稿 + 0_result_summaries.md（唯一数据源）
 09_backup/         旧版 / 一次性脚本 / 探索实验
-CLAUDE.md / SESSION_LOG.md / DECISIONS.md
+CLAUDE.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md（待补清单：缺文献/数据/方法/规划，发现即记，规划时先看）
 ```
 
 - **试新方法 / 优化模型**：**NEVER** 直接改主流程脚本。按 `/biostat-principles` 探索工作流执行：`09_backup/<日期>_<主题>/` 隔离实验 → 与主流程同口径公平对照 → `FINDINGS.md` 记结论 → 确有稳健提升且过口径门禁才合并。探索脚本永不留 `02_code/`。
@@ -98,7 +104,7 @@ CLAUDE.md / SESSION_LOG.md / DECISIONS.md
 - [ ] 图件满足 `/publication-figures` 规范（mm 尺寸 / PDF+PNG 双存 / 字体嵌入）
 - [ ] 代码已实跑验证 + 全量扫 error/warning
 - [ ] 论文 / 交付文本已按 `/academic-publishing` 与 `/humanizer-zh` 清单自检
-- [ ] 方法变 → `DECISIONS.md`；结果变 → `0_result_summaries.md`；操作完 → `SESSION_LOG.md`；会话收尾 → 项目 `CLAUDE.md` 当前状态块
+- [ ] 方法变 → `DECISIONS.md`；结果变 → `0_result_summaries.md`；操作完 → `SESSION_LOG.md`；发现缺口/想法 → `BACKLOG.md`；会话收尾 → 项目 `CLAUDE.md` 当前状态块
 - [ ] 一次性脚本与旧版文件已归 `09_backup/`
 
 ## 4. 规则优先级（冲突时）
@@ -115,6 +121,6 @@ CLAUDE.md / SESSION_LOG.md / DECISIONS.md
 
 1. **02_code 编号连续 + 一次性脚本归档** → 否则脚本堆积失序。
 2. **Table/Fig 按论文行文编号，registry 单源** → 否则正文引用全错。
-3. **结果变同步 0_result_summaries.md，方法变同步 DECISIONS.md，操作完同步 SESSION_LOG.md** → 否则数字源失锁。
+3. **结果变同步 0_result_summaries.md，方法变同步 DECISIONS.md，操作完同步 SESSION_LOG.md，发现缺口立即记 BACKLOG.md** → 否则数字源失锁、待补项遗忘。
 4. **代码写完必跑 + 全量扫 error/warning** → 否则交付带未验证错误。
 5. **口径不明先问用户** → 否则分析方向偏离用户意图。
