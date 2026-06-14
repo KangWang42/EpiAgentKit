@@ -50,7 +50,7 @@ cp -r ~/.claude-epiclaude/skills ~/.claude/skills
 
 ## 推荐 Hook 配置（可选，把硬红线交给 harness 强制）
 
-CLAUDE.md 的红线靠模型自觉遵守；其中三条可机械化的，建议用 Claude Code hook **强制执行**（比"提醒模型"可靠一个量级）。脚本在仓库 `hooks/`，把它复制到 `~/.claude/hooks/`，再把下面片段并入你自己的 `~/.claude/settings.json`（个人配置，本仓库**不含** settings.json），然后开一次 `/hooks` 或重启 Claude Code 生效。
+规则靠模型自觉遵守；其中四条可机械化的，建议用 Claude Code hook **强制执行**（比"提醒模型"可靠一个量级）。前三条是 CLAUDE.md 硬红线，第四条强制 `publication-figures` 出图自检。脚本在仓库 `hooks/`，把它复制到 `~/.claude/hooks/`，再把下面片段并入你自己的 `~/.claude/settings.json`（个人配置，本仓库**不含** settings.json），然后开一次 `/hooks` 或重启 Claude Code 生效。
 
 - `protect_rawdata.sh`（PreToolUse）：拦截对 `01_data/rawdata/` 原始数据的写改，直接 deny。
 - `check_r_syntax.sh`（PostToolUse）：`.R` 文件存盘即 `parse()` 语法检查，出错当场反馈给模型修。
