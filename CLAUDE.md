@@ -39,6 +39,7 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 - **NEVER** 在 `02_code/` 新增 `run_all.R` / `main.R` / `一键复现.R` AI 式入口（交付包内的 `run_all.R` 是 /consulting-delivery 的规定动作，不在此列）。
 
 ### 02_code 编号
+- **默认语言 = R**：`02_code/` 分析脚本一律 `.R`；仅特殊要求项目（既有 Python 管线 / 特定工具链，如 python-ecg-analysis）才用 Python，并在项目 `CLAUDE.md` 注明原因。代码风格遵 r-biostats `references/code-style.md`（管道为主线、中间变量少而短且语义化命名、map 优先于循环、输出干净无调试 cat、注释适度）。
 - **NEVER** 留无编号脚本（`test.R` / `final.R` / `temp.R`）；**NEVER** 编号断层，归档/增删后立刻重排 01..0N 连续。
 - **NEVER** 把一次性脚本（一次绘图 / 临时诊断 / 迁移）留 `02_code/`；写完归 `09_backup/<日期>_scripts_oneoff/`。退役 / 被替代脚本同样立即移 `09_backup/`。
 - `02_code/` 只放"从原始数据复现到论文最终结果"的脚本；**编号脚本数 ≤ 10**（config / conventions / lib / run_pipeline 与 vendored/ 不计）。1 个编号脚本 = 论文 1 个阶段，阶段内子分析用 `--step` / `--outcome` 参数切分；超 10 个就是没合够，立即按阶段归并。

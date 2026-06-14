@@ -108,6 +108,8 @@ description: |
 
 ### 必须
 
+- **默认语言 R**：`02_code/` 分析脚本默认 `.R`，仅特殊要求项目用 Python（见全局 CLAUDE.md §2）。
+- **代码风格遵 [references/code-style.md](references/code-style.md)**（软约束，服从工作流/红线）：管道为主线、中间变量少而短且语义化命名（`data`→`data_neat`→`data_baseline`，不用 `tmp/df1`）、`map`/`across`/`case_when` 优先于循环与连串 if、输出干净（最终脚本无调试 `cat`/`print`）、`# 节 ----` 分节 + 关键步骤一句话注释、不留死代码。
 - R 脚本顶部：`library()` 全部依赖 + `set.seed(123)` + 注释说明本脚本目的/输入/输出
 - 命名：文件 `NN_描述.R`、变量 `snake_case`、函数 `do_something()`
 - 中文注释关键步骤（为什么这样切分、为什么选这个模型）
