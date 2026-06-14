@@ -50,23 +50,22 @@ cp -r ~/.claude-epiclaude/skills ~/.claude/skills
 
 ## 推荐 Hook 配置（可选，把硬红线交给 harness 强制）
 
-规则靠模型自觉遵守；其中六条可机械化的，建议用 Claude Code hook **强制执行**（比"提醒模型"可靠一个量级）。脚本在仓库 `hooks/`，把它复制到 `~/.claude/hooks/`，再把下面片段并入你自己的 `~/.claude/settings.json`（个人配置，本仓库**不含** settings.json），然后开一次 `/hooks` 或重启 Claude Code 生效。
+规则靠模型自觉遵守；其中五条可机械化的，建议用 Claude Code hook **强制执行**（比"提醒模型"可靠一个量级）。脚本在仓库 `hooks/`，把它复制到 `~/.claude/hooks/`，再把下面片段并入你自己的 `~/.claude/settings.json`（个人配置，本仓库**不含** settings.json），然后开一次 `/hooks` 或重启 Claude Code 生效。
 
 - `protect_rawdata.sh`（PreToolUse）：拦截对 `01_data/rawdata/` 原始数据的写改，直接 deny。
 - `check_r_syntax.sh`（PostToolUse）：`.R` 文件存盘即 `parse()` 语法检查，出错当场反馈给模型修。
 - `scan_ai_trace.sh`（PostToolUse）：扫文本里 emoji 与 AI 痕迹字样（AI辅助 / 机辅 / 待人工复核…）；放过 `✅`（BACKLOG 状态标记），跳过 `.claude/` 自身。
 - `fig_selfcheck.sh`（PostToolUse / Bash）：检测 `04_figures/` 新生成或修改的图，注入 `publication-figures §12ter` 逐元素自检清单（图例不遮数据 / 比例 / 裁切 / 数值溯源 / 风格一致），逼模型 Read 图逐条判。hook 只负责"逮事件 + 强制自检"，视觉判断仍由主模型完成。
-- `block_rscript_e.sh`（PreToolUse / Bash）：拦截"多行 `Rscript -e`"——本环境用 `-e` 传多行 R 脚本会 segfault，强制改写成 `.R` 文件运行（`-e` 单行小命令放行）。
 - `check_results_rds.sh`（PostToolUse / Bash）：检测 `06_results/` 新写入的 `.rds`，提醒"表格化数据应存 `.xlsx`，`.rds` 仅限模型/ggplot/MCA 等非表格对象"。
+
+（"多行 `Rscript -e` 会 segfault、须写成 `.R` 文件运行"这条已直接写进 `CLAUDE.md` 的代码必跑红线，常驻每会话上下文，无需单设 hook。）
 
 ```json
 {
   "hooks": {
     "PreToolUse": [
       { "matcher": "Write|Edit|MultiEdit", "hooks": [
-        { "type": "command", "command": "bash ~/.claude/hooks/protect_rawdata.sh", "timeout": 15 } ] },
-      { "matcher": "Bash", "hooks": [
-        { "type": "command", "command": "bash ~/.claude/hooks/block_rscript_e.sh", "timeout": 15 } ] }
+        { "type": "command", "command": "bash ~/.claude/hooks/protect_rawdata.sh", "timeout": 15 } ] }
     ],
     "PostToolUse": [
       { "matcher": "Write|Edit|MultiEdit", "hooks": [
@@ -80,7 +79,7 @@ cp -r ~/.claude-epiclaude/skills ~/.claude/skills
 }
 ```
 
-每个 hook 都先做轻量判断、**只在命中各自触发条件时才动作**（无 `04_figures/` / `06_results/` 目录或命令不含 `Rscript` 等即刻零成本退出），平时不干扰。需 Git Bash（Windows）或 bash（macOS/Linux）；无 `jq` 也可用（脚本用环境变量 + python 兜底解析 stdin）。让 AI 据本仓库安装时，可一并据此节自动配好这几道闸。
+每个 hook 都先做轻量判断、**只在命中各自触发条件时才动作**（非目标文件类型、无 `04_figures/` / `06_results/` 目录等即刻零成本退出），平时不干扰。需 Git Bash（Windows）或 bash（macOS/Linux）；无 `jq` 也可用（脚本用环境变量 + python 兜底解析 stdin）。让 AI 据本仓库安装时，可一并据此节自动配好这几道闸。
 
 ## 设计原则
 

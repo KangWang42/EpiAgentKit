@@ -55,7 +55,7 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 ### 结果与方法
 - **NEVER** 把中间结果 / 调参痕迹当最终交付。
 - **NEVER** 结果变了不同步**结果单源** `07_paper/results.yaml`（机器可读，`r-biostats/scripts/emit_summary.R` 的 `add_result` 写入、`render_summary_md` 派生 `0_result_summaries.md`）；下游论文/报告/PPT 一律 `val()` 取数禁手敲；方法变了不同步 `DECISIONS.md`。
-- **NEVER** 写完代码不跑就宣称完成（`Rscript` / `python` 实跑验证）。
+- **NEVER** 写完代码不跑就宣称完成（`Rscript` / `python` 实跑验证）；**多行 R 一律写成 `.R` 文件再 `Rscript 文件.R` 跑——本环境用 `Rscript -e` 传多行会 segfault，`-e` 只用于一行小命令**。
 - **NEVER** 把口径常量（有序因子序 / P 值格式 / 表组成 / 配色 / 字体 / registry）散落各脚本；集中 `config.R` + `conventions.R` 单一真源，改一处全同步。
 - **NEVER** 只改分享包（`05_reports/<包>`）而不回写主流程源 + `conventions.R`（分享包 = 主流程派生导出）；确需脱离主流程的定制版在包内 `00_说明.md` 与 `DECISIONS.md` 注明"未回写"。详见 `/consulting-delivery`。
 - 中间表格化数据存 xlsx；仅跨脚本传**非表格 R 对象**（拟合模型 / MCA / ggplot 对象）才用 `.RData`；交付物（05_reports）零 rds/RData。`06_results/` 按内容命名不编号。
