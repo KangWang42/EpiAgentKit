@@ -76,6 +76,6 @@ run._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   # 中文
 
 ## 6 Windows 注意
 
-- python 脚本含 emoji 的 `print` 在 GBK 控制台会 `UnicodeEncodeError` → 运行用 `PYTHONUTF8=1`，或脚本里
-  不打印 emoji。
+- Python 脚本打印表情符号时，GBK 控制台可能触发 `UnicodeEncodeError`；运行时设置 `PYTHONUTF8=1`，
+  或不打印表情符号。
 - 中文字体（宋体/黑体/楷体_GB2312）需系统已安装；缺字体时 Word 回退会破版，先确认字体可用。

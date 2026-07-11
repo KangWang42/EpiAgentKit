@@ -1,9 +1,9 @@
 ---
 name: consulting-delivery
 description: |
-  统计咨询交付包标准技能。把 R 分析结果打包成客户可独立复现、可直接阅读、看不出 AI 痕迹的专业交付物。
+  统计咨询交付包标准技能。把 R 分析结果打包成客户可独立复现、可直接阅读、无模板化写作痕迹的专业交付物。
   触发场景：(1) 用户说"给客户做""咨询任务""交付给 XX""打包结果"；(2) 在 05_reports/ 下新建结果-M-D-主题 文件夹；(3) r-biostats 任务完成后需要外发；(4) 用户请人做的分析要发回对方。
-  上游依赖：biostat-principles（尤其原则 6 可复现）+ r-biostats 已完成分析 + humanizer-zh 去 AI 味。
+  上游依赖：biostat-principles（尤其原则 6 可复现）+ r-biostats 已完成分析 + academic-humanizer 学术审校。
 ---
 
 # 咨询交付包标准 skill
@@ -27,7 +27,7 @@ description: |
 **核心原则：单一真源，分享包是派生物不是手改终点。**
 
 - **口径常量集中一处**：有序因子顺序、P 值格式、表组成、配色、字体、表图 registry 等放进被主流程与导出脚本共同 `source()` 的 `02_code/conventions.R` + `config.R`。改口径只改这一个文件，主流程与分享包各跑一次即同步。
-- **分享包由导出脚本生成**：写 `02_code/NN_export_<topic>.R` 或 `09_backup` 一次性脚本，自动建目录→按分享编号复制数据/表/图→扫 AI 痕迹→出 docx，可随时重跑。要改分享内容 = 改主流程源 + 重跑导出，不进包手改。
+- **分享包由导出脚本生成**：写 `02_code/NN_export_<topic>.R` 或 `09_backup` 一次性脚本，自动建目录→按分享编号复制数据/表/图→扫生成过程痕迹→出 docx，可随时重跑。要改分享内容 = 改主流程源 + 重跑导出，不进包手改。
 - **冻结部分例外**：已发表/冻结的产物不套用新口径，在 DECISIONS 记为豁免。
 - **防漂移两条硬规则**：① 分享包 `00_说明.md` 记一行"由 `<脚本>` 于 `<日期>` 从主流程导出"；② 用户在分享包里提的修改意见**必须回写主流程源 + conventions.R**，不能只改分享包。
 - **若确实只想改分享、不动主流程**：在该包 `00_说明.md` 注明"脱离主流程的定制版，未回写"，并记 DECISIONS.md。
@@ -51,7 +51,7 @@ description: |
     ↓       ↓ 不通过回到 ISOLATE
 [WRITE]     写 00_客户说明.md + 01_方法与结果.docx（模板见 references/templates.md §3-4）
     ↓
-[DE_AI]     humanizer-zh 扫全包
+[ACADEMIC_EDIT] academic-humanizer 扫全包
     ↓
 [FINAL]     终检 + 压缩 + 交付
 ```
@@ -126,9 +126,9 @@ Rscript --vanilla -e "setwd('/tmp/test_pack'); source('run_all.R')"
 
 ---
 
-## 七、DE_AI 阶段（CRITICAL）
+## 七、ACADEMIC_EDIT 阶段（CRITICAL）
 
-docx 写完后必须过 `humanizer-zh`（黑名单 grep → 最小改写 → 复扫归零）。本阶段交付包特有的补充：
+docx 写完后必须过 `academic-humanizer`（事实锁 → 模式审计 → 最小改写 → 证据与语体复核）。本阶段交付包特有的补充：
 
 - **数据文件同样要扫（不只 docx）**：包内所有 csv / xlsx 的列名与单元格值全量 grep
   `AI|assistant|assisted|机辅`，命中一律以研究者视角改写（如 coder 列 `AI_assisted` → `研究者`）。
@@ -156,8 +156,8 @@ docx 写完后必须过 `humanizer-zh`（黑名单 grep → 最小改写 → 复
 - [ ] 若交付论文初稿：按 `academic-publishing` 规范生成（见 templates.md §4 末尾）
 - [ ] Word 字体、字号、行距符合学术标准
 
-### 不露 AI 痕迹
-- [ ] docx 过了 humanizer-zh；包内全部 csv / xlsx 列值已扫 `AI|assistant|assisted|机辅` 清零
+### 不露生成过程痕迹
+- [ ] docx 过了 academic-humanizer；包内全部 csv / xlsx 列值已扫生成过程与助手口吻相关标记并清零
 - [ ] 全包无 emoji（含 md / 代码注释 / 表格单元格）
 - [ ] 无内部版本号、调试痕迹、内部变量名；写作视角是"我做了 XX"
 - [ ] 关键结论用科学克制语气（"提示"/"支持方向"），非"证实"/"明确"
@@ -196,7 +196,7 @@ docx 写完后必须过 `humanizer-zh`（黑名单 grep → 最小改写 → 复
 | 上游 | 本 skill 做什么 | 下游 |
 |------|---------------|------|
 | `biostat-principles` 原则 6（可复现） | 落实为 run_all.R + 实测 | — |
-| `r-biostats` 完成分析 | 打包、改路径、写客户文档 | `humanizer-zh` 扫 AI 味 |
+| `r-biostats` 完成分析 | 打包、改路径、写客户文档 | `academic-humanizer` 做事实锁、证据强度与学术语体审校 |
 | `project-init --consulting` | 骨架已建 | 本 skill 做后续填充 |
 
 | 翻车场景 | 原因 | 预防 |
@@ -206,7 +206,7 @@ docx 写完后必须过 `humanizer-zh`（黑名单 grep → 最小改写 → 复
 | 中文 PDF 乱码 | 用了默认 pdf() | 统一 `cairo_pdf` |
 | 字体在客户电脑变形 | 本地特殊字体 | Times New Roman + 宋体 |
 | 客户说"看不懂" | docx 太技术 | 00_客户说明.md 写明看哪里 |
-| 被甲方说"像 AI 写的" | 套话太多 | DE_AI 阶段不跳过 |
+| 文风模板化、缺少研究者声纹 | 套话太多 | ACADEMIC_EDIT 阶段不跳过 |
 | 返工多次 | 开工没对齐口径 | `biostat-principles` 原则 1 严格执行 |
 
 ## reference 导航

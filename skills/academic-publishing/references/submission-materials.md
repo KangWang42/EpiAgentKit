@@ -1,6 +1,7 @@
 # Submission Materials reference
 
-> Cover Letter · Response to Reviewers · Highlights · Graphical Abstract · Title Page · Declarations.
+> Cover Letter · Response to Reviewers · Highlights · Graphical Abstract · Title Page · Declarations ·
+> Editorial and research correspondence.
 > Prerequisite: a near-final manuscript with locked data. Author info / ethics / funding missing →
 > `[NEED CONFIRMATION]`, never invent. Files go to `07_paper/submission/`.
 
@@ -10,7 +11,8 @@
 3. Highlights
 4. Graphical Abstract (text spec)
 5. Title Page & Declarations
-6. Pre-submission checklist
+6. Editorial and research correspondence
+7. Pre-submission checklist
 
 ---
 
@@ -66,6 +68,8 @@ Principles:
   (page/line or section). Show the change, do not just assert it.
 - Be courteous even when disagreeing; if declining a change, justify with evidence, not opinion.
 - Keep the manuscript and the response consistent — every claimed change must actually exist in the revision.
+- Build a response matrix before drafting: comment number · requested action · action taken · evidence/reason ·
+  manuscript location · verification status. Do not write “we added/performed/revised” until the change is verified.
 - Use a visible convention: reviewer comments in one style, responses in another (e.g. **R1.1**, *Response:*).
 
 Layout:
@@ -86,7 +90,7 @@ Reviewer 2
 …
 ```
 
-Response phrasebank:
+Response functions:
 - Agreement: We thank the reviewer for this suggestion and have [revised/added/clarified] accordingly.
 - Clarification: We apologize for the lack of clarity. We have clarified that …
 - Added analysis: As suggested, we performed [analysis]; the results (new Table S2) show …
@@ -96,7 +100,8 @@ Response phrasebank:
   direction for future work (p.X).
 
 Self-check: every comment answered in order; each response cites exact revised wording + location; tone
-courteous; declines are justified; manuscript and response are mutually consistent.
+courteous; declines are justified; manuscript and response are mutually consistent; new analyses are present
+in the result source, tables/figures, manuscript, and response.
 
 ---
 
@@ -142,7 +147,27 @@ Title page items: see `english-writing.md` §2. Standard declaration blocks (fil
 
 ---
 
-## 6 Pre-submission checklist (light)
+## 6 Editorial and research correspondence
+
+Use this mode for presubmission inquiries, extension requests, correction notices, withdrawal letters,
+data or material requests, collaborator messages, and coauthor approval requests.
+
+Structure: specific subject line → purpose in the first sentence → necessary facts and dates → requested
+action → concise close. Include manuscript ID, short title, deadline, and attachment list when relevant.
+Do not imply approval, attachment, analysis, or action that has not occurred.
+
+- Extension: request a specific new date and give a brief truthful reason.
+- Correction or withdrawal: separate the factual issue, its scope, its effect, and the action already taken.
+- Data/material request: state intended use, requested scope, ethics or access conditions, and authorship terms.
+- Coauthor approval: distinguish whether the message requests comments, formal approval, or acknowledgment.
+- Presubmission inquiry: summarize fit and study contribution without reproducing the abstract or using hype.
+
+Run the same fact lock as for the manuscript: names, dates, manuscript numbers, journal, files, results, and
+promised actions must all be verifiable.
+
+---
+
+## 7 Pre-submission checklist (light)
 
 Confirm against the journal's Guide for Authors before submitting:
 - [ ] Manuscript matches Aim & Scope; journal has published comparable work

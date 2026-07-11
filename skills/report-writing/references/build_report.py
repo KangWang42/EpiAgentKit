@@ -165,6 +165,7 @@ class Report:
     # ---- 表 ----
     def table_caption(self, text):
         p = self.doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER   # 表题注居中（表上方）
         p.paragraph_format.space_before = Pt(6)
         p.paragraph_format.space_after = Pt(2)
         setfont(p.add_run(text), size=self.body_size, bold=True)
@@ -252,21 +253,3 @@ class Report:
                 f.write("\n".join(self._md).rstrip() + "\n")
             out.append(md_path)
         return out
-
-
-if __name__ == "__main__":  # 冒烟自测
-    rep = Report()
-    rep.title_lines(["示例：某随机对照研究", "24--36 周体重反弹补充分析报告"])
-    rep.meta("2026-06-14 ｜ v1")
-    rep.heading("一、分析背景与目的", level=1)
-    rep.para("本补充分析用于评估第 24 周停止干预后至第 36 周期间三组受试者的体重回升情况。")
-    rep.para_runs([("主要研究方向 S2 vs S1 的组间反弹差异为 −1.82 kg（95%CI：−3.29，−0.36），",
-                    None), ("P", {"italic": True}), (" = 0.015，差异达统计学显著。", None)])
-    rep.table_caption("表1 各组样本量")
-    rep.three_line_table(
-        header=["组别编码", "组别", "随机入组 N", "24/36周例数"],
-        rows=[["S0", "S0（单用）", 27, 22], ["S1", "S1（对照）", 28, 23], ["S2", "S2（联合）", 26, 24]],
-    )
-    rep.note("注：以同时具有第 24 周和第 36 周记录者作为完全病例集。")
-    paths = rep.save("_smoketest_report.docx", also_md=True)
-    print("OK:", paths)

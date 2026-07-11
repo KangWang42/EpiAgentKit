@@ -191,6 +191,6 @@ description: |
 - `academic-publishing`：本文件原则 5（可追溯）是论文数字一致性的底层约束
 - `consulting-delivery`：本文件原则 6（可复现）是咨询交付包的底层约束
 - `epi-project-audit`：审查时逐条对照本文件 6 条原则
-- `humanizer-zh`：交付文档前对照其规则去 AI 味
+- `academic-humanizer`：交付文档前执行事实锁、论断证据与学术语体审校
 
 **所有执行 skill 冲突时，本文件优先级更高**（除非 CLAUDE.md 明文覆盖）。

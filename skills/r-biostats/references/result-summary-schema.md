@@ -81,6 +81,7 @@ results.yaml 不只是数字——每条结果可带 `interp`（结论/效应解
 - 复核后调 `confirm_interp(path, key, interp="新的解读")` 写新解读并清除标记；总结论用 `set_conclusion(path, text)`。
 - `stale_interps(path)` 列出所有待复核键，可在交付前 gate（非空则不许定稿）。
 
-写解读的话术规范（沿用 academic-publishing / chinese-anti-ai）：客观、有依据、不夸大；无依据的"最佳/证明"不写。
+写解读的话术规范（沿用 academic-publishing / chinese-style-audit / academic-humanizer）：客观、有依据、不夸大；
+无依据的"最佳/证明"不写，数字、统计方向和证据位置保持锁定。
 
 > 这解决了"只改数字改不掉解读"的问题：解读与数字同源、同渲染，且数字变动会**强制**提示复核解读，杜绝陈旧结论残留。

@@ -1,8 +1,8 @@
-# English Phrasebank & Style reference
+# English Functional Phrasebank and Evidence-Bound Style
 
-> Sentence templates by section × function, plus tense / hedging / coherence / over-claim rules.
-> Use templates as scaffolds — borrow the rhetorical function and information order, never copy a source
-> sentence verbatim. Pair with `english-writing.md` (frameworks) and `submission-materials.md`.
+> Rhetorical functions by section, plus tense, hedging, coherence, evidence strength, and template-trace rules.
+> Use each item only as a structural cue. Replace generic nouns and verbs with study-specific content; never
+> paste a template unchanged. Pair with `english-writing.md`, `submission-materials.md`, and `academic-humanizer`.
 
 ## Contents
 1. Tense rules by section
@@ -10,6 +10,7 @@
 3. Logical connectors
 4. Hedging vs over-claim (blacklist)
 5. Phrasebank by section/function
+6. Fact-lock and voice checks
 
 ---
 
@@ -46,7 +47,7 @@
 - Comparison: Similarly · Consistent with · In contrast to
 - Hedging: may · could · might · appears to · suggests that · is likely to
 
-Do not stack more than ~2 connectors per paragraph (English AI-trace tell, mirrors the Chinese rule).
+Do not stack connectors. There is no fixed quota: keep only those needed to state a real logical relation.
 
 ---
 
@@ -58,18 +59,23 @@ Do not stack more than ~2 connectors per paragraph (English AI-trace tell, mirro
 
 **Replace with**: suggests · indicates · provides evidence that · is associated with · may contribute to.
 
-English AI-trace tells to scrub (in addition to over-claim): formulaic "It is worth noting that…";
+Template-like academic tells to scrub (in addition to over-claim): formulaic "It is worth noting that…";
 "plays a significant role"; "a growing body of literature"; over-use of "Moreover/Furthermore/Additionally"
 as paragraph openers; em-dash overuse; rule-of-three lists everywhere; "-ing"-clause shallow analysis
 ("highlighting the importance of…", "underscoring the need for…"); vague attribution ("studies have shown",
-"it is widely believed") — name the study instead. Keep sentence length varied (mix short declaratives with
-longer complex sentences) to avoid the flat, uniform rhythm of generated text.
+"it is widely believed") — name the study instead. Vary sentence structure only when it improves clarity;
+do not enforce artificial word-count or sentence-length patterns.
+
+Preserve legitimate scholarship: calibrated hedging, necessary passive voice, `we`, technical terms,
+equations, symbols, citation keys, and deliberate repetition of a stable term. A pattern match is an audit
+signal, not an automatic deletion rule.
 
 ---
 
 ## 5 Phrasebank by section/function
 
-> Templates only. X/Y/Z = variables; fill from the project. Cite real studies, never invent.
+> Functional cues only. X/Y/Z = variables; replace them with exact project terms. Cite real studies, never invent.
+> Prefer content-specific openings over these cues whenever the evidence already supplies a stronger sentence.
 
 ### 5.1 Introduction — Context
 - X is a major public health concern because …
@@ -114,8 +120,8 @@ longer complex sentences) to avoid the flat, uniform rhythm of generated text.
 ### 5.7 Methods
 - We conducted a … / Data were obtained from … / Participants were included if … / We excluded
   participants with … / X was defined as … / The primary outcome was … / Covariates included … / We used
-  multivariable regression models to … / Sensitivity analyses were performed to … / All analyses were
-  conducted using [software, version]; statistical significance was set at …
+  multivariable regression models to … / Sensitivity analyses were performed to … / Analyses were
+  conducted using [analysis platform]; statistical significance was set at …
 
 ### 5.8 Results — LOC / KD / COM
 - LOC: Table 1 shows … / Figure 2 presents … / As shown in Figure 3, … / The distribution of X is shown in
@@ -148,3 +154,15 @@ longer complex sentences) to avoid the flat, uniform rhythm of generated text.
 - Methods: We conducted a … study using …
 - Results: Among …, we found that …
 - Conclusions: These findings suggest that …
+
+---
+
+## 6 Fact-lock and voice checks
+
+Before editing, record every number, unit, citation, equation, table/figure pointer, population, outcome,
+time window, and claim direction. After editing, compare them one by one. Do not change a factual token to
+improve rhythm.
+
+If the author supplies a writing sample, match only stable features: sentence rhythm, preferred subjects,
+connective habits, terminology, and placement of hedging. Do not copy source sentences or manufacture a
+more casual persona. Without a sample, default to precise, restrained, venue-appropriate prose.

@@ -137,7 +137,7 @@ Session - Set Working Directory - To Source File Location，全选运行。
 | "枚举所有方案"、"试了很多次" | 暴露调试过程 | 删除 |
 | "相比旧版更好" | 内部决策 | 删除 |
 | "本次分析"、"本工作" | 口语化 | 用"研究"/"分析" |
-| AI 套话（humanizer-zh 黑名单） | 露馅 | 对照改写 |
+| 模板化套话（academic-humanizer 审计模式） | 文风失真 | 对照改写并核对事实锁 |
 
 ### 结构默认
 

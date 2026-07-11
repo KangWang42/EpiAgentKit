@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository packages Claude Code guidance for epidemiology and biostatistics workflows. `CLAUDE.md` contains the cross-task rules loaded for every session, while `README.md` documents installation and the overall architecture. Each directory under `skills/` is a self-contained capability: keep its required `SKILL.md` concise, place detailed guidance in `references/`, deterministic utilities in `scripts/`, and templates or media in `assets/`. Shared Claude Code enforcement scripts live in `hooks/`. Do not commit runtime state, credentials, caches, histories, or local settings from the repository root; the allowlist-style `.gitignore` intentionally excludes them.
+This repository provides Claude Code guidance for epidemiology and biostatistics. `CLAUDE.md` holds cross-task rules; `README.md` covers installation and architecture. Each `skills/` directory is self-contained: keep `SKILL.md` concise, detailed guidance in `references/`, utilities in `scripts/`, and templates or media in `assets/`. Enforcement scripts live in `hooks/`. The allowlist `.gitignore` excludes runtime state, credentials, caches, histories, and local settings.
 
 ## Build, Test, and Development Commands
 
@@ -15,20 +15,20 @@ python -m py_compile path/to/changed_script.py
 Rscript -e 'parse(file="path/to/changed_script.R")'
 ```
 
-The skill validator checks required metadata and structure. The remaining commands perform syntax checks for hooks, Python utilities, and R scripts. Run an affected script with representative inputs when behavior changes; syntax-only validation is insufficient for functional changes.
+The validator checks skill metadata and structure; the other commands check syntax. Run affected scripts with representative inputs when behavior changes.
 
 ## Coding Style & Naming Conventions
 
-Use UTF-8 Markdown, short imperative instructions, and descriptive headings. Skill directories use lowercase kebab-case, such as `academic-publishing/`; every skill entry point is named `SKILL.md` and begins with YAML front matter containing at least `name` and `description`. Use four spaces in Python, two spaces in R, and portable Bash with `#!/usr/bin/env bash`. Keep shell files LF-only as enforced by `.gitattributes`. Prefer relative paths and keep reusable logic in `scripts/` instead of embedding large code blocks in documentation.
+Use UTF-8 Markdown, imperative instructions, and descriptive headings. Skill directories use lowercase kebab-case, such as `academic-publishing/`. Every `SKILL.md` starts with YAML fields `name` and `description`. Use four spaces in Python, two in R, and portable Bash with `#!/usr/bin/env bash`. Keep shell files LF-only. Prefer relative paths and reusable scripts over large embedded code blocks.
 
 ## Testing Guidelines
 
-The repository currently has no central coverage target or dedicated test tree. Treat validators, syntax checks, and focused execution as the required test set. For bug fixes, reproduce the failing case before the change and record the exact verification command in the pull request. Never use private research data as a fixture.
+There is no central coverage target or test tree. Use validators, syntax checks, and focused execution. Reproduce bugs before fixing them, record verification commands in the pull request, and never use private research data as fixtures.
 
 ## Commit & Pull Request Guidelines
 
-Follow the existing Conventional Commit pattern: `feat(scope): summary`, `fix(scope): summary`, `docs(scope): summary`, or `refactor(scope): summary`. Keep each commit focused. Pull requests should explain the problem, identify affected skills or hooks, list verification commands, and call out compatibility or migration effects. Link relevant issues and include screenshots only for generated visual or document output.
+Use Conventional Commits: `feat(scope): summary`, `fix(scope): summary`, `docs(scope): summary`, or `refactor(scope): summary`. When authorized, review the entire worktree, commit every validated change, and leave none pending. Pull requests must explain the problem, affected skills or hooks, verification commands, and compatibility effects. Link issues; include screenshots only for visual or document output.
 
 ## Agent-Specific Instructions
 
-Read `CLAUDE.md` before modifying domain workflows. Preserve raw data, never guess analytical definitions, and do not alter unrelated local changes. Update references and executable helpers together when a workflow contract changes.
+Read `CLAUDE.md` before changing domain workflows. Preserve raw data and never guess analytical definitions. Claude Code and Codex share one rule, skill, and hook set; synchronize both runtime homes after changes and verify file parity. Update references and helpers together when a workflow contract changes.

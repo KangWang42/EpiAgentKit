@@ -3,7 +3,7 @@
 > 与 `chinese-paper.md`（期刊论著，≤5000 字）并列、互斥：**学位论文是长文**（硕士常 5–8 万字 / 80–120
 > 页，博士更长），结构、字数、部件、排版都与期刊论著不同。本文件管"结构 + 各部件该写什么 + 字数 + 自检"；
 > 字体/页面/编号等排版另见 `thesis-formatting.md`；各部分"怎么写得像真论文"复用 `section-content-playbook.md`；
-> 去 AI 味用 `chinese-anti-ai.md`；硬伤清单用 `review-killers.md`。
+> 模板化表达与证据强度审校用 `chinese-style-audit.md`；硬伤清单用 `review-killers.md`。
 
 ## 目录
 1. 最高法：学校格式规范优先
@@ -246,4 +246,4 @@
 - [ ] 讨论含研究特色与不足；结论逐条定性、无 β/P/CI
 - [ ] 综述为独立章、主题区别于正文、30+ 引用
 - [ ] 所有 `[待补充：]` / `[NEED CONFIRMATION：]` 已加亮，并在交付时列清单计数
-- [ ] 过 `chinese-anti-ai.md` 黑名单与 `review-killers.md` 硬伤；排版过 `thesis-formatting.md` 自检
+- [ ] 过 `chinese-style-audit.md` 与 `review-killers.md` 审校；排版过 `thesis-formatting.md` 自检

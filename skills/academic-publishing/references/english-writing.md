@@ -1,7 +1,8 @@
 # English IMRaD Writing reference
 
 > SKILL.md §二 的英文执行细节。各部件框架 + 写作流程 + 自检清单。句式从 `english-phrasebank.md` 取；
-> 时态/hedging/over-claim 规范同样在 phrasebank。数据一律取自 `07_paper/0_result_summaries.md`。
+> 时态/hedging/over-claim 规范同样在 phrasebank。数据一律取自 `07_paper/results.yaml` 及其派生
+> `0_result_summaries.md`。润色或改写同时执行 `academic-humanizer` 的事实锁与论断—证据检查。
 
 ## Contents
 1. IMRaD skeleton + section purposes + result-interpretation-contribution map
@@ -37,6 +38,11 @@ Each section answers one question:
 (a) one interpretation/mechanism point, (b) one literature comparison point, (c) one significance point.
 The Discussion must use this map. Cross-check coherence: the Introduction's gap must be answered by
 Methods+Results, and the Discussion must return to the Introduction's gap.
+
+Before revising existing prose, also build a fact lock containing every number, citation, equation,
+table/figure pointer, technical term, and claim direction. If the author supplies prior work, note their
+sentence rhythm, preferred subjects, connective habits, and placement of hedging. Preserve these unless
+they impair clarity or accuracy.
 
 ---
 
@@ -146,7 +152,7 @@ checked." Build a composite the right way: "items A, B, C were summed into an ac
 Cronbach α=0.75)" — not why it was not dichotomized, not why X was excluded, not what was checked first.
 
 Self-check: design stated first; inclusion/exclusion clear; exposure & outcome definitions reproducible;
-models map to the aim; software, version, significance level stated; reporting guideline followed; no
+models map to the aim; analysis platform and significance level stated when required; reporting guideline followed; no
 engineering noise (random seed, render engine, package build).
 
 ---
@@ -189,10 +195,9 @@ work; avoids causal over-inference; limitations real/specific/explained; ending 
 
 ## 10 Conclusion (if a separate section)
 
-Short, contribution-oriented, no over-claim. Elements available: restate aim (RE-AIM), summarize key results
-(RE-RES), compare (CP), explain (EXP), generalize (GEN), significance (SIG), limitation (LIM),
-recommendation (REC). A short paper usually needs one paragraph: what was found → what it suggests → what
-future work is needed.
+Short, contribution-oriented, no over-claim. A short paper usually needs one paragraph: what was found,
+what it suggests, and the evidence-proportionate contribution. Do not add a new limitation or future-work
+sentence merely to complete a template; place limitations in the Discussion unless the venue requires otherwise.
 
 Forbidden: new results; large new literature; causal over-claim; repeating the abstract; data-unrelated
 policy claims.
@@ -208,7 +213,7 @@ Run before marking any section complete:
 | Title | reflects design; no over-claim; meets journal title rules |
 | Abstract | explicit objective; key numbers w/ CI/P; conclusion = results; within word limit |
 | Introduction | general→specific; specific gap; purpose maps to gap; no result leak |
-| Methods | reproducible; models map to aim; software/version/α stated; guideline followed |
+| Methods | reproducible; models map to aim; analysis platform/α stated when required; guideline followed |
 | Results | per-question subsections; tables/figures cited & embedded; numbers match source; no interpretation |
 | Discussion | returns to gap; each finding explained; specific comparison; limitations w/ 3 elements |
 | Conclusion | no new content; no over-claim; proportionate |
@@ -216,3 +221,6 @@ Run before marking any section complete:
 Cross-section coherence (whole-draft): sample size consistent everywhere; same number in Abstract = Results
 = Discussion = tables = source; Introduction gap answered by Results; Discussion returns to Introduction;
 tense usage per `english-phrasebank.md`.
+
+After any edit, compare the revised section against the fact lock. A fluent rewrite that changes a number,
+citation, equation, table/figure pointer, claim direction, population, outcome, or time window fails review.
