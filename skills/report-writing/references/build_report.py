@@ -13,7 +13,7 @@
     rep.table_caption("表1 24--36周体重反弹分析样本量")
     rep.three_line_table(header=[...], rows=[...])      # 或 rep.table_from_xlsx(path, sheet)
     rep.note("注：随机入组 N 按 ...")
-    rep.figure("../04_figures/Fig1_xxx.png", caption="图1 各组体重变化轨迹")
+    rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 路径由 registry/export map 提供
     rep.save("报告_v1.docx", also_md=True)              # 默认同时落 .md
 
 正文内容必须由调用方按 skill 铁律手写（数据有源、完整段落、零编造），

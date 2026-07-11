@@ -2,7 +2,7 @@
 
 R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本文件只放每个 session 都需要的跨任务规则。
 
-> 维护原则：每条规则过"删除测试"——删了 agent 会犯具体可观察的错误才保留。目标 < 120 行；多步程序性内容一律下沉 skill，本文件只留规则与指针。Claude 与 Codex 共用本套规则、skills 与 hooks，任一侧调整后立即同步另一侧并校验一致性。
+> 维护原则：每条规则过"删除测试"——删了 agent 会犯具体可观察的错误才保留。入口文件控制在 200 行以内；多步程序、模板与领域细节一律下沉 skill / references，本文件只留跨任务规则、路由与指针。Claude 与 Codex 共用本套规则、skills 与 hooks，任一侧调整后立即同步另一侧并校验一致性。
 
 ## Approach
 
@@ -95,10 +95,10 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 06_results/        中间对象，按内容命名不编号
 07_paper/          论文文稿 + results.yaml（结果机器单源）+ 0_result_summaries.md（由其派生）
 09_backup/         旧版 / 一次性脚本 / 探索实验
-CLAUDE.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md（待补清单四列：待完善内容/完善方式AI·人工/重要性必补·建议·可选/状态✅日期，发现即记，规划时先看）
+PROTOCOL.md / SAP.md（研究方案与预设分析）；CLAUDE.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md（待补清单四列，发现即记）
 ```
 
-- **试新方法 / 优化模型**：**NEVER** 直接改主流程脚本。按 `biostat-principles` 探索工作流执行：`09_backup/<日期>_<主题>/` 隔离实验 → 与主流程同口径公平对照 → `FINDINGS.md` 记结论 → 确有稳健提升且过口径门禁才合并。探索脚本永不留 `02_code/`。
+- **试新方法 / 优化模型**：**NEVER** 直接改主流程脚本。先登记 `09_backup/EXPERIMENTS.md` 并写 `PLAN.md` → 隔离实验 → 与主流程同口径公平对照 → `FINDINGS.md` 记录成功与失败 → 确有稳健提升且过口径门禁才合并。探索脚本永不留 `02_code/`；多文件实验可用 `experiment/<主题>` 分支，但 commit 仍须先征询用户。
 - **git 阶段性备份**：只在**重要里程碑/重要决策后**（完成一个主分析、合并一次探索结果、口径变更、定稿一个论文部件、一次成规模的重构）才考虑提交；**改一点小东西不提交也不问**。
   - **commit 前必须先征询用户**：完成里程碑工作后，报告"已做完 X，是否 commit 备份？"，**用户确认后才 `git commit`**；不擅自提交。用户确认后先审查整个工作区，检查通过即全部纳入提交，不留已检查的未提交项；提交信息写清这一阶段做了什么。
   - **NEVER `git push`，除非用户明确要求**。默认只在本地 commit 留回退点，不推远端、不做 release。

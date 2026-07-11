@@ -21,9 +21,10 @@ description: |
 
 1. 项目内 `CLAUDE.md` / `AGENTS.md`
 2. `README.md`（项目说明）
-3. `DECISIONS.md`（方法决策历史）
-4. `SESSION_LOG.md`（操作日志）
-5. `07_paper/results.yaml`（结果机器单源）+ 派生 `0_result_summaries.md`
+3. `PROTOCOL.md` / `SAP.md`（预设研究问题、分析与偏离边界）
+4. `DECISIONS.md`（方法决策与方案偏离历史）
+5. `SESSION_LOG.md`（操作日志）
+6. `07_paper/results.yaml`（结果机器单源）+ 派生 `0_result_summaries.md`
 
 **缺失关键文件就已经是扣分项**，要写入"Problems found"。
 
@@ -84,7 +85,8 @@ description: |
 - [ ] `02_code/` 编号脚本数 ≤ 10（config / conventions / lib / run_pipeline 与 vendored/ 不计）；探索 / 一次性脚本不在 `02_code/`（应在 `09_backup/`）
 - [ ] `03_tables/` / `04_figures/` 编号按论文行文顺序连续无断号；`TableS{N}` / `FigS{N}` 在 `supplementary/`；无 `Table_xxx` / `Fig_xxx` 无编号残留；交付 xlsx 内无 cover / 说明类解说性 sheet
 - [ ] 根目录无散落临时文件（`.csv`、`.xlsx`、`.png` 不在根）
-- [ ] `CLAUDE.md` / `SESSION_LOG.md` / `DECISIONS.md` 三件套存在
+- [ ] `CLAUDE.md` / `PROTOCOL.md` / `SAP.md` / `SESSION_LOG.md` / `DECISIONS.md` 存在；入口规则文件不超过 200 行
+- [ ] `09_backup/EXPERIMENTS.md` 登记全部探索尝试；每个已运行实验有 `PLAN.md` 与 `FINDINGS.md`
 - [ ] `09_backup/` 存在；旧版文件已归档，不在活跃目录
 - [ ] 没有多个互相冲突的"最终版"（比如 `final/` + `最终版/` + `提交版/`）
 
@@ -208,16 +210,20 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 ### TODO 清单
 
 - [ ] 研究设计（队列/病例对照/横断面/RCT/Meta）明确
+- [ ] 主终点、分析人群和主要模型与冻结的 PROTOCOL/SAP 一致；偏离均在 `DECISIONS.md` 有时间、原因和确认记录
 - [ ] 主分析方法匹配研究设计（比如队列用 Cox 或 Poisson，不要用逻辑回归无视时间）
 - [ ] 纳排标准前后一致（方法节说的排除标准，和 CONSORT 流程图一致）
 - [ ] 样本量足够支撑分析（事件数 ≥ 10×协变量数 for Cox）
 - [ ] 模型诊断做了（PH 假设、线性假设、多重共线、异常值）
 - [ ] 敏感性分析覆盖了主要的口径假设
+- [ ] 探索实验完整登记而非只保留“最佳”结果；主线采用项达到预设晋级标准，未采用项未混入主 `results.yaml`
 - [ ] 有 STROBE / CONSORT / PRISMA / AMSTAR 等对应报告规范遵循
 
 ### 红线
 
 - 方法学严重错配（比如 RCT 分析忽略了随机分层）
+- 主要分析在看过结果后变更，却未记录为 SAP 偏离或探索性分析
+- 只报告成功尝试、无法还原全部方法搜索过程，或未过门禁的探索结果被写成主要结论
 - 事件数 < 10×协变量，过拟合风险高但未披露
 - 缺关键假设检验却未说明
 

@@ -14,40 +14,54 @@ create_delivery_pack <- function(name, root = "05_reports", overwrite = FALSE) {
     stop("目录已存在：", pack, "；如需覆盖请 overwrite = TRUE")
   }
 
-  subdirs <- c("data", "code", "06_results", "tables", "figures")
+  subdirs <- c("data", "code", "results", "tables", "figures")
   invisible(lapply(
     file.path(pack, subdirs),
     dir.create, recursive = TRUE, showWarnings = FALSE
   ))
+  invisible(file.create(file.path(pack, subdirs, ".gitkeep")))
+
+  writeLines(
+    c("# 交付包口径常量；从主流程 conventions.R 派生后再交付",
+      "ORDERED_LEVELS <- list()",
+      "PALETTE <- c(\"#00468B\", \"#ED0000\", \"#42B540\", \"#0099B4\")",
+      "DIGITS_EST <- 2L",
+      "DIGITS_P <- 3L",
+      "P_FLOOR <- 0.001"),
+    file.path(pack, "code/conventions.R"), useBytes = TRUE
+  )
+  writeLines(
+    c('source("code/conventions.R", encoding = "UTF-8")',
+      "TABLE_REGISTRY <- character()",
+      "FIG_REGISTRY <- character()",
+      "table_path <- function(stem) {",
+      "  i <- match(stem, TABLE_REGISTRY)",
+      "  if (is.na(i)) stop(\"stem 不在交付包 table registry：\", stem)",
+      "  sprintf(\"tables/Table%d_%s.xlsx\", i, stem)",
+      "}",
+      "fig_path <- function(stem, ext = \"png\") {",
+      "  i <- match(stem, FIG_REGISTRY)",
+      "  if (is.na(i)) stop(\"stem 不在交付包 figure registry：\", stem)",
+      "  sprintf(\"figures/Fig%d_%s.%s\", i, stem, ext)",
+      "}"),
+    file.path(pack, "code/config.R"), useBytes = TRUE
+  )
 
   # 写占位文件
   writeLines(
-    c("# [包名]",
+    c("# 文件清单",
       "",
-      "## 这份文件夹是什么",
-      "",
-      "[一句话说明]",
-      "",
-      "## 怎么看结果",
-      "- 想看**方法和结论** → 打开 `01_方法与结果.docx`",
-      "- 想看**具体数字** → 打开 `tables/` 里的 Excel 文件",
-      "- 想看**图** → 打开 `figures/` 里的 PDF",
-      "",
-      "## 怎么重现结果",
-      "1. 安装 R ≥ 4.2（推荐 RStudio）",
-      "2. 双击打开 `run_all.R`",
-      "3. 菜单栏：Session → Set Working Directory → To Source File Location",
-      "4. Ctrl+Shift+Enter 运行全文",
-      "",
-      "## 文件清单",
-      "| 路径 | 作用 |",
+      "| 文件 | 内容 |",
       "|------|------|",
-      "| `data/` | 分析用数据 |",
-      "| `code/` | R 脚本（编号顺序执行）|",
-      "| `tables/` | 所有表格 |",
-      "| `figures/` | 所有图件 |",
-      "| `06_results/` | 中间产物 |",
-      "| `sessionInfo.txt` | 运行环境 |"),
+      "| `01_方法与结果.docx` | 方法、结果与结论（图表嵌入正文） |",
+      "| `run_all.R` | 一键复现全部分析 |",
+      "| `data/` | 分析用数据；填充后逐文件列出 |",
+      "| `code/` | 分析脚本与口径/registry；填充后逐文件列出 |",
+      "| `results/` | 自动生成的中间数据 |",
+      "| `tables/` | 最终表；填充后逐文件列出 |",
+      "| `figures/` | 最终图；填充后逐文件列出 |",
+      "",
+      "复现：在 RStudio 打开 `run_all.R`，把工作目录设为本文件所在目录后运行全文。"),
     con = file.path(pack, "00_客户说明.md"),
     useBytes = TRUE
   )
@@ -79,6 +93,8 @@ create_delivery_pack <- function(name, root = "05_reports", overwrite = FALSE) {
     '  message("缺少依赖：", paste(missing_pkgs, collapse = ", "))',
     '  install.packages(missing_pkgs, repos = "https://cloud.r-project.org")',
     "}",
+    "",
+    'source("code/config.R", encoding = "UTF-8")',
     "",
     'scripts <- list.files("code", pattern = "^[0-9]{2}_.*\\\\.R$", full.names = TRUE) |> sort()',
     "",

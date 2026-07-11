@@ -57,6 +57,8 @@ description: |
 
 **每次分析开头必须输出此块**（trivial 任务可压缩为一行）：
 
+开工前先读项目 `PROTOCOL.md`、`SAP.md`、`CLAUDE.md` 与 `DECISIONS.md`。新项目的方案或 SAP 仍为草案、主要终点/分析人群/主模型未确认，或实际做法偏离 SAP 时，先向用户确认并记录偏离；不得先看结果再把主要分析写成“预设”。
+
 ```
 【口径】
   - 研究对象：XX 人群 (N=?)
@@ -175,15 +177,15 @@ library(ggpubr)      # P 值标注
 
 ```
 project/
-├── CLAUDE.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md
+├── CLAUDE.md / PROTOCOL.md / SAP.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md
 ├── 01_data/rawdata/      # 只读
-├── 02_code/NN_xxx.R      # 编号脚本
+├── 02_code/              # config.R / conventions.R / vendored/ + 编号脚本
 ├── 03_tables/TableN.xlsx # 最终表
 ├── 04_figures/FigN.pdf/png
 ├── 05_reports/结果-M-D-主题/ # 咨询/汇报结果包
 ├── 06_results/           # 中间对象：表格 xlsx；非表格对象 rds；按内容命名不编号
 ├── 07_paper/             # 论文 + results.yaml(数字单源) + 0_result_summaries.md(由其派生)
-└── 09_backup/            # 旧版归档
+└── 09_backup/            # 旧版 / 探索实验；EXPERIMENTS.md 索引全部尝试
 ```
 
 脚本之间传值 → **必须落盘到 `06_results/`**，不要靠 R 环境变量（复现会断）。
@@ -213,6 +215,7 @@ library(ggsci)
 
 set.seed(123)
 here::i_am("02_code/03_cox_main.R")  # 锚定工作目录
+source("02_code/config.R", encoding = "UTF-8")
 ```
 
 ---
@@ -298,11 +301,12 @@ ggsave(fig_path("xxx", "png"), p, width = 180, height = 120, units = "mm",
 **A. 写入结果单源 `07_paper/results.yaml`**（结果变了就写；**NEVER 手写 0_result_summaries.md**）：
 
 ```r
-source("../skills/r-biostats/scripts/emit_summary.R")  # 或全局路径
+source("02_code/vendored/emit_summary.R", encoding = "UTF-8")
 yp <- "07_paper/results.yaml"
 add_result(yp, "exposure_HR", label = "暴露 X 对 OS 的 HR",
            est = 1.45, ci_low = 1.12, ci_high = 1.87, p = 0.004,
-           section = "主分析", source = "02_code/03_cox_main.R", table = "Table3",
+           section = "主分析", source = "02_code/03_cox_main.R",
+           table = table_path("cox_main"),
            interp = "暴露 X 与 OS 风险升高相关，调整年龄/性别/BMI/吸烟后仍稳健。")
 render_summary_md(yp, "07_paper/0_result_summaries.md")  # 派生人读版
 ```
@@ -360,7 +364,7 @@ writexl::write_xlsx(
 
 ```r
 # 出图用 publication-figures 的 fig_setup.R（theme_pub + save_fig 双存，勿在此重定义）
-source("../skills/publication-figures/scripts/fig_setup.R")
+source("02_code/vendored/fig_setup.R", encoding = "UTF-8")
 save_fig(p_forest, "forest", type = "forest")   # type 自带各图型推荐尺寸；详见 publication-figures
 ```
 

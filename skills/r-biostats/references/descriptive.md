@@ -38,5 +38,8 @@ data |>
 ## 导出
 
 ```r
-tbl |> as_gt() |> gtsave("03_tables/Table1.docx")
+# 先在 config.R 的 TABLE_REGISTRY 注册 "baseline"；主表一律 xlsx。
+tbl |>
+  gtsummary::as_tibble() |>
+  writexl::write_xlsx(table_path("baseline"))
 ```

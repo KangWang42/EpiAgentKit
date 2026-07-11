@@ -8,7 +8,9 @@
 - 目录是否符合项目约定（如 `01_data/`, `02_code/`, `03_tables/`, `04_figures/`, `07_paper/`, `09_backup/`）
 - 脚本命名是否规范（如 `NN_description.R`、`FigN_xxx.*`、`TableN_xxx.*`）
 - 根目录是否存在临时文件、过期导出、重复版本
+- `PROTOCOL.md` / `SAP.md` 是否在分析前冻结，入口 `CLAUDE.md` / `AGENTS.md` 是否保持 200 行以内并以索引为主
 - 日志文件是否存在并持续更新：`SESSION_LOG.md`、`DECISIONS.md`
+- `09_backup/EXPERIMENTS.md` 是否登记全部尝试（含失败/未采用），单次实验是否有 `PLAN.md` 与 `FINDINGS.md`
 
 红旗：
 - `test.R`, `final.R`, `temp.*`, `new new final.*`
@@ -61,6 +63,8 @@
 
 检查：
 - 研究设计与分析方法是否匹配
+- 主分析是否与冻结的 SAP 一致；偏离是否记录，探索结果是否与预设结果清楚分开
+- 是否存在只保留最佳模型/参数、未记录失败尝试的选择性报告
 - 因果语言是否超出研究设计支持范围
 - 单篇综述/单篇Meta是否被写成强结论
 - 叙述性证据是否被误当作定量证据

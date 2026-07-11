@@ -19,7 +19,7 @@ results:
     label: "人读标签"             # 用于 md 标题
     section: "主要结果"           # md 分节归类
     source: "02_code/03_main.R"  # 产出脚本
-    table: "Table2"              # 对应表/图（可空）
+    table: "<table_path('main_effect') 的返回值>"  # 由 registry 生成（可空）
     raw: {est, ci_low, ci_high, p, unit}   # 原始数值（审计/重渲染用）
     rendered:                    # 成品串（下游只读这层）
       est: "−1.82 kg"
@@ -38,11 +38,13 @@ conclusion: "主分析与敏感性分析方向一致，支持 S2 优于 S1。"  
 每个产出脚本算完一个指标即写一行（**不要手敲 rendered，由函数渲染**）：
 
 ```r
-source("../skills/r-biostats/scripts/emit_summary.R")  # 或全局路径
+source("02_code/vendored/emit_summary.R", encoding = "UTF-8")
+source("02_code/config.R", encoding = "UTF-8")
 yp <- "07_paper/results.yaml"
 add_result(yp, "S2_vs_S1_diff", label = "S2 vs S1 组间反弹差异",
            est = -1.82, ci_low = -3.29, ci_high = -0.36, p = 0.015, unit = "kg",
-           section = "主要结果", source = "02_code/03_rebound.R", table = "Table2")
+           section = "主要结果", source = "02_code/03_rebound.R",
+           table = table_path("main_effect"))
 ```
 
 口径常量（小数位 / P 阈值 / CI 样式）是 `emit_summary.R` 的单一真源；若项目 `conventions.R` 已定义 `DIGITS_EST` / `DIGITS_P` / `P_FLOOR`，函数自动采用之。百分比传 `unit="%"`（紧贴无空格，按需 `digits=1`）。英文期刊传 `style="en"` 得 `(95% CI: ...)`。

@@ -73,7 +73,7 @@ description: |
 **禁止命名**：`最终版`、`最新`、`final2`、`new`、`修订`、`v2`、`修改后`。每个新版本用新日期建新包，不原地覆盖。
 
 **包内编号连续性（CRITICAL，与项目主文件夹同一标准）**：
-- `data/`（含子目录）、`code/`、`tables/`、`figures/` 内所有文件一律带编号前缀且从 01（或 T1/F1）起连续，包括复制进来的原始数据与质性材料。
+- `data/`（含子目录）、`tables/`、`figures/` 内所有文件及 `code/` 的分析脚本一律带编号前缀且从 01（或 T1/F1）起连续，包括复制进来的原始数据与质性材料；`code/config.R`、`code/conventions.R` 作为单源 helper 不编号。
 - 任何合并 / 增删 / 改名后立即重排补号，不许断号或跳号残留；脚本输出路径与脚本头注释同步改。
 - 同主题多张表合并为单 xlsx 多 sheet，合并后下游编号顺延重排。
 - docx 正文"表 N / 图 N"引用与包内文件编号保持一致，重排后同步改正文。
@@ -89,7 +89,7 @@ description: |
 ├── run_all.R                   ← 一键复现脚本（模板 §1）
 ├── README.md                   ← 文件清单（可选）
 ├── data/                       ← 本包需要的数据（编号从 01 起）
-├── code/                       ← 包内脚本，从 01 起（头部模板 §2）
+├── code/                       ← config.R / conventions.R + 包内分析脚本，从 01 起（头部模板 §2）
 ├── results/                    ← 中间数据（xlsx，按内容命名不编号；禁 rds/RData）
 ├── tables/                     ← TableN_*.xlsx
 └── figures/                    ← FigN_*.pdf + .png

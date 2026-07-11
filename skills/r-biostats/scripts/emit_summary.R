@@ -6,11 +6,12 @@
 # 双向规则：数字只在此改；若需在下游改，先回到产出脚本/此处回写，再向其余下游传播。
 #
 # 用法：
-#   source(".../emit_summary.R")
+#   source("02_code/vendored/emit_summary.R", encoding = "UTF-8")
+#   source("02_code/config.R", encoding = "UTF-8")
 #   add_result("07_paper/results.yaml", "S2_vs_S1_diff",
 #              label="S2 vs S1 组间反弹差异", est=-1.82, ci_low=-3.29, ci_high=-0.36,
 #              p=0.015, unit="kg", section="主要结果",
-#              source="02_code/03_rebound.R", table="Table2")
+#              source="02_code/03_rebound.R", table=table_path("main_effect"))
 #   render_summary_md("07_paper/results.yaml", "07_paper/0_result_summaries.md")
 #   val("07_paper/results.yaml", "S2_vs_S1_diff")          # 取 full 成品串
 #   val("07_paper/results.yaml", "S2_vs_S1_diff", "p")     # 取 P 部分

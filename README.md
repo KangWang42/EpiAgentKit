@@ -21,7 +21,7 @@ scripts/           双平台用户配置同步工具
 | 层 | 技能 | 作用 |
 |---|---|---|
 | 原则层 | `biostat-principles` | 六条底层行为原则（先问口径、最小实现、只改必要、可验证、可追溯、可复现）+ 探索新方法的隔离试验工作流。所有分析类任务开工前先对齐 |
-| 执行层 | `project-init` | 一键创建七层标准项目结构 + 表图编号 registry（研究 / 咨询双模式） |
+| 执行层 | `project-init` | 一键创建标准项目结构、PROTOCOL/SAP 前置门禁、探索实验索引与表图 registry（研究 / 咨询双模式） |
 | | `r-biostats` | R 统计分析执行层：PLAN-CODE-RUN-VERIFY-DOC 五阶状态机，描述统计 / 回归 / 生存 / 中介 / Meta |
 | | `publication-figures` | 发表级图件规范（mm 尺寸 / 字体嵌入 / 期刊配色）+ 约 180 种图选型画廊 + 170 余套配方代码 |
 | 产出层 | `academic-publishing` | 中英双语论文生成（GB/T 7713 / IMRaD）+ 投稿材料（Cover Letter / 审稿回复 / Highlights），逐部件门控写作 |
@@ -58,6 +58,16 @@ python ~/epiclaude/scripts/sync_user_configs.py --target all
 也可只挑选单个技能目录复制到相应 `skills/` 目录。修改技能后若界面未刷新，重启对应客户端。
 
 注意：`sysu-ppt` 的字体与部分路径按 Windows 编写（`USERPROFILE` 环境变量、`C:/Windows/Fonts`），macOS / Linux 使用需按 `SKILL.md` 内注释调整。
+
+## 维护校验
+
+修改规则或 skills 后运行：
+
+```bash
+python scripts/audit_workflow_contracts.py
+```
+
+该检查覆盖全部 skill 元数据、`CLAUDE.md` / `AGENTS.md` 的 200 行预算，以及初始化、探索隔离、vendored helper 和提交授权等跨 skill 契约。行为发生变化时仍须对相关 R / Python / Bash 脚本做语法检查与最小实跑。
 
 ## 推荐 Hook 配置（可选，把硬红线交给 harness 强制）
 
@@ -117,12 +127,13 @@ Windows 若 hook 进程找不到 `bash`，把命令改为 `"%USERPROFILE%\\.code
 
 本仓库的写法遵循几条经验规则，也是它区别于"把所有规范堆进 CLAUDE.md"的地方：
 
-1. **删除测试**：全局规则每条都要回答"删了 agent 会犯什么具体错误"，答不出就删。全文控制在 120 行内——指令越多，单条遵循率越低。
+1. **删除测试 + 入口预算**：全局规则每条都要回答"删了 agent 会犯什么具体错误"，答不出就删。`CLAUDE.md` / `AGENTS.md` 控制在 200 行以内，只放跨任务红线、路由与索引；程序、模板和领域细节下沉到 skill / references。
 2. **规则与流程分离**：CLAUDE.md 只放每个 session 都需要的硬红线与路由表；多步骤工作流全部下沉到技能，按需加载不占上下文。
 3. **渐进披露**：技能正文只放核心流程与门禁，模板、句式库、配方代码放 `references/`，由模型在需要时自行读取。
 4. **单一真源**：表图编号走 registry（编号 = 清单位置，脚本经 `table_path()` / `fig_path()` 取路径）；口径常量集中 `config.R` + `conventions.R`；论文数字机器单源 `07_paper/results.yaml`（脚本渲染一次写入、`render_summary_md()` 派生 `0_result_summaries.md`、下游 `val()` 取数禁手敲）。
 5. **门禁状态机**：分析（PLAN-CODE-RUN-VERIFY-DOC）、写作（逐部件自检）、交付（八阶段）、审查（六层）都是"不过检不许进下一步"的状态机，而非建议清单。
 6. **强制实跑与全量扫错**：代码写完必须实际执行，输出全量 grep error / warning，每条报错三选一去向（修复 / 记录豁免 / 核实可忽略），不允许沉默放过。
+7. **预设与探索分轨**：`PROTOCOL.md` / `SAP.md` 在分析前冻结主要问题和方法；全部尝试登记在 `09_backup/EXPERIMENTS.md` 并隔离运行，只有过公平比较门禁且经确认的结果进入主线。
 
 ## 目录约定
 
@@ -130,13 +141,14 @@ Windows 若 hook 进程找不到 `bash`，把命令改为 `"%USERPROFILE%\\.code
 
 ```
 01_data/rawdata/   只读原始数据
-02_code/           编号脚本（连续编号，<= 10 个，一脚本一阶段）
+PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
+02_code/           config.R / conventions.R / vendored/ + 编号脚本（连续编号，<= 10 个）
 03_tables/         Table{N}_*.xlsx（附表进 supplementary/）
 04_figures/        Fig{N}_*.{pdf,png}
 05_reports/        对外交付包
 06_results/        中间对象（按内容命名不编号）
 07_paper/          论文 + results.yaml（数字机器单源）+ 0_result_summaries.md（由其派生）
-09_backup/         旧版 / 一次性脚本 / 探索实验
+09_backup/         旧版 / 一次性脚本 / 探索实验（EXPERIMENTS.md 索引全部尝试）
 ```
 
 ## 适用范围与使用须知

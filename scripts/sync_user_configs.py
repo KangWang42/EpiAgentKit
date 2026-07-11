@@ -8,12 +8,14 @@ import json
 import os
 import shutil
 import stat
+import uuid
 from pathlib import Path
 
 
 SKILL_MANIFEST = ".epiclaude-managed-skills.json"
 HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 CODEX_EXCLUDES = {"skill-creator"}
+COPY_IGNORES = {"__pycache__", ".DS_Store"}
 
 
 def remove_readonly(func, path: str, _exc_info) -> None:
@@ -58,8 +60,7 @@ def sync_file(source: Path, target: Path, dry_run: bool) -> None:
         return
     print(f"COPY   {source} -> {target}")
     if not dry_run:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
+        atomic_copy_file(source, target)
 
 
 def source_skills(root: Path, exclude: set[str]) -> dict[str, Path]:
@@ -68,6 +69,55 @@ def source_skills(root: Path, exclude: set[str]) -> dict[str, Path]:
         if item.is_dir() and item.name not in exclude and (item / "SKILL.md").is_file():
             result[item.name] = item
     return result
+
+
+def ignored(path: Path) -> bool:
+    return path.name in COPY_IGNORES or path.suffix == ".pyc"
+
+
+def atomic_copy_file(source: Path, target: Path) -> None:
+    """Replace one file without exposing a missing-file window to watchers."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(f".{target.name}.epiclaude-{uuid.uuid4().hex}.tmp")
+    try:
+        # copy2 may inherit a read-only bit from bundled assets, which prevents
+        # os.replace on Windows. Content parity matters here; timestamps do not.
+        shutil.copyfile(source, temporary)
+        if target.exists():
+            os.chmod(target, stat.S_IWRITE | stat.S_IREAD)
+        os.replace(temporary, target)
+    finally:
+        if temporary.exists():
+            os.chmod(temporary, stat.S_IWRITE | stat.S_IREAD)
+            temporary.unlink()
+
+
+def mirror_tree(source: Path, target: Path) -> None:
+    """Mirror a skill in place while keeping SKILL.md continuously readable."""
+    target.mkdir(parents=True, exist_ok=True)
+
+    source_items = [item for item in source.rglob("*") if not ignored(item)]
+    for item in sorted(source_items, key=lambda value: (not value.is_dir(), len(value.parts))):
+        relative = item.relative_to(source)
+        destination = target / relative
+        if item.is_dir():
+            if destination.is_file() or destination.is_symlink():
+                destination.unlink()
+            destination.mkdir(parents=True, exist_ok=True)
+        elif item.is_file():
+            if destination.is_dir():
+                shutil.rmtree(destination, onerror=remove_readonly)
+            atomic_copy_file(item, destination)
+
+    for item in sorted(target.rglob("*"), key=lambda value: len(value.parts), reverse=True):
+        relative = item.relative_to(target)
+        source_item = source / relative
+        if ignored(item) or not source_item.exists():
+            if item.is_dir() and not item.is_symlink():
+                shutil.rmtree(item, onerror=remove_readonly)
+            else:
+                os.chmod(item, stat.S_IWRITE | stat.S_IREAD)
+                item.unlink()
 
 
 def sync_skills(
@@ -95,11 +145,9 @@ def sync_skills(
 
     for name, skill in skills.items():
         destination = target / name
-        if destination.exists():
-            safe_remove(destination, target, dry_run)
-        print(f"COPY   {skill} -> {destination}")
+        print(f"SYNC   {skill} -> {destination}")
         if not dry_run:
-            shutil.copytree(skill, destination)
+            mirror_tree(skill, destination)
 
     if prune_codex_bundled and codex_home is not None:
         for name in sorted(exclude):

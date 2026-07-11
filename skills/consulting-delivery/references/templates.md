@@ -71,12 +71,13 @@ cat("\n全部分析已复现完成；表格见 tables/，图件见 figures/\n")
 # code/02_baseline.R
 # 目的：生成基线表（按分组对比）
 # 输入：results/cohort.xlsx
-# 输出：tables/Table1_baseline.xlsx
+# 输出：由 code/config.R 的 table_path("baseline") 生成
 # ============================================================
 
 library(tidyverse)
 library(gtsummary)
 library(flextable)
+source("code/config.R", encoding = "UTF-8")
 
 # 路径全部用相对路径（以交付包根目录为工作目录）
 cohort <- readxl::read_excel("results/cohort.xlsx")  # 中间数据 xlsx，禁 rds
@@ -84,7 +85,7 @@ cohort <- readxl::read_excel("results/cohort.xlsx")  # 中间数据 xlsx，禁 r
 # ... 分析代码 ...
 
 # 输出
-writexl::write_xlsx(tbl, "tables/Table1_baseline.xlsx")
+writexl::write_xlsx(tbl, table_path("baseline"))
 ```
 
 **禁止出现**：

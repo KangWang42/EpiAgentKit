@@ -19,6 +19,31 @@ init_project <- function(name,
                   "rct", "meta", "rwd", "methodology")
   stopifnot(type %in% seq_along(type_names))
 
+  # 项目需自包含关键 helper，避免运行时依赖仓库外相对路径。
+  skill_roots <- unique(path.expand(c(
+    Sys.getenv("EPICLAUDE_SKILLS"),
+    "~/.claude/skills",
+    "~/.agents/skills",
+    "~/.codex/skills"
+  )))
+  skill_roots <- skill_roots[nzchar(skill_roots)]
+  find_skill_file <- function(skill, relative_path) {
+    candidates <- file.path(skill_roots, skill, relative_path)
+    found <- candidates[file.exists(candidates)]
+    if (!length(found)) {
+      stop("缺少必需 skill 文件：", file.path(skill, relative_path),
+           "；请安装完整 skills 或设置 EPICLAUDE_SKILLS")
+    }
+    found[[1]]
+  }
+  helper_sources <- c(
+    emit_summary = find_skill_file("r-biostats", "scripts/emit_summary.R"),
+    fig_setup = find_skill_file("publication-figures", "scripts/fig_setup.R")
+  )
+  consulting_scaffold_source <- if (mode == "consulting") {
+    find_skill_file("consulting-delivery", "scripts/consulting_scaffold.R")
+  } else NULL
+
   # 名称检查 -----------------------------------------------
   if (!grepl("^[a-z][a-z0-9_]*$", name)) {
     warning("项目名建议 snake_case（小写 + 下划线），例如 'cohort_smoking_chd'")
@@ -32,9 +57,9 @@ init_project <- function(name,
   # 建目录 -------------------------------------------------
   dirs <- c(
     "01_data/rawdata",
-    "02_code",
-    "03_tables",
-    "04_figures",
+    "02_code/vendored",
+    "03_tables/supplementary",
+    "04_figures/supplementary",
     "05_reports",
     "06_results",
     "07_paper",
@@ -44,7 +69,9 @@ init_project <- function(name,
                    dir.create, recursive = TRUE, showWarnings = FALSE))
 
   today <- format(Sys.Date(), "%Y-%m-%d")
-  today_md <- format(Sys.Date(), "%-m-%-d")
+  today_md <- sprintf("%d-%d",
+                      as.integer(format(Sys.Date(), "%m")),
+                      as.integer(format(Sys.Date(), "%d")))
   type_name <- type_names[type]
 
   # 项目规则：CLAUDE.md 为单源，AGENTS.md 指示 Codex 读取它 ----
@@ -52,7 +79,25 @@ init_project <- function(name,
     sprintf("# %s · 项目级规则", name),
     "",
     "本项目继承 EpiClaude 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。",
-    "以下是本项目专属约束。",
+    "`CLAUDE.md` 是项目规则单源；`AGENTS.md` 只负责指示 Codex 读取本文件，避免双份口径漂移。",
+    "",
+    "## 新会话必读（按序）",
+    "",
+    "1. 本文件的口径锁定与当前状态",
+    "2. `PROTOCOL.md` 与 `SAP.md`（研究问题、预设分析及偏离）",
+    "3. `07_paper/results.yaml`（结果机器单源）",
+    "4. `DECISIONS.md` 末尾 2–3 条",
+    "5. `BACKLOG.md` 主表未完成项",
+    "6. `02_code/conventions.R` 与 `02_code/config.R`",
+    "7. `SESSION_LOG.md` 末 10 行",
+    "",
+    "## 当前状态（每次会话收尾更新，最多 10 行）",
+    "",
+    "- 当前阶段：方案待确认",
+    "- 最新定稿版本 / 回退点：无",
+    "- 进行中：填写 PROTOCOL.md 与 SAP.md",
+    "- 已知坑 / 待办：见 BACKLOG.md",
+    "- 下一步：确认研究方案后开始数据清洗",
     "",
     "## 项目基本信息",
     "",
@@ -116,6 +161,104 @@ init_project <- function(name,
     file.path(proj, "DECISIONS.md"), useBytes = TRUE
   )
 
+  # PROTOCOL.md：研究问题与治理前置锁定 -------------------
+  writeLines(
+    c("# 研究方案（PROTOCOL）",
+      "",
+      "> 状态：草案。分析开始前由研究负责人确认；后续变更写入版本记录与 `DECISIONS.md`。",
+      "",
+      "## 研究问题与设计",
+      "",
+      sprintf("- 研究设计：%s", type_name),
+      "- 研究问题（PICO/PECO）：",
+      "- 研究目的与主要假设：",
+      "- 数据来源与研究时间窗：",
+      "",
+      "## 研究对象与变量",
+      "",
+      "- 目标人群与研究场景：",
+      "- 纳入标准：",
+      "- 排除标准：",
+      "- 暴露 / 干预与对照：",
+      "- 主要结局及测量时点：",
+      "- 次要结局：",
+      "- 预设协变量与混杂因素：",
+      "",
+      "## 治理与报告",
+      "",
+      "- 伦理审批 / 知情同意：",
+      "- 注册或预注册平台与编号（如适用）：",
+      "- 数据安全与访问权限：",
+      "- 适用报告规范（如 STROBE / CONSORT / PRISMA）：",
+      "",
+      "## 版本记录",
+      "",
+      "| 日期 | 版本 | 变更 | 确认人 |",
+      "|------|------|------|--------|",
+      sprintf("| %s | 0.1 | 初始化草案 | 待确认 |", today)),
+    file.path(proj, "PROTOCOL.md"), useBytes = TRUE
+  )
+
+  # SAP.md：统计分析计划前置锁定 --------------------------
+  writeLines(
+    c("# 统计分析计划（SAP）",
+      "",
+      "> 状态：草案。查看结果前冻结主要分析；任何偏离必须在 `DECISIONS.md` 记录原因并标明预设或探索性。",
+      "",
+      "## 分析目标",
+      "",
+      "- 主要估计目标（estimand）：",
+      "- 主要 / 次要假设：",
+      "- 分析人群：",
+      "- 主要与次要终点：",
+      "",
+      "## 数据处理",
+      "",
+      "- 变量定义与有序水平：见 `02_code/conventions.R`",
+      "- 缺失数据处理：",
+      "- 异常值与数据质量规则：",
+      "- 样本量 / 精度 / 功效依据：",
+      "",
+      "## 统计方法",
+      "",
+      "- 描述性分析：",
+      "- 主要模型与效应量：",
+      "- 协变量调整策略：",
+      "- 模型假设与诊断：",
+      "- 多重比较控制：",
+      "- 验证 / 交叉验证切分与防信息泄漏规则：",
+      "- 主评价指标与最小有意义差异：",
+      "- 亚组与交互作用（预设）：",
+      "- 敏感性分析（预设）：",
+      "- 探索性分析边界：每次先登记于 `09_backup/EXPERIMENTS.md`，再隔离运行",
+      "",
+      "## 可复现性与偏离",
+      "",
+      "- 随机种子：123",
+      "- 软件与包版本记录：`sessionInfo()` 或 renv 锁文件",
+      "- SAP 冻结日期 / 确认人：",
+      "- 偏离记录：见 `DECISIONS.md`",
+      "",
+      "## 版本记录",
+      "",
+      "| 日期 | 版本 | 变更 | 确认人 |",
+      "|------|------|------|--------|",
+      sprintf("| %s | 0.1 | 初始化草案 | 待确认 |", today)),
+    file.path(proj, "SAP.md"), useBytes = TRUE
+  )
+
+  # 探索实验总索引：记录全部尝试，主线只接收过门禁结果 ----
+  writeLines(
+    c("# 探索实验索引",
+      "",
+      "每次尝试在看结果前登记一行，并在对应目录建立 `PLAN.md`；完成后更新状态和 `FINDINGS.md`。",
+      "失败、持平与未采用的尝试同样保留，避免重复试验和选择性报告。未合并结果不得写入主 `results.yaml`。",
+      "",
+      "| 实验ID | 日期 | 问题 / 假设 | 主线基线 | 唯一改动 | 数据切分与主指标 | 预设晋级标准 | 状态 | 目录 |",
+      "|--------|------|-------------|----------|----------|------------------|--------------|------|------|"),
+    file.path(proj, "09_backup/EXPERIMENTS.md"), useBytes = TRUE
+  )
+
   # BACKLOG.md --------------------------------------------
   writeLines(
     c("# BACKLOG · 待补清单",
@@ -141,11 +284,6 @@ init_project <- function(name,
       "",
       "| 待完善内容 | 完善方式 | 重要性 | 状态 |",
       "|------------|----------|--------|------|",
-      "| 【方法】主分析可加竞争风险模型作敏感性分析 | AI | 建议 |  |",
-      "| 【数据】缺基线用药史，需回原始库提取或问数据方 | 人工 | 必补 |  |",
-      sprintf("| 【数据】（示例已完成）省界 GeoJSON 已下载，出地图用 | AI | 建议 | ✅ %s |", today),
-      "",
-      "（首次使用删除上面三行示例）",
       "",
       "## 已移出主流程（挪至 09_backup，留指针不留正文）",
       "",
@@ -175,13 +313,13 @@ init_project <- function(name,
       "09_backup/     # 归档",
       "```",
       "",
-      "另有 `BACKLOG.md`（待补清单）：缺文献 / 缺数据 / 缺方法 / 下一步规划随时记录，规划时先看它。",
+      "研究方案见 `PROTOCOL.md`，预设统计分析见 `SAP.md`；缺口统一记入 `BACKLOG.md`，全部探索尝试登记于 `09_backup/EXPERIMENTS.md`。",
       "",
       "## 快速开始",
       "",
-      "1. 把原始数据放入 `01_data/rawdata/`",
-      "2. 填写 `01_data/README.md` 数据字典",
-      "3. 锁口径：打开 `CLAUDE.md`，填\"口径锁定\"节（Codex 由 `AGENTS.md` 自动指向该单源）",
+      "1. 填写并确认 `PROTOCOL.md` 与 `SAP.md`，冻结主要口径和预设分析",
+      "2. 把原始数据放入 `01_data/rawdata/`，填写 `01_data/README.md` 数据字典",
+      "3. 同步 `CLAUDE.md` 的口径锁定节（Codex 由 `AGENTS.md` 指向该单源）",
       "4. 开始清洗：打开 `02_code/01_data_cleaning.R`"),
     file.path(proj, "README.md"), useBytes = TRUE
   )
@@ -191,7 +329,7 @@ init_project <- function(name,
     c("# 结果单一真源（machine-readable）。数字只在此处改；",
       "# 下游论文/报告/PPT 一律 val(\"07_paper/results.yaml\", \"key\") 取数，禁手敲。",
       "# 改下游须先回写此处再向其余下游传播（双向一致性）。",
-      "# 写入与渲染用 r-biostats/scripts/emit_summary.R 的 add_result()；",
+      "# 写入与渲染用 02_code/vendored/emit_summary.R 的 add_result()；",
       "# 0_result_summaries.md 由 render_summary_md() 从本文件生成，勿手改 md。",
       "meta:",
       "  project: \"[项目名]\"",
@@ -201,7 +339,7 @@ init_project <- function(name,
       "#    label: S2 vs S1 组间差异",
       "#    section: 主要结果",
       "#    source: 02_code/03_main.R",
-      "#    table: Table2",
+      "#    table: [由 table_path(\"main_effect\") 生成]",
       "#    raw: {est: -1.82, ci_low: -3.29, ci_high: -0.36, p: 0.015, unit: kg}",
       "#    rendered: {full: \"...\", est_ci: \"...\", p: \"...\"}",
       "#    interp: \"结论/效应解读（人写）；数字变了会自动标 interp_review 待复核\"",
@@ -244,6 +382,60 @@ init_project <- function(name,
     file.path(proj, "01_data/README.md"), useBytes = TRUE
   )
 
+  # 02_code 口径与 registry 单一真源 --------------------
+  writeLines(
+    c("# 全项目口径常量单一真源 ----------------------------------",
+      "ORDERED_LEVELS <- list()",
+      "",
+      "lv <- function(name) {",
+      "  if (!name %in% names(ORDERED_LEVELS)) stop(\"未在 ORDERED_LEVELS 注册：\", name)",
+      "  ORDERED_LEVELS[[name]]",
+      "}",
+      "",
+      "PALETTE <- c(\"#00468B\", \"#ED0000\", \"#42B540\", \"#0099B4\",",
+      "             \"#925E9F\", \"#FDAF91\", \"#AD002A\", \"#1B1919\")",
+      "DIGITS_EST <- 2L",
+      "DIGITS_P <- 3L",
+      "P_FLOOR <- 0.001"),
+    file.path(proj, "02_code/conventions.R"), useBytes = TRUE
+  )
+
+  writeLines(
+    c("source(\"02_code/conventions.R\", encoding = \"UTF-8\")",
+      "",
+      "# 顺序 = 论文行文顺序 = 自动编号；新增 / 退役 / 调序只改下列清单。",
+      "TABLE_REGISTRY <- character()",
+      "TABLE_S_REGISTRY <- character()",
+      "FIG_REGISTRY <- character()",
+      "FIG_S_REGISTRY <- character()",
+      "",
+      "table_path <- function(stem) {",
+      "  i <- match(stem, TABLE_REGISTRY)",
+      "  if (!is.na(i)) return(sprintf(\"03_tables/Table%d_%s.xlsx\", i, stem))",
+      "  i <- match(stem, TABLE_S_REGISTRY)",
+      "  if (!is.na(i)) return(sprintf(\"03_tables/supplementary/TableS%d_%s.xlsx\", i, stem))",
+      "  stop(\"stem 不在 table registry：\", stem)",
+      "}",
+      "",
+      "fig_path <- function(stem, ext = \"png\") {",
+      "  ext <- tolower(ext)",
+      "  if (!ext %in% c(\"png\", \"pdf\")) stop(\"图件扩展名只允许 png 或 pdf\")",
+      "  i <- match(stem, FIG_REGISTRY)",
+      "  if (!is.na(i)) return(sprintf(\"04_figures/Fig%d_%s.%s\", i, stem, ext))",
+      "  i <- match(stem, FIG_S_REGISTRY)",
+      "  if (!is.na(i)) return(sprintf(\"04_figures/supplementary/FigS%d_%s.%s\", i, stem, ext))",
+      "  stop(\"stem 不在 figure registry：\", stem)",
+      "}"),
+    file.path(proj, "02_code/config.R"), useBytes = TRUE
+  )
+
+  copied <- file.copy(
+    unname(helper_sources),
+    file.path(proj, "02_code/vendored", paste0(names(helper_sources), ".R")),
+    overwrite = TRUE
+  )
+  if (!all(copied)) stop("项目 helper 复制失败；初始化未通过可复现性门禁")
+
   # 02_code/01_data_cleaning.R ----------------------------
   cleaning_r <- c(
     "# ============================================================",
@@ -251,7 +443,7 @@ init_project <- function(name,
     "# 目的：从 01_data/rawdata/ 读取原始数据，清洗为分析用数据集",
     "# 输入：01_data/rawdata/xxx.csv",
     "# 输出：06_results/cohort_clean.xlsx（表格化数据一律 xlsx；06_results 按内容命名不编号）",
-    "#       03_tables/Table0_flowchart.xlsx",
+    "#       06_results/sample_flow.xlsx（样本损失链中间表；最终流程图经 fig_path() 输出）",
     "# ============================================================",
     "",
     "library(tidyverse)",
@@ -259,6 +451,7 @@ init_project <- function(name,
     "library(writexl)",
     "",
     'here::i_am("02_code/01_data_cleaning.R")',
+    'source("02_code/config.R", encoding = "UTF-8")',
     "set.seed(123)",
     "",
     "# 1. 读取 ----------------------------------------------------",
@@ -270,14 +463,15 @@ init_project <- function(name,
     "# step2 <- step1 |> filter(age >= 18)",
     "",
     "# 3. 编码分类变量 --------------------------------------------",
+    "# 先在 conventions.R 注册 levels，再用 lv()；不要在阶段脚本散落水平顺序。",
     "# cohort <- step2 |>",
-    "#   mutate(sex = factor(sex, levels = c(1, 2), labels = c('Male', 'Female')))",
+    "#   mutate(sex = factor(sex, levels = lv('sex')))",
     "",
     "# 4. 保存 ----------------------------------------------------",
     '# writexl::write_xlsx(cohort, "06_results/cohort_clean.xlsx")',
     "",
     '# flowchart <- tibble(step = ..., n = ..., loss = ...)',
-    '# writexl::write_xlsx(flowchart, "03_tables/Table0_flowchart.xlsx")',
+    '# writexl::write_xlsx(flowchart, "06_results/sample_flow.xlsx")',
     "",
     'message("清洗完成（模板，待填充实际逻辑）")'
   )
@@ -311,7 +505,10 @@ init_project <- function(name,
       "*.bak"),
     file.path(proj, ".gitignore"), useBytes = TRUE
   )
-  file.create(file.path(proj, "01_data/rawdata/.gitkeep"))
+  keep_dirs <- c("01_data/rawdata", "03_tables", "03_tables/supplementary",
+                 "04_figures", "04_figures/supplementary", "05_reports",
+                 "06_results", "09_backup")
+  invisible(file.create(file.path(proj, keep_dirs, ".gitkeep")))
 
   # .Rproj ------------------------------------------------
   writeLines(
@@ -335,59 +532,11 @@ init_project <- function(name,
   # 咨询模式：预建一个结果包骨架 --------------------------
   if (mode == "consulting") {
     pack_name <- sprintf("结果-%s-主题占位", today_md)
-    pack <- file.path(proj, "05_reports", pack_name)
-    invisible(lapply(
-      file.path(pack, c("data", "code", "06_results", "tables", "figures")),
-      dir.create, recursive = TRUE, showWarnings = FALSE
-    ))
-
-    writeLines(
-      c(sprintf("# %s", pack_name),
-        "",
-        "（首次使用请把\"主题占位\"改成实际主题，例如\"训练测试集\"）",
-        "",
-        "## 这份文件夹是什么",
-        "",
-        "[一句话说明]",
-        "",
-        "## 怎么看结果",
-        "",
-        "- 方法与结论 → `01_方法与结果.docx`",
-        "- 表格 → `tables/`",
-        "- 图件 → `figures/`",
-        "",
-        "## 怎么重现",
-        "",
-        "1. 在 RStudio 打开 `run_all.R`",
-        "2. Session → Set Working Directory → To Source File Location",
-        "3. Ctrl+Shift+Enter 运行全文"),
-      file.path(pack, "00_客户说明.md"), useBytes = TRUE
-    )
-
-    writeLines(
-      c("# ============================================================",
-        sprintf("# %s · 一键复现脚本", pack_name),
-        "# ============================================================",
-        "",
-        'if (!file.exists("run_all.R")) stop("工作目录错了")',
-        "",
-        'required_pkgs <- c("tidyverse", "readxl", "writexl", "ggsci", "ragg")',
-        "missing_pkgs <- setdiff(required_pkgs, rownames(installed.packages()))",
-        'if (length(missing_pkgs) > 0) install.packages(missing_pkgs)',
-        "",
-        'scripts <- list.files("code", pattern = "^[0-9]{2}_.*\\\\.R$", full.names = TRUE) |> sort()',
-        "set.seed(123)",
-        'for (s in scripts) { cat("执行：", s, "\\n"); source(s, encoding = "UTF-8") }',
-        'writeLines(capture.output(sessionInfo()), "sessionInfo.txt")',
-        'cat("\\n全部分析已复现；表格见 tables/，图件见 figures/\\n")'),
-      file.path(pack, "run_all.R"), useBytes = TRUE
-    )
-
-    writeLines(
-      c(sprintf("# %s", pack_name),
-        "",
-        "交付包骨架已就绪。文件清单见 `00_客户说明.md`。"),
-      file.path(pack, "README.md"), useBytes = TRUE
+    scaffold_env <- new.env(parent = globalenv())
+    sys.source(consulting_scaffold_source, envir = scaffold_env)
+    scaffold_env$create_delivery_pack(
+      pack_name,
+      root = file.path(proj, "05_reports")
     )
   }
 
@@ -396,10 +545,6 @@ init_project <- function(name,
     old <- setwd(proj)
     on.exit(setwd(old))
     try(system2("git", c("init", "--quiet")), silent = TRUE)
-    try(system2("git", c("add", ".")), silent = TRUE)
-    try(system2("git",
-                c("commit", "-m", "chore: init project skeleton", "--quiet")),
-        silent = TRUE)
   }
 
   # 完成报告 ----------------------------------------------
@@ -410,10 +555,11 @@ init_project <- function(name,
   message("类型：", type_name, "  |  模式：", mode)
   message("")
   message("下一步：")
-  message("  1. 把原始数据放入 ", file.path(name, "01_data/rawdata/"))
-  message("  2. 填写 ", file.path(name, "01_data/README.md"), "（数据字典）")
-  message("  3. 锁口径：打开 ", file.path(name, "CLAUDE.md"))
+  message("  1. 填写并确认 ", file.path(name, "PROTOCOL.md"), " 与 SAP.md")
+  message("  2. 把原始数据放入 ", file.path(name, "01_data/rawdata/"), " 并填写数据字典")
+  message("  3. 同步口径：打开 ", file.path(name, "CLAUDE.md"))
   message("  4. 开始清洗：", file.path(name, "02_code/01_data_cleaning.R"))
+  if (git) message("Git 已初始化；首次 commit 须在完整检查后征询用户确认。")
 
   invisible(proj)
 }

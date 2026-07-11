@@ -45,7 +45,10 @@ description: |
 ```
 {project}/
 ├── CLAUDE.md              # 继承 + 项目专属规则
+├── AGENTS.md              # Codex 指向 CLAUDE.md 单源
 ├── README.md              # 项目说明
+├── PROTOCOL.md            # 研究问题、设计、伦理与报告规范
+├── SAP.md                 # 冻结的统计分析计划与偏离规则
 ├── SESSION_LOG.md         # 操作日志
 ├── DECISIONS.md           # 方法决策
 ├── BACKLOG.md             # 待补清单（缺文献/数据/方法/规划，全程只增不删）
@@ -56,14 +59,18 @@ description: |
 │   └── README.md          # 数据字典
 ├── 02_code/
 │   ├── config.R           # 口径常量 + 表图 registry（空清单起步，实现见 references/registry.md）
+│   ├── conventions.R      # 有序水平、配色、数字格式单源
+│   ├── vendored/          # 项目自包含的结果/出图 helper
 │   └── 01_data_cleaning.R # 清洗脚本模板
-├── 03_tables/
-├── 04_figures/
+├── 03_tables/supplementary/
+├── 04_figures/supplementary/
 ├── 05_reports/
 ├── 06_results/
 ├── 07_paper/
+│   ├── results.yaml
 │   └── 0_result_summaries.md
 └── 09_backup/
+    └── EXPERIMENTS.md      # 全部探索尝试索引，含失败/未采用结果
 ```
 
 ### 咨询模式（B）· 额外装配
@@ -117,11 +124,12 @@ init_project(
 > 本文件每 session 必然注入；下面这份清单 = 不依赖记忆、不重读全项目即可进入状态的最短路径。
 
 1. 本文件「口径锁定」节 —— **当前口径以此为准**（下游全部服从）
-2. `07_paper/results.yaml` —— 结果机器单源（→ 派生 `0_result_summaries.md`；下游 `val()` 取数）
-3. `DECISIONS.md` 末尾 2~3 条 —— 最近的方法变更与原因
-4. `BACKLOG.md` 主表未完成项 —— 全程累积的待补项（缺文献 / 数据 / 方法 / 下一步规划），挑「完善方式=AI」的必补项作为下一步候选
-5. `02_code/conventions.R` + `config.R` —— 口径常量真源（有序因子序 / 配色 / registry）
-6. `SESSION_LOG.md` 末 10 行 —— 上次做到哪、卡在哪
+2. `PROTOCOL.md` + `SAP.md` —— 研究问题、预设分析及偏离边界
+3. `07_paper/results.yaml` —— 结果机器单源（→ 派生 `0_result_summaries.md`；下游 `val()` 取数）
+4. `DECISIONS.md` 末尾 2~3 条 —— 最近的方法变更与原因
+5. `BACKLOG.md` 主表未完成项 —— 全程累积的待补项（缺文献 / 数据 / 方法 / 下一步规划），挑「完善方式=AI」的必补项作为下一步候选
+6. `02_code/conventions.R` + `config.R` —— 口径常量真源（有序因子序 / 配色 / registry）
+7. `SESSION_LOG.md` 末 10 行 —— 上次做到哪、卡在哪
 
 **信任但验证**：涉及数字的任务，先快速核 `0_result_summaries` 关键数字 vs 最新输出文件 mtime / registry 是否对得上；对不上立即触发 `epi-project-audit`，不盲信本文件可能已陈旧的内容。
 
@@ -228,6 +236,13 @@ init_project(
 |--------------|----------------------|------|------|
 ```
 
+### 4.3c `PROTOCOL.md`、`SAP.md` 与探索实验索引
+
+- `PROTOCOL.md` 在分析前锁定研究问题、设计、人群、暴露/干预、终点、伦理/注册和适用报告规范。
+- `SAP.md` 在查看主要结果前锁定 estimand、分析人群、缺失处理、主要模型、诊断、多重性、验证切分、敏感性和亚组分析。
+- 任何方案偏离写入 `DECISIONS.md`，并区分预设与探索性。
+- 每次试新方法先登记 `09_backup/EXPERIMENTS.md`，再在独立目录写 `PLAN.md`、运行并以 `FINDINGS.md` 记录全部结果。未过门禁的结果不进入主 `results.yaml`；需展示时只进入消融/探索性附录。
+
 ### 4.4 结果单源 `07_paper/results.yaml`（+ 派生 `0_result_summaries.md`）
 
 `init_project.R` 生成**机器可读单源** `results.yaml` 与其派生 `0_result_summaries.md`（标注勿手改）。
@@ -274,7 +289,7 @@ schema 与用法详见 r-biostats `references/result-summary-schema.md`。改数
 # 目的：从 01_data/rawdata/ 读取原始数据，清洗为分析用数据集
 # 输入：01_data/rawdata/xxx.csv
 # 输出：06_results/cohort_clean.xlsx（表格化数据一律 xlsx；06_results 按内容命名不编号）
-#       03_tables/Table0_flowchart.xlsx（样本量损失链）
+#       06_results/sample_flow.xlsx（样本量损失链中间表）
 # 依赖脚本：（无，本脚本是上游）
 # ============================================================
 
@@ -283,6 +298,7 @@ library(here)
 library(writexl)
 
 here::i_am("02_code/01_data_cleaning.R")
+source("02_code/config.R", encoding = "UTF-8")
 set.seed(123)
 
 # 1. 读取 ----------------------------------------------------
@@ -302,7 +318,7 @@ n_step2 <- nrow(step2)
 # 3. 编码分类变量 --------------------------------------------
 cohort <- step2 |>
   mutate(
-    sex = factor(sex, levels = c(1, 2), labels = c("Male", "Female")),
+    sex = factor(sex, levels = lv("sex")),
     # bmi_cat = cut(bmi, c(0, 18.5, 24, 28, Inf),
     #               labels = c("Underweight", "Normal", "Overweight", "Obese"))
   )
@@ -315,7 +331,7 @@ flowchart <- tibble(
   n = c(n_raw, n_step1, n_step2),
   loss = c(0, n_raw - n_step1, n_step1 - n_step2)
 )
-writexl::write_xlsx(flowchart, "03_tables/Table0_flowchart.xlsx")
+writexl::write_xlsx(flowchart, "06_results/sample_flow.xlsx")
 
 message("清洗完成。最终样本量: ", nrow(cohort))
 ```
@@ -377,17 +393,19 @@ LineEndingConversion: Posix
 ```
 【项目初始化自检】
   - 7 层目录已建
-  - CLAUDE.md / SESSION_LOG.md / DECISIONS.md / BACKLOG.md 就绪
+  - CLAUDE.md / AGENTS.md / PROTOCOL.md / SAP.md / 日志与待补清单就绪
+  - config.R / conventions.R / vendored helpers 与空 registry 就绪
+  - 探索实验索引 09_backup/EXPERIMENTS.md 就绪
   - 数据字典模板已生成
   - 清洗脚本模板已生成 (02_code/01_data_cleaning.R)
   - .gitignore 已配置（原始数据不入 git）
-  - Git 仓库已初始化 + 首次提交
+  - Git 仓库已初始化；首次提交等待用户确认
   - [咨询模式] 交付包骨架已预建：05_reports/结果-{今日}/
   
 下一步：
-  1. 把原始数据放入 01_data/rawdata/
-  2. 填写 01_data/README.md 数据字典
-  3. 锁口径：打开 CLAUDE.md，填"口径锁定"节
+  1. 填写并确认 PROTOCOL.md 与 SAP.md
+  2. 把原始数据放入 01_data/rawdata/，填写数据字典
+  3. 同步 CLAUDE.md 的口径锁定节
   4. 开始清洗：打开 02_code/01_data_cleaning.R
 ```
 
@@ -409,6 +427,7 @@ LineEndingConversion: Posix
 |------|------|
 | 用户给了中文项目名 | 建议改 snake_case，但尊重用户决定；中文名要警示 shell 转义问题 |
 | 目录已存在 | 停下来问，不覆盖；默认建议加 `_v2` 后缀 |
-| 不在 git 仓库但用户要启 git | 先 `git init`，.gitignore 必须在第一次 commit 之前存在 |
+| 不在 git 仓库但用户要启 git | 只执行 `git init`；完整检查后先征询用户，获准才首次 commit |
+| 想试多个模型或参数 | 先登记 `09_backup/EXPERIMENTS.md` 并隔离运行；不得直接改主流程或只保留最好结果 |
 | 咨询模式没指定主题 | 用 `主题占位`，在 `00_客户说明.md` 里提示用户改 |
 | 用户说"要不要用 renv" | 默认 **否**；除非用户明确要求，renv 对小咨询任务反而拖累速度 |
