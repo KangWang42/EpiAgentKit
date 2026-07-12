@@ -147,7 +147,7 @@ description: |
   未显式引用的主表图兜底补在结论后。
 - **表**：用 Markdown 表格语法把 `03_tables/` 的关键数据写进 md，拼装脚本转三线表。一张论文表=一个
   主题；切面多了进同一表多 sheet（出表交给 r-biostats/xlsx，本技能只把关键行写进正文）。
-- **图**：`![图注](04_figures/FigN_xxx.png)` 嵌入；图注在图下方。出图规范走 `publication-figures`。
+- **图**：统计结果图走 `publication-figures`，以 PDF+PNG 为主；流程图、研究框架、技术路线、机制图、包含关系图等非统计图解走 `svg-diagrams`，保留 `FigN_xxx.svg` 源文件与同名 PNG 预览。Word 不直接支持 SVG 时嵌入 PNG，SVG 不得丢失。`![图注](04_figures/FigN_xxx.png)` 随文嵌入，图注在图下方。
 - **公式**：`$$LaTeX$$` 标记，拼装时转 OMML；**禁止**输出 `RPF_(i)`、`²⁹` 这类 fallback 字符串。
 - **上下标**：用 `~i~` / `^2^`，拼装转真上下标，不要直接塞 Unicode 下标字符。
 
@@ -218,7 +218,7 @@ description: |
 ## 八、与生态内其他技能的衔接
 
 - 开工前对齐 `biostat-principles`（口径与可复现）。
-- 结果/图表由 `r-biostats` 产出、`publication-figures` 出图、`xlsx` 出表；本技能只消费，不改分析。
+- 结果由 `r-biostats` 产出；统计图由 `publication-figures` 生成，流程/结构/机制等非统计图解由 `svg-diagrams` 生成，`xlsx` 出表；本技能只消费，不改分析。
 - 所有学术文本润色统一走 `academic-humanizer` 的事实锁、中文或英文语体与论断强度门禁；Word 细排可叫 `docx`。
 - 结果变 → 回写 `07_paper/results.yaml` 并重新派生 `0_result_summaries.md`；方法变 → 回写 `DECISIONS.md`；操作完 → `SESSION_LOG.md`。
 

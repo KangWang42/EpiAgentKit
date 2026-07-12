@@ -14,11 +14,13 @@
     rep.three_line_table(header=[...], rows=[...])      # 或 rep.table_from_xlsx(path, sheet)
     rep.note("注：随机入组 N 按 ...")
     rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 路径由 registry/export map 提供
-    rep.save("报告_v1.docx", also_md=True)              # 默认同时落 .md
+    rep.save("报告.docx", also_md=True)                 # 默认同时落 .md；当前版稳定命名
 
 正文内容必须由调用方按 skill 铁律手写（数据有源、完整段落、零编造），
 本模块只负责"排版正确"，不负责"内容生成"。
 """
+from pathlib import Path
+
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -231,15 +233,23 @@ class Report:
 
     # ---- 图 ----
     def figure(self, path, caption=None, width_in=6.0):
+        source = Path(path)
+        embed = source
+        if source.suffix.lower() == ".svg":
+            embed = source.with_suffix(".png")
+            if not embed.is_file():
+                raise FileNotFoundError(
+                    f"SVG 图解缺少同名 PNG 回退：{embed}。先按 svg-diagrams 生成预览。"
+                )
         p = self.doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.add_run().add_picture(path, width=Inches(width_in))
+        p.add_run().add_picture(str(embed), width=Inches(width_in))
         if caption:
             c = self.doc.add_paragraph()
             c.alignment = WD_ALIGN_PARAGRAPH.CENTER
             c.paragraph_format.space_before = Pt(2)
             setfont(c.add_run(caption), size=self.body_size, bold=True)
-        self._md.append(f"\n![{caption or ''}]({path})")
+        self._md.append(f"\n![{caption or ''}]({source.as_posix()})")
         if caption:
             self._md.append(f"**{caption}**\n")
 

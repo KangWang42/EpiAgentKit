@@ -19,7 +19,8 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 | ----------------------------------------------------------------------------- | --------------------------------- |
 | 新建项目 / 初始化                                                             | `project-init`                  |
 | 任意 R/Python 统计分析、回归、生存分析、清洗                                  | `r-biostats`                    |
-| **任意出图（ggplot / matplotlib / 论文图件）**                          | **`publication-figures`** |
+| 统计图 / 数据图 / 论文结果图（ggplot / matplotlib）                         | `publication-figures`           |
+| 流程图 / 结构图 / 技术路线 / 包含关系 / 概念框架 / 机制示意                 | `svg-diagrams`                  |
 | 写/改论文任一部件（中/英）、投稿材料、排版 docx                               | `academic-publishing`           |
 | 写/改报告类 docx（分析报告 / 进展 / 指南 / 手册 / 说明 / 备忘，非论文非投稿） | `report-writing`                |
 | 学术/专业文本润色、文风统一、审稿回复与科研邮件                               | `academic-humanizer`            |
@@ -52,7 +53,7 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 
 ### 03_tables / 04_figures
 
-- 主表 `Table{N}_{描述}.xlsx`、附表 `TableS{N}_...`；主图 `Fig{N}_{描述}.{png,pdf}`、附图 `FigS{N}_...`；N **按论文行文顺序连续**；附表附图一律放 `supplementary/`。
+- 主表 `Table{N}_{描述}.xlsx`、附表 `TableS{N}_...`；主图 `Fig{N}_{描述}.{png,pdf,svg}`、附图 `FigS{N}_...`；N **按论文行文顺序连续**；SVG 仅用于流程、结构、机制等非统计图解，统计图仍以 PDF+PNG 为主；附表附图一律放 `supplementary/`。
 - **编号唯一来源 = registry 有序清单**（编号 = 清单中的位置）：产出脚本一律 `table_path(stem)` / `fig_path(stem,ext)` 取路径，**NEVER 在脚本里写死 `Table6` / `Fig3` 数字**；增删 / 改序 / 退役只改这一个清单，后续号自动前移补齐，永不断号。实现细节见 `project-init` 的 `references/registry.md`；新项目初始化时即建空 registry。
 - **NEVER** 长期保留无编号文件（`Table_xxx` / `Fig_xxx`）；**NEVER** 同主题留多版本（旧版进 `09_backup/`）；**NEVER** 导出 `.tsv`。
 - **一个主题/一张论文表 = 一个 xlsx**；多切面（双 outcome / 多模型 / 亚组）放同一 xlsx 多 sheet，sheet 名即论文小表名。**NEVER** 在交付 xlsx 放 cover / 说明 / 数据字典等解说性 sheet（方法说明写进论文正文）。
@@ -101,7 +102,7 @@ R / Python 流行病学项目的硬红线。详细领域规范在各 skill；本
 01_data/rawdata/   只读原始数据
 02_code/           NN_描述.{R,py} 连续编号 + config.R / conventions.R
 03_tables/         Table{N}_..xlsx（附表进 supplementary/）
-04_figures/        Fig{N}_..{png,pdf}（附图进 supplementary/）
+04_figures/        Fig{N}_..{png,pdf,svg}（SVG 用于非统计图解；附图进 supplementary/）
 05_reports/        可分享结果包（consulting-delivery）
 06_results/        中间对象，按内容命名不编号
 07_paper/          论文文稿 + results.yaml（结果机器单源）+ 0_result_summaries.md（由其派生）
@@ -122,7 +123,7 @@ PROTOCOL.md / SAP.md（研究方案与预设分析）；CLAUDE.md / SESSION_LOG.
 - [ ] 所有编号序列连续无断号（code / tables / figures / data 及分享包同名目录）；增删后立即重排 01..N，含改脚本输出路径与正文引用
 - [ ] 表格化中间数据存 xlsx；交付物零 rds/RData
 - [ ] 有序分类变量表行序 / 图轴序符合 `conventions.R::ORDERED_LEVELS`，脚本未手写 level 向量（一律 `lv()` 取）
-- [ ] 图件满足 `publication-figures` 规范（mm 尺寸 / PDF+PNG 双存 / 字体嵌入）
+- [ ] 统计图满足 `publication-figures`；流程/结构/机制图满足 `svg-diagrams`（载体比例 / 对齐 / SVG+PNG 预览）
 - [ ] 代码已实跑验证 + 全量扫 error/warning
 - [ ] 论文 / 交付文本已按 `academic-publishing` 与 `academic-humanizer` 清单自检
 - [ ] 方法变 → `DECISIONS.md`；结果变 → `07_paper/results.yaml`（→ 派生 `0_result_summaries.md`）；操作完 → `SESSION_LOG.md`；发现缺口/想法 → `BACKLOG.md`；会话收尾 → 项目 `CLAUDE.md` 当前状态块

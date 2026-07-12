@@ -24,6 +24,7 @@ scripts/           双平台用户配置同步工具
 | 执行层 | `project-init` | 一键创建标准项目结构、PROTOCOL/SAP 前置门禁、探索实验索引与表图 registry（研究 / 咨询双模式） |
 | | `r-biostats` | R 统计分析执行层：PLAN-CODE-RUN-VERIFY-DOC 五阶状态机，描述统计 / 回归 / 生存 / 中介 / Meta |
 | | `publication-figures` | 发表级图件规范（mm 尺寸 / 字体嵌入 / 期刊配色）+ 约 180 种图选型画廊 + 170 余套配方代码 |
+| | `svg-diagrams` | 论文、报告与 PPT 的 SVG 原生流程图、结构图、技术路线、包含关系图和机制示意，含对齐、比例与载体适配规范 |
 | 产出层 | `academic-publishing` | 中英双语论文生成（GB/T 7713 / IMRaD）+ 投稿材料（Cover Letter / 审稿回复 / Highlights），逐部件门控写作 |
 | | `consulting-delivery` | 咨询交付包标准：自包含、一键复现、空 session 实测、终检清单 |
 | | `sysu-ppt` | 组会汇报 PPT 代码化生成（R officer，含可复用模板与工具库） |
@@ -46,14 +47,36 @@ Codex 的目录和调用约定见官方 [Build skills](https://learn.chatgpt.com
 
 ## 安装与同步
 
-克隆后运行仓库自带同步器，将规则、skills 与 hook 脚本部署到两个用户配置目录：
+克隆后优先运行交互式配置器。它会依次询问目标平台（Claude / Codex / 两者）和导入范围（规则、PPT、论文报告、统计分析、自选 skills 或完整环境），避免为只需要一个技能的用户复制整个配方库：
 
 ```bash
 git clone git@github.com:KangWang42/EpiClaude.git ~/epiclaude
-python ~/epiclaude/scripts/sync_user_configs.py --target all
+python ~/epiclaude/scripts/configure_user.py
 ```
 
-只安装一个平台时用 `--target claude` 或 `--target codex`。Codex 官方用户目录默认为 `~/.agents/skills/`；若现有环境明确从 `~/.codex/skills/` 发现技能，可传 `--codex-skills-dir ~/.codex/skills`。每次更新仓库后重跑同一命令即可同步；脚本只覆盖 EpiClaude 管理的规则、skills 和 hook 脚本，不改认证、模型或其他个人配置。
+也可非交互快速安装：
+
+```bash
+# 只为 Codex 安装 PPT + SVG 图解技能包，不覆盖共享规则与 hooks
+python ~/epiclaude/scripts/configure_user.py --target codex --preset ppt --yes
+
+# 为 Claude 与 Codex 完整安装，覆盖同名 EpiClaude 规则/skills/hooks，保留无关个人配置
+python ~/epiclaude/scripts/configure_user.py --target all --preset full --yes
+
+# 自选 skills；依赖项会自动补齐
+python ~/epiclaude/scripts/configure_user.py --target all --preset custom \
+  --skills sysu-ppt,report-writing --with-rules --yes
+```
+
+底层同步器仍可直接使用：
+
+```bash
+python ~/epiclaude/scripts/sync_user_configs.py --target all
+python ~/epiclaude/scripts/sync_user_configs.py --target codex \
+  --components skills --skills sysu-ppt,svg-diagrams
+```
+
+只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex 官方用户目录默认为 `~/.agents/skills/`；若现有环境明确从 `~/.codex/skills/` 发现技能，可传 `--codex-skills-dir ~/.codex/skills`。同步器跳过内容完全相同的文件，只覆盖同名 EpiClaude 文件，不改认证、模型或无关个人配置。
 
 也可只挑选单个技能目录复制到相应 `skills/` 目录。修改技能后若界面未刷新，重启对应客户端。
 
@@ -145,7 +168,7 @@ Windows 若 hook 进程找不到 `bash`，把命令改为 `"%USERPROFILE%\\.code
 PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
 02_code/           config.R / conventions.R / vendored/ + 编号脚本（连续编号，<= 10 个）
 03_tables/         Table{N}_*.xlsx（附表进 supplementary/）
-04_figures/        Fig{N}_*.{pdf,png}
+04_figures/        Fig{N}_*.{pdf,png,svg}（SVG 用于非统计图解）
 05_reports/        对外交付包
 06_results/        中间对象（按内容命名不编号）
 07_paper/          论文 + results.yaml（数字机器单源）+ 0_result_summaries.md（由其派生）
@@ -162,4 +185,5 @@ PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
 
 - `docx` / `pdf` / `pptx` / `xlsx` / `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录内保留原始 LICENSE；本仓库对 `skill-creator` 做了 Windows 中文环境的编码修复。
 - `sysu-ppt` 内置的两套 PPT 模板版权归中山大学所有，仅供学习参考；如有顾虑请删除 `skills/sysu-ppt/assets/` 后使用自己的模板。
+- `sysu-ppt` 默认使用中大医学棕榈封面模板（原模板2）；原公卫学院绿色模板保留为 `模板2` 可选项。
 - 中文技能（原则 / 分析 / 论文 / 交付 / 审查 / 学术审校）为本仓库原创，针对中文学术写作与中文期刊投稿场景做了大量特化。

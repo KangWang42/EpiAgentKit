@@ -34,7 +34,7 @@ description: |
    一律成段。执行摘要可用"加粗标签 + 整句"的短段，不用点。
 5. **图表自动入文（核心铁律）**：报告涉及的数据，凡 `03_tables/`（xlsx）有对应表就**读取并作为三线表插入正文**、
    凡 `04_figures/` 有对应图就**作为图片嵌入正文**，不要只在文字里描述"见表 X / 如图所示"而不放实际表图。
-   表题在表上方、图题在图下方，编号按行文顺序连续。无现成表图时按 `publication-figures` / `xlsx` 规范现做再插。
+   表题在表上方、图题在图下方，编号按行文顺序连续。无现成表图时，统计图按 `publication-figures`、流程/结构/机制等非统计图解按 `svg-diagrams`、表格按 `xlsx` 规范现做再插。
 6. **默认双格式输出（核心铁律）**：每次生成报告**同时产出 `.md` 与 `.docx` 两个版本**（同名、同目录、内容一致），
    除非用户明确只要其中一种。md 供快速预览 / 版本管理，docx 为正式交付件。
 7. **结论先行**：报告开头先给最重要的结论 / 要点 / 行动项，再展开依据。读者读前 1/4 就应抓住核心。
@@ -137,8 +137,7 @@ def setfont(run, cn="宋体", en="Times New Roman", size=10.5, bold=False, itali
   无现成 xlsx 时据 `0_result_summaries.md` 构表。表题在表**上方**（"表1 …"），必要时表下加一行斜体小号注。
 
 **图片（自动嵌入）**：
-- **自动嵌图**：报告涉及的图，从 `04_figures/` 取对应 PNG 用 `doc.add_picture(path, width=Inches(...))` 嵌入正文，
-  居中，宽度约占版心（通常 5.5–6.5 in）。图题在图**下方**（"图1 …"）。无现成图时按 `publication-figures` 现做再插。
+- **自动嵌图**：报告涉及的统计图从 `04_figures/` 取对应 PNG；流程图、结构图、包含关系图、概念框架和机制示意先按 `svg-diagrams` 生成同名 SVG+PNG，再用 PNG 作为 python-docx 回退嵌入，SVG 源文件必须保留。图片居中，宽度约占版心（通常 5.5–6.5 in），图题在图**下方**（"图1 …"）。
 
 - **全文字体一律黑色**（标题、正文、表头、注释一律纯黑 #000000）；**不用彩色字、不用灰字**；层级靠字号与加粗区分，不靠颜色。**禁止表情符号、禁止彩虹色、禁止默认灰底。**
 
@@ -152,7 +151,7 @@ def setfont(run, cn="宋体", en="Times New Roman", size=10.5, bold=False, itali
 干净标题页（无灰字）、三线表、`table_from_xlsx()` 自动取数、`figure()` 嵌图、统计符号斜体、`save(..., also_md=True)` 同时落 md+docx。
 内容仍须按铁律手写传入，助手只保证排版正确。
 
-**流程**：定读者与目的 → 选骨架（§二）→ 取数（铁律 1）→ 收集要插的表（`03_tables/` xlsx）与图（`04_figures/` png）
+**流程**：定读者与目的 → 选骨架（§二）→ 取数（铁律 1）→ 收集要插的表（`03_tables/` xlsx）与图（统计图 PNG；非统计图 SVG+PNG）
 → 逐节"结论先行 + 完整段落"写，把数与图表引用织进正文 → 套排版（§四，宋体/Times、三线表、表上图下、统计符号斜体）
 → 归档被替代的整组旧版并登记索引 → **同时生成稳定同名 `.md` 与 `.docx`** → 自检 → 交付时先报告"已自检项"。
 
@@ -177,6 +176,6 @@ def setfont(run, cn="宋体", en="Times New Roman", size=10.5, bold=False, itali
 
 - 正式论文 / 投稿材料 → `academic-publishing`（本 skill 不处理论文）。
 - 学术与专业文风润色 → 统一使用 `academic-humanizer` 的事实锁、语体和论断证据门禁。
-- 出图 → `publication-figures`。
+- 统计图 → `publication-figures`；流程、结构、机制和包含关系图 → `svg-diagrams`。
 - docx 底层机制（读改、转换、模板）→ `docx` skill。
 - 咨询交付 zip 打包 → `consulting-delivery`（本 skill 只管报告本身的写作与排版）。

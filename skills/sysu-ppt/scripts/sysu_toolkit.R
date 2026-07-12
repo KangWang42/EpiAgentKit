@@ -13,6 +13,13 @@ library(officer)
 library(magrittr)
 library(flextable)
 
+# 在 source() 执行时立即锁定 skill 根目录；不要等到函数调用后再读 sys.frame()。
+.SYSU_TOOLKIT_FILE <- tryCatch(
+  normalizePath(sys.frame(1)$ofile, winslash = "/", mustWork = TRUE),
+  error = function(e) NA_character_
+)
+.SYSU_SKILL_DIR <- if (!is.na(.SYSU_TOOLKIT_FILE)) dirname(dirname(.SYSU_TOOLKIT_FILE)) else NA_character_
+
 # 结果单一真源取数（C1：下游取数禁手敲）。数字只在 results.yaml 改，PPT 一律 val() 取。
 # 用法：tx(paste0("S2 vs S1 差异 ", val("07_paper/results.yaml", "S2_vs_S1_diff")))
 val <- function(path, key, which = "full") {
@@ -50,18 +57,18 @@ G <- list(
 )
 
 # ============================================================================
-# 1b. 模板注册表（default = template.pptx；medical = 用户称"模板2"）
+# 1b. 模板注册表（default = 原模板2中大医学；public_health = 原模板1公卫学院）
 # ----------------------------------------------------------------------------
-# 不同模板的版式命名不同：default 用英文(Title and Content/Blank)，
-# medical 用中文(标题和内容/空白)。master 名在 sysu_init 时从文件读取，避免抄错隐藏字符。
+# 不同模板的版式命名不同：default 用中文布局名，public_health 用英文布局名。
+# master 名在 sysu_init 时从文件读取，避免抄错隐藏字符。
 # ============================================================================
 .TPL_REG <- list(
   default = list(file = "template.pptx",
-                 cover = "标题幻灯片", content = "Title and Content", blank = "Blank",
-                 cover_style = "green"),
-  medical = list(file = "template-中大医学演示.pptx",
                  cover = "1_空白", content = "3_空白", blank = "空白",
-                 cover_style = "native")   # 用带设计的版式：1_空白(棕榈封面)/3_空白(绿框+校徽+水印)
+                 cover_style = "native"),  # 棕榈封面/绿框+校徽+水印
+  public_health = list(file = "template-公卫学院.pptx",
+                       cover = "标题幻灯片", content = "Title and Content", blank = "Blank",
+                       cover_style = "green")
 )
 .ACT <- new.env(parent = emptyenv())   # 活动模板：master/cover/content/blank/cover_style
 
@@ -70,8 +77,7 @@ G <- list(
     Sys.getenv("EPICLAUDE_SKILLS"),
     "~/.claude/skills", "~/.agents/skills", "~/.codex/skills"
   ))
-  cand <- c(tryCatch(file.path(dirname(dirname(sys.frame(1)$ofile)), "assets"),
-                     error = function(e) NA),
+  cand <- c(if (!is.na(.SYSU_SKILL_DIR)) file.path(.SYSU_SKILL_DIR, "assets") else NA_character_,
             "assets", "../assets",
             file.path(skill_roots[nzchar(skill_roots)], "sysu-ppt", "assets"))
   cand <- cand[!is.na(cand)]
@@ -157,7 +163,7 @@ num_item <- function(num, head, body = "", size = SYSU$sz$body) {
 .add_title <- function(ppt, title) {
   ppt <- ph_with(ppt, value = fpar(ftext(title, .title_fp()), fp_p = .title_par()),
                  location = G$title)
-  # 模板2(无绿色竖条、段落边框不渲染)：补一条可靠的 flextable 横线
+  # 当前默认中大医学模板无绿色竖条、段落边框不渲染：补一条可靠的 flextable 横线
   if (exists("cover_style", envir = .ACT) && identical(.L("cover_style"), "native")) {
     ppt <- ph_with(ppt, .rule_ft(11.5),
                    location = ph_location(left = 0.92, top = 1.04, width = 11.5, height = 0.06))
@@ -179,11 +185,25 @@ num_item <- function(num, head, body = "", size = SYSU$sz$body) {
   ppt
 }
 
-# 读取 PNG 真实像素宽高比（w/h）
+# 读取 SVG viewBox 宽高比（w/h），不依赖渲染器。
+.svg_aspect <- function(path) {
+  x <- paste(readLines(path, warn = FALSE, encoding = "UTF-8"), collapse = " ")
+  m <- regexec("viewBox\\s*=\\s*['\"]\\s*[-+0-9.eE]+[ ,]+[-+0-9.eE]+[ ,]+([-+0-9.eE]+)[ ,]+([-+0-9.eE]+)\\s*['\"]",
+               x, perl = TRUE)
+  hit <- regmatches(x, m)[[1]]
+  if (length(hit) == 3) {
+    wh <- suppressWarnings(as.numeric(hit[2:3]))
+    if (all(is.finite(wh)) && all(wh > 0)) return(wh[1] / wh[2])
+  }
+  NA_real_
+}
+
+# 读取 PNG 或 SVG 的真实宽高比（w/h）
 .img_aspect <- function(path) {
   if (requireNamespace("png", quietly = TRUE) && grepl("\\.png$", path, ignore.case = TRUE)) {
     d <- dim(png::readPNG(path)); return(d[2] / d[1])
   }
+  if (grepl("\\.svg$", path, ignore.case = TRUE)) return(.svg_aspect(path))
   NA_real_
 }
 # 等比缩放：在 (max_w × max_h) 盒子内按图片真实比例取最大尺寸，保证视觉不变形
@@ -202,17 +222,28 @@ num_item <- function(num, head, body = "", size = SYSU$sz$body) {
   ph_location(left = left, top = top, width = w, height = h)
 }
 
+# officer 0.7.x 支持 SVG，但写入 PPTX 时需要 rsvg；提前给出明确错误。
+.external_media <- function(path, width, height) {
+  if (grepl("\\.svg$", path, ignore.case = TRUE) &&
+      !requireNamespace("rsvg", quietly = TRUE)) {
+    stop("嵌入 SVG 需要 R 包 rsvg；请安装后重试，或使用同名 PNG 回退。")
+  }
+  external_img(path, width = width, height = height)
+}
+
 # ============================================================================
 # 4. 公开 API
 # ============================================================================
 
 #' 初始化（读取模板并清空所有演示页，仅保留母版布局）
-#' @param template 模板：可填 "default"/"模板1"（默认 template.pptx）、
-#'   "medical"/"模板2"（template-中大医学演示.pptx），或一个 .pptx 完整路径。
+#' @param template 模板："default"/"模板1"/"medical" 为默认中大医学模板；
+#'   "模板2"/"公卫" 为原公卫学院模板；也可传 .pptx 完整路径。
 sysu_init <- function(template = "default") {
   key <- switch(template,
                 "default" = "default", "模板1" = "default", "模板一" = "default",
-                "medical" = "medical", "模板2" = "medical", "模板二" = "medical",
+                "medical" = "default", "医学" = "default",
+                "public-health" = "public_health", "public_health" = "public_health",
+                "模板2" = "public_health", "模板二" = "public_health", "公卫" = "public_health",
                 NA_character_)
   if (!is.na(key)) {
     reg  <- .TPL_REG[[key]]
@@ -220,7 +251,7 @@ sysu_init <- function(template = "default") {
     path <- if (!is.na(ad)) file.path(ad, reg$file) else reg$file
   } else {
     path <- template                                  # 当作完整路径
-    reg  <- if (grepl("中大医学|medical", path)) .TPL_REG$medical else .TPL_REG$default
+    reg  <- if (grepl("公卫|public", path, ignore.case = TRUE)) .TPL_REG$public_health else .TPL_REG$default
   }
   if (is.na(path) || !file.exists(path)) stop("找不到模板文件: ", path)
   ppt <- read_pptx(path)
@@ -238,7 +269,7 @@ sysu_init <- function(template = "default") {
 sysu_add_cover <- function(ppt, title, subtitle = "", author = "", date = "") {
   ppt <- add_slide(ppt, layout = .L("cover"), master = .L("master"))
   if (identical(.L("cover_style"), "native")) {
-    # 模板2(1_空白)：棕榈实景照片 + 绿色色带已由版式提供；在绿带上叠白色标题文字。
+    # 默认中大医学模板：棕榈实景照片 + 绿色色带已由版式提供；在绿带上叠白色标题文字。
     ppt <- ph_with(ppt, fpar(ftext(title, .fp(46, TRUE, "white")), fp_p = fp_par(text.align = "center")),
                    location = ph_location(left = 0.6, top = 2.42, width = 12.1, height = 1.1))
     info <- block_list(
@@ -311,7 +342,7 @@ sysu_add_text_image <- function(ppt, title, content, img, img_w, img_h,
     ppt <- ph_with(ppt, content, location = ph_location(left = 7.0, top = 1.62, width = 5.55, height = 5.40))
     ix <- 0.85 + (5.55 - img_w) / 2
   }
-  ppt <- ph_with(ppt, external_img(img, width = img_w, height = img_h),
+  ppt <- ph_with(ppt, .external_media(img, width = img_w, height = img_h),
                  location = ph_location(left = max(ix, 0.6), top = img_top, width = img_w, height = img_h))
   if (!is.null(caption)) {
     cy <- img_top + img_h + 0.05
@@ -327,7 +358,7 @@ sysu_add_image_caption <- function(ppt, title, img, img_w, img_h, content, img_p
   ppt <- .new(ppt, title)
   wh <- .fit(img, img_w, img_h); img_w <- wh[["w"]]; img_h <- wh[["h"]]  # 等比缩放
   if (img_pos == "top") {
-    ppt <- ph_with(ppt, external_img(img, width = img_w, height = img_h),
+    ppt <- ph_with(ppt, .external_media(img, width = img_w, height = img_h),
                    location = .center_img(img, img_w, img_h, top = 1.55))
     cap_h <- 0
     if (!is.null(caption)) {
@@ -341,7 +372,7 @@ sysu_add_image_caption <- function(ppt, title, img, img_w, img_h, content, img_p
                                           height = 7.0 - (1.55 + img_h + 0.15 + cap_h)))
   } else {
     ppt <- ph_with(ppt, content, location = G$top_box)
-    ppt <- ph_with(ppt, external_img(img, width = img_w, height = img_h),
+    ppt <- ph_with(ppt, .external_media(img, width = img_w, height = img_h),
                    location = .center_img(img, img_w, img_h, top = 2.95))
   }
   .add_pagenum(ppt)
@@ -352,7 +383,7 @@ sysu_add_image <- function(ppt, title, img, img_w, img_h, caption = NULL) {
   ppt <- .new(ppt, title)
   wh <- .fit(img, img_w, img_h); img_w <- wh[["w"]]; img_h <- wh[["h"]]  # 等比缩放
   top <- if (is.null(caption)) NULL else 1.62
-  ppt <- ph_with(ppt, external_img(img, width = img_w, height = img_h),
+  ppt <- ph_with(ppt, .external_media(img, width = img_w, height = img_h),
                  location = .center_img(img, img_w, img_h, top = top))
   if (!is.null(caption)) {
     left <- (13.333 - img_w) / 2

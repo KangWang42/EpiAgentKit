@@ -3,12 +3,13 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-from sync_user_configs import mirror_tree
+from sync_user_configs import SKILL_MANIFEST, mirror_tree, sync_skills
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,6 +79,18 @@ def main() -> int:
             "def atomic_copy_file(",
             "def mirror_tree(",
             "mirror_tree(skill, destination)",
+            "include: set[str] | None",
+            "prune_stale: bool = True",
+        ),
+        "skills/svg-diagrams/SKILL.md": (
+            "序号与标题第一行垂直居中对齐",
+            "包含关系图",
+            "SVG XML 有效",
+        ),
+        "skills/sysu-ppt/scripts/sysu_toolkit.R": (
+            'default = list(file = "template.pptx"',
+            'public_health = list(file = "template-公卫学院.pptx"',
+            ".svg_aspect <- function(path)",
         ),
     }
     for relative, fragments in required.items():
@@ -109,6 +122,10 @@ def main() -> int:
         "scripts/sync_user_configs.py": (
             "safe_remove(destination, target, dry_run)",
             "shutil.copytree(skill, destination)",
+        ),
+        "skills/sysu-ppt/references/figure_snippets.R": (
+            "flow_box <- function",
+            "make_decision <- function",
         ),
     }
     for relative, fragments in forbidden.items():
@@ -142,6 +159,43 @@ def main() -> int:
                 problems.append("sync mirror self-test: temporary files remain")
         except OSError as error:
             problems.append(f"sync mirror self-test failed: {error}")
+
+    with tempfile.TemporaryDirectory(prefix="epiclaude_partial_sync_") as directory:
+        test_root = Path(directory)
+        repo = test_root / "repo"
+        target = test_root / "target"
+        for name in ("alpha", "beta"):
+            skill = repo / "skills" / name
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: test\n---\n", encoding="utf-8"
+            )
+        target.mkdir(parents=True)
+        (target / "alpha").mkdir()
+        (target / "alpha" / "SKILL.md").write_text("existing\n", encoding="utf-8")
+        (target / SKILL_MANIFEST).write_text(
+            '{"managed": ["alpha"]}\n', encoding="utf-8"
+        )
+        try:
+            sync_skills(
+                repo,
+                target,
+                exclude=set(),
+                dry_run=False,
+                include={"beta"},
+                prune_stale=False,
+            )
+            managed = set(
+                json.loads(
+                    (target / SKILL_MANIFEST).read_text(encoding="utf-8")
+                )["managed"]
+            )
+            if managed != {"alpha", "beta"}:
+                problems.append("partial sync self-test: managed manifest was not merged")
+            if not (target / "alpha" / "SKILL.md").is_file():
+                problems.append("partial sync self-test: existing managed skill was removed")
+        except OSError as error:
+            problems.append(f"partial sync self-test failed: {error}")
 
     if problems:
         print("Workflow contract audit failed:")
