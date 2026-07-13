@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 960"
+  font-family="Source Han Sans SC, Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#909090"/>
+    </marker>
+  </defs>
+  <rect data-role="canvas" x="0" y="0" width="1200" height="960" fill="#FFFFFF"/>
+
+  <rect id="candidate" data-role="flow-main" data-layer="main" x="120" y="40" width="520" height="100" rx="1"
+    fill="#EAF2FB" stroke="#2E5C8A" stroke-width="1.5"/>
+  <text data-role="flow-label" x="380" y="82" text-anchor="middle" fill="#444444" font-size="24" font-weight="500">候选研究对象</text>
+  <text data-role="flow-label" x="380" y="115" text-anchor="middle" fill="#444444" font-size="22" font-weight="400">n = 1,248</text>
+
+  <rect id="eligible" data-role="flow-main" data-layer="main" x="120" y="280" width="520" height="100" rx="1"
+    fill="#EAF2FB" stroke="#2E5C8A" stroke-width="1.5"/>
+  <text data-role="flow-label" x="380" y="322" text-anchor="middle" fill="#444444" font-size="24" font-weight="500">完成资格筛选</text>
+  <text data-role="flow-label" x="380" y="355" text-anchor="middle" fill="#444444" font-size="22" font-weight="400">n = 1,162</text>
+
+  <rect id="complete" data-role="flow-main" data-layer="main" x="120" y="520" width="520" height="100" rx="1"
+    fill="#EAF2FB" stroke="#2E5C8A" stroke-width="1.5"/>
+  <text data-role="flow-label" x="380" y="562" text-anchor="middle" fill="#444444" font-size="24" font-weight="500">主要变量资料完整</text>
+  <text data-role="flow-label" x="380" y="595" text-anchor="middle" fill="#444444" font-size="22" font-weight="400">n = 1,068</text>
+
+  <rect id="analysis" data-role="flow-terminal" data-layer="terminal" x="120" y="800" width="520" height="120" rx="1"
+    fill="#EAF2FB" stroke="#2E5C8A" stroke-width="1.5"/>
+  <text data-role="flow-label" x="380" y="850" text-anchor="middle" fill="#444444" font-size="24" font-weight="500">纳入主要分析</text>
+  <text data-role="flow-label" x="380" y="885" text-anchor="middle" fill="#444444" font-size="22" font-weight="400">n = 946</text>
+
+  <rect id="exclude-missing" data-role="flow-exclusion" data-layer="exclusions" x="760" y="165" width="380" height="90" rx="1"
+    fill="#F2F2F2" stroke="#8A8A8A" stroke-width="1.25"/>
+  <text data-role="flow-label" x="950" y="202" text-anchor="middle" fill="#444444" font-size="21" font-weight="400">排除：关键基线信息缺失</text>
+  <text data-role="flow-label" x="950" y="231" text-anchor="middle" fill="#444444" font-size="20" font-weight="400">n = 86</text>
+
+  <rect id="exclude-ineligible" data-role="flow-exclusion" data-layer="exclusions" x="760" y="405" width="380" height="90" rx="1"
+    fill="#F2F2F2" stroke="#8A8A8A" stroke-width="1.25"/>
+  <text data-role="flow-label" x="950" y="442" text-anchor="middle" fill="#444444" font-size="21" font-weight="400">排除：不符合纳入标准</text>
+  <text data-role="flow-label" x="950" y="471" text-anchor="middle" fill="#444444" font-size="20" font-weight="400">n = 94</text>
+
+  <rect id="exclude-followup" data-role="flow-exclusion" data-layer="exclusions" x="760" y="665" width="380" height="90" rx="1"
+    fill="#F2F2F2" stroke="#8A8A8A" stroke-width="1.25"/>
+  <text data-role="flow-label" x="950" y="702" text-anchor="middle" fill="#444444" font-size="21" font-weight="400">排除：随访资料不完整</text>
+  <text data-role="flow-label" x="950" y="731" text-anchor="middle" fill="#444444" font-size="20" font-weight="400">n = 122</text>
+
+  <path data-role="connector" data-arrow="true" d="M380 140 V280" fill="none" stroke="#909090" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path data-role="connector" data-arrow="true" d="M380 210 H760" fill="none" stroke="#909090" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path data-role="connector" data-arrow="true" d="M380 380 V520" fill="none" stroke="#909090" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path data-role="connector" data-arrow="true" d="M380 450 H760" fill="none" stroke="#909090" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path data-role="connector" data-arrow="true" d="M380 620 V800" fill="none" stroke="#909090" stroke-width="1.75" marker-end="url(#arrow)"/>
+  <path data-role="connector" data-arrow="true" d="M380 710 H760" fill="none" stroke="#909090" stroke-width="1.75" marker-end="url(#arrow)"/>
+</svg>
