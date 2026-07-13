@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Interactively install EpiClaude for Claude Code, Codex, or both."""
+"""Install shared rules, skills, and hooks for Claude Code, Codex, or both."""
 
 from __future__ import annotations
 
@@ -8,61 +8,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-PRESETS = {
-    "ppt": {
-        "biostat-principles",
-        "publication-figures",
-        "svg-diagrams",
-        "sysu-ppt",
-        "pptx",
-    },
-    "writing": {
-        "biostat-principles",
-        "academic-humanizer",
-        "academic-publishing",
-        "report-writing",
-        "publication-figures",
-        "svg-diagrams",
-        "docx",
-        "xlsx",
-    },
-    "analysis": {
-        "biostat-principles",
-        "r-biostats",
-        "publication-figures",
-        "xlsx",
-    },
-}
-
-DEPENDENCIES = {
-    "academic-publishing": {
-        "biostat-principles",
-        "academic-humanizer",
-        "publication-figures",
-        "svg-diagrams",
-    },
-    "consulting-delivery": {
-        "biostat-principles",
-        "r-biostats",
-        "academic-humanizer",
-    },
-    "epi-project-audit": {"biostat-principles"},
-    "project-init": {"biostat-principles"},
-    "publication-figures": {"biostat-principles"},
-    "r-biostats": {"biostat-principles", "publication-figures"},
-    "report-writing": {
-        "academic-humanizer",
-        "publication-figures",
-        "svg-diagrams",
-        "docx",
-    },
-    "sysu-ppt": {"publication-figures", "svg-diagrams", "pptx"},
-}
+from config_core import PRESETS, available_skills, csv_values, expand_dependencies
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+def parse_args(
+    argv: list[str] | None = None, prog: str | None = None
+) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog=prog, description=__doc__)
     parser.add_argument("--target", choices=("claude", "codex", "all"))
     parser.add_argument(
         "--preset",
@@ -75,36 +27,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--home", type=Path)
-    parser.add_argument("--codex-skills-dir", type=Path)
-    return parser.parse_args()
-
-
-def available_skills(root: Path) -> list[str]:
-    return sorted(
-        item.name
-        for item in (root / "skills").iterdir()
-        if item.is_dir() and (item / "SKILL.md").is_file()
+    parser.add_argument("--codex-skills-dir", type=Path, action="append")
+    parser.add_argument(
+        "--codex-layout",
+        choices=("auto", "agents", "codex", "both"),
+        default="auto",
     )
-
-
-def csv_values(values: list[str] | None) -> set[str]:
-    result: set[str] = set()
-    for value in values or []:
-        result.update(item.strip() for item in value.split(",") if item.strip())
-    return result
-
-
-def expand_dependencies(selected: set[str]) -> set[str]:
-    expanded = set(selected)
-    changed = True
-    while changed:
-        changed = False
-        for skill in tuple(expanded):
-            additions = DEPENDENCIES.get(skill, set()) - expanded
-            if additions:
-                expanded.update(additions)
-                changed = True
-    return expanded
+    parser.add_argument("--skip-doctor", action="store_true")
+    return parser.parse_args(argv)
 
 
 def ask_choice(prompt: str, choices: dict[str, str]) -> str:
@@ -199,8 +129,8 @@ def plan_install(
     return components, skills
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None, prog: str | None = None) -> int:
+    args = parse_args(argv, prog)
     root = args.repo_root.expanduser().resolve()
     if not (root / "scripts" / "sync_user_configs.py").is_file():
         raise FileNotFoundError(f"Not an EpiClaude repository: {root}")
@@ -223,6 +153,8 @@ def main() -> int:
     print(f"- 组件：{', '.join(sorted(components))}")
     print(f"- Skills：{'全部' if skills is None else ', '.join(sorted(skills))}")
     print("- 行为：覆盖同名 EpiClaude 文件，保留无关个人配置")
+    if target in {"codex", "all"}:
+        print(f"- Codex skills 布局：{args.codex_layout}")
     if "hooks" in components:
         print("- Hooks：复制脚本并合并客户端配置；Windows 自动使用 Git Bash 启动器")
 
@@ -249,8 +181,9 @@ def main() -> int:
         command.extend(("--skills", ",".join(sorted(skills))))
     if args.home:
         command.extend(("--home", str(args.home)))
-    if args.codex_skills_dir:
-        command.extend(("--codex-skills-dir", str(args.codex_skills_dir)))
+    for directory in args.codex_skills_dir or []:
+        command.extend(("--codex-skills-dir", str(directory)))
+    command.extend(("--codex-layout", args.codex_layout))
     if args.dry_run:
         command.append("--dry-run")
 
@@ -260,7 +193,26 @@ def main() -> int:
     if args.dry_run:
         print("演练完成，未写入用户配置。")
     else:
-        print("配置完成。若客户端未识别新 skills 或 hooks，请重启对应客户端。")
+        if not args.skip_doctor:
+            doctor = [
+                sys.executable,
+                str(root / "scripts" / "epiclaude.py"),
+                "doctor",
+                "--target",
+                target,
+                "--repo-root",
+                str(root),
+                "--codex-layout",
+                args.codex_layout,
+            ]
+            if args.home:
+                doctor.extend(("--home", str(args.home)))
+            for directory in args.codex_skills_dir or []:
+                doctor.extend(("--codex-skills-dir", str(directory)))
+            checked = subprocess.run(doctor, cwd=root)
+            if checked.returncode:
+                return checked.returncode
+        print("配置与双端验收完成。若客户端未刷新，请重启对应客户端。")
     return 0
 
 

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -27,6 +28,25 @@ LINE_BUDGET = 200
 
 def read(relative: str) -> str:
     return (ROOT / relative).read_text(encoding="utf-8")
+
+
+def snapshot_tree(root: Path) -> dict[str, str]:
+    return {
+        path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+
+
+def run_epiclaude(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(ROOT / "scripts/epiclaude.py"), *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
 
 
 def run_hook_script(
@@ -121,6 +141,24 @@ def main() -> int:
             "mirror_tree(skill, destination)",
             "include: set[str] | None",
             "prune_stale: bool = True",
+            "def update_install_manifest(",
+        ),
+        "scripts/config_core.py": (
+            'PROJECT_NAME = "EpiClaude"',
+            'INSTALL_MANIFEST = ".epiclaude-install.json"',
+            "def resolve_codex_skill_dirs(",
+            'layout == "both"',
+        ),
+        "scripts/configure_user.py": (
+            "from config_core import PRESETS",
+            '"doctor"',
+            '"--skip-doctor"',
+        ),
+        "scripts/epiclaude.py": (
+            "def tree_matches(",
+            "def run_doctor(",
+            'command == "install"',
+            'command == "sync"',
         ),
         "hooks/_emit_notice.py": (
             '"hookEventName": "PostToolUse"',
@@ -182,6 +220,11 @@ def main() -> int:
         "scripts/sync_user_configs.py": (
             "safe_remove(destination, target, dry_run)",
             "shutil.copytree(skill, destination)",
+        ),
+        "scripts/configure_user.py": (
+            "PRESETS = {",
+            "DEPENDENCIES = {",
+            "def csv_values(",
         ),
         "skills/sysu-ppt/references/figure_snippets.R": (
             "flow_box <- function",
@@ -342,6 +385,96 @@ def main() -> int:
                 problems.append("hook sync self-test: POSIX command does not use bash")
         except (OSError, ValueError) as error:
             problems.append(f"hook sync self-test failed: {error}")
+
+    with tempfile.TemporaryDirectory(prefix="epiclaude_install_audit_") as directory:
+        home = Path(directory)
+        for platform, config_name in ((".claude", "settings.json"), (".codex", "hooks.json")):
+            platform_home = home / platform
+            (platform_home / "hooks").mkdir(parents=True)
+            (platform_home / config_name).write_text(
+                json.dumps({"model": "personal-model"}), encoding="utf-8"
+            )
+            (platform_home / "hooks" / "custom.sh").write_text(
+                "#!/usr/bin/env bash\n", encoding="utf-8"
+            )
+
+        install = [
+            "install",
+            "--target",
+            "all",
+            "--preset",
+            "custom",
+            "--skills",
+            "academic-humanizer",
+            "--with-rules",
+            "--with-hooks",
+            "--yes",
+            "--home",
+            str(home),
+            "--codex-layout",
+            "both",
+        ]
+
+        first = run_epiclaude(install)
+        if first.returncode:
+            problems.append(
+                "dual-platform install self-test failed: "
+                + (first.stdout + first.stderr).strip()
+            )
+        else:
+            expected_paths = (
+                home / ".claude/CLAUDE.md",
+                home / ".codex/AGENTS.md",
+                home / ".claude/skills/academic-humanizer/SKILL.md",
+                home / ".agents/skills/academic-humanizer/SKILL.md",
+                home / ".codex/skills/academic-humanizer/SKILL.md",
+                home / ".claude/.epiclaude-install.json",
+                home / ".codex/.epiclaude-install.json",
+            )
+            missing = [str(path) for path in expected_paths if not path.is_file()]
+            if missing:
+                problems.append(
+                    "dual-platform install self-test: missing files: " + ", ".join(missing)
+                )
+
+            for config_path in (home / ".claude/settings.json", home / ".codex/hooks.json"):
+                config = json.loads(config_path.read_text(encoding="utf-8"))
+                if config.get("model") != "personal-model":
+                    problems.append(
+                        f"dual-platform install self-test: personal config changed: {config_path}"
+                    )
+
+            before = snapshot_tree(home)
+            second = run_epiclaude(install)
+            if second.returncode:
+                problems.append(
+                    "dual-platform reinstall self-test failed: "
+                    + (second.stdout + second.stderr).strip()
+                )
+            elif snapshot_tree(home) != before:
+                problems.append("dual-platform reinstall self-test: install is not idempotent")
+
+            doctor = run_epiclaude(
+                [
+                    "doctor",
+                    "--target",
+                    "all",
+                    "--home",
+                    str(home),
+                    "--codex-layout",
+                    "both",
+                    "--json",
+                ]
+            )
+            try:
+                doctor_payload = json.loads(doctor.stdout)
+            except json.JSONDecodeError:
+                doctor_payload = {}
+            if doctor.returncode or not doctor_payload.get("ok"):
+                problems.append(
+                    "dual-platform doctor self-test failed: "
+                    + (doctor.stdout + doctor.stderr).strip()
+                )
 
     notice_helper = ROOT / "hooks" / "_emit_notice.py"
     for client, expected_key in (("claude", "hookSpecificOutput"), ("codex", "systemMessage")):

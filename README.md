@@ -11,7 +11,7 @@ CLAUDE.md          双平台全局规则源（安装为 Claude 的 CLAUDE.md / C
 AGENTS.md          本仓库 contributor guide
 skills/            Agent Skills 标准技能集（按需加载，渐进披露）
 hooks/             Claude Code / Codex 共用的确定性检查脚本
-scripts/           双平台用户配置同步工具
+scripts/           双平台安装、同步与验收工具
 ```
 
 ## 技能架构
@@ -40,6 +40,8 @@ scripts/           双平台用户配置同步工具
 |---|---|---|
 | 全局规则 | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` |
 | 用户 skills | `~/.claude/skills/` | `~/.agents/skills/` |
+| hooks | `~/.claude/hooks/` + `settings.json` | `~/.codex/hooks/` + `hooks.json` |
+| 安装清单 | `~/.claude/.epiclaude-install.json` | `~/.codex/.epiclaude-install.json` |
 | 显式调用 | `/skill-name` | `$skill-name`（或 `/skills` 选择） |
 | 自动触发 | 按 `description` | 按 `description` |
 
@@ -47,36 +49,41 @@ Codex 的目录和调用约定见官方 [Build skills](https://learn.chatgpt.com
 
 ## 安装与同步
 
-克隆后优先运行交互式配置器。它会依次询问目标平台（Claude / Codex / 两者）和导入范围（规则、PPT、论文报告、统计分析、自选 skills 或完整环境），避免为只需要一个技能的用户复制整个配方库：
+克隆后运行统一入口。交互式安装会询问目标平台和导入范围，安装完成后自动执行 `doctor` 验收：
 
 ```bash
 git clone git@github.com:KangWang42/EpiClaude.git ~/epiclaude
-python ~/epiclaude/scripts/configure_user.py
+python ~/epiclaude/scripts/epiclaude.py install
 ```
 
-也可非交互快速安装：
+常用命令：
 
 ```bash
 # 只为 Codex 安装 PPT + SVG 图解技能包，不覆盖共享规则与 hooks
-python ~/epiclaude/scripts/configure_user.py --target codex --preset ppt --yes
+python ~/epiclaude/scripts/epiclaude.py install --target codex --preset ppt --yes
 
 # 为 Claude 与 Codex 完整安装，覆盖同名 EpiClaude 规则/skills/hooks，保留无关个人配置
-python ~/epiclaude/scripts/configure_user.py --target all --preset full --yes
+python ~/epiclaude/scripts/epiclaude.py install --target all --preset full --yes
 
 # 自选 skills；依赖项会自动补齐
-python ~/epiclaude/scripts/configure_user.py --target all --preset custom \
+python ~/epiclaude/scripts/epiclaude.py install --target all --preset custom \
   --skills sysu-ppt,report-writing --with-rules --yes
-```
 
-底层同步器仍可直接使用：
+# 从仓库同步已安装内容并复核双端一致性
+python ~/epiclaude/scripts/epiclaude.py sync --target all
+python ~/epiclaude/scripts/epiclaude.py doctor --target all
 
-```bash
-python ~/epiclaude/scripts/sync_user_configs.py --target all
-python ~/epiclaude/scripts/sync_user_configs.py --target codex \
+# 查看预设与可安装技能
+python ~/epiclaude/scripts/epiclaude.py list
+
+# 只同步部分 Codex skills
+python ~/epiclaude/scripts/epiclaude.py sync --target codex \
   --components skills --skills sysu-ppt,svg-diagrams
 ```
 
-只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex 官方用户目录默认为 `~/.agents/skills/`；若现有环境明确从 `~/.codex/skills/` 发现技能，可传 `--codex-skills-dir ~/.codex/skills`。同步器跳过内容完全相同的文件，只覆盖同名 EpiClaude 文件，不改认证、模型或无关个人配置。
+只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex skills 布局由 `--codex-layout` 控制：`agents` 使用官方 `~/.agents/skills/`，`codex` 使用兼容目录 `~/.codex/skills/`，`both` 双写，默认 `auto` 使用官方目录并自动兼容已由本项目管理的旧目录。
+
+仓库是唯一配置源。同步器只覆盖同名 EpiClaude 文件并合并受管 hook，不改认证、模型、密钥或无关个人配置；每个平台的安装清单记录组件、skills 目录和来源，供 `doctor` 逐文件验收。原命令 `configure_user.py` 与 `sync_user_configs.py` 保留兼容，但新文档与自动化统一使用 `epiclaude.py`。
 
 也可只挑选单个技能目录复制到相应 `skills/` 目录。修改技能后若界面未刷新，重启对应客户端。
 
@@ -88,6 +95,7 @@ python ~/epiclaude/scripts/sync_user_configs.py --target codex \
 
 ```bash
 python scripts/audit_workflow_contracts.py
+python scripts/epiclaude.py doctor --target all
 ```
 
 该检查覆盖全部 skill 元数据、`CLAUDE.md` / `AGENTS.md` 的 200 行预算，以及初始化、探索隔离、vendored helper 和提交授权等跨 skill 契约。行为发生变化时仍须对相关 R / Python / Bash 脚本做语法检查与最小实跑。
@@ -110,10 +118,10 @@ python scripts/audit_workflow_contracts.py
 
 ```bash
 # 仅安装并注册 hooks
-python scripts/sync_user_configs.py --target all --components hooks
+python scripts/epiclaude.py sync --target all --components hooks
 
 # 安装 PPT 技能包并同时注册 hooks
-python scripts/configure_user.py --target all --preset ppt --with-hooks --yes
+python scripts/epiclaude.py install --target all --preset ppt --with-hooks --yes
 ```
 
 Windows 配置由同步器统一通过 `run_hook.cmd` 定位 Git Bash，不依赖 hook 进程的 `PATH`；macOS / Linux 使用 `bash`。再次执行会替换旧的 EpiClaude hook 命令并保持幂等，不会重复注册。图件与 `.rds` 检查属于非阻断提醒：Claude 通过 `additionalContext`、Codex 通过 `systemMessage` 接收，并以退出码 0 完成，不会显示为 hook failed；真正违反 rawdata 保护或代码门禁时仍返回阻断状态。每个 hook 只在命中目标文件或目录时动作；无 `jq` 时由 Python 解析 stdin JSON。

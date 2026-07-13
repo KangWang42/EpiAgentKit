@@ -13,9 +13,10 @@ python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
 bash -n hooks/*.sh
 python -m py_compile path/to/changed_script.py
 Rscript -e 'parse(file="path/to/changed_script.R")'
+python scripts/epiclaude.py doctor --target all
 ```
 
-The validator checks skill metadata and structure; the other commands check syntax. Run affected scripts with representative inputs when behavior changes.
+The validator checks skill metadata and structure; the other commands check syntax and installed Claude/Codex parity. Changes to the installer or synchronizer must also pass `python scripts/audit_workflow_contracts.py`, which performs an isolated dual-platform install and idempotency check. Run affected scripts with representative inputs when behavior changes.
 
 ## Coding Style & Naming Conventions
 

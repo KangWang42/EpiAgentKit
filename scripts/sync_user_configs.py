@@ -13,9 +13,17 @@ import stat
 import uuid
 from pathlib import Path
 
+from config_core import (
+    HOOK_MANIFEST,
+    INSTALL_MANIFEST,
+    INSTALL_SCHEMA,
+    PROJECT_NAME,
+    SKILL_MANIFEST,
+    csv_values,
+    load_json,
+    resolve_codex_skill_dirs,
+)
 
-SKILL_MANIFEST = ".epiclaude-managed-skills.json"
-HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 CODEX_EXCLUDES = {"skill-creator"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
 VALID_COMPONENTS = {"rules", "skills", "hooks"}
@@ -387,17 +395,51 @@ def sync_hook_config(
     atomic_write_json(config_path, updated)
 
 
-def csv_values(values: list[str] | None) -> set[str] | None:
-    if not values:
-        return None
-    result: set[str] = set()
-    for value in values:
-        result.update(item.strip() for item in value.split(",") if item.strip())
-    return result
+def update_install_manifest(
+    platform: str,
+    platform_home: Path,
+    root: Path,
+    components: set[str],
+    skill_dirs: list[Path],
+    dry_run: bool,
+) -> None:
+    path = platform_home / INSTALL_MANIFEST
+    print(f"WRITE  install manifest -> {path}")
+    if dry_run:
+        return
+
+    current = load_json(path)
+    installed_components = set(current.get("components", [])) | components
+    installed_skills = set(current.get("skills", []))
+    installed_dirs = [Path(value) for value in current.get("skill_dirs", [])]
+    if "skills" in components:
+        installed_dirs = skill_dirs
+        exclude = CODEX_EXCLUDES if platform == "codex" else set()
+        managed_sets = [
+            set(source_skills(root, exclude))
+            if same_path(root / "skills", directory)
+            else read_manifest(directory / SKILL_MANIFEST)
+            for directory in skill_dirs
+        ]
+        installed_skills = set.intersection(*managed_sets) if managed_sets else set()
+    payload = {
+        "schema": INSTALL_SCHEMA,
+        "project": PROJECT_NAME,
+        "platform": platform,
+        "source": str(root),
+        "components": sorted(installed_components),
+        "skills": sorted(installed_skills),
+        "skill_dirs": [str(path) for path in dict.fromkeys(installed_dirs)],
+        "rule_file": "CLAUDE.md" if platform == "claude" else "AGENTS.md",
+        "hook_config": "settings.json" if platform == "claude" else "hooks.json",
+    }
+    atomic_write_json(path, payload)
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description=__doc__)
+def parse_args(
+    argv: list[str] | None = None, prog: str | None = None
+) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog=prog, description=__doc__)
     parser.add_argument("--target", choices=("all", "claude", "codex"), default="all")
     parser.add_argument(
         "--components",
@@ -414,22 +456,30 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--home", type=Path, default=Path.home(), help="User home; useful for tests")
     parser.add_argument("--claude-home", type=Path)
     parser.add_argument("--codex-home", type=Path)
-    parser.add_argument("--codex-skills-dir", type=Path)
+    parser.add_argument("--codex-skills-dir", type=Path, action="append")
+    parser.add_argument(
+        "--codex-layout",
+        choices=("auto", "agents", "codex", "both"),
+        default="auto",
+    )
     parser.add_argument("--skip-hooks", action="store_true")
     parser.add_argument("--prune-codex-bundled", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv: list[str] | None = None, prog: str | None = None) -> None:
+    args = parse_args(argv, prog)
     root = args.repo_root.expanduser().resolve()
     home = args.home.expanduser().resolve()
     claude_home = (args.claude_home or home / ".claude").expanduser().resolve()
     codex_home = (args.codex_home or home / ".codex").expanduser().resolve()
-    codex_skills = (
-        args.codex_skills_dir or home / ".agents" / "skills"
-    ).expanduser().resolve()
+    codex_skill_dirs = resolve_codex_skill_dirs(
+        home,
+        codex_home,
+        explicit=args.codex_skills_dir,
+        layout=args.codex_layout,
+    )
 
     required = (root / "CLAUDE.md", root / "skills", root / "hooks")
     if not all(path.exists() for path in required):
@@ -446,7 +496,7 @@ def main() -> None:
         raise ValueError("Unknown components: " + ", ".join(sorted(unknown_components)))
     if args.skip_hooks:
         components.discard("hooks")
-    selected_skills = csv_values(args.skills)
+    selected_skills = csv_values(args.skills) or None
     if selected_skills is not None and "skills" not in components:
         raise ValueError("--skills requires --components skills")
     prune_stale = selected_skills is None
@@ -472,22 +522,31 @@ def main() -> None:
                 claude_home / "hooks",
                 args.dry_run,
             )
+        update_install_manifest(
+            "claude",
+            claude_home,
+            root,
+            components,
+            [claude_home / "skills"] if "skills" in components else [],
+            dry_run=args.dry_run,
+        )
 
     if args.target in {"all", "codex"}:
         print("\n[Codex]")
         if "rules" in components:
             sync_file(root / "CLAUDE.md", codex_home / "AGENTS.md", args.dry_run)
         if "skills" in components:
-            sync_skills(
-                root,
-                codex_skills,
-                CODEX_EXCLUDES,
-                args.dry_run,
-                include=selected_skills,
-                prune_stale=prune_stale,
-                prune_codex_bundled=args.prune_codex_bundled,
-                codex_home=codex_home,
-            )
+            for codex_skills in codex_skill_dirs:
+                sync_skills(
+                    root,
+                    codex_skills,
+                    CODEX_EXCLUDES,
+                    args.dry_run,
+                    include=selected_skills,
+                    prune_stale=prune_stale,
+                    prune_codex_bundled=args.prune_codex_bundled,
+                    codex_home=codex_home,
+                )
         if "hooks" in components:
             sync_hooks(root / "hooks", codex_home / "hooks", args.dry_run)
             sync_hook_config(
@@ -496,6 +555,14 @@ def main() -> None:
                 codex_home / "hooks",
                 args.dry_run,
             )
+        update_install_manifest(
+            "codex",
+            codex_home,
+            root,
+            components,
+            codex_skill_dirs if "skills" in components else [],
+            dry_run=args.dry_run,
+        )
 
     print("\nSync complete. Restart the client if changed skills are not visible.")
 

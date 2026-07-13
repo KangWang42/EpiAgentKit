@@ -116,7 +116,7 @@ PROTOCOL.md / SAP.md（研究方案与预设分析）；CLAUDE.md / SESSION_LOG.
   - message 用 Conventional Commits：`type(scope): 清晰动作 + 对象`；禁用 `update / changes / fix stuff / 完善一下`。非简单改动必须写 body，说明动机、关键变化、验证命令与兼容性 / 回退影响，使 `git log` 可直接回顾。
   - push 前确认当前分支与远端差异；正常推送当前分支，**NEVER force push**、不擅自 release。远端领先、冲突或无远端时停止并汇报，不改写他人历史。
   - commit 后向用户报告 hash、subject、远端分支和上一个可回退点；平台有项目 memory 时同步记录，但不得因此留下第二批未提交改动。
-  - 修改 EpiClaude 全局规则 / skills / hooks 时，以仓库为单源，运行 `python scripts/sync_user_configs.py --target all` 部署 Claude 与 Codex，校验规则和技能逐文件一致后再 commit + push。
+  - 修改 EpiClaude 全局规则 / skills / hooks 时，以仓库为单源，运行 `python scripts/epiclaude.py sync --target all` 部署 Claude 与 Codex，再用 `python scripts/epiclaude.py doctor --target all` 校验双端一致后 commit + push。
 
 ### 完成前自检清单
 
