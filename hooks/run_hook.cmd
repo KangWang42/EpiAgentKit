@@ -10,6 +10,6 @@ if not defined BASH_EXE (
   echo Git Bash not found. Install Git for Windows or put bash.exe on PATH. 1>&2
   exit /b 1
 )
-if not "%~2"=="" set "EPICLAUDE_HOOK_CLIENT=%~2"
+if not "%~2"=="" set "EPIAGENTKIT_HOOK_CLIENT=%~2"
 "%BASH_EXE%" "%~1"
 exit /b %ERRORLEVEL%

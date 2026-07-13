@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository provides Claude Code guidance for epidemiology and biostatistics. `CLAUDE.md` holds cross-task rules; `README.md` covers installation and architecture. Each `skills/` directory is self-contained: keep `SKILL.md` concise, detailed guidance in `references/`, utilities in `scripts/`, and templates or media in `assets/`. Enforcement scripts live in `hooks/`. The allowlist `.gitignore` excludes runtime state, credentials, caches, histories, and local settings.
+This repository provides shared Claude Code and Codex guidance for epidemiology and biostatistics. `CLAUDE.md` holds cross-task rules; `README.md` covers installation and architecture. Each `skills/` directory is self-contained: keep `SKILL.md` concise, detailed guidance in `references/`, utilities in `scripts/`, and templates or media in `assets/`. Enforcement scripts live in `hooks/`. The allowlist `.gitignore` excludes runtime state, credentials, caches, histories, and local settings.
 
 ## Build, Test, and Development Commands
 
@@ -13,7 +13,7 @@ python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
 bash -n hooks/*.sh
 python -m py_compile path/to/changed_script.py
 Rscript -e 'parse(file="path/to/changed_script.R")'
-python scripts/epiclaude.py doctor --target all
+python scripts/epiagentkit.py doctor --target all
 ```
 
 The validator checks skill metadata and structure; the other commands check syntax and installed Claude/Codex parity. Changes to the installer or synchronizer must also pass `python scripts/audit_workflow_contracts.py`, which performs an isolated dual-platform install and idempotency check. Run affected scripts with representative inputs when behavior changes.

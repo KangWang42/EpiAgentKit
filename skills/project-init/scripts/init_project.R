@@ -3,7 +3,7 @@
 # 一键创建卫生统计研究项目骨架
 #
 # 用法：从 Claude Code 的 ~/.claude/skills、Codex 的 ~/.agents/skills，
-#       或 EPICLAUDE_SKILLS 指定目录 source 本脚本后运行：
+#       或 EPIAGENTKIT_SKILLS 指定目录 source 本脚本后运行：
 #   init_project("cohort_smoking_chd", type = 1, mode = "research")
 #   init_project("client_xxx_survival", type = 1, mode = "consulting")
 # ============================================================
@@ -21,6 +21,7 @@ init_project <- function(name,
 
   # 项目需自包含关键 helper，避免运行时依赖仓库外相对路径。
   skill_roots <- unique(path.expand(c(
+    Sys.getenv("EPIAGENTKIT_SKILLS"),
     Sys.getenv("EPICLAUDE_SKILLS"),
     "~/.claude/skills",
     "~/.agents/skills",
@@ -32,7 +33,7 @@ init_project <- function(name,
     found <- candidates[file.exists(candidates)]
     if (!length(found)) {
       stop("缺少必需 skill 文件：", file.path(skill, relative_path),
-           "；请安装完整 skills 或设置 EPICLAUDE_SKILLS")
+           "；请安装完整 skills 或设置 EPIAGENTKIT_SKILLS")
     }
     found[[1]]
   }
@@ -78,7 +79,7 @@ init_project <- function(name,
   claude_md <- c(
     sprintf("# %s · 项目级规则", name),
     "",
-    "本项目继承 EpiClaude 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。",
+    "本项目继承 EpiAgentKit 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。",
     "`CLAUDE.md` 是项目规则单源；`AGENTS.md` 只负责指示 Codex 读取本文件，避免双份口径漂移。",
     "",
     "## 新会话必读（按序）",

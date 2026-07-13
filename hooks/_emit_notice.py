@@ -10,7 +10,10 @@ import sys
 
 def main() -> int:
     message = sys.stdin.read().strip()
-    client = os.environ.get("EPICLAUDE_HOOK_CLIENT", "claude").lower()
+    client = os.environ.get(
+        "EPIAGENTKIT_HOOK_CLIENT",
+        os.environ.get("EPICLAUDE_HOOK_CLIENT", "claude"),
+    ).lower()
     if client == "codex":
         payload = {"systemMessage": message}
     else:

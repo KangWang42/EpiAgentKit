@@ -11,6 +11,11 @@ import sys
 import tempfile
 from pathlib import Path
 
+from config_core import (
+    LEGACY_HOOK_MANIFEST,
+    LEGACY_INSTALL_MANIFEST,
+    LEGACY_SKILL_MANIFEST,
+)
 from sync_user_configs import (
     MANAGED_HOOK_SCRIPTS,
     REGISTERED_HOOK_SCRIPTS,
@@ -38,9 +43,9 @@ def snapshot_tree(root: Path) -> dict[str, str]:
     }
 
 
-def run_epiclaude(args: list[str]) -> subprocess.CompletedProcess[str]:
+def run_epiagentkit(args: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(ROOT / "scripts/epiclaude.py"), *args],
+        [sys.executable, str(ROOT / "scripts/epiagentkit.py"), *args],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -65,7 +70,7 @@ def run_hook_script(
         )
     else:
         command = ["bash", str(script)]
-        env["EPICLAUDE_HOOK_CLIENT"] = "claude"
+        env["EPIAGENTKIT_HOOK_CLIENT"] = "claude"
     return subprocess.run(
         command,
         cwd=cwd,
@@ -144,8 +149,8 @@ def main() -> int:
             "def update_install_manifest(",
         ),
         "scripts/config_core.py": (
-            'PROJECT_NAME = "EpiClaude"',
-            'INSTALL_MANIFEST = ".epiclaude-install.json"',
+            'PROJECT_NAME = "EpiAgentKit"',
+            'INSTALL_MANIFEST = ".epiagentkit-install.json"',
             "def resolve_codex_skill_dirs(",
             'layout == "both"',
         ),
@@ -154,12 +159,13 @@ def main() -> int:
             '"doctor"',
             '"--skip-doctor"',
         ),
-        "scripts/epiclaude.py": (
+        "scripts/epiagentkit.py": (
             "def tree_matches(",
             "def run_doctor(",
             'command == "install"',
             'command == "sync"',
         ),
+        "scripts/epiclaude.py": ("from epiagentkit import main",),
         "hooks/_emit_notice.py": (
             '"hookEventName": "PostToolUse"',
             '"additionalContext": message',
@@ -242,7 +248,7 @@ def main() -> int:
             if fragment in body:
                 problems.append(f"{relative}: forbidden workflow fragment {fragment!r}")
 
-    with tempfile.TemporaryDirectory(prefix="epiclaude_sync_audit_") as directory:
+    with tempfile.TemporaryDirectory(prefix="epiagentkit_sync_audit_") as directory:
         test_root = Path(directory)
         source = test_root / "source"
         target = test_root / "target"
@@ -268,7 +274,7 @@ def main() -> int:
         except OSError as error:
             problems.append(f"sync mirror self-test failed: {error}")
 
-    with tempfile.TemporaryDirectory(prefix="epiclaude_partial_sync_") as directory:
+    with tempfile.TemporaryDirectory(prefix="epiagentkit_partial_sync_") as directory:
         test_root = Path(directory)
         repo = test_root / "repo"
         target = test_root / "target"
@@ -281,7 +287,7 @@ def main() -> int:
         target.mkdir(parents=True)
         (target / "alpha").mkdir()
         (target / "alpha" / "SKILL.md").write_text("existing\n", encoding="utf-8")
-        (target / SKILL_MANIFEST).write_text(
+        (target / LEGACY_SKILL_MANIFEST).write_text(
             '{"managed": ["alpha"]}\n', encoding="utf-8"
         )
         try:
@@ -300,12 +306,14 @@ def main() -> int:
             )
             if managed != {"alpha", "beta"}:
                 problems.append("partial sync self-test: managed manifest was not merged")
+            if (target / LEGACY_SKILL_MANIFEST).exists():
+                problems.append("partial sync self-test: legacy manifest was not migrated")
             if not (target / "alpha" / "SKILL.md").is_file():
                 problems.append("partial sync self-test: existing managed skill was removed")
         except OSError as error:
             problems.append(f"partial sync self-test failed: {error}")
 
-    with tempfile.TemporaryDirectory(prefix="epiclaude_hook_sync_") as directory:
+    with tempfile.TemporaryDirectory(prefix="epiagentkit_hook_sync_") as directory:
         test_root = Path(directory)
         hooks_dir = test_root / ".claude" / "hooks"
         config_path = test_root / ".claude" / "settings.json"
@@ -377,25 +385,38 @@ def main() -> int:
                 problems.append("hook sync self-test: Windows hook is shell-dependent")
             if any('"claude"' not in command for command in managed):
                 problems.append("hook sync self-test: client identity is not forwarded")
-            if not config_path.with_name("settings.json.epiclaude.bak").is_file():
+            if not config_path.with_name("settings.json.epiagentkit.bak").is_file():
                 problems.append("hook sync self-test: config backup was not created")
             if not hook_command(hooks_dir, "fig_selfcheck.sh", windows=False).startswith(
-                "EPICLAUDE_HOOK_CLIENT=claude bash "
+                "EPIAGENTKIT_HOOK_CLIENT=claude bash "
             ):
                 problems.append("hook sync self-test: POSIX command does not use bash")
         except (OSError, ValueError) as error:
             problems.append(f"hook sync self-test failed: {error}")
 
-    with tempfile.TemporaryDirectory(prefix="epiclaude_install_audit_") as directory:
+    with tempfile.TemporaryDirectory(prefix="epiagentkit_install_audit_") as directory:
         home = Path(directory)
+        (home / ".epiclaude").mkdir()
+        (home / ".epiclaude/state").write_text("legacy\n", encoding="utf-8")
         for platform, config_name in ((".claude", "settings.json"), (".codex", "hooks.json")):
             platform_home = home / platform
             (platform_home / "hooks").mkdir(parents=True)
-            (platform_home / config_name).write_text(
+            config_path = platform_home / config_name
+            config_path.write_text(
                 json.dumps({"model": "personal-model"}), encoding="utf-8"
+            )
+            config_path.with_name(f"{config_name}.epiclaude.bak").write_text(
+                "legacy backup\n", encoding="utf-8"
             )
             (platform_home / "hooks" / "custom.sh").write_text(
                 "#!/usr/bin/env bash\n", encoding="utf-8"
+            )
+            (platform_home / LEGACY_INSTALL_MANIFEST).write_text(
+                '{"components": [], "skills": [], "skill_dirs": []}\n',
+                encoding="utf-8",
+            )
+            (platform_home / "hooks" / LEGACY_HOOK_MANIFEST).write_text(
+                '{"managed": []}\n', encoding="utf-8"
             )
 
         install = [
@@ -415,7 +436,7 @@ def main() -> int:
             "both",
         ]
 
-        first = run_epiclaude(install)
+        first = run_epiagentkit(install)
         if first.returncode:
             problems.append(
                 "dual-platform install self-test failed: "
@@ -428,13 +449,33 @@ def main() -> int:
                 home / ".claude/skills/academic-humanizer/SKILL.md",
                 home / ".agents/skills/academic-humanizer/SKILL.md",
                 home / ".codex/skills/academic-humanizer/SKILL.md",
-                home / ".claude/.epiclaude-install.json",
-                home / ".codex/.epiclaude-install.json",
+                home / ".claude/.epiagentkit-install.json",
+                home / ".codex/.epiagentkit-install.json",
+                home / ".epiagentkit/state",
+                home / ".claude/settings.json.epiagentkit.bak",
+                home / ".codex/hooks.json.epiagentkit.bak",
             )
             missing = [str(path) for path in expected_paths if not path.is_file()]
             if missing:
                 problems.append(
                     "dual-platform install self-test: missing files: " + ", ".join(missing)
+                )
+            legacy = [
+                path
+                for platform in (home / ".claude", home / ".codex")
+                for path in (
+                    platform / LEGACY_INSTALL_MANIFEST,
+                    platform / "hooks" / LEGACY_HOOK_MANIFEST,
+                )
+                if path.exists()
+            ]
+            legacy.extend(home.glob("*/**/*.epiclaude.bak"))
+            if (home / ".epiclaude").exists():
+                legacy.append(home / ".epiclaude")
+            if legacy:
+                problems.append(
+                    "dual-platform install self-test: legacy manifests remain: "
+                    + ", ".join(map(str, legacy))
                 )
 
             for config_path in (home / ".claude/settings.json", home / ".codex/hooks.json"):
@@ -445,7 +486,7 @@ def main() -> int:
                     )
 
             before = snapshot_tree(home)
-            second = run_epiclaude(install)
+            second = run_epiagentkit(install)
             if second.returncode:
                 problems.append(
                     "dual-platform reinstall self-test failed: "
@@ -454,7 +495,7 @@ def main() -> int:
             elif snapshot_tree(home) != before:
                 problems.append("dual-platform reinstall self-test: install is not idempotent")
 
-            doctor = run_epiclaude(
+            doctor = run_epiagentkit(
                 [
                     "doctor",
                     "--target",
@@ -479,7 +520,7 @@ def main() -> int:
     notice_helper = ROOT / "hooks" / "_emit_notice.py"
     for client, expected_key in (("claude", "hookSpecificOutput"), ("codex", "systemMessage")):
         environment = os.environ.copy()
-        environment["EPICLAUDE_HOOK_CLIENT"] = client
+        environment["EPIAGENTKIT_HOOK_CLIENT"] = client
         result = subprocess.run(
             [sys.executable, str(notice_helper)],
             input="quality reminder",
@@ -496,7 +537,7 @@ def main() -> int:
         if result.returncode or expected_key not in payload:
             problems.append(f"hook notice self-test: invalid {client} success payload")
 
-    with tempfile.TemporaryDirectory(prefix="epiclaude_hook_aggregate_") as directory:
+    with tempfile.TemporaryDirectory(prefix="epiagentkit_hook_aggregate_") as directory:
         project = Path(directory) / "project"
         state = Path(directory) / "state"
         code = project / "02_code"
@@ -530,7 +571,7 @@ def main() -> int:
         if bad_trace.returncode != 2 or "生成过程痕迹" not in bad_trace.stderr:
             problems.append("aggregate edit hook self-test: text trace failure was not preserved")
 
-        hook_env = {"EPICLAUDE_STATE_HOME": str(state)}
+        hook_env = {"EPIAGENTKIT_STATE_HOME": str(state)}
         combined = run_hook_script(bash_hook, project, environment=hook_env)
         repeated = run_hook_script(bash_hook, project, environment=hook_env)
         try:

@@ -90,14 +90,14 @@ description: |
 
 ```r
 skill_roots <- path.expand(c(
-  Sys.getenv("EPICLAUDE_SKILLS"),
+  Sys.getenv("EPIAGENTKIT_SKILLS"), Sys.getenv("EPICLAUDE_SKILLS"),
   "~/.claude/skills",  # Claude Code
   "~/.agents/skills",  # Codex 官方用户目录
   "~/.codex/skills"    # 既有 Codex 本地兼容目录
 ))
 init_script <- file.path(skill_roots[nzchar(skill_roots)], "project-init/scripts/init_project.R")
 init_script <- init_script[file.exists(init_script)][1]
-if (is.na(init_script)) stop("找不到 project-init；请先安装 skills 或设置 EPICLAUDE_SKILLS")
+if (is.na(init_script)) stop("找不到 project-init；请先安装 skills 或设置 EPIAGENTKIT_SKILLS")
 source(init_script)
 init_project(
   name = "cohort_smoking_chd",
@@ -117,7 +117,7 @@ init_project(
 ```markdown
 # {项目名} · 项目级规则
 
-本项目继承 EpiClaude 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。
+本项目继承 EpiAgentKit 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。
 `CLAUDE.md` 是项目规则单源；`AGENTS.md` 指示 Codex 开工前完整读取它，避免双份项目口径漂移。
 
 ## 新会话必读（新 agent 开局第一步，按序读完再动手）

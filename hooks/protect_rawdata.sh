@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse(Edit|Write|apply_patch)：拦截对 01_data/rawdata 原始数据的修改（EpiClaude 红线）。
+# PreToolUse(Edit|Write|apply_patch)：拦截对 01_data/rawdata 原始数据的修改（EpiAgentKit 红线）。
 source "$(dirname "$0")/_resolve_path.sh"
 while IFS= read -r f; do
   fn="${f//\\//}"

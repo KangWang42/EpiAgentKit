@@ -74,6 +74,7 @@ G <- list(
 
 .assets_dir <- function() {
   skill_roots <- path.expand(c(
+    Sys.getenv("EPIAGENTKIT_SKILLS"),
     Sys.getenv("EPICLAUDE_SKILLS"),
     "~/.claude/skills", "~/.agents/skills", "~/.codex/skills"
   ))

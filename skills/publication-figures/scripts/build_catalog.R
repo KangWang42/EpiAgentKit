@@ -8,10 +8,11 @@
 # ============================================================
 `%||%` <- function(a, b) if (is.null(a) || length(a) == 0) b else a
 
-# skill 根：优先命令行 --skill= / EPICLAUDE_SKILLS，再检测 Claude/Codex 用户目录
+# skill 根：优先命令行 --skill= / EPIAGENTKIT_SKILLS，再检测 Claude/Codex 用户目录
 .args <- commandArgs(trailingOnly = TRUE)
 .sk <- sub("^--skill=", "", .args[grepl("^--skill=", .args)])
 .skill_roots <- path.expand(c(
+  Sys.getenv("EPIAGENTKIT_SKILLS"),
   Sys.getenv("EPICLAUDE_SKILLS"),
   "~/.claude/skills",
   "~/.agents/skills",
@@ -20,7 +21,7 @@
 .skill_candidates <- file.path(.skill_roots[nzchar(.skill_roots)], "publication-figures")
 .default_skill <- .skill_candidates[dir.exists(.skill_candidates)][1]
 if (!length(.sk) && (length(.default_skill) == 0 || is.na(.default_skill))) {
-  stop("找不到 publication-figures；请传 --skill=... 或设置 EPICLAUDE_SKILLS")
+  stop("找不到 publication-figures；请传 --skill=... 或设置 EPIAGENTKIT_SKILLS")
 }
 SKILL <- if (length(.sk)) .sk else .default_skill
 ADV  <- file.path(SKILL, "references", "recipes_advanced")

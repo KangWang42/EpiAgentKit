@@ -1,4 +1,4 @@
-# EpiClaude
+# EpiAgentKit
 
 面向流行病学 / 卫生统计研究的 Claude Code 与 Codex 共用规则和技能集（R + Python），覆盖从项目初始化、统计分析、发表级图表、论文写作、咨询交付到项目审查的完整研究流程。
 
@@ -41,7 +41,7 @@ scripts/           双平台安装、同步与验收工具
 | 全局规则 | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` |
 | 用户 skills | `~/.claude/skills/` | `~/.agents/skills/` |
 | hooks | `~/.claude/hooks/` + `settings.json` | `~/.codex/hooks/` + `hooks.json` |
-| 安装清单 | `~/.claude/.epiclaude-install.json` | `~/.codex/.epiclaude-install.json` |
+| 安装清单 | `~/.claude/.epiagentkit-install.json` | `~/.codex/.epiagentkit-install.json` |
 | 显式调用 | `/skill-name` | `$skill-name`（或 `/skills` 选择） |
 | 自动触发 | 按 `description` | 按 `description` |
 
@@ -52,38 +52,38 @@ Codex 的目录和调用约定见官方 [Build skills](https://learn.chatgpt.com
 克隆后运行统一入口。交互式安装会询问目标平台和导入范围，安装完成后自动执行 `doctor` 验收：
 
 ```bash
-git clone git@github.com:KangWang42/EpiClaude.git ~/epiclaude
-python ~/epiclaude/scripts/epiclaude.py install
+git clone git@github.com:KangWang42/EpiAgentKit.git ~/epiagentkit
+python ~/epiagentkit/scripts/epiagentkit.py install
 ```
 
 常用命令：
 
 ```bash
 # 只为 Codex 安装 PPT + SVG 图解技能包，不覆盖共享规则与 hooks
-python ~/epiclaude/scripts/epiclaude.py install --target codex --preset ppt --yes
+python ~/epiagentkit/scripts/epiagentkit.py install --target codex --preset ppt --yes
 
-# 为 Claude 与 Codex 完整安装，覆盖同名 EpiClaude 规则/skills/hooks，保留无关个人配置
-python ~/epiclaude/scripts/epiclaude.py install --target all --preset full --yes
+# 为 Claude 与 Codex 完整安装，覆盖同名 EpiAgentKit 规则/skills/hooks，保留无关个人配置
+python ~/epiagentkit/scripts/epiagentkit.py install --target all --preset full --yes
 
 # 自选 skills；依赖项会自动补齐
-python ~/epiclaude/scripts/epiclaude.py install --target all --preset custom \
+python ~/epiagentkit/scripts/epiagentkit.py install --target all --preset custom \
   --skills sysu-ppt,report-writing --with-rules --yes
 
 # 从仓库同步已安装内容并复核双端一致性
-python ~/epiclaude/scripts/epiclaude.py sync --target all
-python ~/epiclaude/scripts/epiclaude.py doctor --target all
+python ~/epiagentkit/scripts/epiagentkit.py sync --target all
+python ~/epiagentkit/scripts/epiagentkit.py doctor --target all
 
 # 查看预设与可安装技能
-python ~/epiclaude/scripts/epiclaude.py list
+python ~/epiagentkit/scripts/epiagentkit.py list
 
 # 只同步部分 Codex skills
-python ~/epiclaude/scripts/epiclaude.py sync --target codex \
+python ~/epiagentkit/scripts/epiagentkit.py sync --target codex \
   --components skills --skills sysu-ppt,svg-diagrams
 ```
 
 只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex skills 布局由 `--codex-layout` 控制：`agents` 使用官方 `~/.agents/skills/`，`codex` 使用兼容目录 `~/.codex/skills/`，`both` 双写，默认 `auto` 使用官方目录并自动兼容已由本项目管理的旧目录。
 
-仓库是唯一配置源。同步器只覆盖同名 EpiClaude 文件并合并受管 hook，不改认证、模型、密钥或无关个人配置；每个平台的安装清单记录组件、skills 目录和来源，供 `doctor` 逐文件验收。原命令 `configure_user.py` 与 `sync_user_configs.py` 保留兼容，但新文档与自动化统一使用 `epiclaude.py`。
+仓库是唯一配置源。同步器只覆盖同名 EpiAgentKit 文件并合并受管 hook，不改认证、模型、密钥或无关个人配置；每个平台的安装清单记录组件、skills 目录和来源，供 `doctor` 逐文件验收。原命令 `configure_user.py`、`sync_user_configs.py` 与 `epiclaude.py` 保留兼容，但新文档与自动化统一使用 `epiagentkit.py`。
 
 也可只挑选单个技能目录复制到相应 `skills/` 目录。修改技能后若界面未刷新，重启对应客户端。
 
@@ -95,14 +95,14 @@ python ~/epiclaude/scripts/epiclaude.py sync --target codex \
 
 ```bash
 python scripts/audit_workflow_contracts.py
-python scripts/epiclaude.py doctor --target all
+python scripts/epiagentkit.py doctor --target all
 ```
 
 该检查覆盖全部 skill 元数据、`CLAUDE.md` / `AGENTS.md` 的 200 行预算，以及初始化、探索隔离、vendored helper 和提交授权等跨 skill 契约。行为发生变化时仍须对相关 R / Python / Bash 脚本做语法检查与最小实跑。
 
 ## 推荐 Hook 配置（可选，把硬红线交给 harness 强制）
 
-五项机械检查保留，但客户端只注册三个聚合 hook：一个 PreToolUse 原始数据保护、一个编辑后代码/文本检查、一个命令后图件/结果检查。同步器会复制脚本并自动合并配置：Claude Code 写入 `~/.claude/settings.json`，Codex 写入 `~/.codex/hooks.json`，不会覆盖模型、权限或其他自定义 hook。修改前会在同目录保留稳定的 `.epiclaude.bak` 配置备份。Codex 修改 hook 后需在 `/hooks` 中重新审查并信任；其发现和信任规则见官方 [Hooks](https://learn.chatgpt.com/docs/hooks)。
+五项机械检查保留，但客户端只注册三个聚合 hook：一个 PreToolUse 原始数据保护、一个编辑后代码/文本检查、一个命令后图件/结果检查。同步器会复制脚本并自动合并配置：Claude Code 写入 `~/.claude/settings.json`，Codex 写入 `~/.codex/hooks.json`，不会覆盖模型、权限或其他自定义 hook。修改前会在同目录保留稳定的 `.epiagentkit.bak` 配置备份。Codex 修改 hook 后需在 `/hooks` 中重新审查并信任；其发现和信任规则见官方 [Hooks](https://learn.chatgpt.com/docs/hooks)。
 
 - `protect_rawdata.sh`（PreToolUse）：拦截对 `01_data/rawdata/` 原始数据的写改，直接 deny。
 - `check_r_syntax.sh`（PostToolUse）：`.R` 文件存盘即 `parse()` 语法检查，出错当场反馈给模型修。
@@ -118,13 +118,13 @@ python scripts/epiclaude.py doctor --target all
 
 ```bash
 # 仅安装并注册 hooks
-python scripts/epiclaude.py sync --target all --components hooks
+python scripts/epiagentkit.py sync --target all --components hooks
 
 # 安装 PPT 技能包并同时注册 hooks
-python scripts/epiclaude.py install --target all --preset ppt --with-hooks --yes
+python scripts/epiagentkit.py install --target all --preset ppt --with-hooks --yes
 ```
 
-Windows 配置由同步器统一通过 `run_hook.cmd` 定位 Git Bash，不依赖 hook 进程的 `PATH`；macOS / Linux 使用 `bash`。再次执行会替换旧的 EpiClaude hook 命令并保持幂等，不会重复注册。图件与 `.rds` 检查属于非阻断提醒：Claude 通过 `additionalContext`、Codex 通过 `systemMessage` 接收，并以退出码 0 完成，不会显示为 hook failed；真正违反 rawdata 保护或代码门禁时仍返回阻断状态。每个 hook 只在命中目标文件或目录时动作；无 `jq` 时由 Python 解析 stdin JSON。
+Windows 配置由同步器统一通过 `run_hook.cmd` 定位 Git Bash，不依赖 hook 进程的 `PATH`；macOS / Linux 使用 `bash`。再次执行会替换旧的 EpiAgentKit hook 命令并保持幂等，不会重复注册。图件与 `.rds` 检查属于非阻断提醒：Claude 通过 `additionalContext`、Codex 通过 `systemMessage` 接收，并以退出码 0 完成，不会显示为 hook failed；真正违反 rawdata 保护或代码门禁时仍返回阻断状态。每个 hook 只在命中目标文件或目录时动作；无 `jq` 时由 Python 解析 stdin JSON。
 
 ## 设计原则
 

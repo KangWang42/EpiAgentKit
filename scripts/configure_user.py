@@ -133,7 +133,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
     args = parse_args(argv, prog)
     root = args.repo_root.expanduser().resolve()
     if not (root / "scripts" / "sync_user_configs.py").is_file():
-        raise FileNotFoundError(f"Not an EpiClaude repository: {root}")
+        raise FileNotFoundError(f"Not an EpiAgentKit repository: {root}")
 
     if not sys.stdin.isatty() and (args.target is None or args.preset is None):
         raise SystemExit("非交互运行必须同时指定 --target 与 --preset。")
@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
     print(f"- 平台：{target}")
     print(f"- 组件：{', '.join(sorted(components))}")
     print(f"- Skills：{'全部' if skills is None else ', '.join(sorted(skills))}")
-    print("- 行为：覆盖同名 EpiClaude 文件，保留无关个人配置")
+    print("- 行为：覆盖同名 EpiAgentKit 文件，保留无关个人配置")
     if target in {"codex", "all"}:
         print(f"- Codex skills 布局：{args.codex_layout}")
     if "hooks" in components:
@@ -196,7 +196,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
         if not args.skip_doctor:
             doctor = [
                 sys.executable,
-                str(root / "scripts" / "epiclaude.py"),
+                str(root / "scripts" / "epiagentkit.py"),
                 "doctor",
                 "--target",
                 target,

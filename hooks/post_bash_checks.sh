@@ -5,7 +5,7 @@ notice=""
 
 collect_notice() {
   local script="$1" out rc
-  out=$(EPICLAUDE_PLAIN_NOTICE=1 bash "$hook_dir/$script")
+  out=$(EPIAGENTKIT_PLAIN_NOTICE=1 bash "$hook_dir/$script")
   rc=$?
   [ "$rc" -eq 0 ] || return "$rc"
   if [ -n "$out" ]; then

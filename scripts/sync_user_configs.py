@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synchronize selected EpiClaude rules, skills, and hooks to user homes."""
+"""Synchronize selected EpiAgentKit rules, skills, and hooks to user homes."""
 
 from __future__ import annotations
 
@@ -17,6 +17,9 @@ from config_core import (
     HOOK_MANIFEST,
     INSTALL_MANIFEST,
     INSTALL_SCHEMA,
+    LEGACY_HOOK_MANIFEST,
+    LEGACY_INSTALL_MANIFEST,
+    LEGACY_SKILL_MANIFEST,
     PROJECT_NAME,
     SKILL_MANIFEST,
     csv_values,
@@ -90,20 +93,22 @@ def safe_remove(path: Path, parent: Path, dry_run: bool) -> None:
         shutil.rmtree(resolved, onerror=remove_readonly)
 
 
-def read_manifest(path: Path) -> set[str]:
-    if not path.exists():
+def read_manifest(path: Path, legacy: Path | None = None) -> set[str]:
+    selected = path if path.is_file() or legacy is None or not legacy.is_file() else legacy
+    if not selected.exists():
         return set()
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(selected.read_text(encoding="utf-8"))
     return set(data.get("managed", []))
 
 
-def write_manifest(path: Path, values: list[str], dry_run: bool) -> None:
+def write_manifest(
+    path: Path, legacy: Path, values: list[str], dry_run: bool
+) -> None:
     print(f"WRITE  {path}")
     if not dry_run:
-        path.write_text(
-            json.dumps({"managed": values}, ensure_ascii=False, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        atomic_write_json(path, {"managed": values})
+        if legacy.is_file():
+            legacy.unlink()
 
 
 def sync_file(source: Path, target: Path, dry_run: bool) -> None:
@@ -218,6 +223,11 @@ def sync_skills(
     source = root / "skills"
     if same_path(source, target):
         print(f"SOURCE {source} (already active)")
+        legacy_manifest = target / LEGACY_SKILL_MANIFEST
+        if legacy_manifest.is_file():
+            print(f"REMOVE {legacy_manifest}")
+            if not dry_run:
+                legacy_manifest.unlink()
         return
     if not dry_run:
         target.mkdir(parents=True, exist_ok=True)
@@ -236,7 +246,8 @@ def sync_skills(
     else:
         skills = available
     manifest = target / SKILL_MANIFEST
-    previous = read_manifest(manifest)
+    legacy_manifest = target / LEGACY_SKILL_MANIFEST
+    previous = read_manifest(manifest, legacy_manifest)
     if prune_stale:
         for stale in sorted(previous - set(skills)):
             stale_path = target / stale
@@ -257,12 +268,17 @@ def sync_skills(
                 safe_remove(duplicate, target, dry_run)
 
     managed = set(skills) if prune_stale else previous | set(skills)
-    write_manifest(manifest, sorted(managed), dry_run)
+    write_manifest(manifest, legacy_manifest, sorted(managed), dry_run)
 
 
 def sync_hooks(source: Path, target: Path, dry_run: bool) -> None:
     if same_path(source, target):
         print(f"SOURCE {source} (already active)")
+        legacy_manifest = target / LEGACY_HOOK_MANIFEST
+        if legacy_manifest.is_file():
+            print(f"REMOVE {legacy_manifest}")
+            if not dry_run:
+                legacy_manifest.unlink()
         return
     if not dry_run:
         target.mkdir(parents=True, exist_ok=True)
@@ -270,10 +286,12 @@ def sync_hooks(source: Path, target: Path, dry_run: bool) -> None:
     files = {
         item.name: item
         for item in source.iterdir()
-        if item.is_file() and item.name not in {HOOK_MANIFEST}
+        if item.is_file()
+        and item.name not in {HOOK_MANIFEST, LEGACY_HOOK_MANIFEST}
     }
     manifest = target / HOOK_MANIFEST
-    previous = read_manifest(manifest)
+    legacy_manifest = target / LEGACY_HOOK_MANIFEST
+    previous = read_manifest(manifest, legacy_manifest)
     for stale in sorted(previous - set(files)):
         stale_path = target / stale
         if stale_path.is_file():
@@ -282,7 +300,7 @@ def sync_hooks(source: Path, target: Path, dry_run: bool) -> None:
                 stale_path.unlink()
     for name, item in files.items():
         sync_file(item, target / name, dry_run)
-    write_manifest(manifest, sorted(files), dry_run)
+    write_manifest(manifest, legacy_manifest, sorted(files), dry_run)
 
 
 def hook_command(
@@ -300,7 +318,7 @@ def hook_command(
             f'cmd.exe /d /s /c call "{wrapper}" '
             f'"{script_path.as_posix()}" "{client}"'
         )
-    return f"EPICLAUDE_HOOK_CLIENT={shlex.quote(client)} bash {shlex.quote(str(script_path))}"
+    return f"EPIAGENTKIT_HOOK_CLIENT={shlex.quote(client)} bash {shlex.quote(str(script_path))}"
 
 
 def hook_groups(
@@ -333,7 +351,7 @@ def hook_groups(
 
 
 def remove_managed_hook_commands(config: dict) -> None:
-    """Remove prior EpiClaude hook commands while preserving unrelated hooks."""
+    """Remove prior EpiAgentKit hook commands while preserving unrelated hooks."""
     hooks = config.setdefault("hooks", {})
     if not isinstance(hooks, dict):
         raise ValueError("Existing 'hooks' setting must be a JSON object")
@@ -364,7 +382,7 @@ def sync_hook_config(
     dry_run: bool,
     windows: bool | None = None,
 ) -> None:
-    """Merge EpiClaude hooks into a client config without touching other settings."""
+    """Merge EpiAgentKit hooks into a client config without touching other settings."""
     if config_path.exists():
         try:
             current = json.loads(config_path.read_text(encoding="utf-8-sig"))
@@ -374,6 +392,13 @@ def sync_hook_config(
             raise ValueError(f"Config root must be a JSON object: {config_path}")
     else:
         current = {}
+
+    backup = config_path.with_name(f"{config_path.name}.epiagentkit.bak")
+    legacy_backup = config_path.with_name(f"{config_path.name}.epiclaude.bak")
+    if legacy_backup.is_file() and not backup.exists():
+        print(f"RENAME {legacy_backup} -> {backup}")
+        if not dry_run:
+            legacy_backup.replace(backup)
 
     updated = json.loads(json.dumps(current))
     remove_managed_hook_commands(updated)
@@ -385,11 +410,10 @@ def sync_hook_config(
     if updated == current:
         print(f"SKIP   {config_path} (hook config unchanged)")
         return
-    print(f"MERGE  EpiClaude hooks -> {config_path}")
+    print(f"MERGE  EpiAgentKit hooks -> {config_path}")
     if dry_run:
         return
     if config_path.exists():
-        backup = config_path.with_name(f"{config_path.name}.epiclaude.bak")
         print(f"BACKUP {config_path} -> {backup}")
         atomic_copy_file(config_path, backup)
     atomic_write_json(config_path, updated)
@@ -404,11 +428,12 @@ def update_install_manifest(
     dry_run: bool,
 ) -> None:
     path = platform_home / INSTALL_MANIFEST
+    legacy_path = platform_home / LEGACY_INSTALL_MANIFEST
     print(f"WRITE  install manifest -> {path}")
     if dry_run:
         return
 
-    current = load_json(path)
+    current = load_json(path if path.is_file() or not legacy_path.is_file() else legacy_path)
     installed_components = set(current.get("components", [])) | components
     installed_skills = set(current.get("skills", []))
     installed_dirs = [Path(value) for value in current.get("skill_dirs", [])]
@@ -418,7 +443,10 @@ def update_install_manifest(
         managed_sets = [
             set(source_skills(root, exclude))
             if same_path(root / "skills", directory)
-            else read_manifest(directory / SKILL_MANIFEST)
+            else read_manifest(
+                directory / SKILL_MANIFEST,
+                directory / LEGACY_SKILL_MANIFEST,
+            )
             for directory in skill_dirs
         ]
         installed_skills = set.intersection(*managed_sets) if managed_sets else set()
@@ -434,6 +462,17 @@ def update_install_manifest(
         "hook_config": "settings.json" if platform == "claude" else "hooks.json",
     }
     atomic_write_json(path, payload)
+    if legacy_path.is_file():
+        legacy_path.unlink()
+
+
+def migrate_legacy_state(home: Path, dry_run: bool) -> None:
+    legacy = home / ".epiclaude"
+    current = home / ".epiagentkit"
+    if legacy.is_dir() and not current.exists():
+        print(f"RENAME {legacy} -> {current}")
+        if not dry_run:
+            legacy.rename(current)
 
 
 def parse_args(
@@ -483,12 +522,14 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
 
     required = (root / "CLAUDE.md", root / "skills", root / "hooks")
     if not all(path.exists() for path in required):
-        raise FileNotFoundError(f"Not an EpiClaude repository: {root}")
+        raise FileNotFoundError(f"Not an EpiAgentKit repository: {root}")
 
     if args.list_skills:
         for name in source_skills(root, set()):
             print(name)
         return
+
+    migrate_legacy_state(home, args.dry_run)
 
     components = csv_values(args.components) or set(VALID_COMPONENTS)
     unknown_components = components - VALID_COMPONENTS

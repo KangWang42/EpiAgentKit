@@ -3,7 +3,7 @@
 # 逐元素自检清单，逼主模型 Read 该图逐条判断。hook 不做视觉判断（命令看不了图），
 # 只负责"逮住出图事件 + 强制自检"，判断交给视觉能力强的主模型。
 [ -d 04_figures ] || exit 0                       # 无 04_figures（如非项目目录）直接跳过
-state_root="${EPICLAUDE_STATE_HOME:-$HOME/.epiclaude}"
+state_root="${EPIAGENTKIT_STATE_HOME:-${EPICLAUDE_STATE_HOME:-$HOME/.epiagentkit}}"
 mkdir -p "$state_root" 2>/dev/null
 state="$state_root/.fig_selfcheck_state"          # 已提醒记录（path|mtime），避免重复提醒
 touch "$state" 2>/dev/null
@@ -34,7 +34,7 @@ if [ -n "$new" ]; then
     echo "④ 数值可溯源不硬编码、与 results.yaml 一致；无统计假象（全同值/恒 ±0.707 等）"
     echo "⑤ 图型匹配数据、与同篇其它图 theme/配色/布局一致、多结局不漏"
   })
-  if [ "${EPICLAUDE_PLAIN_NOTICE:-0}" = "1" ]; then
+  if [ "${EPIAGENTKIT_PLAIN_NOTICE:-${EPICLAUDE_PLAIN_NOTICE:-0}}" = "1" ]; then
     printf '%s\n' "$notice"
   else
     printf '%s\n' "$notice" | python "$(dirname "$0")/_emit_notice.py"

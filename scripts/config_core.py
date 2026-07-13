@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared configuration model for EpiClaude's Claude Code and Codex installers."""
+"""Shared configuration model for EpiAgentKit's Claude Code and Codex installers."""
 
 from __future__ import annotations
 
@@ -7,10 +7,13 @@ import json
 from pathlib import Path
 
 
-PROJECT_NAME = "EpiClaude"
-INSTALL_MANIFEST = ".epiclaude-install.json"
-SKILL_MANIFEST = ".epiclaude-managed-skills.json"
-HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
+PROJECT_NAME = "EpiAgentKit"
+INSTALL_MANIFEST = ".epiagentkit-install.json"
+SKILL_MANIFEST = ".epiagentkit-managed-skills.json"
+HOOK_MANIFEST = ".epiagentkit-managed-hooks.json"
+LEGACY_INSTALL_MANIFEST = ".epiclaude-install.json"
+LEGACY_SKILL_MANIFEST = ".epiclaude-managed-skills.json"
+LEGACY_HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 INSTALL_SCHEMA = 1
 
 PRESETS = {
@@ -102,6 +105,12 @@ def load_json(path: Path, default: dict | None = None) -> dict:
     return data
 
 
+def active_manifest(directory: Path, name: str, legacy_name: str) -> Path:
+    current = directory / name
+    legacy = directory / legacy_name
+    return current if current.is_file() or not legacy.is_file() else legacy
+
+
 def unique_paths(paths: list[Path]) -> list[Path]:
     result: list[Path] = []
     seen: set[Path] = set()
@@ -136,9 +145,13 @@ def resolve_codex_skill_dirs(
 
     targets = [official]
     managed_compatibility = (
-        (compatibility / SKILL_MANIFEST).is_file()
+        active_manifest(
+            compatibility, SKILL_MANIFEST, LEGACY_SKILL_MANIFEST
+        ).is_file()
         or (
-            (codex_home / INSTALL_MANIFEST).is_file()
+            active_manifest(
+                codex_home, INSTALL_MANIFEST, LEGACY_INSTALL_MANIFEST
+            ).is_file()
             and compatibility.is_dir()
         )
     )
