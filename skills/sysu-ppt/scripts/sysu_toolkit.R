@@ -296,7 +296,7 @@ sysu_add_cover <- function(ppt, title, subtitle = "", author = "", date = "") {
   ppt
 }
 
-#' 章节分隔页（上下主色规则线 + 大号居中标题）
+#' 正式汇报章节分隔页（上下主色规则线 + 大号居中标题）；组会禁止调用。
 sysu_add_section <- function(ppt, title, subtitle = "") {
   ppt <- add_slide(ppt, layout = .L("blank"), master = .L("master"))
   line <- strrep("─", 26)             # 实线（box-drawing）
@@ -527,11 +527,35 @@ sysu_flextable <- function(df, widths = NULL, fsize = 14, align = "left") {
 }
 
 # ============================================================================
-# 6. 保存（强制文本框顶端对齐——修复部分模板默认垂直居中导致正文偏下）
+# 6. 保存（体裁门禁 + 强制文本框顶端对齐）
 # ============================================================================
-#' 保存 PPT。等价于 print(ppt, path)，但额外把所有"空 bodyPr"的文本框设为顶端对齐。
+#' 组会体裁检查：禁止目录页与 sysu_add_section() 生成的章节分隔页。
+.validate_meeting_deck <- function(ppt) {
+  sm <- officer::pptx_summary(ppt)
+  if (!nrow(sm)) return(invisible(ppt))
+  sm$text <- trimws(as.character(sm$text))
+  directory_titles <- c("目录", "汇报提纲", "内容提要", "agenda", "contents")
+  directory_rows <- nzchar(sm$text) & tolower(sm$text) %in% directory_titles
+  if (any(directory_rows)) {
+    slides <- paste(sort(unique(sm$slide_id[directory_rows])), collapse = ", ")
+    stop("组会 PPT 禁止目录页；检测到目录类标题，幻灯片：", slides, call. = FALSE)
+  }
+
+  section_rows <- grepl("─{4,}", sm$text)
+  if (any(section_rows)) {
+    slides <- paste(sort(unique(sm$slide_id[section_rows])), collapse = ", ")
+    stop("组会 PPT 禁止章节分隔/过渡页；检测到 sysu_add_section() 页面，幻灯片：",
+         slides, call. = FALSE)
+  }
+  invisible(ppt)
+}
+
+#' 保存 PPT。genre 默认 meeting；正式开题/答辩须显式传 formal。
+#' 等价于 print(ppt, path)，但保存前执行体裁门禁，并把所有"空 bodyPr"文本框设为顶端对齐。
 #' 仅按字节替换 ASCII 串 <a:bodyPr/>，不触碰中文(UTF-8)与已显式设置对齐的表格单元。
-sysu_save <- function(ppt, path) {
+sysu_save <- function(ppt, path, genre = c("meeting", "formal")) {
+  genre <- match.arg(genre)
+  if (identical(genre, "meeting")) .validate_meeting_deck(ppt)
   path <- normalizePath(path, winslash = "/", mustWork = FALSE)
   print(ppt, path)
   td <- tempfile(); dir.create(td)

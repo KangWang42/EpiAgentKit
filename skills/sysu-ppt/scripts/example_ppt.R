@@ -57,5 +57,5 @@ ppt <- sysu_add_code(ppt, "9 代码 / 示例",
   intro = block_list(prose(bd("示例　"), tx("用 rms 拟合限制性立方样条。"))))
 
 out <- file.path(here, "_tmp", "demo.pptx")
-sysu_save(ppt, out)
+sysu_save(ppt, out, genre = "meeting")
 cat("Demo saved:", out, " slides =", length(ppt), "\n")

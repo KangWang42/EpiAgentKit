@@ -147,6 +147,10 @@ def main() -> int:
             'default = list(file = "template.pptx"',
             'public_health = list(file = "template-公卫学院.pptx"',
             ".svg_aspect <- function(path)",
+            ".validate_meeting_deck <- function(ppt)",
+            'genre = c("meeting", "formal")',
+            "组会 PPT 禁止目录页",
+            "组会 PPT 禁止章节分隔/过渡页",
         ),
     }
     for relative, fragments in required.items():
@@ -182,6 +186,11 @@ def main() -> int:
         "skills/sysu-ppt/references/figure_snippets.R": (
             "flow_box <- function",
             "make_decision <- function",
+        ),
+        "skills/sysu-ppt/references/deck_skeleton.R": (
+            'ppt <- sysu_add_section(',
+            'sysu_add_text(ppt, "目录"',
+            'genre = "formal"',
         ),
     }
     for relative, fragments in forbidden.items():

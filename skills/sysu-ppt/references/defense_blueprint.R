@@ -150,5 +150,5 @@ ppt <- sysu_add_table(ppt, "六、进度安排",
 # ---- 致谢页 ----
 ppt <- sysu_add_section(ppt, "请各位老师批评指正！")
 
-sysu_save(ppt, "输出_开题报告.pptx")
+sysu_save(ppt, "输出_开题报告.pptx", genre = "formal")
 cat("done. slides =", length(ppt), "\n")
