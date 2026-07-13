@@ -10,6 +10,7 @@
 语言：中文 / 英文
 图类：队列筛选 / 概念机制 / 技术路线 / 层级结构 / 包含关系 / 时间轴 / 矩阵 / 系统架构
 视觉配置：journal-flow（队列筛选/纳排/CONSORT）/ editorial（其余非统计图解）
+色彩模式：paper-neutral（默认，白/灰+单一蓝色）/ semantic-color（仅用户明确要求的内部材料）
 版式：A 层级汇聚 / B 谱系时间轴 / C 嵌套包含 / 线性流程 / 树形层级 / 矩阵 / 容器架构
 背景：#FFFFFF 或 #FDFDFB
 图注：外置 / 嵌入；编号与标题
@@ -51,6 +52,7 @@
 不要添加英文眉题、图标、徽章、装饰圆点、渐变、深色顶条、厚重阴影或大圆角彩色卡片墙。
 所有图先采用白底、细边框、低饱和浅填充、常规正文和几何优先的期刊研究流程图语法；
 editorial 默认一个主强调色加中性灰，不为制造丰富感而把相邻节点随机换色。
+论文用途强制 paper-neutral；不得根据 biology、exposure、covariate、risk、outcome 元数据自动生成蓝、黄、灰、红、绿卡片。
 同层卡片等宽等高，节点间净距不小于卡片高度的 60%，连线只走横平竖直。
 在语义元素上写入 data-role、data-category 和 data-layer，输出 SVG 与同名 PNG，
 并通过 validate_svg.py --profile <journal-flow|editorial> 的对应配置校验后再交付。

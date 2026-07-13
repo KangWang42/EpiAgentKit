@@ -28,6 +28,20 @@ JOURNAL_FLOW = {
     "text": "#444444",
     "connector": "#909090",
 }
+PAPER_EDITORIAL_COLORS = {
+    "#FFFFFF",
+    "#F2F2F2",
+    "#EAF2FB",
+    "#D0D0D0",
+    "#8A8A8A",
+    "#BBD6F0",
+    "#2E5C8A",
+    "#909090",
+    "#444444",
+}
+PAPER_NODE_FILLS = {"#FFFFFF", "#F2F2F2", "#EAF2FB"}
+PAPER_NODE_STROKES = {"#D0D0D0", "#8A8A8A", "#BBD6F0", "#2E5C8A"}
+PAPER_TITLE_COLORS = {"#444444", "#2E5C8A"}
 NEUTRALS = {"#FFFFFF", "#FDFDFB", "#8A8A8A", "#909090", "#444444"}
 ALLOWED_COLORS = NEUTRALS | {
     color for category in PALETTE.values() for color in category.values()
@@ -229,6 +243,10 @@ def validate_editorial(
                 normalized = match.upper()
                 if len(normalized) != 7 or normalized not in ALLOWED_COLORS:
                     problems.append(f"color outside editorial palette on {label}: {match}")
+                if purpose == "paper" and normalized not in PAPER_EDITORIAL_COLORS:
+                    problems.append(
+                        f"paper editorial allows only white/gray and one blue hue on {label}: {match}"
+                    )
             if re.search(r"\b(?:rgb|rgba|hsl|hsla)\s*\(", raw, re.I):
                 problems.append(f"non-hex color is not allowed on {label}: {raw}")
 
@@ -250,11 +268,19 @@ def validate_editorial(
             if category not in PALETTE:
                 problems.append(f"semantic node lacks valid data-category: {label}")
                 continue
-            expected = PALETTE[category]
-            if color(prop(element, "fill")) != expected["fill"]:
-                problems.append(f"category fill mismatch on {label}")
-            if color(prop(element, "stroke")) != expected["stroke"]:
-                problems.append(f"category stroke mismatch on {label}")
+            actual_fill = color(prop(element, "fill"))
+            actual_stroke = color(prop(element, "stroke"))
+            if purpose == "paper":
+                if actual_fill not in PAPER_NODE_FILLS:
+                    problems.append(f"paper node fill must be white, gray, or pale blue on {label}")
+                if actual_stroke not in PAPER_NODE_STROKES:
+                    problems.append(f"paper node stroke must be neutral or blue on {label}")
+            else:
+                expected = PALETTE[category]
+                if actual_fill != expected["fill"]:
+                    problems.append(f"category fill mismatch on {label}")
+                if actual_stroke != expected["stroke"]:
+                    problems.append(f"category stroke mismatch on {label}")
             stroke_width = number(prop(element, "stroke-width"))
             if stroke_width is None or not 0.8 <= stroke_width <= 1.5:
                 problems.append(f"card border must be 0.8 to 1.5 px on {label}")
@@ -263,7 +289,7 @@ def validate_editorial(
             radius = number(element.get("rx"))
             if None in {width, height}:
                 problems.append(f"semantic node needs numeric width and height: {label}")
-            elif radius is None or radius < 0 or radius > 10:
+            elif radius is None or radius < 0 or radius > (4 if purpose == "paper" else 10):
                 problems.append(f"semantic node radius is missing or excessive: {label}")
             if role == "card":
                 layer = element.get("data-layer")
@@ -275,8 +301,12 @@ def validate_editorial(
         if role == "node-title":
             if category not in PALETTE:
                 problems.append(f"node title lacks valid data-category: {label}")
-            elif color(prop(element, "fill")) != PALETTE[category]["title"]:
-                problems.append(f"title color mismatch on {label}")
+            else:
+                actual_title = color(prop(element, "fill"))
+                if purpose == "paper" and actual_title not in PAPER_TITLE_COLORS:
+                    problems.append(f"paper title must be neutral or blue on {label}")
+                elif purpose != "paper" and actual_title != PALETTE[category]["title"]:
+                    problems.append(f"title color mismatch on {label}")
             weight = number(prop(element, "font-weight"))
             if weight is None or not 550 <= weight <= 700:
                 problems.append(f"node title weight must be 550 to 700 on {label}")
