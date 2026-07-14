@@ -11,7 +11,7 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from skill_conflicts import quarantine_skill_conflicts, scan_skill_conflicts
+from skill_conflicts import remove_skill_conflicts, scan_skill_conflicts
 
 
 def write_skill(root: Path, name: str, description: str, body: str = "Instructions\n") -> Path:
@@ -100,7 +100,7 @@ class SkillConflictTests(unittest.TestCase):
             self.assertEqual(conflicts[0].kind, "duplicate_root")
             self.assertFalse(conflicts[0].target_root)
 
-    def test_quarantine_moves_complete_skill_and_writes_registry(self) -> None:
+    def test_removal_deletes_skill_and_writes_report(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             repo = root / "repo"
@@ -117,7 +117,7 @@ class SkillConflictTests(unittest.TestCase):
                 target_roots=[local],
             )
 
-            manifest = quarantine_skill_conflicts(
+            manifest = remove_skill_conflicts(
                 conflicts,
                 home=home,
                 source_root=repo,
@@ -128,10 +128,8 @@ class SkillConflictTests(unittest.TestCase):
             self.assertIsNotNone(manifest)
             self.assertFalse(old.exists())
             payload = json.loads(manifest.read_text(encoding="utf-8"))
-            backup = Path(payload["conflicts"][0]["backup_path"])
-            self.assertTrue((backup / "SKILL.md").is_file())
-            self.assertEqual((backup / "notes.txt").read_text(encoding="utf-8"), "keep me\n")
-            self.assertEqual(payload["conflicts"][0]["action"], "quarantined")
+            self.assertNotIn("backup_path", payload["conflicts"][0])
+            self.assertEqual(payload["conflicts"][0]["action"], "deleted")
 
     def test_dry_run_changes_nothing(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -149,7 +147,7 @@ class SkillConflictTests(unittest.TestCase):
                 target_roots=[local],
             )
 
-            manifest = quarantine_skill_conflicts(
+            manifest = remove_skill_conflicts(
                 conflicts,
                 home=home,
                 source_root=repo,

@@ -315,13 +315,13 @@ def main() -> int:
             "prune_stale: bool = True",
             "def update_install_manifest(",
             "scan_skill_conflicts(",
-            "quarantine_skill_conflicts(",
+            "remove_skill_conflicts(",
         ),
         "scripts/skill_conflicts.py": (
             "CONFLICT_DOMAINS",
             'kind="semantic_overlap"',
-            '"skill-conflicts"',
-            "shutil.move",
+            '"skill-conflict-reports"',
+            "shutil.rmtree",
             "matched_terms",
         ),
         "scripts/config_core.py": (

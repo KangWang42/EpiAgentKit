@@ -28,7 +28,7 @@ from config_core import (
     load_json,
     resolve_codex_skill_dirs,
 )
-from skill_conflicts import quarantine_skill_conflicts, scan_skill_conflicts
+from skill_conflicts import remove_skill_conflicts, scan_skill_conflicts
 
 CODEX_EXCLUDES = {"skill-creator"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
@@ -257,10 +257,8 @@ def migrate_codex_compatibility_skills(
         if not source.is_dir() or not trees_equal(source, duplicate):
             print(f"KEEP   {duplicate} (not identical to repository source)")
             continue
-        print(
-            f"KEEP   {duplicate} (conflict preflight must quarantine "
-            "verified duplicates before migration)"
-        )
+        safe_remove(duplicate, compatibility, dry_run)
+        remaining.discard(name)
 
     if remaining:
         write_manifest(manifest, legacy_manifest, sorted(remaining), dry_run)
@@ -634,7 +632,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
                     target_roots=codex_skill_dirs,
                 )
             )
-        quarantine_skill_conflicts(
+        remove_skill_conflicts(
             conflicts,
             home=home,
             source_root=root,

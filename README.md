@@ -92,7 +92,7 @@ python ~/epiagentkit/scripts/epiagentkit.py sync --target codex \
 
 只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex skills 布局由 `--codex-layout` 控制：默认 `auto` 与 `agents` 均只使用官方 `~/.agents/skills/`；`codex` 使用兼容目录 `~/.codex/skills/`，`both` 双写，后二者会显示重复技能风险警告，不作为默认安装或验收基线。
 
-首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能；与仓库源完全一致的旧根副本也会先完整隔离归档，不直接删除，`.system` 与无冲突的非受管技能保持原位。可先演练迁移：
+首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能；与仓库源重复的旧根副本会直接删除，`.system` 与无冲突的非受管技能保持原位。可先演练迁移：
 
 ```bash
 python scripts/epiagentkit.py sync --target codex --components skills --dry-run
@@ -100,7 +100,7 @@ python scripts/epiagentkit.py sync --target codex --components skills --dry-run
 
 每次安装或同步 `skills` 前都会遍历 Claude Code 与 Codex 的 Skill 发现目录，检查两类冲突：①与待安装权威 Skill 同名但内容不同；②名称不同，但 `description` 命中同一广义触发场景。已经明确写成“停用 / 委派 / 仅在特定条件下使用”的后备 Skill 不判为冲突。
 
-冲突旧版不会直接删除。同步器先把整个 Skill 目录移出发现根，完整归档到 `~/.epiagentkit/skill-conflicts/<UTC批次>/`，再写入 `manifest.json`，记录原路径、冲突类型、命中的触发词、委派目标和备份路径。这样旧 Skill 不再自动触发，但正文、脚本、references 和 assets 均可恢复；需要回退时关闭客户端，按 manifest 将备份目录移回 `local_path` 即可。目标目录中与仓库完全一致的当前版不会重复归档。使用 `--dry-run` 时只显示拟隔离项和登记位置，不移动任何文件。
+同名或触发范围冲突的旧 Skill 会在安装前直接、永久删除，不保留内容副本。同步器只在 `~/.epiagentkit/skill-conflict-reports/<UTC批次>/manifest.json` 写入一份小型删除记录，登记原路径、冲突类型、命中的触发词和委派目标。目标目录中与仓库完全一致的当前版不处理；使用 `--dry-run` 时只显示拟删除项和报告位置，不删除文件。正式执行前应自行备份需要保留的个人 Skill。
 
 安装前建议先运行：
 
@@ -205,4 +205,4 @@ PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
 
 ## 贡献者
 
-- OpenAI Codex：安装前 Skill 冲突扫描、隔离备份与可审计登记流程。
+- OpenAI Codex：安装前 Skill 冲突扫描、直接清理与可审计登记流程。

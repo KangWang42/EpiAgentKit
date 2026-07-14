@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Detect and quarantine local skills that conflict with EpiAgentKit."""
+"""Detect and remove local skills that conflict with EpiAgentKit."""
 
 from __future__ import annotations
 
 import ast
 import hashlib
 import json
+import os
 import re
 import shutil
+import stat
 import unicodedata
 import uuid
 from dataclasses import asdict, dataclass
@@ -299,7 +301,12 @@ def scan_skill_conflicts(
     return conflicts
 
 
-def quarantine_skill_conflicts(
+def remove_readonly(func, path: str, _exc_info) -> None:
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
+def remove_skill_conflicts(
     conflicts: list[SkillConflict],
     *,
     home: Path,
@@ -307,7 +314,7 @@ def quarantine_skill_conflicts(
     dry_run: bool,
     run_id: str | None = None,
 ) -> Path | None:
-    """Move complete conflicting skill trees outside discovery roots and register them."""
+    """Delete conflicting skill trees and write a compact audit report."""
     if not conflicts:
         print("Skill conflict preflight: no conflicts found.")
         return None
@@ -316,7 +323,12 @@ def quarantine_skill_conflicts(
         + "-"
         + uuid.uuid4().hex[:8]
     )
-    run_root = home.expanduser().resolve() / ".epiagentkit" / "skill-conflicts" / run_id
+    run_root = (
+        home.expanduser().resolve()
+        / ".epiagentkit"
+        / "skill-conflict-reports"
+        / run_id
+    )
     records: list[dict] = []
     handled: set[Path] = set()
     for conflict in conflicts:
@@ -324,27 +336,22 @@ def quarantine_skill_conflicts(
         if original in handled:
             continue
         handled.add(original)
-        root_key = hashlib.sha256(conflict.discovery_root.encode("utf-8")).hexdigest()[:8]
-        destination = run_root / conflict.platform / root_key / conflict.local_name
         print(
             f"CONFLICT {conflict.kind}: {original} -> {conflict.authority} "
             f"({', '.join(conflict.matched_terms)})"
         )
-        print(f"{'WOULD QUARANTINE' if dry_run else 'QUARANTINE'} {original} -> {destination}")
-        record = asdict(conflict)
-        record["backup_path"] = str(destination)
-        record["action"] = "would_quarantine" if dry_run else "quarantined"
-        records.append(record)
         if dry_run:
-            continue
+            print(f"WOULD REMOVE {original}")
+        record = asdict(conflict)
+        record["action"] = "would_delete" if dry_run else "pending_delete"
+        records.append(record)
         if not original.is_dir():
-            raise FileNotFoundError(f"Conflicting skill disappeared before quarantine: {original}")
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        if destination.exists():
-            raise FileExistsError(f"Conflict backup already exists: {destination}")
-        shutil.move(str(original), str(destination))
+            raise FileNotFoundError(f"Conflicting skill disappeared before deletion: {original}")
+        discovery_root = Path(conflict.discovery_root).resolve()
+        if original.parent != discovery_root:
+            raise RuntimeError(f"Refusing to delete path outside discovery root: {original}")
     if dry_run:
-        print(f"Conflict registry would be written under {run_root}")
+        print(f"Conflict deletion report would be written under {run_root}")
         return run_root / "manifest.json"
     payload = {
         "schema": 1,
@@ -355,9 +362,17 @@ def quarantine_skill_conflicts(
     }
     manifest = run_root / "manifest.json"
     manifest.parent.mkdir(parents=True, exist_ok=True)
+    for record in records:
+        manifest.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        original = Path(record["local_path"])
+        print(f"REMOVE {original}")
+        shutil.rmtree(original, onerror=remove_readonly)
+        record["action"] = "deleted"
     manifest.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    print(f"WRITE  conflict registry -> {manifest}")
+    print(f"WRITE  conflict deletion report -> {manifest}")
     return manifest
