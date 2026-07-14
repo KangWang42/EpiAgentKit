@@ -92,10 +92,20 @@ python ~/epiagentkit/scripts/epiagentkit.py sync --target codex \
 
 只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex skills 布局由 `--codex-layout` 控制：默认 `auto` 与 `agents` 均只使用官方 `~/.agents/skills/`；`codex` 使用兼容目录 `~/.codex/skills/`，`both` 双写，后二者会显示重复技能风险警告，不作为默认安装或验收基线。
 
-首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能，仅删除与仓库源完全一致的副本；`.system`、非受管技能和内容不一致的目录均保留。可先演练迁移：
+首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能；与仓库源完全一致的旧根副本也会先完整隔离归档，不直接删除，`.system` 与无冲突的非受管技能保持原位。可先演练迁移：
 
 ```bash
 python scripts/epiagentkit.py sync --target codex --components skills --dry-run
+```
+
+每次安装或同步 `skills` 前都会遍历 Claude Code 与 Codex 的 Skill 发现目录，检查两类冲突：①与待安装权威 Skill 同名但内容不同；②名称不同，但 `description` 命中同一广义触发场景。已经明确写成“停用 / 委派 / 仅在特定条件下使用”的后备 Skill 不判为冲突。
+
+冲突旧版不会直接删除。同步器先把整个 Skill 目录移出发现根，完整归档到 `~/.epiagentkit/skill-conflicts/<UTC批次>/`，再写入 `manifest.json`，记录原路径、冲突类型、命中的触发词、委派目标和备份路径。这样旧 Skill 不再自动触发，但正文、脚本、references 和 assets 均可恢复；需要回退时关闭客户端，按 manifest 将备份目录移回 `local_path` 即可。目标目录中与仓库完全一致的当前版不会重复归档。使用 `--dry-run` 时只显示拟隔离项和登记位置，不移动任何文件。
+
+安装前建议先运行：
+
+```bash
+python scripts/epiagentkit.py install --target codex --preset full --yes --dry-run
 ```
 
 默认 `doctor` 会扫描两个 Codex 发现根，同名技能跨根重复时验收失败。需要临时回退到旧布局时，可显式运行带警告的 `--codex-layout codex` 或 `--codex-layout both` 重新同步；恢复默认布局后再次同步即可安全迁回官方目录。
@@ -192,3 +202,7 @@ PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
 - `sysu-ppt` 内置的两套 PPT 模板版权归中山大学所有，仅供学习参考；如有顾虑请删除 `skills/sysu-ppt/assets/` 后使用自己的模板。
 - `sysu-ppt` 默认使用中大医学棕榈封面模板（原模板2）；原公卫学院绿色模板保留为 `模板2` 可选项。
 - 中文技能（原则 / 分析 / 论文 / 交付 / 审查 / 学术审校）为本仓库原创，针对中文学术写作与中文期刊投稿场景做了大量特化。
+
+## 贡献者
+
+- OpenAI Codex：安装前 Skill 冲突扫描、隔离备份与可审计登记流程。

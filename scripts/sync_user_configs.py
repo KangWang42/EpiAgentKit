@@ -28,6 +28,7 @@ from config_core import (
     load_json,
     resolve_codex_skill_dirs,
 )
+from skill_conflicts import quarantine_skill_conflicts, scan_skill_conflicts
 
 CODEX_EXCLUDES = {"skill-creator"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
@@ -256,8 +257,10 @@ def migrate_codex_compatibility_skills(
         if not source.is_dir() or not trees_equal(source, duplicate):
             print(f"KEEP   {duplicate} (not identical to repository source)")
             continue
-        safe_remove(duplicate, compatibility, dry_run)
-        remaining.discard(name)
+        print(
+            f"KEEP   {duplicate} (conflict preflight must quarantine "
+            "verified duplicates before migration)"
+        )
 
     if remaining:
         write_manifest(manifest, legacy_manifest, sorted(remaining), dry_run)
@@ -602,6 +605,41 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
     if selected_skills is not None and "skills" not in components:
         raise ValueError("--skills requires --components skills")
     prune_stale = selected_skills is None
+
+    if "skills" in components:
+        conflicts = []
+        if args.target in {"all", "claude"}:
+            claude_incoming = set(source_skills(root, set(), selected_skills))
+            conflicts.extend(
+                scan_skill_conflicts(
+                    platform="claude",
+                    source_root=root,
+                    incoming=claude_incoming,
+                    discovery_roots=[claude_home / "skills"],
+                    target_roots=[claude_home / "skills"],
+                )
+            )
+        if args.target in {"all", "codex"}:
+            codex_incoming = set(source_skills(root, CODEX_EXCLUDES, selected_skills))
+            conflicts.extend(
+                scan_skill_conflicts(
+                    platform="codex",
+                    source_root=root,
+                    incoming=codex_incoming,
+                    discovery_roots=[
+                        home / ".agents" / "skills",
+                        codex_home / "skills",
+                        *codex_skill_dirs,
+                    ],
+                    target_roots=codex_skill_dirs,
+                )
+            )
+        quarantine_skill_conflicts(
+            conflicts,
+            home=home,
+            source_root=root,
+            dry_run=args.dry_run,
+        )
 
     if args.target in {"all", "claude"}:
         print("\n[Claude Code]")

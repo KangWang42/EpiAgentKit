@@ -159,6 +159,11 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
     print(f"- 组件：{', '.join(sorted(components))}")
     print(f"- Skills：{'全部' if skills is None else ', '.join(sorted(skills))}")
     print("- 行为：覆盖同名 EpiAgentKit 文件，保留无关个人配置")
+    if "skills" in components:
+        print(
+            "- 冲突门禁：安装前遍历 Skill 发现目录；冲突旧版完整隔离到 "
+            "~/.epiagentkit/skill-conflicts/，不直接删除"
+        )
     if target in {"codex", "all"}:
         print(f"- Codex skills 布局：{args.codex_layout}")
         if args.codex_layout in {"codex", "both"}:

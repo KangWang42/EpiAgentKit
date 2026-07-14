@@ -153,6 +153,29 @@ def main() -> int:
             + (evidence_tests.stdout + evidence_tests.stderr).strip()
         )
 
+    installer_tests = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "scripts/tests",
+            "-p",
+            "test_*.py",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if installer_tests.returncode:
+        problems.append(
+            "installer conflict tests failed: "
+            + (installer_tests.stdout + installer_tests.stderr).strip()
+        )
+
     routing_path = ROOT / "scripts/skill_routing_cases.json"
     try:
         routing_contract = json.loads(routing_path.read_text(encoding="utf-8"))
@@ -291,6 +314,15 @@ def main() -> int:
             "include: set[str] | None",
             "prune_stale: bool = True",
             "def update_install_manifest(",
+            "scan_skill_conflicts(",
+            "quarantine_skill_conflicts(",
+        ),
+        "scripts/skill_conflicts.py": (
+            "CONFLICT_DOMAINS",
+            'kind="semantic_overlap"',
+            '"skill-conflicts"',
+            "shutil.move",
+            "matched_terms",
         ),
         "scripts/config_core.py": (
             'PROJECT_NAME = "EpiAgentKit"',
