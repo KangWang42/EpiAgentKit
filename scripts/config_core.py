@@ -19,8 +19,8 @@ INSTALL_SCHEMA = 1
 PRESETS = {
     "ppt": {
         "biostat-principles",
+        "image-diagrams",
         "publication-figures",
-        "svg-diagrams",
         "sysu-ppt",
         "pptx",
     },
@@ -30,8 +30,8 @@ PRESETS = {
         "academic-humanizer",
         "academic-publishing",
         "report-writing",
+        "image-diagrams",
         "publication-figures",
-        "svg-diagrams",
         "docx",
         "xlsx",
     },
@@ -50,8 +50,8 @@ DEPENDENCIES = {
     "academic-publishing": {
         "biostat-principles",
         "academic-humanizer",
+        "image-diagrams",
         "publication-figures",
-        "svg-diagrams",
     },
     "consulting-delivery": {
         "biostat-principles",
@@ -60,15 +60,16 @@ DEPENDENCIES = {
     },
     "epi-project-audit": {"biostat-principles"},
     "project-init": {"biostat-principles"},
+    "image-diagrams": {"svg-diagrams"},
     "publication-figures": {"biostat-principles"},
     "r-biostats": {"biostat-principles", "publication-figures"},
     "report-writing": {
         "academic-humanizer",
+        "image-diagrams",
         "publication-figures",
-        "svg-diagrams",
         "docx",
     },
-    "sysu-ppt": {"publication-figures", "svg-diagrams", "pptx"},
+    "sysu-ppt": {"image-diagrams", "publication-figures", "pptx"},
 }
 
 CODEX_COMPATIBILITY_WARNING = (

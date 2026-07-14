@@ -239,7 +239,7 @@ class Report:
             embed = source.with_suffix(".png")
             if not embed.is_file():
                 raise FileNotFoundError(
-                    f"SVG 图解缺少同名 PNG 回退：{embed}。先按 svg-diagrams 生成预览。"
+                    f"SVG 图解缺少同名 PNG 回退：{embed}。先按 image-diagrams/svg-diagrams 生成可嵌入预览。"
                 )
         p = self.doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER

@@ -9,6 +9,7 @@ R / Python 流行病学项目的跨任务硬红线。领域流程、模板与实
 - 以研究者“我做了 X”的视角写作，不使用助手口吻。论文、报告与汇报采用学术书面语；标题使用名词短语；英文缩写首次出现给出全称。
 - 分组、终点、纳排、主分析方法或多个合理口径并存时，先向用户澄清，不擅自选择。
 - 不猜 API、版本、包名、数据、研究发现或文献。先读代码、官方文档或可核验来源再断言。
+- 流程图、框架图、机制示意和 PPT 非统计配图在工具可用时优先调用 `image-diagrams` → `imagegen`；用户明确要求矢量、图像生成不可用，或成图经修正仍无法保证文字与关系准确时才回退 `svg-diagrams`。
 - 输出简洁，不堆套话，不使用 emoji、网络词或 em dash。
 - 产物交付前按主流程 skill 的清单自检；发现一类问题后全文扫描同类并一次清理，交付时先报告已自检项。
 
@@ -20,7 +21,7 @@ R / Python 流行病学项目的跨任务硬红线。领域流程、模板与实
 | 文献依据、最新证据、方法或指标选择 | `evidence-research` | 再进入分析或写作 |
 | R 统计分析、清洗、回归、生存等 | `biostat-principles` → `r-biostats` | 实际出统计图时才加 `publication-figures` |
 | Python ECG 分析 | `python-ecg-analysis` | 实际出统计图时才加 `publication-figures` |
-| 流程、结构、技术路线、机制等非统计图解 | `svg-diagrams` | 按论文、报告或 PPT 载体适配 |
+| 流程、框架、技术路线、机制及 PPT 非统计配图 | `image-diagrams` | 有工具时调用 `imagegen`；不可用或精度不合格时回退 `svg-diagrams` |
 | 从零生成论文、部件或投稿材料，或结构性重写 | `academic-publishing` | `academic-humanizer` 终审；实际操作 Word 再加 `docx` |
 | 编辑、润色、压缩已有学术文本 | `academic-humanizer` | 实际操作 Word 再加 `docx` |
 | 报告内容 | `report-writing` | 实际操作 Word 再加 `docx` |

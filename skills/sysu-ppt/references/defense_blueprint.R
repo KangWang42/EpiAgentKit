@@ -49,7 +49,7 @@ if (!length(SKILL) || is.na(SKILL)) stop("找不到 sysu-ppt；请设置 EPIAGEN
 source(file.path(SKILL, "scripts", "sysu_toolkit.R"))
 
 TPL <- "default"
-FIG <- "figures"        # 流程/结构/路线图按 svg-diagrams 生成 SVG+PNG
+FIG <- "figures"        # 流程/结构/路线及场景配图按 image-diagrams 优先生成 PNG
 f <- function(x) file.path(FIG, x)
 
 ppt <- sysu_init(TPL)
@@ -74,7 +74,7 @@ ppt <- sysu_add_text_image(ppt, "1.1 研究意义",
   block_list(
     prose(bd("研究意义　"), tx("点明该问题对学科/公共卫生/临床决策的重要性，一两句。")),
     prose(bd("现实需求　"), tx("当前实践中的痛点或政策需求。"))),
-  f("background.svg"), img_w = 5.2, img_h = 4.0, side = "right", caption = "图1　研究背景示意")
+  f("background.png"), img_w = 5.2, img_h = 4.0, side = "right", caption = "图1　研究背景示意")
 
 # 1.2 国内外研究现状：方法对比三线表
 cmp <- data.frame(
@@ -108,17 +108,17 @@ ppt <- sysu_add_section(ppt, "三、研究方法")
 
 # 3.x 每个研究内容：先总流程图，再分步细化
 ppt <- sysu_add_image_caption(ppt, "3.1 方法总流程",
-  f("method_flow.svg"), img_w = 9.8, img_h = 4.4,
+  f("method_flow.png"), img_w = 9.8, img_h = 4.4,
   block_list(prose(bd("方法流程　"), tx("概述方法整体流程，串联下列各步骤。"))), img_pos = "top",
   caption = "图2　方法总流程")
 
 ppt <- sysu_add_text_image(ppt, "3.2 第一步：变量筛选",
   block_list(prose(bd("目标函数　"), tx("配合右图的两三句关键设定。"))),
-  f("step1.svg"), img_w = 5.4, img_h = 4.2, side = "right", caption = "图3　第一步示意")
+  f("step1.png"), img_w = 5.4, img_h = 4.2, side = "right", caption = "图3　第一步示意")
 
 ppt <- sysu_add_text_image(ppt, "3.3 第二步：效应估计",
   block_list(prose(bd("平衡权重　"), tx("两三句说明估计量构造。"))),
-  f("step2.svg"), img_w = 5.4, img_h = 4.2, side = "right", caption = "图4　第二步示意")
+  f("step2.png"), img_w = 5.4, img_h = 4.2, side = "right", caption = "图4　第二步示意")
 
 ppt <- sysu_add_text(ppt, "3.4 模拟研究与评价", block_list(
   prose(bd("模拟场景　"), tx("线性 / 非线性无交互 / 非线性有交互三种场景。")),
@@ -126,7 +126,7 @@ ppt <- sysu_add_text(ppt, "3.4 模拟研究与评价", block_list(
 
 # ============ 四、技术路线图 ============
 ppt <- sysu_add_image(ppt, "四、技术路线图",
-  f("roadmap.svg"), img_w = 11.0, img_h = 5.4, caption = "图5　技术路线")
+  f("roadmap.png"), img_w = 11.0, img_h = 5.4, caption = "图5　技术路线")
 
 # ============ 五、创新点与可行性分析 ============
 ppt <- sysu_add_section(ppt, "五、创新点与可行性分析")

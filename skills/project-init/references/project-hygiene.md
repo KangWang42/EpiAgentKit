@@ -37,7 +37,7 @@
 - 主表命名 `Table{N}_{描述}.xlsx`，附表 `TableS{N}_...`；主图命名 `Fig{N}_{描述}.{png,pdf,svg}`，附图 `FigS{N}_...`。
 - N 按论文首次引用顺序连续。附表、附图放 `supplementary/`；敏感性、消融、探索和审计产物进入相应二级目录或归档。
 - registry 有序清单是编号唯一来源。脚本通过 `table_path(stem)` 与 `fig_path(stem, ext)` 取路径，不写死 `Table6`、`Fig3`。实现见 `registry.md`。
-- SVG 只用于流程、结构、技术路线、机制等非统计图解；统计图以 PDF 与 PNG 为主。
+- 流程、结构、技术路线、机制和 PPT 非统计配图默认由 `image-diagrams` 调用 imagegen 生成 PNG；用户或格式要求矢量、工具不可用或内容精度不合格时才由 `svg-diagrams` 生成 SVG + PNG。统计图以 PDF 与 PNG 为主。
 - 不长期保留无编号表图，不保留同主题多版本，不导出 TSV。
 - 一张论文表对应一个 xlsx 主题；多个 outcome、模型或亚组放同一工作簿的多个 sheet。交付工作簿不放 cover、说明或数据字典 sheet。
 

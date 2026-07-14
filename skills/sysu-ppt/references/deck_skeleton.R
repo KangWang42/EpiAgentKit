@@ -23,7 +23,7 @@ if (!length(SKILL) || is.na(SKILL)) stop("找不到 sysu-ppt；请设置 EPIAGEN
 source(file.path(SKILL, "scripts", "sysu_toolkit.R"))
 
 TPL <- "default"        # 默认中大医学；用户要原公卫模板时改 "模板2"
-FIG <- "figures"        # 非统计图解先按 svg-diagrams 生成 SVG+PNG；统计图走 publication-figures
+FIG <- "figures"        # 非统计图解按 image-diagrams 优先生成 PNG；统计图走 publication-figures
 f <- function(x) file.path(FIG, x)
 
 ppt <- sysu_init(TPL)
@@ -37,7 +37,7 @@ ppt <- sysu_add_text_image(ppt, "1 背景：为什么关注它",
     prose(bd("现状　"), tx("点明领域现状或核心痛点。")),
     prose(bd("问题　"), tx("点出核心问题，避免铺陈。")),
     prose(bd("思路　"), tx("本主题给出的解决思路。"))),
-  f("concept.svg"), img_w = 5.5, img_h = 4.0, side = "right",
+  f("concept.png"), img_w = 5.5, img_h = 4.0, side = "right",
   caption = "图1　核心概念示意")
 
 # 1.1 关键定义：纯文字（成段 + 少量编号，写清即可）
@@ -49,7 +49,7 @@ ppt <- sysu_add_text(ppt, "1.1 核心概念", block_list(
 
 # 2 方法/分类：整图或上下图文（谱系/流程一图胜千言）
 ppt <- sysu_add_image_caption(ppt, "2 方法谱系",
-  f("taxonomy.svg"), img_w = 9.8, img_h = 4.4,
+  f("taxonomy.png"), img_w = 9.8, img_h = 4.4,
   block_list(prose(bd("要点　"), tx("概述下列各类方法的共同脉络与划分依据。"))), img_pos = "top",
   caption = "图2　方法谱系总览")
 
@@ -64,7 +64,7 @@ ppt <- sysu_add_cards(ppt, "2.1 三种主流方法",
 # 2.2 机制细节：左文右图（流程图讲清步骤）
 ppt <- sysu_add_text_image(ppt, "2.2 机制细节",
   block_list(prose(bd("关键　"), tx("配合右图的两三句要点。"))),
-  f("mechanism.svg"), img_w = 5.4, img_h = 4.2, side = "right",
+  f("mechanism.png"), img_w = 5.4, img_h = 4.2, side = "right",
   caption = "图3　机制流程")
 
 # 3 对比/评估：四列三线表（答辩 deck 的高信息量对比范式，组会讲方法同样适用）
@@ -87,7 +87,7 @@ ppt <- sysu_add_text_image(ppt, "4 决策建议",
   block_list(
     prose(bd("默认　"), tx("默认怎么做。")),
     prose(bd("例外　"), tx("什么情况下换做法。"))),
-  f("decision.svg"), img_w = 5.2, img_h = 4.4, side = "right",
+  f("decision.png"), img_w = 5.2, img_h = 4.4, side = "right",
   caption = "图4　决策流程")
 
 # 4.1 总结：纯文字（编号收束 take-home）

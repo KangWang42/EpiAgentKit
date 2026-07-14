@@ -1,6 +1,7 @@
 # ============================================================
 # 数据型配图函数库（适配 PPT 嵌入）
-# 非统计流程图、结构图、技术路线、包含关系和机制示意统一使用 svg-diagrams，
+# 非统计流程图、结构图、技术路线、包含关系、机制示意和场景配图统一使用
+# image-diagrams 优先调用 imagegen；只有矢量需求或精度回退时使用 svg-diagrams。
 # 不在本文件继续维护 ggplot 矩形/箭头流程图基元。
 # ============================================================
 suppressPackageStartupMessages({
@@ -31,4 +32,4 @@ make_spectrum <- function(items, xlab = "X →", ylab = "Y →", pal = c(BLUE, R
 }
 
 # 渲染提示：右栏图按约 5.5–6.2 英寸输出，整图按约 8.6–9.8 英寸输出。
-# 统计图遵循 publication-figures；非统计图解遵循 svg-diagrams 并直接嵌入 SVG。
+# 统计图遵循 publication-figures；非统计图解遵循 image-diagrams 并优先嵌入 PNG。

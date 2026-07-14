@@ -331,6 +331,7 @@ def main() -> int:
             'layout == "both"',
             "Installation-time bundle closure only",
             '"evidence-research"',
+            '"image-diagrams"',
         ),
         "skills/project-init/SKILL.md": (
             "已有项目开始分析不触发本 skill",
@@ -429,6 +430,13 @@ def main() -> int:
             "序号与标题第一行垂直居中对齐",
             "包含关系图",
             "SVG XML 有效",
+        ),
+        "skills/image-diagrams/SKILL.md": (
+            "Codex 使用内置 `imagegen` 技能及其 `image_gen` 工具",
+            "不因流程图或框架图看似可用简单形状表达就跳过 imagegen",
+            "Imagegen 视觉层加确定性文字",
+            "SVG 整图回退",
+            "逐字比对标签、数字和缩写",
         ),
         "skills/sysu-ppt/scripts/sysu_toolkit.R": (
             'default = list(file = "template.pptx"',
