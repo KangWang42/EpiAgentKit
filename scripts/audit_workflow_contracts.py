@@ -153,6 +153,29 @@ def main() -> int:
             + (evidence_tests.stdout + evidence_tests.stderr).strip()
         )
 
+    installer_tests = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "scripts/tests",
+            "-p",
+            "test_*.py",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if installer_tests.returncode:
+        problems.append(
+            "installer conflict tests failed: "
+            + (installer_tests.stdout + installer_tests.stderr).strip()
+        )
+
     routing_path = ROOT / "scripts/skill_routing_cases.json"
     try:
         routing_contract = json.loads(routing_path.read_text(encoding="utf-8"))
@@ -291,6 +314,15 @@ def main() -> int:
             "include: set[str] | None",
             "prune_stale: bool = True",
             "def update_install_manifest(",
+            "scan_skill_conflicts(",
+            "remove_skill_conflicts(",
+        ),
+        "scripts/skill_conflicts.py": (
+            "CONFLICT_DOMAINS",
+            'kind="semantic_overlap"',
+            '"skill-conflict-reports"',
+            "shutil.rmtree",
+            "matched_terms",
         ),
         "scripts/config_core.py": (
             'PROJECT_NAME = "EpiAgentKit"',
@@ -648,6 +680,22 @@ def main() -> int:
                 '{"managed": []}\n', encoding="utf-8"
             )
 
+        inline_conflict = home / ".codex/hooks/legacy_r_check.py"
+        inline_conflict.write_text("Rscript -e 'parse(file=x)'\n", encoding="utf-8")
+        codex_inline = home / ".codex/config.toml"
+        codex_inline.write_text(
+            "model = 'personal-model'\n\n"
+            "[[hooks.PostToolUse]]\n"
+            "matcher = 'apply_patch'\n"
+            "[[hooks.PostToolUse.hooks]]\n"
+            "type = 'command'\n"
+            f"command = 'python \"{inline_conflict}\"'\n"
+            "[[hooks.PostToolUse.hooks]]\n"
+            "type = 'command'\n"
+            "command = 'custom-quality-check'\n",
+            encoding="utf-8",
+        )
+
         compatibility = home / ".codex/skills"
         managed_duplicate = compatibility / "academic-humanizer"
         mirror_tree(ROOT / "skills/academic-humanizer", managed_duplicate)
@@ -725,6 +773,7 @@ def main() -> int:
                 home / ".epiagentkit/state",
                 home / ".claude/settings.json.epiagentkit.bak",
                 home / ".codex/hooks.json.epiagentkit.bak",
+                home / ".codex/config.toml.epiagentkit.bak",
             )
             missing = [str(path) for path in expected_paths if not path.is_file()]
             if missing:
@@ -763,6 +812,25 @@ def main() -> int:
                     problems.append(
                         f"dual-platform install self-test: personal config changed: {config_path}"
                     )
+            codex_hooks = json.loads(
+                (home / ".codex/hooks.json").read_text(encoding="utf-8")
+            )
+            codex_commands = [
+                handler.get("command", "")
+                for groups in codex_hooks.get("hooks", {}).values()
+                for group in groups
+                for handler in group.get("hooks", [])
+                if isinstance(handler, dict)
+            ]
+            if inline_conflict.exists() or "custom-quality-check" not in codex_commands:
+                problems.append(
+                    "hook conflict self-test: conflict was not deleted or custom hook was lost"
+                )
+            if "[[hooks." in codex_inline.read_text(encoding="utf-8"):
+                problems.append("hook conflict self-test: Codex inline hooks were not migrated")
+            reports = list((home / ".epiagentkit/hook-conflict-reports").glob("*/manifest.json"))
+            if len(reports) != 1:
+                problems.append("hook conflict self-test: deletion report count is incorrect")
 
             before = snapshot_tree(home)
             second = run_epiagentkit(install)

@@ -92,10 +92,20 @@ python ~/epiagentkit/scripts/epiagentkit.py sync --target codex \
 
 只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex skills 布局由 `--codex-layout` 控制：默认 `auto` 与 `agents` 均只使用官方 `~/.agents/skills/`；`codex` 使用兼容目录 `~/.codex/skills/`，`both` 双写，后二者会显示重复技能风险警告，不作为默认安装或验收基线。
 
-首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能，仅删除与仓库源完全一致的副本；`.system`、非受管技能和内容不一致的目录均保留。可先演练迁移：
+首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能；与仓库源重复的旧根副本会直接删除，`.system` 与无冲突的非受管技能保持原位。可先演练迁移：
 
 ```bash
 python scripts/epiagentkit.py sync --target codex --components skills --dry-run
+```
+
+每次安装或同步 `skills` 前都会遍历 Claude Code 与 Codex 的 Skill 发现目录，检查两类冲突：①与待安装权威 Skill 同名但内容不同；②名称不同，但 `description` 命中同一广义触发场景。已经明确写成“停用 / 委派 / 仅在特定条件下使用”的后备 Skill 不判为冲突。
+
+同名或触发范围冲突的旧 Skill 会在安装前直接、永久删除，不保留内容副本。同步器只在 `~/.epiagentkit/skill-conflict-reports/<UTC批次>/manifest.json` 写入一份小型删除记录，登记原路径、冲突类型、命中的触发词和委派目标。目标目录中与仓库完全一致的当前版不处理；使用 `--dry-run` 时只显示拟删除项和报告位置，不删除文件。正式执行前应自行备份需要保留的个人 Skill。
+
+安装前建议先运行：
+
+```bash
+python scripts/epiagentkit.py install --target codex --preset full --yes --dry-run
 ```
 
 默认 `doctor` 会扫描两个 Codex 发现根，同名技能跨根重复时验收失败。需要临时回退到旧布局时，可显式运行带警告的 `--codex-layout codex` 或 `--codex-layout both` 重新同步；恢复默认布局后再次同步即可安全迁回官方目录。
@@ -119,7 +129,9 @@ python scripts/epiagentkit.py doctor --target all
 
 ## 推荐 Hook 配置（可选，把硬红线交给 harness 强制）
 
-客户端只注册三个聚合 hook：一个 PreToolUse 原始数据保护、一个编辑后代码/文本检查、一个命令后图件/结果检查。同步器会复制脚本并自动合并配置：Claude Code 写入 `~/.claude/settings.json`，Codex 写入 `~/.codex/hooks.json`，不会覆盖模型、权限或其他自定义 hook。修改前会在同目录保留稳定的 `.epiagentkit.bak` 配置备份。Codex 修改 hook 后需在 `/hooks` 中重新审查并信任；其发现和信任规则见官方 [Hooks](https://learn.chatgpt.com/docs/hooks)。
+客户端只注册三个聚合 hook：一个 PreToolUse 原始数据保护、一个编辑后代码/文本检查、一个命令后图件/结果检查。同步器会复制脚本并自动合并配置：Claude Code 写入 `~/.claude/settings.json`，Codex 写入 `~/.codex/hooks.json`，不会覆盖模型、权限或无关自定义 hook。修改前会在同目录保留第一次变更前的稳定 `.epiagentkit.bak` 配置备份。Codex 修改 hook 后需在 `/hooks` 中重新审查并信任；其发现和信任规则见官方 [Hooks](https://learn.chatgpt.com/docs/hooks)。
+
+安装或同步 hooks 前会按事件、matcher、命令名和本地脚本内容遍历现有注册，识别原始数据保护、R 语法、AI 痕迹、图件自检和 `.rds` 检查五类功能冲突。冲突注册以 EpiAgentKit 为准并从本地配置删除；冲突脚本只有位于对应客户端 `hooks/` 目录、未被保留注册引用且不属于待安装文件时才永久删除，不保留脚本内容副本。Codex 的非冲突 inline hooks 会从 `config.toml` 迁移到 `hooks.json`，避免同一配置层同时加载两种 Hook 来源；无关 Hook 和其他配置保持不变。删除清单写入 `~/.epiagentkit/hook-conflict-reports/<UTC批次>/manifest.json`，`--dry-run` 只预览。
 
 - `protect_rawdata.sh`（PreToolUse）：canonicalize 编辑路径并拦截 `01_data/rawdata/` 及项目 `.epiagentkit-raw-roots` 声明的额外原始根。声明文件每行一个项目相对路径，支持中文、空格、反斜杠与 `../` 归一化。该 hook 不解析任意 shell/Python/PowerShell 写入，不能替代 ACL、只读副本和终检。
 - `check_r_syntax.sh`（PostToolUse）：`.R` 文件存盘即 `parse()` 语法检查，出错当场反馈给模型修。
@@ -192,3 +204,7 @@ PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
 - `sysu-ppt` 内置的两套 PPT 模板版权归中山大学所有，仅供学习参考；如有顾虑请删除 `skills/sysu-ppt/assets/` 后使用自己的模板。
 - `sysu-ppt` 默认使用中大医学棕榈封面模板（原模板2）；原公卫学院绿色模板保留为 `模板2` 可选项。
 - 中文技能（原则 / 分析 / 论文 / 交付 / 审查 / 学术审校）为本仓库原创，针对中文学术写作与中文期刊投稿场景做了大量特化。
+
+## 贡献者
+
+- OpenAI Codex：安装前 Skill 冲突扫描、直接清理与可审计登记流程。

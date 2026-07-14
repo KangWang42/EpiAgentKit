@@ -28,6 +28,8 @@ from config_core import (
     load_json,
     resolve_codex_skill_dirs,
 )
+from hook_conflicts import reconcile_hook_conflicts
+from skill_conflicts import remove_skill_conflicts, scan_skill_conflicts
 
 CODEX_EXCLUDES = {"skill-creator"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
@@ -472,7 +474,7 @@ def sync_hook_config(
     print(f"MERGE  EpiAgentKit hooks -> {config_path}")
     if dry_run:
         return
-    if config_path.exists():
+    if config_path.exists() and not backup.exists():
         print(f"BACKUP {config_path} -> {backup}")
         atomic_copy_file(config_path, backup)
     atomic_write_json(config_path, updated)
@@ -603,6 +605,41 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
         raise ValueError("--skills requires --components skills")
     prune_stale = selected_skills is None
 
+    if "skills" in components:
+        conflicts = []
+        if args.target in {"all", "claude"}:
+            claude_incoming = set(source_skills(root, set(), selected_skills))
+            conflicts.extend(
+                scan_skill_conflicts(
+                    platform="claude",
+                    source_root=root,
+                    incoming=claude_incoming,
+                    discovery_roots=[claude_home / "skills"],
+                    target_roots=[claude_home / "skills"],
+                )
+            )
+        if args.target in {"all", "codex"}:
+            codex_incoming = set(source_skills(root, CODEX_EXCLUDES, selected_skills))
+            conflicts.extend(
+                scan_skill_conflicts(
+                    platform="codex",
+                    source_root=root,
+                    incoming=codex_incoming,
+                    discovery_roots=[
+                        home / ".agents" / "skills",
+                        codex_home / "skills",
+                        *codex_skill_dirs,
+                    ],
+                    target_roots=codex_skill_dirs,
+                )
+            )
+        remove_skill_conflicts(
+            conflicts,
+            home=home,
+            source_root=root,
+            dry_run=args.dry_run,
+        )
+
     if args.target in {"all", "claude"}:
         print("\n[Claude Code]")
         if "rules" in components:
@@ -617,6 +654,14 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
                 prune_stale=prune_stale,
             )
         if "hooks" in components:
+            reconcile_hook_conflicts(
+                platform="claude",
+                json_config=claude_home / "settings.json",
+                hooks_dir=claude_home / "hooks",
+                home=home,
+                protected_names={item.name for item in (root / "hooks").iterdir()},
+                dry_run=args.dry_run,
+            )
             sync_hooks(root / "hooks", claude_home / "hooks", args.dry_run)
             sync_hook_config(
                 "claude",
@@ -654,6 +699,15 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
                     root, codex_home / "skills", args.dry_run
                 )
         if "hooks" in components:
+            reconcile_hook_conflicts(
+                platform="codex",
+                json_config=codex_home / "hooks.json",
+                inline_config=codex_home / "config.toml",
+                hooks_dir=codex_home / "hooks",
+                home=home,
+                protected_names={item.name for item in (root / "hooks").iterdir()},
+                dry_run=args.dry_run,
+            )
             sync_hooks(root / "hooks", codex_home / "hooks", args.dry_run)
             sync_hook_config(
                 "codex",
