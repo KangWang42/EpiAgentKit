@@ -227,6 +227,7 @@ def main() -> int:
             "轻量任务",
             "不得自动初始化项目",
             "正式项目审查或交付签发前",
+            "`biostat-principles` → `python-ecg-analysis`",
         ),
         "skills/project-init/references/project-hygiene.md": (
             "编号脚本不超过 10 个",
@@ -286,6 +287,7 @@ def main() -> int:
             "SAP.md",
             "轻量任务",
             "不补建缺失的项目文档",
+            "不用询问代替排错",
         ),
         "skills/biostat-principles/SKILL.md": (
             "09_backup/EXPERIMENTS.md",
@@ -294,6 +296,7 @@ def main() -> int:
             "规则冲突只使用全局",
             "轻量任务",
             "不创建七层目录",
+            "完成并验证后自动 commit",
         ),
         "skills/consulting-delivery/SKILL.md": (
             "09_backup/INDEX.md",
@@ -332,6 +335,7 @@ def main() -> int:
             "matched_terms",
             "def remove_tree(",
             "deferred_empty_directory",
+            '"research-visuals"',
         ),
         "scripts/config_core.py": (
             'PROJECT_NAME = "EpiAgentKit"',
@@ -342,6 +346,7 @@ def main() -> int:
             '"evidence-research"',
             '"research-visuals"',
             '"project-init": {"biostat-principles", "epi-project-audit"}',
+            '"python-ecg-analysis": {"biostat-principles", "publication-figures"}',
         ),
         "skills/project-init/SKILL.md": (
             "已有项目开始分析不触发本 skill",
@@ -350,6 +355,11 @@ def main() -> int:
         ),
         "skills/academic-publishing/SKILL.md": (
             "已有文本的局部润色、压缩与语气校准由 academic-humanizer 主导",
+            "写→自检→标记完成→下一部件",
+        ),
+        "skills/academic-publishing/references/chinese-thesis.md": (
+            "数字机器单源 = `07_paper/results.yaml`",
+            "重新派生 `0_result_summaries.md`",
         ),
         "skills/docx/SKILL.md": (
             "only when Codex must actually",
@@ -369,6 +379,11 @@ def main() -> int:
         "skills/python-ecg-analysis/SKILL.md": (
             "只有确认 `--help` 会在业务逻辑前退出且不会写文件时",
             "无法证明入口的帮助调用无副作用时，不执行它",
+            "上游依赖：开工前对齐 biostat-principles",
+        ),
+        "skills/publication-figures/SKILL.md": (
+            "发表级统计图、数据图和含坐标或尺度映射的结果图",
+            "非统计视觉不触发本技能",
         ),
         "scripts/configure_user.py": (
             "CODEX_COMPATIBILITY_WARNING,",
@@ -431,6 +446,13 @@ def main() -> int:
             "不得只在当前研究项目或 `PATH` 中查找",
             "任何 ERROR 都阻止最终签发",
             "不得把无 provenance 时的 mtime 提示升级成确定性不一致",
+            "继续完成其余层审查",
+            "results.yaml | 0_result_summaries.md",
+            "来源不明的既有文件",
+            "仅在“审查并修复”模式",
+        ),
+        "skills/epi-project-audit/references/audit-checklist.md": (
+            "`results.yaml` ↔ 派生 `0_result_summaries.md`",
         ),
         "skills/epi-project-audit/scripts/run_check_project.py": (
             "def source_from_manifest(",
@@ -530,6 +552,10 @@ def main() -> int:
             "`research-visuals`",
             "PPT、论文、标书、报告和网页",
             "PPT + imagegen 科研视觉技能包",
+            "发表级统计图与数据图规范",
+            "逐部件内部闭环写作",
+            "`biostat-principles` → `python-ecg-analysis`",
+            "审查（六层）在发现失败后继续收集全部证据",
         ),
         "skills/git-commit-helper/SKILL.md": (
             "create the commit automatically",
@@ -558,8 +584,8 @@ def main() -> int:
             "提交并正常推送",
             "<EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
         ),
-        "skills/epi-project-audit/SKILL.md": (
-            "python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
+        "README.md": (
+            '审查（六层）都是"不过检不许进下一步"',
         ),
         "skills/project-init/references/project-hygiene.md": (
             "<EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
@@ -590,9 +616,25 @@ def main() -> int:
         "skills/biostat-principles/SKILL.md": (
             "CLAUDE.md 的 CRITICAL 条款",
             "所有执行 skill 冲突时，本文件优先级更高",
+            "提交前征询用户",
         ),
         "skills/academic-publishing/SKILL.md": (
             "生成或润色任一部件",
+            "批准→下一部件",
+        ),
+        "skills/academic-publishing/references/chinese-thesis.md": (
+            "数字唯一来源 = `0_result_summaries.md`",
+            "结果变 → 回写 `0_result_summaries.md`",
+        ),
+        "skills/publication-figures/SKILL.md": (
+            "用户要求出图、画图、做图、生成 Fig",
+        ),
+        "skills/epi-project-audit/SKILL.md": (
+            "python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
+            "不通过不进入下一层",
+            "文件命名不规范（重命名）",
+            "散落临时文件（移入对应目录）",
+            "### 自动修复动作",
         ),
         "hooks/final_project_check.py": (
             "results.source_older_than_outputs",

@@ -36,6 +36,7 @@ class VisualRoutingTests(unittest.TestCase):
             "references/visual-strategy.md",
             "references/carrier-specs.md",
             "references/prompt-recipes.md",
+            "references/research-figure-patterns.md",
         ):
             self.assertTrue((skill / relative).is_file(), relative)
 

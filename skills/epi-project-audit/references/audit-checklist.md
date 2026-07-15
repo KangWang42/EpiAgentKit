@@ -51,7 +51,7 @@
 - 表格 vs 图片
 - 表格 vs 摘要
 - 表格 vs 正文结果段
-- `0_result_summaries.md` vs 终稿 vs 分享包
+- `results.yaml` ↔ 派生 `0_result_summaries.md` ↔ 终稿 ↔ 分享包
 - 主分析 vs 敏感性分析 vs 附录
 
 红旗：

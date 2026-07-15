@@ -63,6 +63,7 @@ DEPENDENCIES = {
     "project-init": {"biostat-principles", "epi-project-audit"},
     "research-visuals": {"svg-diagrams"},
     "publication-figures": {"biostat-principles"},
+    "python-ecg-analysis": {"biostat-principles", "publication-figures"},
     "r-biostats": {"biostat-principles", "publication-figures"},
     "report-writing": {
         "academic-humanizer",

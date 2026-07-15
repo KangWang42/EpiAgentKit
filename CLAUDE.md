@@ -21,7 +21,7 @@ R / Python 流行病学项目的跨任务硬红线。领域流程、模板与实
 | 明确新建、初始化项目或空工作区建骨架 | `project-init` | 咨询项目完成分析后再用 `consulting-delivery` |
 | 文献依据、最新证据、方法或指标选择 | `evidence-research` | 再进入分析或写作 |
 | R 统计分析、清洗、回归、生存等 | `biostat-principles` → `r-biostats` | 实际出统计图时才加 `publication-figures` |
-| Python ECG 分析 | `python-ecg-analysis` | 实际出统计图时才加 `publication-figures` |
+| Python ECG 分析 | `biostat-principles` → `python-ecg-analysis` | 实际出统计图时才加 `publication-figures` |
 | PPT、论文、标书、报告和网页非统计视觉；流程、框架、路线、机制、图形摘要 | `research-visuals` | 调用 `imagegen`；统计数据图转 `publication-figures`，矢量或精度回退转 `svg-diagrams` |
 | 从零生成论文、部件或投稿材料，或结构性重写 | `academic-publishing` | `academic-humanizer` 终审；实际操作 Word 再加 `docx` |
 | 编辑、润色、压缩已有学术文本 | `academic-humanizer` | 实际操作 Word 再加 `docx` |

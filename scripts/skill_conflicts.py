@@ -93,6 +93,12 @@ CONFLICT_DOMAINS = {
         "中介效应、meta 分析",
         "r biostatistics",
     ),
+    "research-visuals": (
+        "科研视觉资产",
+        "imagegen 科研视觉",
+        "流程图、技术路线、结构图、概念框架",
+        "scientific research visuals",
+    ),
     "report-writing": (
         "分析报告",
         "进展报告",

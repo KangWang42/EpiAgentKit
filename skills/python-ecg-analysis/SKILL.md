@@ -4,6 +4,7 @@ description: |
   通用 Python 心电图（ECG）分析技能，覆盖 ECG 预处理与波形质量控制、心拍/心率变异性（HRV）/表征特征、纵向或多轮 ECG 对齐、超声或临床结局连接及患者级建模。
   触发场景：(1) 用 Python 处理 ECG 原始信号；(2) 做心拍、HRV、波形或表征特征；(3) 对齐同一患者多轮 ECG；(4) 连接 ECG 与超声/临床结局；(5) 构建患者级 ECG 模型。
   不适用：普通 R 生物统计任务、非 ECG 的通用机器学习、仅写论文或报告。项目命令、参数和数据位置必须从项目规则、README、代码与实际 --help 读取，不得写死。
+  上游依赖：开工前对齐 biostat-principles；实际生成统计图时使用 publication-figures。
 ---
 
 # Python ECG 分析

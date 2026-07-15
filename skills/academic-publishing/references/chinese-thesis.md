@@ -215,8 +215,8 @@
      基金号、答辩委员、签名、致谢对象、在读成果）。
    - `[NEED CONFIRMATION：xxx]` —— `0_result_summaries.md` 里查不到的数字/结论，不许瞎填。
    拼装时这两类标记在 docx 里**黄色高亮**（见 `thesis-formatting.md`），并在交付汇报中给出两类标记的清单与计数。
-5. **数字唯一来源 = `0_result_summaries.md`**；源不自洽（新旧值混杂）先让用户统一再写，不在混杂源上动笔。
-6. 结果变 → 回写 `0_result_summaries.md`；方法变 → `DECISIONS.md`；操作完 → `SESSION_LOG.md`。
+5. **数字机器单源 = `07_paper/results.yaml`**；`0_result_summaries.md` 仅为其派生人读版。两者不一致时先回到生成脚本或 results.yaml 修正并重新派生，不在混杂源上动笔。
+6. 结果变 → 回写 `07_paper/results.yaml` 并重新派生 `0_result_summaries.md`；方法变 → `DECISIONS.md`；操作完 → `SESSION_LOG.md`。
 
 ---
 
