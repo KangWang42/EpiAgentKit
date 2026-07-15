@@ -86,6 +86,6 @@ R / Python 流行病学项目的跨任务硬红线。领域流程、模板与实
 - 代码已实跑，输出存在，全量异常扫描逐项闭环。
 - 轻量任务确认请求本身完成、输出可打开或可复现，并报告最小验证；不运行正式项目签发，也不补项目账本。
 - 正式项目的结果、方法、日志、BACKLOG、当前状态和 registry 已按变更同步；编号、目录、表图、归档与唯一当前版通过 `project-hygiene.md` 和对应 skill 自检。
-- 正式项目审查或交付签发前运行 `python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project <项目根>`；ERROR 阻止签发，WARN 逐项解释。该命令不注册 Stop、不自动续跑。
+- 正式项目审查或交付签发前运行 `python <epi-project-audit技能目录>/scripts/run_check_project.py <项目根> --json`；该入口从用户安装清单的 `source` 键解析中央 `epiagentkit.py`。不得只在当前项目或 `PATH` 中查找后宣称未安装。ERROR 阻止签发，WARN 逐项解释；该命令不注册 Stop、不自动续跑。
 - 修改 EpiAgentKit 规则、skills 或 hooks 后，以仓库为单源运行 `sync --target all` 与 `doctor --target all`。
 - 明确修改请求完成并验证后默认按 Conventional Commits 自动提交；只有用户当轮明确要求 push 时才推送，不询问、不提醒或自行累积推送。绝不 force push 或改写远端历史。

@@ -63,7 +63,7 @@
 
 ## 7. 收尾核对
 
-- 签发前运行 `python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project <项目根>`；ERROR 必须修复，基于 mtime 或缺 provenance 的 WARN 需解释但不冒充确定性失败。
+- 签发前运行 `python <epi-project-audit技能目录>/scripts/run_check_project.py <项目根> --json`；入口会从平台安装清单解析中央 EpiAgentKit 源，不在项目内复制 `epiagentkit.py`。ERROR 必须修复，基于 mtime 或缺 provenance 的 WARN 需解释但不冒充确定性失败。
 - 所有代码、表、图编号连续，生成脚本与正文引用同步。
 - 有序分类水平来自 `conventions.R`，脚本不散写 level、配色、P 值格式或 registry。
 - 当前工作区每类交付物只有一组稳定名当前版，旧版批次有 MANIFEST 与 INDEX 记录。

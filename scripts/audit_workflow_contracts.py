@@ -299,7 +299,7 @@ def main() -> int:
             "唯一当前交付包",
             "R 或 Python 分析",
             "run_all.R` 或 `run_all.py",
-            "check-project",
+            "scripts/run_check_project.py",
         ),
         "skills/consulting-delivery/scripts/consulting_scaffold.R": (
             'subdirs <- c("data", "code", "results", "tables", "figures")',
@@ -335,6 +335,7 @@ def main() -> int:
             "Installation-time bundle closure only",
             '"evidence-research"',
             '"image-diagrams"',
+            '"project-init": {"biostat-principles", "epi-project-audit"}',
         ),
         "skills/project-init/SKILL.md": (
             "已有项目开始分析不触发本 skill",
@@ -416,9 +417,19 @@ def main() -> int:
             "os.walk(project, topdown=True",
         ),
         "skills/epi-project-audit/SKILL.md": (
-            "epiagentkit.py check-project",
+            "scripts/run_check_project.py",
+            ".epiagentkit-install.json",
+            "不得只在当前研究项目或 `PATH` 中查找",
             "任何 ERROR 都阻止最终签发",
             "不得把无 provenance 时的 mtime 提示升级成确定性不一致",
+        ),
+        "skills/epi-project-audit/scripts/run_check_project.py": (
+            "def source_from_manifest(",
+            "def resolve_cli(",
+            'home / ".codex" / INSTALL_MANIFEST',
+            'home / ".claude" / INSTALL_MANIFEST',
+            '"check-project"',
+            "subprocess.run(command, check=False)",
         ),
         "hooks/post_edit_checks.sh": (
             'run_check "check_r_syntax.sh"',
@@ -468,8 +479,17 @@ def main() -> int:
                 problems.append(f"{relative}: missing workflow contract {fragment!r}")
 
     forbidden = {
-        "CLAUDE.md": ("提交并正常推送",),
         "AGENTS.md": ("commit and normally push",),
+        "CLAUDE.md": (
+            "提交并正常推送",
+            "<EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
+        ),
+        "skills/epi-project-audit/SKILL.md": (
+            "python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
+        ),
+        "skills/project-init/references/project-hygiene.md": (
+            "<EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
+        ),
         "skills/image-diagrams/SKILL.md": (
             "优先生成无文字视觉层",
             "加确定性文字覆盖",

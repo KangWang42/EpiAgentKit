@@ -34,8 +34,10 @@ description: |
 在进入六层人工审查前运行：
 
 ```bash
-python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project <项目根> --json
+python <本技能目录>/scripts/run_check_project.py <项目根> --json
 ```
+
+`run_check_project.py` 从 `~/.codex/.epiagentkit-install.json` 或 `~/.claude/.epiagentkit-install.json` 的 `source` 键解析中央 EpiAgentKit 仓库，再调用其中的 `scripts/epiagentkit.py check-project`。不得只在当前研究项目或 `PATH` 中查找 `epiagentkit.py`，也不得在未检查安装清单前报告“当前机器未找到”。可先用 `--print-cli` 核验解析结果。
 
 把 findings 映射到对应 Layer。任何 ERROR 都阻止最终签发；WARN 必须解释，但不得把无 provenance 时的 mtime 提示升级成确定性不一致。该命令只做预检，不替代代码实跑、数字矩阵或科学判断，不注册为 Stop hook。
 
