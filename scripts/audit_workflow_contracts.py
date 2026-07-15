@@ -469,6 +469,8 @@ def main() -> int:
             "科研感必须来自真实主题和关系",
             "网页图已检查响应式裁切",
             "不得用 Python、PPT 文本框、Word 文本框或 SVG 覆盖层",
+            "触发本技能不等于每页都要生成图片",
+            "research-figure-patterns.md",
         ),
         "skills/research-visuals/references/visual-strategy.md": (
             "从信息功能出发",
@@ -479,6 +481,7 @@ def main() -> int:
         ),
         "skills/research-visuals/references/carrier-specs.md": (
             "PPT",
+            "技术路线占标题以下 70%–90%",
             "论文与图形摘要",
             "基金标书",
             "网页",
@@ -490,6 +493,25 @@ def main() -> int:
             "标书立项、创新或影响配图",
             "网页 hero 或登录侧栏",
             "最多连续两次定向修正",
+            "Question-method pairs",
+        ),
+        "skills/research-visuals/references/research-figure-patterns.md": (
+            "好的科研图回答一个问题",
+            "先判定证据属性",
+            "概念框架",
+            "机制示意",
+            "研究设计与数据流",
+            "研究对象/数据源 → 采集与整合",
+            "研究问题与对应方法",
+            "连续讲解复杂方法时复用同一母图",
+            "禁止图库水印、低清截图、缺图占位符",
+        ),
+        "skills/sysu-ppt/SKILL.md": (
+            "不要把“每页有图”当目标",
+            "research-figure-patterns.md",
+            "技术路线至少按项目实际覆盖",
+            "总体技术路线占标题以下正文区 70%–90%",
+            "封面主视觉、纯背景图和章节氛围图不编号",
         ),
         "skills/academic-publishing/references/submission-materials.md": (
             "built via `research-visuals`",

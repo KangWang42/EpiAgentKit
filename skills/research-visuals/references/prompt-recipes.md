@@ -90,6 +90,22 @@ Avoid: card wall, random 3D symbols, gradients, duplicate nodes, ambiguous arrow
 
 对样本纳排、CONSORT、病例流转和包含数字的图，逐项比对全部数字、原因和分支。错误时只用 imagegen 修正完整成图；两次定向修正后整图重生成，仍不准确才整图回退 `svg-diagrams`。
 
+### 科研技术路线补充
+
+生成论文、PPT、标书或报告技术路线前，先按 `research-figure-patterns.md` 锁定以下内容：
+
+```text
+Research object and sources: <人群、队列、数据库、暴露、结局或外部数据>
+Collection and time structure: <检测、设备、随访、空间匹配或重复测量>
+Eligibility and QC: <纳排、清洗、缺失、异常、对齐和质量控制>
+Variable or feature construction: <暴露、结局、中介、协变量、指标或信号特征>
+Question-method pairs: <研究问题或估计对象 -> 对应方法；逐条列出>
+Validation and robustness: <交叉/外部验证、分层、敏感性、替代定义或消融>
+Outputs: <效应估计、风险预测、机制路径、解释或交付成果>
+```
+
+主阅读方向只选一种，阶段控制在 4–7 个。多源数据先汇入整合节点，平行研究问题从共同分析集分叉，最终汇入验证或输出。不得只罗列模型名，也不得省略研究对象、质量控制和结果输出。
+
 ## 6. 标书立项、创新或影响配图
 
 ```text
