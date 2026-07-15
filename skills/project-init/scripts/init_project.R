@@ -579,7 +579,7 @@ init_project <- function(name,
   message("  2. 把原始数据放入 ", file.path(name, "01_data/rawdata/"), " 并填写数据字典")
   message("  3. 同步口径：打开 ", file.path(name, "CLAUDE.md"))
   message("  4. 开始清洗：", file.path(name, "02_code/01_data_cleaning.R"))
-  if (git) message("Git 已初始化；完成初始化与验证后按全局偏好 commit，有远端才正常 push。")
+  if (git) message("Git 已初始化；完成初始化与验证后按全局偏好自动 commit，用户明确要求时才 push。")
 
   invisible(proj)
 }

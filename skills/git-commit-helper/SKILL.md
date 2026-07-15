@@ -51,7 +51,7 @@ Write each commit so a future reader can understand the completed unit without o
    - validation commands and results;
    - compatibility, migration, or rollback implications when present.
 4. Review the complete worktree and staged diff before committing. Do not mix unexplained pre-existing changes into the commit.
-5. When the user's standing policy authorizes commit and push after validation, commit and push without asking again. Never force-push. Stop and report if the remote is ahead, the push is rejected, or history would need rewriting.
+5. After validation, create the commit automatically when the user's standing policy authorizes it. Push only when the user explicitly requests push in the current turn; do not ask, remind, or batch-push accumulated commits. Never force-push or rewrite remote history.
 
 ### Examples
 
@@ -169,7 +169,7 @@ Migration guide: Update client code to handle new response structure
 5. **Write summary**: Specific imperative action + object
 6. **Add body**: Motivation, key changes, validation, compatibility / rollback
 7. **Note breaking changes**: If applicable
-8. **Push safely when authorized**: Verify branch and remote divergence, then normal push; never force
+8. **Push only on explicit request**: If the current user turn asks for push, verify branch and remote divergence, then use a normal push; otherwise stop after commit without prompting about push
 
 ## Interactive commit helper
 
@@ -217,4 +217,5 @@ git commit --amend --no-edit
 - [ ] Breaking changes are clearly marked
 - [ ] Related issue numbers are included
 - [ ] Commit contains one coherent, reversible unit
-- [ ] Push is a normal fast-forward update; no force push
+- [ ] Commit was created after validation unless the user opted out
+- [ ] If push was explicitly requested, it is a normal fast-forward update with no force push

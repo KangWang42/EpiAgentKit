@@ -9,7 +9,7 @@ R / Python 流行病学项目的跨任务硬红线。领域流程、模板与实
 - 以研究者“我做了 X”的视角写作，不使用助手口吻。论文、报告与汇报采用学术书面语；标题使用名词短语；英文缩写首次出现给出全称。
 - 分组、终点、纳排、主分析方法或多个合理口径并存时，先向用户澄清，不擅自选择。
 - 不猜 API、版本、包名、数据、研究发现或文献。先读代码、官方文档或可核验来源再断言。
-- 流程图、框架图、机制示意和 PPT 非统计配图在工具可用时优先调用 `image-diagrams` → `imagegen`；用户明确要求矢量、图像生成不可用，或成图经修正仍无法保证文字与关系准确时才回退 `svg-diagrams`。
+- 流程图、框架图、机制示意和 PPT 非统计配图必须先触发 `image-diagrams` → `imagegen`，由 AI 直接生成包含完整文字、数字和箭头的整张图。文字或数字较多、图形看似适合 SVG、当前可见技能清单未列出 `image-diagrams`，均不是提前跳过 imagegen 的理由；不得用 Python、PPT 文本框或 SVG 覆盖层给 AI 图补字。只有用户明确要求矢量、实际图像生成工具不可用或调用失败，或整张图经 imagegen 修正后仍无法保证精度时才整图回退 `svg-diagrams`。
 - 输出简洁，不堆套话，不使用 emoji、网络词或 em dash。
 - 产物交付前按主流程 skill 的清单自检；发现一类问题后全文扫描同类并一次清理，交付时先报告已自检项。
 
@@ -88,4 +88,4 @@ R / Python 流行病学项目的跨任务硬红线。领域流程、模板与实
 - 正式项目的结果、方法、日志、BACKLOG、当前状态和 registry 已按变更同步；编号、目录、表图、归档与唯一当前版通过 `project-hygiene.md` 和对应 skill 自检。
 - 正式项目审查或交付签发前运行 `python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project <项目根>`；ERROR 阻止签发，WARN 逐项解释。该命令不注册 Stop、不自动续跑。
 - 修改 EpiAgentKit 规则、skills 或 hooks 后，以仓库为单源运行 `sync --target all` 与 `doctor --target all`。
-- 明确修改请求完成并验证后默认按 Conventional Commits 提交并正常推送；用户当轮要求不提交或不推送时服从，绝不 force push。
+- 明确修改请求完成并验证后默认按 Conventional Commits 自动提交；只有用户当轮明确要求 push 时才推送，不询问、不提醒或自行累积推送。绝不 force push 或改写远端历史。

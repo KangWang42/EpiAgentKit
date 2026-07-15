@@ -217,6 +217,9 @@ def main() -> int:
             "主流程 skill",
             "只负责实际文件操作，不取代内容主流程",
             "evidence-research",
+            "必须先触发 `image-diagrams` → `imagegen`",
+            "由 AI 直接生成包含完整文字、数字和箭头的整张图",
+            "只有用户当轮明确要求 push 时才推送",
             "唯一优先级",
             "凭证的完整内容",
             "轻量任务",
@@ -427,6 +430,8 @@ def main() -> int:
             '_emit_notice.py"',
         ),
         "skills/svg-diagrams/SKILL.md": (
+            "回退凭证",
+            "当前可见 skills 清单没有 `image-diagrams`",
             "序号与标题第一行垂直居中对齐",
             "包含关系图",
             "SVG XML 有效",
@@ -434,9 +439,17 @@ def main() -> int:
         "skills/image-diagrams/SKILL.md": (
             "Codex 使用内置 `imagegen` 技能及其 `image_gen` 工具",
             "不因流程图或框架图看似可用简单形状表达就跳过 imagegen",
-            "Imagegen 视觉层加确定性文字",
+            "Imagegen 整图修正",
             "SVG 整图回退",
             "逐字比对标签、数字和缩写",
+            "不得停在方案、提示词",
+            "生成初稿 → 查看原图",
+            "不得用 Python、PPT 文本框、Word 文本框或 SVG 覆盖层",
+        ),
+        "skills/git-commit-helper/SKILL.md": (
+            "create the commit automatically",
+            "Push only when the user explicitly requests push in the current turn",
+            "otherwise stop after commit without prompting about push",
         ),
         "skills/sysu-ppt/scripts/sysu_toolkit.R": (
             'default = list(file = "template.pptx"',
@@ -455,18 +468,34 @@ def main() -> int:
                 problems.append(f"{relative}: missing workflow contract {fragment!r}")
 
     forbidden = {
+        "CLAUDE.md": ("提交并正常推送",),
+        "AGENTS.md": ("commit and normally push",),
+        "skills/image-diagrams/SKILL.md": (
+            "优先生成无文字视觉层",
+            "加确定性文字覆盖",
+        ),
+        "skills/sysu-ppt/SKILL.md": (
+            "优先生成无文字视觉层",
+            "再在 PPT 中用原生文本框和连接线叠加",
+        ),
         "skills/project-init/scripts/init_project.R": (
             'system2("git", c("add"',
             'c("commit", "-m"',
             "Table0_flowchart",
+            "有远端才正常 push",
+        ),
+        "skills/project-init/SKILL.md": (
+            "开始新的数据分析任务",
+            "自动 commit + push",
+            "有远端才正常 push",
+        ),
+        "skills/git-commit-helper/SKILL.md": (
+            "commit and push without asking again",
         ),
         "skills/r-biostats/SKILL.md": ('source("../skills/',),
         "skills/biostat-principles/SKILL.md": (
             "CLAUDE.md 的 CRITICAL 条款",
             "所有执行 skill 冲突时，本文件优先级更高",
-        ),
-        "skills/project-init/SKILL.md": (
-            "开始新的数据分析任务",
         ),
         "skills/academic-publishing/SKILL.md": (
             "生成或润色任一部件",
