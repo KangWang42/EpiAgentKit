@@ -52,6 +52,8 @@ scripts/           双平台安装、同步与验收工具
 
 流程图与技术路线的 icon 规范见 [`diagram-iconography.md`](skills/research-visuals/references/diagram-iconography.md)。该规范综合 PLOS 科研图原则、W3C 图像与非文本对比要求、Microsoft Fluent、IBM Pictogram 和 GOV.UK 图像规范，默认不为每个节点配图；常规 5–7 阶段路线通常只用 2–4 个符合课题对象、操作或产出的简单语义锚点，并统一图标家族、笔画、视角、配色和最终尺寸。
 
+携图编辑采用不降质替换门槛：Image 1 是编辑目标和验收基线，Image 2 仅在明确需要时作为风格参考；提示词按 `LOCKED / FLEXIBLE / FORBIDDEN` 分块，候选图只有在事实、精确内容、结构关系、最终尺寸可读性和视觉精修的顺序检查中全部通过后才替换原图。HTTP 524 单独按服务失败处理：首次用同一目标和压缩提示词重试，第二次停止并保留原图，不静默降级模型或切换 SVG/API。
+
 ## 双平台兼容
 
 技能主体遵循 Agent Skills 目录结构：每个 skill 必有 `SKILL.md`（`name` + `description`），可带 `scripts/`、`references/`、`assets/` 与 Codex 可选的 `agents/openai.yaml`。Claude Code 与 Codex 读取同一份技能内容，不维护两套正文。

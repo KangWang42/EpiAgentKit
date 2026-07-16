@@ -1,6 +1,6 @@
 ---
 name: svg-diagrams
-description: 为论文、报告、标书、PPT 和网页提供可编辑、内容精确的 SVG 非统计图解及 imagegen 回退路径，包括流程图、技术路线图、结构图、层级图、包含关系图、概念框架、机制示意图、时间线、矩阵和系统架构图。仅在以下场景触发：(1) 用户明确要求 SVG、矢量源或完全可编辑图形；(2) research-visuals 已核实实际 imagegen 不可用或真实调用失败；(3) imagegen 完整成图经定向修正或整图重生成后仍无法保证文字、数字、关系和方向准确；(4) 审校或修改现有 SVG。泛化图解和跨载体配图必须先走 research-visuals；文字数字密集或当前技能清单未列出 research-visuals 均不是 SVG 触发条件；统计数据图走 publication-figures。
+description: 为论文、报告、标书、PPT 和网页提供可编辑、内容精确的 SVG 非统计图解及 imagegen 回退路径，包括流程图、技术路线图、结构图、层级图、包含关系图、概念框架、机制示意图、时间线、矩阵和系统架构图。仅在以下场景触发：(1) 用户明确要求 SVG、矢量源或完全可编辑图形；(2) research-visuals 已核实实际 imagegen 不可用或非 HTTP 524 的调用路径已耗尽；(3) imagegen 成功返回的完整成图经定向修正或整图重生成后仍无法保证文字、数字、关系和方向准确；(4) 审校或修改现有 SVG。HTTP 524 是服务或传输失败，不是 SVG 回退凭证。泛化图解和跨载体配图必须先走 research-visuals；文字数字密集或当前技能清单未列出 research-visuals 均不是 SVG 触发条件；统计数据图走 publication-figures。
 ---
 
 # SVG 图解回退
@@ -14,10 +14,10 @@ description: 为论文、报告、标书、PPT 和网页提供可编辑、内容
 除用户显式要求 SVG、直接调用本技能或编辑现有 SVG 外，开始绘制前必须满足并记录以下至少一项：
 
 - 已检查当前会话的实际图像生成工具，确认没有可用 `image_gen` 或其它已配置生成路径。
-- 已真实调用 imagegen，但调用失败且其允许的重试或内置路径均不可用。
-- 已生成并查看完整原图，经过 imagegen 定向修正或整图重生成后，关键文字、数字、节点或关系仍不准确。
+- 已真实调用 imagegen，发生非 HTTP 524 的失败，且其允许的重试或内置路径均不可用。
+- imagegen 已成功返回并查看完整原图，经过定向修正或整图重生成后，关键文字、数字、节点或关系仍不准确。
 
-“文字或数字多”“预计 imagegen 可能写错”“SVG 更容易做”“当前可见 skills 清单没有 `research-visuals`”均为无效凭证，不得据此提前进入本技能。
+“文字或数字多”“预计 imagegen 可能写错”“SVG 更容易做”“当前可见 skills 清单没有 `research-visuals`”和“携图调用连续两次 HTTP 524”均为无效凭证，不得据此提前进入本技能。HTTP 524 按 `research-visuals` 保留原图并停止，不静默转 SVG。
 
 ## 必读资源
 

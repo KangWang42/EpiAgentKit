@@ -72,7 +72,7 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("未引入上游生产脚本、示例图片或第三方 API 配置", planning)
         self.assertIn("不得把上游文件当独立 skill 直接执行", body)
         self.assertIn("携图定向编辑", body)
-        self.assertIn("全部目标都有本地路径时使用 `referenced_image_paths`", body)
+        self.assertIn("所有待附图片均有本地路径时使用 `referenced_image_paths`", body)
         self.assertIn("最小 `num_last_images_to_include`", body)
         self.assertIn("两者不得并用", body)
         self.assertIn("参考图解构与编辑目标", planning)
@@ -110,6 +110,68 @@ class VisualRoutingTests(unittest.TestCase):
             self.assertIn(fragment, reference)
         self.assertIn("本地操作性启发式", reference)
         self.assertIn("不使用灯泡、奖杯、火箭、脑、芯片或发光 DNA", reference)
+
+    def test_image_editing_uses_no_regression_contract_and_524_split(self) -> None:
+        skill = ROOT / "skills" / "research-visuals"
+        body = (skill / "SKILL.md").read_text(encoding="utf-8")
+        planning = (skill / "references" / "figure-planning.md").read_text(
+            encoding="utf-8"
+        )
+        recipes = (skill / "references" / "prompt-recipes.md").read_text(
+            encoding="utf-8"
+        )
+        svg_fallback = (ROOT / "skills" / "svg-diagrams" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        for fragment in (
+            "Image 1 视为验收基线",
+            "事实与语义忠实度",
+            "LOCKED",
+            "FLEXIBLE",
+            "FORBIDDEN",
+            "第二次 524",
+            "不计入两轮设计修正",
+        ):
+            self.assertIn(fragment, body)
+        for fragment in (
+            "Baseline: Image 1 is the acceptance baseline",
+            "A more attractive image is not acceptable",
+            "Image 2: optional style reference only",
+            "Use case: high-fidelity scientific-figure edit",
+            "Structure inventory",
+            "merges or branches",
+            "ambiguous source text must be copied, never guessed",
+            "100% critical-text accuracy",
+            "100% node and edge preservation",
+            "First HTTP 524",
+            "Second HTTP 524",
+            "do not silently downgrade the model or switch to SVG/API",
+            "每个最终提示词只保留三条永久约束",
+            "相同约束只出现一次",
+            "图类专属质量指标",
+            "人物或临床场景",
+            "网页视觉",
+            "科学教育插图",
+            "封面与章节图",
+        ):
+            self.assertIn(fragment, recipes)
+        self.assertIn("Baseline / Image 1", planning)
+        self.assertIn("单一机制无法覆盖全部图片时", planning)
+        self.assertIn("HTTP 524 单独按服务失败处理", readme)
+        self.assertIn("HTTP 524", rules)
+        self.assertIn("HTTP 524 是服务或传输失败，不是 SVG 回退凭证", svg_fallback)
+        self.assertIn("连续两次 HTTP 524", svg_fallback)
+        self.assertNotIn("Preserve exactly:", recipes)
+        self.assertNotIn(
+            "No watermark, logo, pseudo-text, random interface copy, decorative formulas",
+            recipes,
+        )
+        self.assertNotIn("单一修改 / 必须保持 / 允许变化 / 禁止变化", body)
+        self.assertEqual(recipes.count("Permanent constraints:"), 1)
+        self.assertEqual(recipes.count("no watermark or false branding"), 1)
 
     def test_vendored_figure_references_match_reviewed_snapshots(self) -> None:
         external = ROOT / "skills" / "research-visuals" / "references" / "external"
