@@ -1,228 +1,221 @@
+<div align="center">
+
 # EpiAgentKit
 
-面向流行病学 / 卫生统计研究的 Claude Code 与 Codex 共用规则和技能集（R + Python），覆盖从项目初始化、统计分析、发表级图表、论文写作、咨询交付到项目审查的完整研究流程。
+**把流行病学与卫生统计研究流程，变成 Claude Code 和 Codex 可执行、可复核、可交付的工作流。**
 
-完整项目框架按需启用：简单作业、单次处理、快速核验或少量输出使用轻量任务模式，只执行必要 skill 与最小验证，不自动创建七层目录、项目账本或运行项目签发；明确初始化、投稿/咨询交付，或已位于标准项目中时才采用完整契约。
+Shared research workflow kit for Claude Code and Codex, built for epidemiology and biostatistics.
 
-A shared Claude Code and Codex rule/skill ecosystem for epidemiology and biostatistics research, covering project scaffolding, statistical analysis, publication-quality figures, manuscript writing, consulting deliverables, and project auditing.
+[![Claude Code](https://img.shields.io/badge/Claude_Code-supported-5B4B8A?style=flat-square)](https://code.claude.com/docs)
+[![OpenAI Codex](https://img.shields.io/badge/OpenAI_Codex-supported-111827?style=flat-square)](https://openai.com/codex/)
+![R workflows](https://img.shields.io/badge/R-statistical_workflows-276DC3?style=flat-square)
+![Python tooling](https://img.shields.io/badge/Python-project_tooling-3776AB?style=flat-square)
+![Agent Skills](https://img.shields.io/badge/Agent_Skills-progressive_disclosure-0F766E?style=flat-square)
 
-## 仓库内容
+[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [如何工作](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
 
-```
-CLAUDE.md          双平台全局规则源（安装为 Claude 的 CLAUDE.md / Codex 的 AGENTS.md）
-AGENTS.md          本仓库 contributor guide
-skills/            Agent Skills 标准技能集（按需加载，渐进披露）
-hooks/             Claude Code / Codex 共用的确定性检查脚本
-scripts/           双平台安装、同步与验收工具
-```
+</div>
 
-## 技能架构
+![EpiAgentKit 将研究问题、证据、分析、发表与质量控制组织为一条可复核工作流](docs/assets/epiagentkit-hero.png)
 
-技能按职责分层；安装预设中的依赖只决定安装闭包，不表示运行时必须同时调用：
+> EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性门禁，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
-| 层 | 技能 | 作用 |
-|---|---|---|
-| 原则层 | `biostat-principles` | 六条底层行为原则（先问口径、最小实现、只改必要、可验证、可追溯、可复现）+ 探索新方法的隔离试验工作流。所有分析类任务开工前先对齐 |
-| 证据层 | `evidence-research` | 文献检索、来源核验、证据矩阵与跨领域适用性判断；不代跑模型或代写论文正文 |
-| 执行层 | `project-init` | 一键创建标准项目结构、PROTOCOL/SAP 前置门禁、探索实验索引与表图 registry（研究 / 咨询双模式） |
-| | `r-biostats` | R 统计分析执行层：PLAN-CODE-RUN-VERIFY-DOC 五阶状态机，描述统计 / 回归 / 生存 / 中介 / Meta |
-| | `python-ecg-analysis` | 通用 Python ECG 预处理、质量控制、纵向对齐、临床结局连接与患者级建模门禁 |
-| | `publication-figures` | 发表级统计图与数据图规范（mm 尺寸 / 字体嵌入 / 期刊配色）+ 约 180 种图选型画廊 + 170 余套配方代码 |
-| | `research-visuals` | 调用 imagegen 为 PPT、论文、标书、报告和网页生成跨载体科研视觉，含视觉简报、美学策略、真实性边界、载体规范与成图验收 |
-| | `svg-diagrams` | 显式矢量需求及 imagegen 不可用或精度不合格时的 SVG 整图回退，含对齐、比例与载体适配规范 |
-| 产出层 | `academic-publishing` | 中英双语论文生成（GB/T 7713 / IMRaD）+ 投稿材料（Cover Letter / 审稿回复 / Highlights），逐部件内部闭环写作 |
-| | `consulting-delivery` | 咨询交付包标准：自包含、一键复现、空 session 实测、终检清单 |
-| | `sysu-ppt` | 组会汇报 PPT 代码化生成（R officer，含可复用模板与工具库） |
-| 质控层 | `academic-humanizer` | 中英文学术文本的事实锁、论断证据、作者声纹与学术语体审校 |
-| | `epi-project-audit` | 六层项目审查状态机：骨架 / 数据链 / 代码 / 结果一致性 / 科学合理性 / 交付一致性，带数字一致性矩阵 |
-| 工具层 | `docx` `pdf` `pptx` `xlsx` `skill-creator` `git-commit-helper` | 文档处理与技能维护（前五个源自 Anthropic 官方技能库，保留各自 LICENSE） |
+## 项目能做到什么
 
-组合路由遵循“内容主流程 → 视觉或文件操作 → 终审”：论文从零生成用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；已有学术文本编辑以 `academic-humanizer` 为主；报告用 `report-writing → docx`；中大学术汇报用 `sysu-ppt → pptx`；R 统计分析用 `biostat-principles → r-biostats`，Python ECG 分析用 `biostat-principles` → `python-ecg-analysis`，仅实际出数据图时加 `publication-figures`。PPT、论文、标书、报告和网页的非统计视觉统一走 `research-visuals → imagegen`，只有矢量或精度回退时使用 `svg-diagrams`。`consulting-delivery` 仅用于分析完成后的最终外发打包。
+只需要描述当前任务，EpiAgentKit 会按任务类型加载必要 skill，并将结果落到可检查的文件、代码或交付物中。
 
-## 科研图外部参考与吸收范围
-
-科研视觉工作流完整审阅了以下开源项目的 README、技能正文、引用、脚本、样例和许可证。EpiAgentKit 按流行病学、医学和公共卫生的证据边界重新实现主流程，同时把选定的开源参考文档和提示词按固定 commit、许可证与 SHA-256 归档为只读素材库；未引入其生产脚本、示例图片或第三方 API 配置。详细执行规范见 [`figure-planning.md`](skills/research-visuals/references/figure-planning.md)，上游文件清单见 [`external/SOURCE.md`](skills/research-visuals/references/external/SOURCE.md)。
-
-| 参考项目与审阅快照 | 吸收的做法 | 明确不采用 |
+| 研究任务 | 它会做什么 | 典型产物 |
 | --- | --- | --- |
-| [TingxiYu/academic-figure-skill](https://github.com/TingxiYu/academic-figure-skill) `1df9940`，Apache-2.0 | 问题驱动的图前合同、面板独立贡献、参考图原图检查、多面板去冗余、多轮 QA、统计与来源说明；已归档图前合同与多面板参考原文 | 固定期刊配色、任意数据有效性阈值、生产脚本机械移植、每次固定等待确认、未核验的“代表性论文”来源；该快照存在语法未通过的评估脚本，不导入其实现 |
-| [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) `0a2bec6`，MIT | 论文分节、来源章节映射、图类/比例/理由结构化保存、总览加局部、模块内语义图元、以编辑目标为条件的单点修正；已归档通用学术架构图提示词原文 | 每个章节自动配图、固定 500 至 1200 词提示词、强制配色确认、让风格参考覆盖本地内容合同、未核验第三方图片 API、无文字模板后叠字、生成式解剖或似真数据图 |
+| 新建研究项目 | 建立标准目录、研究方案、统计分析计划、结果单源、表图 registry 与归档约定 | 可直接开工的研究或咨询项目骨架 |
+| 核验文献与方法依据 | 核对题名、作者、DOI/PMID、来源身份和撤稿状态，必要时组织正式证据检索 | 核验记录、证据矩阵、方法选择依据 |
+| 完成 R 统计分析 | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析，并按 `PLAN-CODE-RUN-VERIFY-DOC` 闭环 | 可复现 R 脚本、结果对象、Excel 表格与方法记录 |
+| 制作发表级统计图 | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图 | PDF、PNG 或 SVG 图件及对应出图代码 |
+| 生成科研非统计视觉 | 为论文、PPT、标书、报告和网页生成流程图、技术路线、概念框架、机制示意和图形摘要 | 经内容与载体复核的完整图件 |
+| 写论文与投稿材料 | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校 | Markdown 或 Word 稿件、投稿材料与自检记录 |
+| 写报告与制作学术汇报 | 把分析结果转成面向读者的报告，或基于中山大学模板生成组会、开题、答辩与正式汇报 | 报告正文、DOCX、可直接汇报的 PPTX |
+| 打包统计咨询结果 | 把已验证的分析整理为客户可独立阅读、复现和复核的外发包 | 自包含交付目录、说明文档、表图与运行入口 |
+| 全项目质量审查 | 从项目骨架、数据链、代码、结果一致性、科学合理性和交付一致性六层收集证据 | 带 ERROR/WARN 的审查结果与修复清单 |
+| 处理常见科研文件 | 在内容主流程之外读取、编辑、验证和转换 Word、PowerPoint、Excel 与 PDF | `.docx`、`.pptx`、`.xlsx`、`.pdf` 等实际文件 |
 
-整合后的最短链路为：`来源到图件矩阵 → 图前合同 → 证据路由 → 结构化提示词 → imagegen 新图或携图编辑 → 四轮 QA → 最终载体`。全新创作使用纯文本生成；修改既有图、根据既有图重绘或修正上一版时携带编辑目标并执行单点修正。统计数据图仍走 `publication-figures`，科研原始证据仍保持原图，参考图不替代来源身份核验。
+### 你可以直接这样提需求
 
-流程图与技术路线的 icon 规范见 [`diagram-iconography.md`](skills/research-visuals/references/diagram-iconography.md)。该规范综合 PLOS 科研图原则、W3C 图像与非文本对比要求、Microsoft Fluent、IBM Pictogram 和 GOV.UK 图像规范，默认不为每个节点配图；常规 5–7 阶段路线通常只用 2–4 个符合课题对象、操作或产出的简单语义锚点，并统一图标家族、笔画、视角、配色和最终尺寸。
-
-携图编辑采用不降质替换门槛：Image 1 是编辑目标和验收基线，Image 2 仅在明确需要时作为风格参考；提示词按 `LOCKED / FLEXIBLE / FORBIDDEN` 分块，候选图只有在事实、精确内容、结构关系、最终尺寸可读性和视觉精修的顺序检查中全部通过后才替换原图。HTTP 524 单独按服务失败处理：首次用同一目标和压缩提示词重试，第二次停止并保留原图，不静默降级模型或切换 SVG/API。
-
-载体内嵌图不按导出文件名猜测身份。先用用户指向、图题与正文交叉引用、页面或段落位置、文档关系和渲染外观定位实际目标；图号、标签、方法、阈值、比例、配色和本轮修改等项目事实只填入运行时实例卡，不写回通用 skill。
-
-## 双平台兼容
-
-技能主体遵循 Agent Skills 目录结构：每个 skill 必有 `SKILL.md`（`name` + `description`），可带 `scripts/`、`references/`、`assets/` 与 Codex 可选的 `agents/openai.yaml`。Claude Code 与 Codex 读取同一份技能内容，不维护两套正文。
-
-| 项目 | Claude Code | Codex |
-|---|---|---|
-| 全局规则 | `~/.claude/CLAUDE.md` | `~/.codex/AGENTS.md` |
-| 用户 skills | `~/.claude/skills/` | `~/.agents/skills/` |
-| hooks | `~/.claude/hooks/` + `settings.json` | `~/.codex/hooks/` + `hooks.json` |
-| 安装清单 | `~/.claude/.epiagentkit-install.json` | `~/.codex/.epiagentkit-install.json` |
-| 显式调用 | `/skill-name` | `$skill-name`（或 `/skills` 选择） |
-| 自动触发 | 按 `description` | 按 `description` |
-
-Codex 的目录和调用约定见官方 [Build skills](https://learn.chatgpt.com/docs/build-skills) 与 [AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)。`skill-creator` 已由 Codex 内置，向 Codex 同步时默认跳过仓库同名副本，避免重复技能。
-
-## 安装与同步
-
-克隆后运行统一入口。交互式安装会询问目标平台和导入范围，安装完成后自动执行 `doctor` 验收：
-
-```bash
-git clone git@github.com:KangWang42/EpiAgentKit.git ~/epiagentkit
-python ~/epiagentkit/scripts/epiagentkit.py install
+```text
+在这个现有队列项目中完成 Cox 回归和森林图，并核对全部 warning。
 ```
 
-常用命令：
+```text
+快速核验这条 DOI 的题名、作者与撤稿状态，不做系统综述。
+```
+
+```text
+根据 results.yaml 起草结果与讨论，生成 Word 稿，并检查数字一致性。
+```
+
+```text
+全面审查这个项目的命名、代码、结果、论文和交付包是否一致。
+```
+
+## 一张图看懂完整项目
+
+![Claude Code 与 Codex 共享规则、技能和 hooks，并贯穿 Question、Evidence、Analysis、Visualize、Publish、Deliver、Audit 七阶段及其产物](docs/assets/research-workflow.png)
+
+Claude Code 与 Codex 共用一个控制层：`Rules` 约束行为，`Skills` 提供领域工作流，`Hooks` 执行确定性检查。控制层贯穿从问题定义到项目审查的完整生命周期，每一阶段都留下可继续使用和复核的明确产物。
+
+| 阶段 | EpiAgentKit 的门禁 |
+| --- | --- |
+| Question | 先锁定分组、终点、纳排标准、分析集与主分析口径 |
+| Evidence | 核验来源身份，区分已核验事实、合理推断和待补证据 |
+| Analysis | 代码必须实跑，输出必须存在，异常必须全量扫描并逐项归因 |
+| Visualize | 统计数据图、非统计视觉和原始科研证据按属性分流，图件在最终载体中复核 |
+| Publish | 统计数字来自机器单源，论文、报告、PPT 和图表不手敲关键结果 |
+| Deliver | 交付包保持自包含、可独立阅读、可复现，并与主流程结果一致 |
+| Audit | ERROR 阻止签发，WARN 逐项解释，工作区保留可复现与可追溯证据 |
+
+## 它如何工作
+
+EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex 的共同配置源。
+
+| 层 | 组件 | 作用 |
+| --- | --- | --- |
+| 全局规则 | [`CLAUDE.md`](CLAUDE.md) | 常驻每个会话的硬红线、任务路由、单源指针与完成门禁 |
+| 领域技能 | [`skills/`](skills/) | 按需加载分析、证据、写作、视觉、交付与审查流程，避免把所有规范塞进上下文 |
+| 确定性 hooks | [`hooks/`](hooks/) | 保护原始数据，检查 R 语法、文本痕迹、图件与结果文件 |
+| 配置管理器 | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、双端一致性验收与项目终检 |
+
+```text
+仓库单一真源
+├── CLAUDE.md        跨任务硬红线与路由
+├── skills/          渐进披露的领域工作流
+├── hooks/           可确定执行的安全与质量检查
+└── scripts/         install / sync / doctor / check-project
+        ├── Claude Code: ~/.claude/
+        └── Codex:       ~/.codex/ + ~/.agents/skills/
+```
+
+### 两种任务模式
+
+| 模式 | 什么时候使用 | 系统行为 |
+| --- | --- | --- |
+| 轻量任务 | 简单作业、单次处理、快速核验或只要一个小结果 | 只调用必要 skill，读写必要文件，执行与风险相称的最小验证，不创建完整项目账本 |
+| 正式项目 | 明确初始化、投稿、咨询交付，或已处于标准研究项目 | 启用方案、分析、结果单源、日志、归档、registry 与最终审查契约 |
+
+触发某个领域 skill 不会自动把轻量任务升级为正式项目。只有文件布局和研究治理确实需要时，才进入完整契约。
+
+## 30 秒安装
+
+需要 Python 3.10 或更高版本。R 只在运行 R 分析、统计图或 R 驱动的 PPT 工作流时需要。
 
 ```bash
-# 只为 Codex 安装 PPT + imagegen 科研视觉技能包，不覆盖共享规则与 hooks
-python ~/epiagentkit/scripts/epiagentkit.py install --target codex --preset ppt --yes
+git clone https://github.com/KangWang42/EpiAgentKit.git
+cd EpiAgentKit
+python scripts/epiagentkit.py install
+```
 
-# 为 Claude 与 Codex 完整安装，覆盖同名 EpiAgentKit 规则/skills/hooks，保留无关个人配置
-python ~/epiagentkit/scripts/epiagentkit.py install --target all --preset full --yes
+交互式安装会询问目标平台和导入范围，结束后自动运行 `doctor`。已有个人配置会保留，只有同名 EpiAgentKit 文件与受管 hook 会被更新。
 
-# 自选 skills；依赖项会自动补齐
-python ~/epiagentkit/scripts/epiagentkit.py install --target all --preset custom \
+### 常用安装方式
+
+```bash
+# Claude Code 与 Codex 完整安装
+python scripts/epiagentkit.py install --target all --preset full --yes
+
+# 只安装统计分析技能包
+python scripts/epiagentkit.py install --target all --preset analysis --yes
+
+# 只安装论文与报告技能包
+python scripts/epiagentkit.py install --target all --preset writing --yes
+
+# 只为 Codex 安装 PPT 与科研视觉技能包
+python scripts/epiagentkit.py install --target codex --preset ppt --yes
+
+# 先演练，不修改用户目录
+python scripts/epiagentkit.py install --target all --preset full --yes --dry-run
+```
+
+<details>
+<summary><strong>同步、自选技能与验收命令</strong></summary>
+
+```bash
+# 从仓库同步已安装内容，并复核 Claude Code 与 Codex 一致性
+python scripts/epiagentkit.py sync --target all
+python scripts/epiagentkit.py doctor --target all
+
+# 查看预设与可分发技能
+python scripts/epiagentkit.py list
+
+# 自选技能，依赖项自动补齐
+python scripts/epiagentkit.py install --target all --preset custom \
   --skills sysu-ppt,report-writing --with-rules --yes
 
-# 从仓库同步已安装内容并复核双端一致性
-python ~/epiagentkit/scripts/epiagentkit.py sync --target all
-python ~/epiagentkit/scripts/epiagentkit.py doctor --target all
-
-# 查看预设与可安装技能
-python ~/epiagentkit/scripts/epiagentkit.py list
-
-# 对研究项目运行确定性签发预检
-python ~/epiagentkit/scripts/epiagentkit.py check-project <项目根>
-
-# 只同步部分 Codex skills
-python ~/epiagentkit/scripts/epiagentkit.py sync --target codex \
-  --components skills --skills sysu-ppt,research-visuals
-```
-
-只安装一个平台时用 `--target claude` 或 `--target codex`。`--components` 可选 `rules,skills,hooks` 的任意组合，`--skills` 可列出部分技能；部分同步不会删除先前安装的其它托管 skills。Codex skills 布局由 `--codex-layout` 控制：默认 `auto` 与 `agents` 均只使用官方 `~/.agents/skills/`；`codex` 使用兼容目录 `~/.codex/skills/`，`both` 双写，后二者会显示重复技能风险警告，不作为默认安装或验收基线。
-
-首次按默认布局同步时，同步器会列出旧 `~/.codex/skills/` 中由 EpiAgentKit manifest 管理的技能；与仓库源重复的旧根副本会直接删除，`.system` 与无冲突的非受管技能保持原位。可先演练迁移：
-
-```bash
-python scripts/epiagentkit.py sync --target codex --components skills --dry-run
-```
-
-每次安装或同步 `skills` 前都会遍历 Claude Code 与 Codex 的 Skill 发现目录，检查两类冲突：①与待安装权威 Skill 同名但内容不同；②名称不同，但 `description` 命中同一广义触发场景。已经明确写成“停用 / 委派 / 仅在特定条件下使用”的后备 Skill 不判为冲突。
-
-同名或触发范围冲突的旧 Skill 会在安装前直接、永久删除，不保留内容副本。同步器只在 `~/.epiagentkit/skill-conflict-reports/<UTC批次>/manifest.json` 写入一份小型删除记录，登记原路径、冲突类型、命中的触发词和委派目标。目标目录中与仓库完全一致的当前版不处理；使用 `--dry-run` 时只显示拟删除项和报告位置，不删除文件。正式执行前应自行备份需要保留的个人 Skill。
-
-安装前建议先运行：
-
-```bash
-python scripts/epiagentkit.py install --target codex --preset full --yes --dry-run
-```
-
-默认 `doctor` 会扫描两个 Codex 发现根，同名技能跨根重复时验收失败。需要临时回退到旧布局时，可显式运行带警告的 `--codex-layout codex` 或 `--codex-layout both` 重新同步；恢复默认布局后再次同步即可安全迁回官方目录。
-
-仓库是唯一配置源。同步器只覆盖同名 EpiAgentKit 文件并合并受管 hook，不改认证、模型、密钥或无关个人配置；每个平台的安装清单记录组件、skills 目录和来源，供 `doctor` 逐文件验收。原命令 `configure_user.py`、`sync_user_configs.py` 与 `epiclaude.py` 保留兼容，但新文档与自动化统一使用 `epiagentkit.py`。
-
-也可只挑选单个技能目录复制到相应 `skills/` 目录。修改技能后若界面未刷新，重启对应客户端。
-
-注意：`sysu-ppt` 的字体与部分路径按 Windows 编写（`USERPROFILE` 环境变量、`C:/Windows/Fonts`），macOS / Linux 使用需按 `SKILL.md` 内注释调整。
-
-## 维护校验
-
-修改规则或 skills 后运行：
-
-```bash
-python scripts/audit_workflow_contracts.py
-python scripts/epiagentkit.py doctor --target all
-```
-
-该检查覆盖全部 skill 元数据、`CLAUDE.md` / `AGENTS.md` 的 200 行预算，以及初始化、探索隔离、vendored helper 和提交授权等跨 skill 契约。行为发生变化时仍须对相关 R / Python / Bash 脚本做语法检查与最小实跑。
-
-## 推荐 Hook 配置（可选，把硬红线交给 harness 强制）
-
-客户端只注册三个聚合 hook：一个 PreToolUse 原始数据保护、一个编辑后代码/文本检查、一个命令后图件/结果检查。同步器会复制脚本并自动合并配置：Claude Code 写入 `~/.claude/settings.json`，Codex 写入 `~/.codex/hooks.json`，不会覆盖模型、权限或无关自定义 hook。修改前会在同目录保留第一次变更前的稳定 `.epiagentkit.bak` 配置备份。Codex 修改 hook 后需在 `/hooks` 中重新审查并信任；其发现和信任规则见官方 [Hooks](https://learn.chatgpt.com/docs/hooks)。
-
-安装或同步 hooks 前会按事件、matcher、命令名和本地脚本内容遍历现有注册，识别原始数据保护、R 语法、AI 痕迹、图件自检和 `.rds` 检查五类功能冲突。冲突注册以 EpiAgentKit 为准并从本地配置删除；冲突脚本只有位于对应客户端 `hooks/` 目录、未被保留注册引用且不属于待安装文件时才永久删除，不保留脚本内容副本。Codex 的非冲突 inline hooks 会从 `config.toml` 迁移到 `hooks.json`，避免同一配置层同时加载两种 Hook 来源；无关 Hook 和其他配置保持不变。删除清单写入 `~/.epiagentkit/hook-conflict-reports/<UTC批次>/manifest.json`，`--dry-run` 只预览。
-
-- `protect_rawdata.sh`（PreToolUse）：canonicalize 编辑路径并拦截 `01_data/rawdata/` 及项目 `.epiagentkit-raw-roots` 声明的额外原始根。声明文件每行一个项目相对路径，支持中文、空格、反斜杠与 `../` 归一化。该 hook 不解析任意 shell/Python/PowerShell 写入，不能替代 ACL、只读副本和终检。
-- `check_r_syntax.sh`（PostToolUse）：`.R` 文件存盘即 `parse()` 语法检查，出错当场反馈给模型修。
-- `scan_ai_trace.sh`（PostToolUse）：按明确字符集扫描生成过程痕迹与 emoji；允许科研符号 `→ ↔ ↑ ↓ ± × ≥ ≤ ℃`，`✅` 只允许出现在 `BACKLOG.md` 状态列。
-- `fig_selfcheck.sh`（PostToolUse / Bash）：用“项目绝对标识 + 文件内容指纹”检测 `04_figures/` 新生成或修改的图，不依赖 120 秒窗口；注入 `publication-figures §12ter` 自检清单，视觉判断仍由主模型完成。
-- `check_results_rds.sh`（PostToolUse / Bash）：同样按项目隔离的内容指纹检测 `06_results/` 新写入或修改的 `.rds`，提醒表格化数据改存 `.xlsx`。
-
-客户端配置不分别注册上述四个 PostToolUse 检查，而由 `post_edit_checks.sh` 聚合 R 语法 + 文本规范、`post_bash_checks.sh` 聚合图件 + `.rds` 检查。一次“修改出图脚本 + 执行出图”最多显示两个 PostToolUse hook；两类命令后提醒同时命中时合并为一条消息。原检查脚本仍可单独运行，便于诊断与兼容旧调用。
-
-交付前另运行确定性终检，不注册为自动修复 hook：
-
-```bash
+# 对正式研究项目运行确定性签发预检
 python scripts/epiagentkit.py check-project <项目根>
 ```
 
-它检查原始目录的 Git 工作区修改、编号/stem、合法 helper、旧版本命名、provenance receipt 或降级 mtime 提示、日志异常，以及疑似凭证或高熵秘密。秘密检查只报告文件、键路径和行号，不输出值；raw roots、`09_backup`、`.git` 与大型缓存会在进入目录前剪枝。双端 Stop hook 的一致行为尚未作为稳定契约验证，因此默认不注册 Stop，不在失败后自动循环修复；PostToolUse 仅报告已发生事件，不能撤销副作用。
+Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。
 
-（"多行 `Rscript -e` 会 segfault、须写成 `.R` 文件运行"这条已直接写进 `CLAUDE.md` 的代码必跑红线，常驻每会话上下文，无需单设 hook。）
+</details>
 
-安装或修复 hook：
+## 能力地图
+
+| 类型 | Skills |
+| --- | --- |
+| 原则与证据 | `biostat-principles` · `evidence-research` |
+| 项目与分析 | `project-init` · `r-biostats` · `publication-figures` |
+| 科研视觉 | `research-visuals` · `svg-diagrams` |
+| 论文与报告 | `academic-publishing` · `academic-humanizer` · `report-writing` |
+| 汇报与交付 | `sysu-ppt` · `consulting-delivery` |
+| 项目审查 | `epi-project-audit` |
+| 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `skill-creator` · `git-commit-helper` |
+
+组合遵循“内容主流程 → 视觉或文件操作 → 终审”。例如，论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 文件时再加 `docx`；R 分析使用 `biostat-principles → r-biostats`，实际生成数据图时再加 `publication-figures`；非统计视觉统一使用 `research-visuals → imagegen`，只有明确矢量要求或精度回退时才转 `svg-diagrams`。
+
+## 为什么不只是一个提示词仓库
+
+- **原始数据只读**：`01_data/rawdata/` 与项目声明的其它原始根不得被 Agent 修改。
+- **口径先于模型**：分组、终点、纳排和主分析存在多个合理定义时，必须先澄清。
+- **数字机器单源**：正式项目以 `07_paper/results.yaml` 保存结果数字，再派生人读摘要并供下游取数。
+- **代码必须实跑**：不以退出码或日志尾部代替核验，必须全量扫描 `error|warning|traceback|failed|nan`。
+- **探索与主线隔离**：新方法先在备份区公平对照，达到合并门禁后才能进入正式流程。
+- **当前版保持唯一**：稳定语义名只保留一组当前交付物，旧版按批次归档并可检索。
+- **双平台共用正文**：Claude Code 和 Codex 读取同一份规则与技能，不维护两套容易漂移的内容。
+
+## 安全边界
+
+| EpiAgentKit 会做 | EpiAgentKit 不会做 |
+| --- | --- |
+| 依据项目文件、真实分析结果和可核验来源推进任务 | 编造研究发现、文献、DOI/PMID、伦理号、基金号或期刊要求 |
+| 在授权范围内整理非原始文件、运行代码、生成成果并审查 | 修改原始数据，或在数据异常未闭环时擅自填补、排除和继续计算 |
+| 把观察性结果校准为合适的论断强度 | 把关联写成已证实因果，或把探索性峰值包装成最终结论 |
+| 用 hooks 和项目审查减少可预防错误 | 替代研究者对设计、临床意义、统计口径和最终签发的责任 |
+
+全局规则授予 Agent 较大的项目整理权限，可能移动、归档或重排非原始文件。建议始终在 Git 管理下使用，并在启用前备份重要数据。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
+
+## 维护与贡献
+
+修改规则、skills、hooks 或安装器后，至少运行：
 
 ```bash
-# 仅安装并注册 hooks
-python scripts/epiagentkit.py sync --target all --components hooks
-
-# 安装 PPT 技能包并同时注册 hooks
-python scripts/epiagentkit.py install --target all --preset ppt --with-hooks --yes
+python scripts/audit_workflow_contracts.py
+python -m unittest discover -s scripts/tests -p "test_*.py"
+python scripts/epiagentkit.py sync --target all
+python scripts/epiagentkit.py doctor --target all
 ```
 
-Windows 配置由同步器统一通过 `run_hook.cmd` 定位 Git Bash，不依赖 hook 进程的 `PATH`；macOS / Linux 使用 `bash`。再次执行会替换旧的 EpiAgentKit hook 命令并保持幂等，不会重复注册。图件与 `.rds` 检查属于非阻断提醒：Claude 通过 `additionalContext`、Codex 通过 `systemMessage` 接收，并以退出码 0 完成，不会显示为 hook failed；真正违反 rawdata 保护或代码门禁时仍返回阻断状态。每个 hook 只在命中目标文件或目录时动作；无 `jq` 时由 Python 解析 stdin JSON。
+行为发生变化时，还需要对受影响的 R、Python 或 Bash 脚本做语法检查和代表性实跑。详细 contributor 约定见 [`AGENTS.md`](AGENTS.md)，全局规则迁移说明见 [`docs/global-rule-migration.md`](docs/global-rule-migration.md)。
 
-## 设计原则
+<details>
+<summary><strong>科研视觉来源与许可证说明</strong></summary>
 
-本仓库的写法遵循几条经验规则，也是它区别于"把所有规范堆进 CLAUDE.md"的地方：
+`research-visuals` 借鉴并重新实现了 [TingxiYu/academic-figure-skill](https://github.com/TingxiYu/academic-figure-skill) 与 [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) 中的问题驱动图前合同、来源映射和多轮质量检查。仓库只归档选定的开源参考文档与提示词，没有引入其生产脚本、示例图片或第三方 API 配置。完整来源、固定快照、许可证与 SHA-256 见 [`external/SOURCE.md`](skills/research-visuals/references/external/SOURCE.md)。
 
-1. **删除测试 + 入口预算**：全局规则每条都要回答"删了 agent 会犯什么具体错误"，答不出就删。`CLAUDE.md` / `AGENTS.md` 控制在 200 行以内，只放跨任务红线、路由与索引；程序、模板和领域细节下沉到 skill / references。
-2. **规则与流程分离**：CLAUDE.md 只放每个 session 都需要的硬红线与路由表；多步骤工作流全部下沉到技能，按需加载不占上下文。
-3. **渐进披露**：技能正文只放核心流程与门禁，模板、句式库、配方代码放 `references/`，由模型在需要时自行读取。
-4. **单一真源**：表图编号走 registry（编号 = 清单位置，脚本经 `table_path()` / `fig_path()` 取路径）；口径常量集中 `config.R` + `conventions.R`；论文数字机器单源 `07_paper/results.yaml`（脚本渲染一次写入、`render_summary_md()` 派生 `0_result_summaries.md`、下游 `val()` 取数禁手敲）。
-5. **门禁状态机**：分析（PLAN-CODE-RUN-VERIFY-DOC）、写作（逐部件自检）和交付（八阶段）均须当前阶段过检后再进入下一阶段；审查（六层）在发现失败后继续收集全部证据，但任何未闭环失败都阻止签发。门禁是完成条件，不是建议清单。
-6. **强制实跑与全量扫错**：代码写完必须实际执行，输出全量 grep error / warning，每条报错三选一去向（修复 / 记录豁免 / 核实可忽略），不允许沉默放过。
-7. **预设与探索分轨**：`PROTOCOL.md` / `SAP.md` 在分析前冻结主要问题和方法；全部尝试登记在 `09_backup/EXPERIMENTS.md` 并隔离运行，只有过公平比较门禁且经确认的结果进入主线。
-8. **当前版单一、旧版可检索**：工作区每种报告、PPT、论文和代码只留稳定命名的当前版；被替代的成品、对应源文件、素材与核验输出按批次移入 `09_backup/YYYY-MM-DD_HHMM_<主题>_<阶段>/`，以 `MANIFEST.md` 和 `09_backup/INDEX.md` 定位历史，不再堆叠“完善版 / 最终版 / v2”。
+`docx`、`pdf`、`pptx`、`xlsx` 与 `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录保留原始 LICENSE。`sysu-ppt` 内置模板版权归中山大学所有，仅供学习参考，可删除模板后替换为自有资产。
 
-## 目录约定
+</details>
 
-技能围绕一套七层项目结构工作（由 `project-init` 创建）：
+---
 
-```
-01_data/rawdata/   只读原始数据
-PROTOCOL.md / SAP.md 研究方案与预设统计分析计划
-02_code/           config.R / conventions.R / vendored/ + 编号脚本（连续编号，<= 10 个）
-03_tables/         Table{N}_*.xlsx（附表进 supplementary/）
-04_figures/        Fig{N}_*.{pdf,png,svg}（SVG 用于非统计图解）
-05_reports/        对外交付包
-06_results/        中间对象（按内容命名不编号）
-07_paper/          论文 + results.yaml（数字机器单源）+ 0_result_summaries.md（由其派生）
-09_backup/         INDEX.md + 分批旧版 / 一次性脚本 / 探索实验（EXPERIMENTS.md 索引全部尝试）
-```
+<div align="center">
 
-## 适用范围与使用须知
+如果你希望科研 Agent 不只“给答案”，而是留下可运行、可复核、可交付的完整证据链，EpiAgentKit 就是为此设计的。
 
-- **面向流行病学 / 卫生统计，但不限于此**：规则与技能以流行病学、临床与真实世界数据研究为蓝本编写，其底层做法（项目分层、单一真源、门禁状态机、发表级图表、证据约束写作）是通用的研究工程实践。其他定量研究领域（基础医学、社会科学、生态、经济计量等）可直接参考，并按本领域的口径、报告规范与文献格式自行拓展、改写技能内容。
-- **项目处理流程为个人经验，按需取舍**：七层目录、脚本编号、表图 registry、交付包形态等约定，是作者在自身研究与咨询中沉淀的个人偏好，并非领域标准或唯一正确做法。认同则用，不认同的条目可直接删改，介意者请勿套用。
-- **Agent 改动框架的权限较大，使用前请知情**：全局规则授予 Claude Code 与 Codex 较大的自主整理权限，可能移动 / 归档 / 重排文件、改写脚本输出路径、归并代码或调整表图编号。建议在版本控制（git）下使用并先备份重要数据；`01_data/rawdata/` 是只读红线，其余自动整理行为请在了解后启用。
-
-## 说明
-
-- `docx` / `pdf` / `pptx` / `xlsx` / `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录内保留原始 LICENSE；本仓库对 `skill-creator` 做了 Windows 中文环境的编码修复。
-- `sysu-ppt` 内置的两套 PPT 模板版权归中山大学所有，仅供学习参考；如有顾虑请删除 `skills/sysu-ppt/assets/` 后使用自己的模板。
-- `sysu-ppt` 默认使用中大医学棕榈封面模板（原模板2）；原公卫学院绿色模板保留为 `模板2` 可选项。
-- 中文技能（原则 / 分析 / 论文 / 交付 / 审查 / 学术审校）为本仓库原创，针对中文学术写作与中文期刊投稿场景做了大量特化。
-
-## 贡献者
-
-- OpenAI Codex：安装前 Skill 冲突扫描、直接清理与可审计登记流程。
+</div>

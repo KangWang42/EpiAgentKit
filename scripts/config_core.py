@@ -16,6 +16,10 @@ LEGACY_SKILL_MANIFEST = ".epiclaude-managed-skills.json"
 LEGACY_HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 INSTALL_SCHEMA = 1
 
+# Repository skills that remain available for local development but must not be
+# advertised, installed, or synchronized into user runtime skill directories.
+SYNC_EXCLUDES = {"python-ecg-analysis"}
+
 PRESETS = {
     "ppt": {
         "biostat-principles",
@@ -63,7 +67,6 @@ DEPENDENCIES = {
     "project-init": {"biostat-principles", "epi-project-audit"},
     "research-visuals": {"svg-diagrams"},
     "publication-figures": {"biostat-principles"},
-    "python-ecg-analysis": {"biostat-principles", "publication-figures"},
     "r-biostats": {"biostat-principles", "publication-figures"},
     "report-writing": {
         "academic-humanizer",
@@ -85,7 +88,11 @@ def available_skills(root: Path) -> list[str]:
     return sorted(
         item.name
         for item in (root / "skills").iterdir()
-        if item.is_dir() and (item / "SKILL.md").is_file()
+        if (
+            item.is_dir()
+            and item.name not in SYNC_EXCLUDES
+            and (item / "SKILL.md").is_file()
+        )
     )
 
 

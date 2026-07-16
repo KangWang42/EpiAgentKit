@@ -23,6 +23,7 @@ from config_core import (
     LEGACY_SKILL_MANIFEST,
     PROJECT_NAME,
     SKILL_MANIFEST,
+    SYNC_EXCLUDES,
     active_manifest,
     csv_values,
     load_json,
@@ -132,10 +133,11 @@ def source_skills(
     root: Path, exclude: set[str], include: set[str] | None = None
 ) -> dict[str, Path]:
     result: dict[str, Path] = {}
+    effective_excludes = exclude | SYNC_EXCLUDES
     for item in sorted((root / "skills").iterdir()):
         if (
             item.is_dir()
-            and item.name not in exclude
+            and item.name not in effective_excludes
             and (include is None or item.name in include)
             and (item / "SKILL.md").is_file()
         ):
@@ -297,6 +299,12 @@ def sync_skills(
     available = source_skills(root, exclude)
     if include is not None:
         requested = set(include)
+        local_only = requested & SYNC_EXCLUDES
+        if local_only:
+            raise ValueError(
+                "Local-only skills are not distributable: "
+                + ", ".join(sorted(local_only))
+            )
         bundled = requested & exclude
         if bundled:
             print("SKIP   bundled skills: " + ", ".join(sorted(bundled)))

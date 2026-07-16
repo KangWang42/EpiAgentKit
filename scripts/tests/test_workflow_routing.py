@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -10,27 +11,61 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from config_core import expand_dependencies
+from config_core import SKILL_MANIFEST, SYNC_EXCLUDES, available_skills
+from sync_user_configs import source_skills, sync_skills
 
 
 class WorkflowRoutingTests(unittest.TestCase):
-    def test_global_routes_align_python_ecg_with_principles(self) -> None:
+    def test_python_ecg_is_local_only_and_not_publicly_routed(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        route = "`biostat-principles` → `python-ecg-analysis`"
-        self.assertIn(route, global_rules)
-        self.assertIn(route, readme)
+        self.assertIn("python-ecg-analysis", SYNC_EXCLUDES)
+        self.assertNotIn("python-ecg-analysis", available_skills(ROOT))
+        self.assertNotIn("python-ecg-analysis", source_skills(ROOT, set()))
+        self.assertNotIn("python-ecg-analysis", global_rules)
+        self.assertNotIn("python-ecg-analysis", readme)
 
-    def test_python_ecg_installs_principles_and_figure_companion(self) -> None:
-        expanded = expand_dependencies({"python-ecg-analysis"})
-        self.assertIn("biostat-principles", expanded)
-        self.assertIn("publication-figures", expanded)
+    def test_python_ecg_cannot_be_explicitly_synchronized(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(ValueError, "Local-only skills"):
+                sync_skills(
+                    ROOT,
+                    Path(directory) / "skills",
+                    set(),
+                    dry_run=False,
+                    include={"python-ecg-analysis"},
+                )
+
+    def test_full_sync_prunes_previously_managed_python_ecg(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            repo = base / "repo"
+            target = base / "target"
+            for name in ("alpha", "python-ecg-analysis"):
+                skill = repo / "skills" / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(
+                    f"---\nname: {name}\ndescription: test\n---\n",
+                    encoding="utf-8",
+                )
+            stale = target / "python-ecg-analysis"
+            stale.mkdir(parents=True)
+            (stale / "SKILL.md").write_text("stale\n", encoding="utf-8")
+            (target / SKILL_MANIFEST).write_text(
+                '{"managed": ["python-ecg-analysis"]}\n', encoding="utf-8"
+            )
+
+            sync_skills(repo, target, set(), dry_run=False)
+
+            self.assertFalse(stale.exists())
+            self.assertTrue((target / "alpha" / "SKILL.md").is_file())
 
     def test_readme_keeps_statistical_and_writing_boundaries_narrow(self) -> None:
         body = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("发表级统计图与数据图规范", body)
-        self.assertIn("逐部件内部闭环写作", body)
-        self.assertIn("审查（六层）在发现失败后继续收集全部证据", body)
+        self.assertIn("制作发表级统计图", body)
+        self.assertIn("写论文与投稿材料", body)
+        self.assertIn("全项目质量审查", body)
+        self.assertIn("项目能做到什么", body)
         self.assertNotIn("逐部件门控写作", body)
         self.assertNotIn('审查（六层）都是"不过检不许进下一步"', body)
 
