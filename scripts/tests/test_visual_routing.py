@@ -39,6 +39,7 @@ class VisualRoutingTests(unittest.TestCase):
             "references/prompt-recipes.md",
             "references/research-figure-patterns.md",
             "references/figure-planning.md",
+            "references/diagram-iconography.md",
             "references/external/SOURCE.md",
             "references/external/academic-figure-skill/figure-contract.md",
             "references/external/academic-figure-skill/multipanel-layout.md",
@@ -57,6 +58,9 @@ class VisualRoutingTests(unittest.TestCase):
         source = (skill / "references" / "external" / "SOURCE.md").read_text(
             encoding="utf-8"
         )
+        recipes = (skill / "references" / "prompt-recipes.md").read_text(
+            encoding="utf-8"
+        )
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("来源到图件矩阵", body)
@@ -67,16 +71,45 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("LigphiDonk/academic-figure-generator", planning)
         self.assertIn("未引入上游生产脚本、示例图片或第三方 API 配置", planning)
         self.assertIn("不得把上游文件当独立 skill 直接执行", body)
-        self.assertIn("不得设置 `referenced_image_paths` 或 `num_last_images_to_include`", body)
-        self.assertIn("不随新图或重生成的 imagegen 调用上传", planning)
-        self.assertIn("imagegen 纯文本整图", readme)
+        self.assertIn("携图定向编辑", body)
+        self.assertIn("全部目标都有本地路径时使用 `referenced_image_paths`", body)
+        self.assertIn("最小 `num_last_images_to_include`", body)
+        self.assertIn("两者不得并用", body)
+        self.assertIn("参考图解构与编辑目标", planning)
+        self.assertIn("携图编辑合同", planning)
+        self.assertIn("imagegen 新图或携图编辑", readme)
         self.assertIn("主 `SKILL.md` 始终优先", source)
-        self.assertIn("新图和重生成不上传参考图", source)
+        self.assertIn("携带全部且仅必要的编辑目标", source)
+        self.assertIn("Edit the attached target image", recipes)
         self.assertIn("选定的开源参考文档和提示词", readme)
-        self.assertNotIn("图生图单点修正", planning)
-        self.assertNotIn("图生图单点修正", readme)
+        self.assertNotIn("最多连续两次纯文本重生成", body)
+        self.assertNotIn("Do not use or condition on any reference image", recipes)
         self.assertNotIn("minimum 500 words", body)
         self.assertNotIn("User Confirms", body)
+
+    def test_diagram_iconography_is_semantic_and_adaptive(self) -> None:
+        reference = (
+            ROOT
+            / "skills"
+            / "research-visuals"
+            / "references"
+            / "diagram-iconography.md"
+        ).read_text(encoding="utf-8")
+
+        for fragment in (
+            "W3C G207",
+            "Microsoft Fluent 2 Iconography",
+            "IBM Pictogram Usage",
+            "GOV.UK Design System",
+            "全图最多 4 个",
+            "通常 2–4 个，不逐节点配图",
+            "全图 0–3 个",
+            "Icon strategy",
+            "必要图标与相邻背景至少 3:1",
+        ):
+            self.assertIn(fragment, reference)
+        self.assertIn("本地操作性启发式", reference)
+        self.assertIn("不使用灯泡、奖杯、火箭、脑、芯片或发光 DNA", reference)
 
     def test_vendored_figure_references_match_reviewed_snapshots(self) -> None:
         external = ROOT / "skills" / "research-visuals" / "references" / "external"

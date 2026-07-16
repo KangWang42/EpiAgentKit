@@ -46,9 +46,11 @@ scripts/           双平台安装、同步与验收工具
 | 参考项目与审阅快照 | 吸收的做法 | 明确不采用 |
 | --- | --- | --- |
 | [TingxiYu/academic-figure-skill](https://github.com/TingxiYu/academic-figure-skill) `1df9940`，Apache-2.0 | 问题驱动的图前合同、面板独立贡献、参考图原图检查、多面板去冗余、多轮 QA、统计与来源说明；已归档图前合同与多面板参考原文 | 固定期刊配色、任意数据有效性阈值、生产脚本机械移植、每次固定等待确认、未核验的“代表性论文”来源；该快照存在语法未通过的评估脚本，不导入其实现 |
-| [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) `0a2bec6`，MIT | 论文分节、来源章节映射、图类/比例/理由结构化保存、总览加局部、模块内语义图元；已归档通用学术架构图提示词原文 | 每个章节自动配图、固定 500 至 1200 词提示词、强制配色确认、参考图条件生成、未核验第三方图片 API、无文字模板后叠字、生成式解剖或似真数据图 |
+| [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) `0a2bec6`，MIT | 论文分节、来源章节映射、图类/比例/理由结构化保存、总览加局部、模块内语义图元、以编辑目标为条件的单点修正；已归档通用学术架构图提示词原文 | 每个章节自动配图、固定 500 至 1200 词提示词、强制配色确认、让风格参考覆盖本地内容合同、未核验第三方图片 API、无文字模板后叠字、生成式解剖或似真数据图 |
 
-整合后的最短链路为：`来源到图件矩阵 → 图前合同 → 证据路由 → 结构化提示词 → imagegen 纯文本整图 → 四轮 QA → 最终载体`。统计数据图仍走 `publication-figures`，科研原始证据仍保持原图；外部参考图只用于生成前解构，不随新图或重生成调用上传，也不替代来源身份核验。
+整合后的最短链路为：`来源到图件矩阵 → 图前合同 → 证据路由 → 结构化提示词 → imagegen 新图或携图编辑 → 四轮 QA → 最终载体`。全新创作使用纯文本生成；修改既有图、根据既有图重绘或修正上一版时携带编辑目标并执行单点修正。统计数据图仍走 `publication-figures`，科研原始证据仍保持原图，参考图不替代来源身份核验。
+
+流程图与技术路线的 icon 规范见 [`diagram-iconography.md`](skills/research-visuals/references/diagram-iconography.md)。该规范综合 PLOS 科研图原则、W3C 图像与非文本对比要求、Microsoft Fluent、IBM Pictogram 和 GOV.UK 图像规范，默认不为每个节点配图；常规 5–7 阶段路线通常只用 2–4 个符合课题对象、操作或产出的简单语义锚点，并统一图标家族、笔画、视角、配色和最终尺寸。
 
 ## 双平台兼容
 
