@@ -217,7 +217,19 @@ Avoid: campaign poster, saturated marketing palette, dramatic spotlight, fake pa
 
 需要修改既有图片、根据既有图重绘或修正上一版时，携带当前编辑目标。所有待附图片都有本地路径时用 `referenced_image_paths`；近期对话能覆盖全部待附图片时用最小 `num_last_images_to_include`；不得同时设置两者。单一机制无法覆盖 Image 1 与必要 Image 2 时，省略非必要 Image 2；风格迁移必要时要求重新附图。
 
-### 12.1 图片角色
+### 12.1 运行时实例卡
+
+先从载体解析真实目标，不按导出文件名或媒体序号猜测图号。以下字段只为当前任务填写，不把项目事实回写到本配方：
+
+```text
+Target identity: <用户指向、图题/正文交叉引用、页面或段落位置>
+Resolved Image 1: <经文档关系和渲染外观核对后的实际编辑目标>
+Source anchors: <支持本轮修改的正文、表图、结果键或其它权威来源>
+Instance-only facts: <本项目的精确标签、方法、阈值、比例、配色和修改范围>
+Carrier-managed text: <由 Word/PPT/网页/排版系统承担且不烧录进图片的图号、图题、标题或来源说明；无则 none>
+```
+
+### 12.2 图片角色
 
 ```text
 Image 1: edit target and acceptance baseline; preserve its factual, scientific, structural, and identity content.
@@ -227,7 +239,7 @@ Do not transfer Image 2 objects, labels, data, layout errors, or branding.
 
 没有明确风格迁移需求时不附 Image 2。使用 Image 2 时必须在提示词中保留以上角色声明。
 
-### 12.2 不降质合同
+### 12.3 不降质合同
 
 ```text
 Baseline: Image 1 is the acceptance baseline.
@@ -243,7 +255,7 @@ A more attractive image is not acceptable if any higher-priority item becomes wo
 Keep the original unchanged unless the candidate passes every acceptance check.
 ```
 
-### 12.3 LOCKED / FLEXIBLE / FORBIDDEN
+### 12.4 LOCKED / FLEXIBLE / FORBIDDEN
 
 每轮只锁定一个主要问题，并填写：
 
@@ -263,7 +275,7 @@ FORBIDDEN:
 Return one complete edited image, not a patch or explanation.
 ```
 
-### 12.4 密集科研图专用模板
+### 12.5 密集科研图专用模板
 
 ```text
 Use case: high-fidelity scientific-figure edit
@@ -292,7 +304,7 @@ Acceptance:
 - readable at page scale and thumbnail scale
 ```
 
-### 12.5 候选图与 HTTP 524
+### 12.6 候选图与 HTTP 524
 
 成功返回候选图后，与 Image 1 全幅比较并按 Section 11 验收。最多连续两轮候选图质量修正；第二轮以上一轮候选为当前目标，但重复完整基线、角色和三段式合同。可替代的生成稿仍失败时，才按完整内容合同纯文本整图重生一次；不可替代的用户原图保留原件。
 

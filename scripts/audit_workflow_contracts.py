@@ -230,6 +230,8 @@ def main() -> int:
             "Image 1 为验收基线",
             "第一次 HTTP 524",
             "第二次 524 停止",
+            "导出文件名或媒体序号只作存储线索",
+            "只进入本次运行时合同或项目记录",
             "不得自动给标题、表头、首列、汇总行或普通单元格添加深色",
             "只有用户当轮明确要求 push 时才推送",
             "唯一优先级",
@@ -523,6 +525,8 @@ def main() -> int:
             "所有待附图片均有本地路径时使用 `referenced_image_paths`",
             "最小 `num_last_images_to_include`",
             "diagram-iconography.md",
+            "不得从中推断正式图号",
+            "项目专属的正式图号",
         ),
         "skills/research-visuals/references/figure-planning.md": (
             "来源到图件矩阵",
@@ -539,6 +543,9 @@ def main() -> int:
             "external/SOURCE.md",
             "未引入上游生产脚本、示例图片或第三方 API 配置",
             "不可替代的用户原图不得静默重造",
+            "载体定位与实例隔离",
+            "载体语义身份",
+            "项目专属事实只进入本次运行时合同",
         ),
         "skills/research-visuals/references/external/SOURCE.md": (
             "只读上游快照",
@@ -611,6 +618,10 @@ def main() -> int:
             "网页视觉",
             "科学教育插图",
             "封面与章节图",
+            "Target identity:",
+            "Resolved Image 1:",
+            "Instance-only facts:",
+            "Carrier-managed text:",
         ),
         "skills/research-visuals/references/diagram-iconography.md": (
             "W3C G207",

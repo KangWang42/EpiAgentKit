@@ -77,6 +77,9 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("两者不得并用", body)
         self.assertIn("参考图解构与编辑目标", planning)
         self.assertIn("携图编辑合同", planning)
+        self.assertIn("载体定位与实例隔离", planning)
+        self.assertIn("载体语义身份", planning)
+        self.assertIn("项目专属事实只进入本次运行时合同", planning)
         self.assertIn("imagegen 新图或携图编辑", readme)
         self.assertIn("主 `SKILL.md` 始终优先", source)
         self.assertIn("携带全部且仅必要的编辑目标", source)
@@ -134,6 +137,8 @@ class VisualRoutingTests(unittest.TestCase):
             "FORBIDDEN",
             "第二次 524",
             "不计入两轮设计修正",
+            "导出文件名和媒体序号仅作存储线索",
+            "项目专属的正式图号",
         ):
             self.assertIn(fragment, body)
         for fragment in (
@@ -156,12 +161,17 @@ class VisualRoutingTests(unittest.TestCase):
             "网页视觉",
             "科学教育插图",
             "封面与章节图",
+            "Target identity:",
+            "Resolved Image 1:",
+            "Instance-only facts:",
+            "Carrier-managed text:",
         ):
             self.assertIn(fragment, recipes)
         self.assertIn("Baseline / Image 1", planning)
         self.assertIn("单一机制无法覆盖全部图片时", planning)
         self.assertIn("HTTP 524 单独按服务失败处理", readme)
         self.assertIn("HTTP 524", rules)
+        self.assertIn("导出文件名或媒体序号只作存储线索", rules)
         self.assertIn("HTTP 524 是服务或传输失败，不是 SVG 回退凭证", svg_fallback)
         self.assertIn("连续两次 HTTP 524", svg_fallback)
         self.assertNotIn("Preserve exactly:", recipes)
