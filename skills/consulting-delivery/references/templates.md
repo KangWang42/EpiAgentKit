@@ -38,7 +38,7 @@ required_pkgs <- character()  # 按包内脚本实际依赖填写，不凭模板
 missing_pkgs <- setdiff(required_pkgs, rownames(installed.packages()))
 if (length(missing_pkgs) > 0) {
   stop("缺少依赖包：", paste(missing_pkgs, collapse = ", "),
-       "。请按交付包依赖清单安装后重跑。")
+       "。请根据交付包依赖清单自行准备 R 环境；本脚本不会自动安装。")
 }
 
 # 顺序执行脚本 -----------------------------------------------

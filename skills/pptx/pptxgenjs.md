@@ -235,7 +235,7 @@ slide.addImage({
 
 ### Icon Libraries
 
-Install: `npm install -g react-icons react react-dom sharp`
+Prerequisites: `react-icons`, `react`, `react-dom`, and `sharp` must already be available in the Node.js environment. If any package is missing, explain the user's next setup step; do not install it.
 
 Popular icon sets in react-icons:
 - `react-icons/fa` - Font Awesome

@@ -159,6 +159,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
     print(f"- 组件：{', '.join(sorted(components))}")
     print(f"- Skills：{'全部' if skills is None else ', '.join(sorted(skills))}")
     print("- 行为：覆盖同名 EpiAgentKit 文件，保留无关个人配置")
+    print("- 本机环境：只安装 EpiAgentKit 文件，不安装或升级 R、Python 及其它运行环境或依赖")
     if "skills" in components:
         print(
             "- 冲突门禁：安装前遍历 Skill 发现目录；同名或触发范围冲突的 "

@@ -137,7 +137,11 @@ create_delivery_pack <- function(name, root = "05_reports", overwrite = FALSE,
       file.path(pack, "requirements.txt"), useBytes = TRUE
     )
     entry <- "run_all.py"
-    reproduce <- "新建虚拟环境，按 `requirements.txt` 安装依赖后运行 `python run_all.py`。"
+    reproduce <- paste0(
+      "使用已准备且兼容的 Python 隔离环境运行 `python run_all.py`。",
+      "若环境或依赖缺失，请根据 `requirements.txt` 自行准备；",
+      "本交付包不会创建环境，也不会安装或升级运行时与依赖。"
+    )
   }
 
   writeLines(

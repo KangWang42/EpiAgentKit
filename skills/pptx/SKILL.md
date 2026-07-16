@@ -234,8 +234,10 @@ pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
 
 ## Dependencies
 
-- `pip install "markitdown[pptx]"` - text extraction
-- `pip install Pillow` - thumbnail grids
-- `npm install -g pptxgenjs` - creating from scratch
+- `markitdown[pptx]` in the user-selected Python environment for text extraction
+- Pillow in the user-selected Python environment for thumbnail grids
+- PptxGenJS in the user-selected Node.js environment for creating from scratch
 - LibreOffice (`soffice`) - PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
 - Poppler (`pdftoppm`) - PDF to images
+
+If any item is unavailable, explain the missing prerequisite and the user's next setup step; do not install or upgrade it.

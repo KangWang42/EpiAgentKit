@@ -239,6 +239,10 @@ def main() -> int:
             "轻量任务",
             "不得自动初始化项目",
             "正式项目审查或交付签发前",
+            "安装或同步 EpiAgentKit 只负责复制规则、skills、hooks",
+            "不负责安装或升级 R、Python",
+            "只说明检测结果、影响与用户下一步可执行的准备方式",
+            "不代用户创建环境或执行安装、升级、降级命令",
         ),
         "skills/project-init/references/project-hygiene.md": (
             "编号脚本不超过 10 个",
@@ -299,6 +303,8 @@ def main() -> int:
             "轻量任务",
             "不补建缺失的项目文档",
             "不用询问代替排错",
+            "依赖或运行环境缺失时说明检测结果",
+            "不代为安装",
         ),
         "skills/biostat-principles/SKILL.md": (
             "09_backup/EXPERIMENTS.md",
@@ -316,6 +322,8 @@ def main() -> int:
             "R 或 Python 分析",
             "run_all.R` 或 `run_all.py",
             "scripts/run_check_project.py",
+            "复现检查只使用本机已有的兼容 R/Python 环境",
+            "不得创建虚拟环境或执行安装、升级命令",
         ),
         "skills/consulting-delivery/scripts/consulting_scaffold.R": (
             'subdirs <- c("data", "code", "results", "tables", "figures")',
@@ -323,6 +331,7 @@ def main() -> int:
             "TABLE_REGISTRY <- character()",
             'language = c("R", "python")',
             'file.path(pack, "run_all.py")',
+            "本交付包不会创建环境，也不会安装或升级运行时与依赖",
         ),
         "scripts/sync_user_configs.py": (
             "def atomic_copy_file(",
@@ -379,10 +388,24 @@ def main() -> int:
         "skills/docx/SKILL.md": (
             "only when Codex must actually",
             "file-operation companion",
+            "If it is unavailable, explain the missing prerequisite",
+            "do not install it",
         ),
         "skills/pptx/SKILL.md": (
             "only when Codex must actually",
             "file-operation companion",
+            "If any item is unavailable, explain the missing prerequisite",
+            "do not install or upgrade it",
+        ),
+        "skills/pptx/pptxgenjs.md": (
+            "Prerequisites:",
+            "explain the user's next setup step",
+            "do not install it",
+        ),
+        "skills/pdf/SKILL.md": (
+            "Requires pytesseract and pdf2image",
+            "If missing, explain the user's next setup step",
+            "do not install them",
         ),
         "skills/report-writing/SKILL.md": (
             "无论只要正文还是文件",
@@ -401,11 +424,16 @@ def main() -> int:
             "非统计视觉不触发本技能",
             "先锁定图前合同",
             "多面板已完成两两去冗余",
+            "配方库中的 `install.packages()`",
+            "不得执行或复制进主流程",
+            "让用户自行准备后再继续",
         ),
         "scripts/configure_user.py": (
             "CODEX_COMPATIBILITY_WARNING,",
             '"doctor"',
             '"--skip-doctor"',
+            "只安装 EpiAgentKit 文件",
+            "不安装或升级 R、Python 及其它运行环境或依赖",
         ),
         "scripts/epiagentkit.py": (
             "def tree_matches(",
@@ -670,6 +698,13 @@ def main() -> int:
             "Neutral Default Formatting",
             "Do not automatically add dark header bands",
             "Default to white cells with black text and light borders",
+            "Use `scripts/recalc.py` only when a compatible LibreOffice installation is already available",
+            "If `soffice` is unavailable",
+            "do not install it",
+        ),
+        "skills/epi-project-audit/scripts/check_consistency.py": (
+            "请先选择要使用的 Python 环境和安装方式",
+            "本检查器不会自动安装或升级依赖",
         ),
         "README.md": (
             "项目能做到什么",
@@ -804,6 +839,20 @@ def main() -> int:
         "skills/consulting-delivery/SKILL.md": (
             "每个新版本用新日期建新包",
             "旧包移 `09_backup/` 或保留原位",
+        ),
+        "skills/docx/SKILL.md": ("Install: `npm install -g docx`",),
+        "skills/pptx/SKILL.md": (
+            '`pip install "markitdown[pptx]"`',
+            "`pip install Pillow`",
+            "`npm install -g pptxgenjs`",
+        ),
+        "skills/pptx/pptxgenjs.md": (
+            "Install: `npm install -g react-icons react react-dom sharp`",
+        ),
+        "skills/pdf/SKILL.md": ("# Requires: pip install pytesseract pdf2image",),
+        "skills/xlsx/SKILL.md": ("You can assume LibreOffice is installed",),
+        "skills/epi-project-audit/scripts/check_consistency.py": (
+            "pip install pyyaml",
         ),
         "scripts/sync_user_configs.py": (
             "safe_remove(destination, target, dry_run)",

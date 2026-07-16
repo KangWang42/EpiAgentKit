@@ -55,7 +55,7 @@ python scripts/accept_changes.py input.docx output.docx
 
 ## Creating New Documents
 
-Generate .docx files with JavaScript, then validate. Install: `npm install -g docx`
+Generate .docx files with JavaScript, then validate. This workflow requires the `docx` package in the existing Node.js environment. If it is unavailable, explain the missing prerequisite and the user's next setup step; do not install it.
 
 ### Setup
 ```javascript
@@ -476,6 +476,6 @@ After running `comment.py` (see Step 2), add markers to document.xml. For replie
 ## Dependencies
 
 - **pandoc**: Text extraction
-- **docx**: `npm install -g docx` (new documents)
+- **docx**: JavaScript package for new documents; if unavailable, report it as a prerequisite without installing it
 - **LibreOffice**: PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
 - **Poppler**: `pdftoppm` for images

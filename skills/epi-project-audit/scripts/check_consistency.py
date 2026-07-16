@@ -21,7 +21,11 @@ import sys, os, re, glob, argparse
 try:
     import yaml
 except ImportError:
-    print("需要 pyyaml：pip install pyyaml"); sys.exit(2)
+    print(
+        "缺少依赖 pyyaml；请先选择要使用的 Python 环境和安装方式。"
+        "本检查器不会自动安装或升级依赖。"
+    )
+    sys.exit(2)
 
 
 def norm(s):

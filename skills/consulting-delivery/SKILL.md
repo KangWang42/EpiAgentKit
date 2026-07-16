@@ -105,10 +105,11 @@ description: |
 
 完整模板见 `references/templates.md` §1-2；不可妥协的要求：
 
-- R 包在空 R session 中运行 `run_all.R`；Python 包在新虚拟环境按锁定依赖安装后运行 `run_all.py`。入口必须检查工作目录并按编号执行脚本。
+- R 包在空 R session 中运行 `run_all.R`；Python 包在用户选定的隔离环境中按锁定依赖运行 `run_all.py`。入口必须检查工作目录并按编号执行脚本。
 - 脚本之间只靠 `results/*.xlsx` 传表格化数据，不靠环境变量；**禁 rds/RData**；模型对象不跨脚本传（留在产出它的脚本内、只导出结果表）。
 - R 脚本声明完整 `library()`；Python 包提供 `requirements.txt` 或项目锁文件。全部路径相对，不读包外文件，不写死 `setwd()` 或绝对路径。
 - 模板与输出内禁 emoji，状态用文字。
+- 复现检查只使用本机已有的兼容 R/Python 环境。若环境或依赖缺失，停止检查并说明缺什么、影响什么以及用户可如何准备；不得创建虚拟环境或执行安装、升级命令。
 
 ---
 
@@ -119,13 +120,11 @@ description: |
 cp -r "05_reports/结果-4-20-训练测试集" /tmp/test_pack
 # 2A. R 包：启动新 R session（不继承当前环境）
 Rscript --vanilla -e "setwd('/tmp/test_pack'); source('run_all.R')"
-# 2B. Python 包：在新虚拟环境安装锁定依赖后运行
-python -m venv /tmp/test_pack_venv
-/tmp/test_pack_venv/bin/python -m pip install -r /tmp/test_pack/requirements.txt
-/tmp/test_pack_venv/bin/python /tmp/test_pack/run_all.py
+# 2B. Python 包：使用用户已准备好的隔离环境
+/path/to/existing/environment/python /tmp/test_pack/run_all.py
 ```
 
-Windows 使用新建虚拟环境中的 `python.exe` 执行同一流程。**通过标准**：复现入口无 error；所有预期 table / figure 都生成；数字与原 `03_tables/` 完全一致。
+Windows 使用用户已准备好的隔离环境中的 `python.exe` 执行同一流程。**通过标准**：复现入口无 error；所有预期 table / figure 都生成；数字与原 `03_tables/` 完全一致。
 不通过 → 多是路径硬编码、依赖未声明、脚本顺序隐式依赖；回 ISOLATE 修。
 
 ---
