@@ -147,7 +147,7 @@ description: |
   未显式引用的主表图兜底补在结论后。
 - **表**：用 Markdown 表格语法把 `03_tables/` 的关键数据写进 md，拼装脚本转三线表。一张论文表=一个
   主题；切面多了进同一表多 sheet（出表交给 r-biostats/xlsx，本技能只把关键行写进正文）。
-- **图**：统计结果图走 `publication-figures`，以 PDF+PNG 为主；流程图、研究框架、技术路线、机制图、包含关系、科学教育插图和图形摘要等非统计视觉走 `research-visuals`，按论文最终版面、目标期刊和读者选择视觉语言并优先调用 imagegen，最终以 `FigN_xxx.png` 随文嵌入。真实显微、病理、影像或其它科研原始图像不得生成式重绘。只有用户或期刊要求矢量、工具不可用或内容精度不合格时才由 `svg-diagrams` 生成 SVG + 同名 PNG，SVG 源不得丢失。`![图注](04_figures/FigN_xxx.png)` 随文嵌入，图注在图下方。
+- **图**：统计结果图走 `publication-figures`，以 PDF+PNG 为主；流程图、研究框架、技术路线、机制图、包含关系、科学教育插图和图形摘要等非统计视觉走 `research-visuals`，按论文最终版面、目标期刊和读者选择视觉语言并优先调用 imagegen，最终以 `FigN_xxx.png` 随文嵌入。真实显微、病理、影像或其它科研原始图像不得生成式重绘。只有用户或期刊要求矢量、工具不可用，或 Image 1、适用 Image 2 与允许的整图重生成均不能保证内容精度时，才由 `svg-diagrams` 生成 SVG + 同名 PNG，SVG 源不得丢失。`![图注](04_figures/FigN_xxx.png)` 随文嵌入，图注在图下方。
 - **公式**：`$$LaTeX$$` 标记，拼装时转 OMML；**禁止**输出 `RPF_(i)`、`²⁹` 这类 fallback 字符串。
 - **上下标**：用 `~i~` / `^2^`，拼装转真上下标，不要直接塞 Unicode 下标字符。
 
@@ -218,7 +218,7 @@ description: |
 ## 八、与生态内其他技能的衔接
 
 - 开工前对齐 `biostat-principles`（口径与可复现）。
-- 结果由 `r-biostats` 产出；统计图由 `publication-figures` 生成，流程/结构/机制、科学插图和图形摘要等非统计视觉由 `research-visuals` 按载体建立视觉简报、调用 imagegen 并按需回退 `svg-diagrams`，`xlsx` 出表；本技能只消费，不改分析。
+- 结果由 `r-biostats` 产出；统计图由 `publication-figures` 生成，流程/结构/机制、科学插图和图形摘要等非统计视觉由 `research-visuals` 按载体建立视觉简报、调用 imagegen，并仅在全部适用生成路径耗尽后最终回退 `svg-diagrams`，`xlsx` 出表；本技能只消费，不改分析。
 - 所有学术文本润色统一走 `academic-humanizer` 的不可变事实清单、中文或英文语体与论断强度审查；Word 细排可叫 `docx`。
 - 结果变 → 回写 `07_paper/results.yaml` 并重新派生 `0_result_summaries.md`；方法变 → 回写 `DECISIONS.md`；操作完 → `SESSION_LOG.md`。
 

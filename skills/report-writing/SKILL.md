@@ -33,7 +33,7 @@ description: |
    一律成段。执行摘要可用"加粗标签 + 整句"的短段，不用点。
 5. **图表自动入文（强制要求）**：报告涉及的数据，凡 `03_tables/`（xlsx）有对应表就**读取并作为三线表插入正文**、
    凡 `04_figures/` 有对应图就**作为图片嵌入正文**，不要只在文字里描述"见表 X / 如图所示"而不放实际表图。
-   表题在表上方、图题在图下方，编号按行文顺序连续。无现成表图时，统计图按 `publication-figures`；封面、章节图、流程、结构、机制、场景和概念插图按 `research-visuals` 的报告载体规范建立视觉简报、调用 imagegen 并按需回退 `svg-diagrams`；表格按 `xlsx` 规范现做再插。
+   表题在表上方、图题在图下方，编号按行文顺序连续。无现成表图时，统计图按 `publication-figures`；封面、章节图、流程、结构、机制、场景和概念插图按 `research-visuals` 的报告载体规范建立视觉简报并调用 imagegen，适用的 Image 2 先于 SVG，全部适用生成路径耗尽后才最终回退 `svg-diagrams`；表格按 `xlsx` 规范现做再插。
 6. **输出载体服从请求（强制要求）**：用户只要正文或明确不生成文件时，直接返回净稿，不创建 `.md`/`.docx`，也不调用 `docx`。用户要求正式报告文件时，默认同时产出同名、同目录、内容一致的 `.md` 与 `.docx`；用户明确只要一种时服从。
 7. **结论先行**：报告开头先给最重要的结论 / 要点 / 行动项，再展开依据。读者读前 1/4 就应抓住核心。
 7bis. **结果/统计报告写成论文体，不暴露工程过程（强制要求）**：结果类 / 统计分析报告面向读者，**NEVER** 写
@@ -178,6 +178,6 @@ def setfont(run, cn="宋体", en="Times New Roman", size=10.5, bold=False, itali
 
 - 正式论文 / 投稿材料 → `academic-publishing`（本 skill 不处理论文）。
 - 学术与专业文风润色 → 统一使用 `academic-humanizer` 的不可变事实清单、语体和论断—证据一致性审查。
-- 统计图 → `publication-figures`；封面、章节、流程、结构、机制、包含关系和研究场景视觉 → `research-visuals` 按报告载体建立视觉系统并调用 imagegen，按需回退 `svg-diagrams`。
+- 统计图 → `publication-figures`；封面、章节、流程、结构、机制、包含关系和研究场景视觉 → `research-visuals` 按报告载体建立视觉系统并调用 imagegen，适用的 Image 2 先于 SVG，全部适用生成路径耗尽后才最终回退 `svg-diagrams`。
 - docx 底层机制（读改、转换、模板）→ `docx` skill。
 - 咨询交付 zip 打包 → `consulting-delivery`（本 skill 只管报告本身的写作与排版）。

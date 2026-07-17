@@ -145,7 +145,7 @@ class VisualRoutingTests(unittest.TestCase):
         for fragment in (
             "Baseline: Image 1 is the acceptance baseline",
             "A more attractive image is not acceptable",
-            "Image 2: optional style reference only",
+            "Image 2: optional auxiliary reference",
             "Use case: high-fidelity scientific-figure edit",
             "Structure inventory",
             "merges or branches",
@@ -170,10 +170,20 @@ class VisualRoutingTests(unittest.TestCase):
             self.assertIn(fragment, recipes)
         self.assertIn("Baseline / Image 1", planning)
         self.assertIn("单一机制无法覆盖全部图片时", planning)
+        self.assertIn("适用的 Image 2 可从首轮开始使用", planning)
+        self.assertIn("SVG 只能位于这些适用 imagegen 路径之后", planning)
         self.assertIn("HTTP 524", rules)
+        self.assertIn("适用的 Image 2 路径必须先于 SVG 实际尝试", rules)
         self.assertIn("导出文件名或媒体序号只作存储线索", rules)
         self.assertIn("HTTP 524 是服务或传输失败，不是 SVG 回退凭证", svg_fallback)
         self.assertIn("连续两次 HTTP 524", svg_fallback)
+        self.assertIn("适用的 Image 2 优先于 SVG", svg_fallback)
+        self.assertIn("全部适用的 imagegen 路径实际耗尽", svg_fallback)
+        self.assertIn("适用的 Image 2 已存在时，必须先于 SVG", body)
+        self.assertIn(
+            "SVG 仅在明确矢量要求、工具实际不可用或全部适用 imagegen 路径耗尽后使用",
+            body,
+        )
         self.assertNotIn("Preserve exactly:", recipes)
         self.assertNotIn(
             "No watermark, logo, pseudo-text, random interface copy, decorative formulas",

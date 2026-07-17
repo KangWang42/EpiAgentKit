@@ -110,7 +110,7 @@ sysu_save(ppt, "输出.pptx", genre = "meeting")  # 组会：强制禁目录/章
 ## 配图（imagegen 优先）
 
 - 开题、答辩、中期和正式研究汇报生成前阅读 `research-visuals/references/research-figure-patterns.md`，逐页标记主要表达方式和是否需要图。背景页优先“核心论断 + 证据视觉”；方法页只为难以口述的时间、空间、变换、模型分支和验证关系配图；创新、可行性和研究计划优先结构化文字、真实前期结果和甘特图。
-- **封面主视觉、研究背景、流程图、结构图、技术路线、包含关系、概念框架、机制示意和研究场景配图默认调用 `research-visuals`**。生成前读取实际模板、图片区、标题位置和配色，按 `research-visuals/references/carrier-specs.md` 的 PPT 规则确定负空间、焦点和比例。Codex 有工具时直接使用内置 imagegen/image_gen，以高质量 PNG 嵌入 `sysu_add_image*`。用户明确要求矢量、工具不可用，或成图经修正仍不能保证文字与关系准确时才调用 `svg-diagrams`。统计图仍走 `publication-figures`。
+- **封面主视觉、研究背景、流程图、结构图、技术路线、包含关系、概念框架、机制示意和研究场景配图默认调用 `research-visuals`**。生成前读取实际模板、图片区、标题位置和配色，按 `research-visuals/references/carrier-specs.md` 的 PPT 规则确定负空间、焦点和比例。Codex 有工具时直接使用内置 imagegen/image_gen，以高质量 PNG 嵌入 `sysu_add_image*`。用户明确要求矢量、工具不可用，或 Image 1、适用 Image 2 与允许的整图重生成均不能保证文字与关系准确时，才最终回退 `svg-diagrams`。统计图仍走 `publication-figures`。
 - 图位于侧栏时通常占 30%–45%；机制图占 45%–60%；分步方法采用文字 30%–35% 加图 55%–65%；总体技术路线占标题以下正文区 70%–90%，页内不再并列长段正文。多图必须等高对齐并逐图题注。
 - 技术路线至少按项目实际覆盖“研究对象/数据源 → 采集与整合 → 纳排/清洗/QC → 变量或特征构建 → 研究问题及对应方法 → 验证/分层/敏感性 → 输出与解释”。研究问题与方法成对表达，不得只罗列模型名。复杂方法可复用同一母图并逐页高亮当前模块。
 - imagegen 图先按 `research-visuals` 在原始分辨率与实际幻灯片中双重核验。流程、框架和路线图逐字检查标签、数字、节点和箭头；有误时继续用 imagegen 定向编辑完整成图或整图重生成，不得用 Python、PPT 文本框或 SVG 覆盖层补字。PPT 主视觉和章节配图默认不烧录标题或正文，由幻灯片原生文本承担。
@@ -152,5 +152,5 @@ $pres.Close(); try { $pp.Quit() } catch {}
 - `references/deck_skeleton.R` — 组会汇报骨架模板（13-15 页，无章节页）。
 - `references/defense_blueprint.R` — 开题/答辩/正式研究汇报骨架（20-40 页，含章节页、目录、技术路线、进度表、致谢页 + 顶部规范用词库与设计基调）。
 - `research-visuals/references/research-figure-patterns.md` — 通用科研流程图、框架图、机制图、研究设计、技术路线和图形摘要的内容与视觉规范。
-- `references/figure_snippets.R` — 数据散点/谱系等统计型配图示例；非统计流程、结构与场景配图改用 `research-visuals`，按需回退 `svg-diagrams`。
+- `references/figure_snippets.R` — 数据散点/谱系等统计型配图示例；非统计流程、结构与场景配图改用 `research-visuals`，全部适用 imagegen 路径耗尽后才最终回退 `svg-diagrams`。
 - `assets/template.pptx`（默认中大医学）、`assets/template-公卫学院.pptx`（模板2）— 两套模板。

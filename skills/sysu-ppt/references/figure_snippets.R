@@ -1,7 +1,7 @@
 # ============================================================
 # 数据型配图函数库（适配 PPT 嵌入）
 # 非统计流程图、结构图、技术路线、包含关系、机制示意和场景配图统一使用
-# research-visuals 优先调用 imagegen；只有矢量需求或精度回退时使用 svg-diagrams。
+# research-visuals 优先调用 imagegen；只有明确矢量需求或全部适用 imagegen 路径耗尽时才最终回退 svg-diagrams。
 # 不在本文件继续维护 ggplot 矩形/箭头流程图基元。
 # ============================================================
 suppressPackageStartupMessages({

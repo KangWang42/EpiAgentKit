@@ -167,7 +167,7 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 项目审查 | `epi-project-audit` |
 | 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `skill-creator` · `git-commit-helper` |
 
-组合遵循“内容主流程 → 视觉或文件操作 → 终审”。例如，论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 文件时再加 `docx`；R 分析使用 `biostat-principles → r-biostats`，实际生成数据图时再加 `publication-figures`；非统计视觉统一使用 `research-visuals → imagegen`，只有明确矢量要求或精度回退时才转 `svg-diagrams`。
+组合遵循“内容主流程 → 视觉或文件操作 → 终审”。例如，论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 文件时再加 `docx`；R 分析使用 `biostat-principles → r-biostats`，实际生成数据图时再加 `publication-figures`；非统计视觉统一使用 `research-visuals → imagegen`。除明确矢量要求或工具实际不可用外，必须先完成 Image 1 定向修正、适用的 Image 2 辅助修正和允许的整图重生成，才把 `svg-diagrams` 作为最终回退。
 
 ## 为什么不只是一个提示词仓库
 
