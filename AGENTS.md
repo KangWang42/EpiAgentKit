@@ -22,6 +22,10 @@ The validator checks skill metadata and structure; the other commands check synt
 
 Use UTF-8 Markdown, imperative instructions, and descriptive headings. Skill directories use lowercase kebab-case, such as `academic-publishing/`. Every `SKILL.md` starts with YAML fields `name` and `description`. Use four spaces in Python, two in R, and portable Bash with `#!/usr/bin/env bash`. Keep shell files LF-only. Prefer relative paths and reusable scripts over large embedded code blocks.
 
+## Skill Maintenance
+
+Treat skill improvement as regression-safe optimization, not append-only documentation. Before editing, identify the observed failure or new use case, behaviors that must remain unchanged, the smallest coherent change, and representative old and new evaluations. Classify existing material as keep, rewrite, merge, move, script, or delete before adding rules or files. Keep each concept in one source: global constraints in `CLAUDE.md`, core routing and workflow in `SKILL.md`, conditional detail and examples in `references/`, and repeated deterministic operations in `scripts/`. Prefer the smaller change when two designs pass the same evaluations; remove stale, redundant, conflicting, speculative, or overly project-specific content. Do not trade away existing behavior under the label of simplification unless the user explicitly changes the contract.
+
 ## Testing Guidelines
 
 There is no central coverage target or test tree. Use validators, syntax checks, and focused execution. Reproduce bugs before fixing them, record verification commands in the pull request, and never use private research data as fixtures.

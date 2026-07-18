@@ -105,6 +105,27 @@
       "primary": "academic-humanizer",
       "companions": [],
       "excluded": ["python-ecg-analysis", "r-biostats"]
+    },
+    {
+      "id": "readme_content_diagram",
+      "prompt": "为 README 绘制带准确中文标签的能力工作流图，并按内容优化现有版式",
+      "primary": "research-visuals",
+      "companions": [],
+      "excluded": ["publication-figures", "svg-diagrams"]
+    },
+    {
+      "id": "readme_real_artifact_screenshot",
+      "prompt": "在 README 中展示实际生成的 PPT 和报告效果，请渲染真实产物并整理截图",
+      "primary": "research-visuals",
+      "companions": [],
+      "excluded": ["publication-figures", "svg-diagrams"]
+    },
+    {
+      "id": "template_adaptive_presentation",
+      "prompt": "使用中大模板制作开题 PPT，但根据每页内容关系调整版式、图文比例和视觉层级",
+      "primary": "sysu-ppt",
+      "companions": ["research-visuals", "pptx"],
+      "excluded": []
     }
   ]
 }

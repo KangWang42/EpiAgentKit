@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -16,6 +17,57 @@ from sync_user_configs import source_skills, sync_skills
 
 
 class WorkflowRoutingTests(unittest.TestCase):
+    def test_skill_maintenance_contract_is_regression_safe(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        repo_rules = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        creator = (ROOT / "skills/skill-creator/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("Skill 优化不是只增不减", global_rules)
+        self.assertIn("同时验证触发边界、旧能力、新场景", global_rules)
+        self.assertIn("regression-safe optimization", repo_rules)
+        self.assertIn("Optimize, Don't Accumulate", creator)
+        self.assertIn("remove superseded text in the same edit", creator)
+
+    def test_skill_validator_enforces_metadata_and_context_budget(self) -> None:
+        validator = ROOT / "skills/skill-creator/scripts/quick_validate.py"
+        cases = {
+            "empty-description": (
+                "---\nname: empty-description\ndescription: ''\n---\n",
+                False,
+            ),
+            "large-body": (
+                (
+                    "---\nname: large-body\ndescription: test skill\n---\n"
+                    + "instruction\n" * 500
+                ),
+                False,
+            ),
+            "claude-only-valid": (
+                "---\nname: claude-only-valid\ndescription: test skill\n"
+                "disable-model-invocation: true\n---\n",
+                True,
+            ),
+        }
+
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            for name, (content, should_pass) in cases.items():
+                with self.subTest(name=name):
+                    skill = base / name
+                    skill.mkdir()
+                    (skill / "SKILL.md").write_text(content, encoding="utf-8")
+                    result = subprocess.run(
+                        [sys.executable, str(validator), str(skill)],
+                        cwd=ROOT,
+                        capture_output=True,
+                        text=True,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                    self.assertEqual(result.returncode == 0, should_pass)
+
     def test_python_ecg_is_local_only_and_not_publicly_routed(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

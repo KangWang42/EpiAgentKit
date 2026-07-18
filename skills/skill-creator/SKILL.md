@@ -32,6 +32,12 @@ The context window is a public good. Skills share the context window with everyt
 
 Prefer concise examples over verbose explanations.
 
+### Optimize, Don't Accumulate
+
+Treat an existing Skill as a behavior contract, not a document that only grows. Before editing, identify the observed failure or new scenario, the behaviors that must remain unchanged, and representative old and new evaluations. Classify current material as `keep / rewrite / merge / move / script / delete` before choosing `add`.
+
+Prefer replacing an unclear rule, merging duplicates, deleting stale or speculative content, or moving conditional detail out of `SKILL.md` over appending another exception. Keep one source for each concept and update its callers, examples, validators, and references together. Add content only when a real task gap cannot be solved by clearer structure or a better example. When two versions pass the same evaluations, prefer the smaller and easier-to-navigate version.
+
 ### Set Appropriate Degrees of Freedom
 
 Match the level of specificity to the task's fragility and variability:
@@ -208,7 +214,7 @@ Skill creation involves these steps:
 3. Initialize the skill (run init_skill.py)
 4. Edit the skill (implement resources and write SKILL.md)
 5. Package the skill (run package_skill.py)
-6. Iterate based on real usage
+6. Optimize and validate against real usage
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
 
@@ -279,6 +285,8 @@ After initialization, customize or remove the generated SKILL.md and example fil
 ### Step 4: Edit the Skill
 
 When editing the (newly-generated or existing) skill, remember that the skill is being created for another instance of Claude to use. Include information that would be beneficial and non-obvious to Claude. Consider what procedural knowledge, domain-specific details, or reusable assets would help another Claude instance execute these tasks more effectively.
+
+For an existing Skill, inspect its complete directory, current callers, validation scripts, and representative behavior before editing. Write a small change plan that names the gap, preserved behavior, proposed keep/rewrite/merge/move/script/delete/add actions, and validation cases. Do not expand trigger scope or change established outputs unless the user requested that behavior change.
 
 #### Learn Proven Design Patterns
 
@@ -356,11 +364,11 @@ If validation fails, the script will report the errors and exit without creating
 
 ### Step 6: Iterate
 
-After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.
+Iterate from observed behavior rather than imagined completeness:
 
-**Iteration workflow:**
-
-1. Use the skill on real tasks
-2. Notice struggles or inefficiencies
-3. Identify how SKILL.md or bundled resources should be updated
-4. Implement changes and test again
+1. Capture the failing or inefficient real task and the current baseline.
+2. Define old behaviors that must still pass and the new behavior to improve.
+3. Inspect the full Skill and prepare the `keep / rewrite / merge / move / script / delete / add` plan.
+4. Implement the smallest coherent change; remove superseded text in the same edit.
+5. Validate metadata, references, scripts, trigger boundaries, and representative old and new tasks.
+6. Compare the result with the baseline. Keep the change only if it improves the target without regression or unnecessary context cost.
