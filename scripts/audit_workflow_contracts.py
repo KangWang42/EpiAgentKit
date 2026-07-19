@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import string
 import subprocess
 import sys
@@ -1328,6 +1329,15 @@ def main() -> int:
                     "dual-platform doctor self-test failed: "
                     + (doctor.stdout + doctor.stderr).strip()
                 )
+            runtime_checks = {
+                check.get("item")
+                for check in doctor_payload.get("checks", [])
+                if check.get("status") == "PASS"
+            }
+            if not {"claude.hook_runtime", "codex.hook_runtime"} <= runtime_checks:
+                problems.append(
+                    "dual-platform doctor self-test did not execute both Windows hook launchers"
+                )
 
             mirror_tree(
                 ROOT / "skills/academic-humanizer",
@@ -1918,6 +1928,43 @@ def main() -> int:
     cmd_bytes = (ROOT / "hooks" / "run_hook.cmd").read_bytes()
     if b"\r\n" not in cmd_bytes or b"\n" in cmd_bytes.replace(b"\r\n", b""):
         problems.append("hook path audit: run_hook.cmd must use CRLF line endings")
+    cmd_text = cmd_bytes.decode("utf-8", errors="replace").lower()
+    if "where bash.exe" in cmd_text:
+        problems.append("hook path audit: run_hook.cmd must not resolve WSL bash.exe")
+    if "where git.exe" not in cmd_text:
+        problems.append("hook path audit: run_hook.cmd must resolve Git for Windows first")
+
+    if os.name == "nt":
+        with tempfile.TemporaryDirectory(prefix="epiagentkit_bash_priority_") as directory:
+            fixture = Path(directory)
+            wsl_dir = fixture / "Windows WSL"
+            git_cmd = fixture / "Portable Git" / "cmd"
+            git_bin = fixture / "Portable Git" / "bin"
+            wsl_dir.mkdir(parents=True)
+            git_cmd.mkdir(parents=True)
+            git_bin.mkdir(parents=True)
+            system32 = Path(os.environ["SystemRoot"]) / "System32"
+            shutil.copy2(system32 / "where.exe", wsl_dir / "bash.exe")
+            shutil.copy2(system32 / "where.exe", git_cmd / "git.exe")
+            shutil.copy2(system32 / "more.com", git_bin / "bash.exe")
+            probe = fixture / "probe.sh"
+            probe.write_bytes(b"GIT_BASH_SELECTED\n")
+            env = os.environ.copy()
+            env["PATH"] = os.pathsep.join((str(wsl_dir), str(git_cmd), str(system32)))
+            wrapper = ROOT / "hooks" / "run_hook.cmd"
+            result = subprocess.run(
+                f'cmd.exe /d /s /c call "{wrapper}" "{probe}" "audit"',
+                cwd=fixture,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=env,
+            )
+            if result.returncode or "GIT_BASH_SELECTED" not in result.stdout:
+                problems.append(
+                    "Windows hook launcher self-test did not prefer Git Bash over WSL bash.exe"
+                )
 
     if problems:
         print("Workflow contract audit failed:")

@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import configure_user
@@ -71,6 +73,35 @@ def tree_matches(source: Path, target: Path) -> bool:
     expected = tree_map(source)
     actual = tree_map(target)
     return all(actual.get(relative) == checksum for relative, checksum in expected.items())
+
+
+def probe_windows_hook_launcher(wrapper: Path) -> tuple[bool, str]:
+    """Run a minimal hook through the installed Windows launcher."""
+    if os.name != "nt":
+        return True, f"{wrapper} (Windows runtime probe not required)"
+    if not wrapper.is_file():
+        return False, f"missing {wrapper}"
+    try:
+        with tempfile.TemporaryDirectory(prefix="epiagentkit_hook_probe_") as directory:
+            probe = Path(directory) / "probe.sh"
+            probe.write_bytes(b"exit 0\n")
+            result = subprocess.run(
+                f'cmd.exe /d /s /c call "{wrapper}" "{probe}" "doctor"',
+                cwd=directory,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+    except OSError as error:
+        return False, f"{wrapper}: {error}"
+    if result.returncode:
+        message = (result.stderr or result.stdout).strip()
+        detail = f"{wrapper}: exit {result.returncode}"
+        if message:
+            detail += f"; {message[:300]}"
+        return False, detail
+    return True, str(wrapper)
 
 
 def codex_skill_duplicates(home: Path, codex_home: Path) -> dict[str, list[Path]]:
@@ -177,6 +208,10 @@ def check_platform(
     if "hooks" in components:
         hook_dir = platform_home / "hooks"
         record(tree_matches(root / "hooks", hook_dir), f"{platform}.hooks", str(hook_dir))
+        runtime_ok, runtime_detail = probe_windows_hook_launcher(
+            hook_dir / "run_hook.cmd"
+        )
+        record(runtime_ok, f"{platform}.hook_runtime", runtime_detail)
         config_path = platform_home / ("settings.json" if platform == "claude" else "hooks.json")
         try:
             config = load_json(config_path)
