@@ -96,7 +96,7 @@ description: |
 | 违禁 | 替代 |
 |------|------|
 | `print()`, `cat()` 调试 | 直接返回对象，RStudio 里跑分块 |
-| `for (i in 1:n)` 循环 | 先定义控制向量，再用 `map*()` / `walk*()`；确需 `for` 时用 `seq_along()` |
+| `for (i in 1:n)` 循环 | 先定义控制向量，再用 `map()` / `map2()` / `pmap()`（或对应的 `walk()` / `walk2()`）；确需 `for` 时用 `seq_along()` |
 | 绝对路径 `"C:/Users/..."` | 相对路径 `"01_data/rawdata/xx.csv"` |
 | `setwd()` | 以项目根为工作目录（Rproj 或 here） |
 | 修改 `01_data/rawdata/` | 只读，派生写到 `06_results/` |
