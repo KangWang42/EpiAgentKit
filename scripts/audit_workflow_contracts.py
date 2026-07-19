@@ -605,6 +605,8 @@ def main() -> int:
             "删除后会造成对象、关系、条件、关键状态或核心结论误读",
             "不得给每个节点机械添加副标题",
             "从来源锚点核验对象名称、关系语义、数字和结论",
+            "目标宽高比来自实际图位而非 Image 2",
+            "中文字形、圆形和方形保持自然比例",
         ),
         "skills/research-visuals/references/figure-planning.md": (
             "来源到图件矩阵",
@@ -676,6 +678,8 @@ def main() -> int:
             "README 与技术文档",
             "Skill 示例至少回答",
             "实际运行或渲染结果",
+            "宽于 16:9 的比例必须有真实横幅或整行图位依据",
+            "禁止非等比缩放",
         ),
         "skills/research-visuals/references/prompt-recipes.md": (
             "通用视觉简报",
@@ -718,6 +722,9 @@ def main() -> int:
             "Text selection:",
             "do not give every node a subtitle",
             "textless decorative illustration",
+            "Geometry and typography:",
+            "regular-width CJK typography",
+            "canvas aspect ratio",
         ),
         "skills/research-visuals/references/scenario-playbook.md": (
             "六项场景判定",
@@ -763,6 +770,8 @@ def main() -> int:
             "与真实输入、变换或输出对应",
             "diagram-iconography.md",
             "5–7 个阶段通常只保留 2–4 个",
+            "单行出现 6 个及以上有字节点",
+            "横向容量已按最长标签自然字宽核对",
         ),
         "skills/sysu-ppt/SKILL.md": (
             "不要把“每页有图”当目标",
