@@ -35,6 +35,14 @@ ROOT = Path(__file__).resolve().parents[1]
 LINE_BUDGET = 200
 
 
+def configure_utf8_output() -> None:
+    """Keep Windows diagnostics printable even when the active code page is GBK."""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def read(relative: str) -> str:
     return (ROOT / relative).read_text(encoding="utf-8")
 
@@ -2074,4 +2082,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    configure_utf8_output()
     raise SystemExit(main())

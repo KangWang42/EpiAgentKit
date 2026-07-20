@@ -18,6 +18,14 @@ from sync_user_configs import source_skills, sync_skills
 
 
 class WorkflowRoutingTests(unittest.TestCase):
+    def test_workflow_audit_forces_utf8_diagnostics(self) -> None:
+        audit = (ROOT / "scripts" / "audit_workflow_contracts.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("def configure_utf8_output()", audit)
+        self.assertIn('reconfigure(encoding="utf-8", errors="replace")', audit)
+        self.assertIn("configure_utf8_output()\n    raise SystemExit(main())", audit)
+
     def test_skill_maintenance_contract_is_regression_safe(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         repo_rules = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
