@@ -193,6 +193,34 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertEqual(recipes.count("Permanent constraints:"), 1)
         self.assertEqual(recipes.count("no watermark or false branding"), 1)
 
+    def test_codex_builtin_imagegen_isolates_inline_payloads(self) -> None:
+        body = (
+            ROOT / "skills" / "research-visuals" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+
+        for fragment in (
+            "Codex 内置 imagegen 的会话隔离",
+            "image_generation_end.result",
+            "input_image.image_url",
+            "一次性隔离子代理",
+            "主任务不得调用 `image_gen`",
+            "每次原图查看、候选图对照、定向修正和最终载体视觉检查",
+            "只返回纯文本",
+            "不得调用 `generatedImage(...)`",
+            "不得继续使用已经接收过内联图像载荷的子代理",
+            "独立图片任务",
+            "不能把 compact 或直接修改会话 JSONL 当作修复",
+        ):
+            self.assertIn(fragment, body)
+        for fragment in (
+            "会话隔离门禁",
+            "主任务只保留纯文本与本地文件路径",
+            "不接收或回放 data URL、base64 或内联图片",
+            "不得把 compact、修改会话 JSONL 或静默切换 CLI/API 当作修复",
+        ):
+            self.assertIn(fragment, rules)
+
     def test_vendored_figure_references_match_reviewed_snapshots(self) -> None:
         external = ROOT / "skills" / "research-visuals" / "references" / "external"
         expected = {
