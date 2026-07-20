@@ -172,9 +172,20 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("单一机制无法覆盖全部图片时", planning)
         self.assertIn("适用的 Image 2 可从首轮开始使用", planning)
         self.assertIn("SVG 只能位于这些适用 imagegen 路径之后", planning)
-        self.assertIn("HTTP 524", rules)
-        self.assertIn("适用的 Image 2 路径必须先于 SVG 实际尝试", rules)
-        self.assertIn("导出文件名或媒体序号只作存储线索", rules)
+        self.assertIn("非统计视觉先走 `research-visuals` → `imagegen`", rules)
+        self.assertIn("真实统计图走 `publication-figures`", rules)
+        self.assertIn(
+            "SVG 只按 `research-visuals` 与 `svg-diagrams` 的明确条件使用",
+            rules,
+        )
+        for conditional_detail in (
+            "HTTP 524",
+            "referenced_image_paths",
+            "num_last_images_to_include",
+            "Image 1 为验收基线",
+            "导出文件名或媒体序号只作存储线索",
+        ):
+            self.assertNotIn(conditional_detail, rules)
         self.assertIn("HTTP 524 是服务或传输失败，不是 SVG 回退凭证", svg_fallback)
         self.assertIn("连续两次 HTTP 524", svg_fallback)
         self.assertIn("适用的 Image 2 优先于 SVG", svg_fallback)

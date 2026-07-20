@@ -1,9 +1,13 @@
 ---
 name: git-commit-helper
-description: Generate clear, reviewable Conventional Commit messages by analyzing complete git diffs, validation evidence, compatibility effects, and rollback context. Use when the user asks to write commit messages, review staged changes, commit completed work, push changes, or improve repository history quality.
+description: Generate clear, reviewable Conventional Commit messages by analyzing complete git diffs, validation evidence, compatibility effects, and rollback context. Use when the user asks to write commit messages, review staged changes, commit completed work, push changes, or improve repository history quality. Run only when Git is already available and the current directory is a repository; otherwise skip Git operations without installing Git or initializing a repository.
 ---
 
 # Git Commit Helper
+
+## Availability preflight
+
+Before any Git command, verify that Git is already available and the current directory is a repository. If either check fails, report that Git was skipped and continue the parent task without version-control actions. Do not install Git, do not create an environment for it, and do not run `git init` unless the user explicitly requested repository initialization and Git is already available.
 
 ## Quick start
 
@@ -51,7 +55,7 @@ Write each commit so a future reader can understand the completed unit without o
    - validation commands and results;
    - compatibility, migration, or rollback implications when present.
 4. Review the complete worktree and staged diff before committing. Do not mix unexplained pre-existing changes into the commit.
-5. After validation, create the commit automatically when the user's standing policy authorizes it. Push only when the user explicitly requests push in the current turn; do not ask, remind, or batch-push accumulated commits. Never force-push or rewrite remote history.
+5. After validation, create the commit automatically when the user's standing policy authorizes it and the availability preflight passes. If it does not pass, skip the commit without treating that as task failure. Push only when the user explicitly requests push in the current turn; do not ask, remind, or batch-push accumulated commits. Never force-push or rewrite remote history.
 
 ### Examples
 
@@ -162,14 +166,15 @@ Migration guide: Update client code to handle new response structure
 
 ## Template workflow
 
-1. **Review worktree**: `git status --short`, `git diff`, and `git diff --staged`
-2. **Confirm validation**: Record the commands run and their outcomes
-3. **Identify type**: Is it feat, fix, refactor, docs, etc.?
-4. **Determine scope**: What coherent subsystem changed?
-5. **Write summary**: Specific imperative action + object
-6. **Add body**: Motivation, key changes, validation, compatibility / rollback
-7. **Note breaking changes**: If applicable
-8. **Push only on explicit request**: If the current user turn asks for push, verify branch and remote divergence, then use a normal push; otherwise stop after commit without prompting about push
+1. **Check availability**: Continue only when Git is installed and the current directory is a repository; otherwise skip without installing or initializing Git
+2. **Review worktree**: `git status --short`, `git diff`, and `git diff --staged`
+3. **Confirm validation**: Record the commands run and their outcomes
+4. **Identify type**: Is it feat, fix, refactor, docs, etc.?
+5. **Determine scope**: What coherent subsystem changed?
+6. **Write summary**: Specific imperative action + object
+7. **Add body**: Motivation, key changes, validation, compatibility / rollback
+8. **Note breaking changes**: If applicable
+9. **Push only on explicit request**: If the current user turn asks for push, verify branch and remote divergence, then use a normal push; otherwise stop after commit without prompting about push
 
 ## Interactive commit helper
 
@@ -218,4 +223,5 @@ git commit --amend --no-edit
 - [ ] Related issue numbers are included
 - [ ] Commit contains one coherent, reversible unit
 - [ ] Commit was created after validation unless the user opted out
+- [ ] Git availability and repository status were confirmed, or all Git operations were explicitly skipped without installation or initialization
 - [ ] If push was explicitly requested, it is a normal fast-forward update with no force push

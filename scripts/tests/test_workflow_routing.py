@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,111 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("regression-safe optimization", repo_rules)
         self.assertIn("Optimize, Don't Accumulate", creator)
         self.assertIn("remove superseded text in the same edit", creator)
+
+    def test_global_rules_are_concise_complete_and_single_source(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        lines = global_rules.splitlines()
+
+        self.assertLessEqual(len(lines), 200)
+        self.assertLessEqual(max(map(len, lines)), 300)
+        for skill in available_skills(ROOT):
+            self.assertIn(skill, global_rules, skill)
+
+        for quality_rule in (
+            "功能与读者匹配",
+            "事实和数字准确",
+            "层级清楚",
+            "结构紧凑",
+            "术语一致",
+            "版式克制",
+            "最终尺寸可读",
+            "未指定风格时采用对应 skill 的中性默认",
+        ):
+            self.assertIn(quality_rule, global_rules)
+
+        for conditional_detail in (
+            "HTTP 524",
+            "referenced_image_paths",
+            "num_last_images_to_include",
+            "Image 1 为验收基线",
+        ):
+            self.assertNotIn(conditional_detail, global_rules)
+
+    def test_epiagentkit_maintenance_contract_is_dedicated_and_portable(self) -> None:
+        maintenance = (
+            ROOT / "skills" / "epiagentkit-maintenance" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        routing = (ROOT / "scripts" / "skill_routing_cases.json").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "name: epiagentkit-maintenance",
+            "CLAUDE.md",
+            "AGENTS.md",
+            "skills",
+            "hooks",
+            "观察到的缺口",
+            "必须保留的行为",
+            "最小变更集",
+            "代表性验证",
+            "每个概念保持一个单源",
+            "不执行 `git init`",
+            "不安装 Git",
+            "sync --target all",
+            "doctor --target all",
+            "普通研究项目的数据分析、写作或项目初始化不触发本 skill",
+        ):
+            self.assertIn(fragment, maintenance)
+        self.assertIn("maintain_epiagentkit_contracts", routing)
+        cases = {case["id"]: case for case in json.loads(routing)["cases"]}
+        self.assertIn("epiagentkit-maintenance", cases["new_empty_project"]["excluded"])
+        self.assertIn(
+            "epiagentkit-maintenance",
+            cases["existing_project_analysis"]["excluded"],
+        )
+
+    def test_neutral_document_defaults_live_in_file_skills(self) -> None:
+        docx = (ROOT / "skills" / "docx" / "SKILL.md").read_text(encoding="utf-8")
+        xlsx = (ROOT / "skills" / "xlsx" / "SKILL.md").read_text(encoding="utf-8")
+        report = (ROOT / "skills" / "report-writing" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "Neutral Default Formatting",
+            "Keep every table cell white by default",
+            "preserve its existing styles and layout",
+        ):
+            self.assertIn(fragment, docx)
+        for fragment in (
+            "Neutral Default Formatting",
+            "Do not automatically add dark header bands",
+        ):
+            self.assertIn(fragment, xlsx)
+        for fragment in ("默认中性排版", "无填充、白底黑字"):
+            self.assertIn(fragment, report)
+
+    def test_analysis_agent_reports_anomalies_as_monitor(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        principles = (ROOT / "skills" / "biostat-principles" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "同时承担执行与监测职责",
+            "主动向用户报告",
+            "现象、证据位置、影响范围、已采取动作及待决定事项",
+            "停在安全点等待确认",
+            "不静默修补后继续",
+        ):
+            self.assertIn(fragment, global_rules)
+        for fragment in (
+            "执行者也是监测者",
+            "发生了什么、证据在哪里、影响什么、已经做了什么、还需要决定什么",
+            "停在安全点等待确认",
+        ):
+            self.assertIn(fragment, principles)
 
     def test_skill_validator_enforces_metadata_and_context_budget(self) -> None:
         validator = ROOT / "skills/skill-creator/scripts/quick_validate.py"

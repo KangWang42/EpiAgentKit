@@ -51,6 +51,7 @@ PRESETS = {
 # Installation-time bundle closure only. This does not require the listed
 # skills to co-trigger at runtime; runtime routing is defined by descriptions.
 DEPENDENCIES = {
+    "epiagentkit-maintenance": {"skill-creator"},
     "academic-publishing": {
         "biostat-principles",
         "academic-humanizer",

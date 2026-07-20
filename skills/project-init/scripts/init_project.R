@@ -560,11 +560,28 @@ init_project <- function(name,
     )
   }
 
-  # Git ---------------------------------------------------
-  if (git) {
-    old <- setwd(proj)
-    on.exit(setwd(old))
-    try(system2("git", c("init", "--quiet")), silent = TRUE)
+  # Git（可选；不可用时不安装，也不阻止项目创建）----------
+  git_state <- "disabled"
+  git_bin <- unname(Sys.which("git"))
+  if (isTRUE(git) && !nzchar(git_bin)) {
+    git_state <- "unavailable"
+  } else if (isTRUE(git)) {
+    old_wd <- getwd()
+    git_result <- tryCatch(
+      {
+        setwd(proj)
+        system2(git_bin, c("init", "--quiet"), stdout = TRUE, stderr = TRUE)
+      },
+      error = function(error) error,
+      finally = setwd(old_wd)
+    )
+    git_status <- if (inherits(git_result, "error")) {
+      1L
+    } else {
+      status <- attr(git_result, "status")
+      if (is.null(status)) 0L else as.integer(status)
+    }
+    git_state <- if (identical(git_status, 0L)) "initialized" else "failed"
   }
 
   # 完成报告 ----------------------------------------------
@@ -579,7 +596,15 @@ init_project <- function(name,
   message("  2. 把原始数据放入 ", file.path(name, "01_data/rawdata/"), " 并填写数据字典")
   message("  3. 同步口径：打开 ", file.path(name, "CLAUDE.md"))
   message("  4. 开始清洗：", file.path(name, "02_code/01_data_cleaning.R"))
-  if (git) message("Git 已初始化；完成初始化与验证后按全局偏好自动 commit，用户明确要求时才 push。")
+  if (identical(git_state, "initialized")) {
+    message("Git 已初始化；完成初始化与验证后按全局偏好自动 commit，用户明确要求时才 push。")
+  } else if (identical(git_state, "unavailable")) {
+    message("Git 不可用，已跳过版本管理；未安装 Git，项目骨架不受影响。")
+  } else if (identical(git_state, "failed")) {
+    message("Git 可用但初始化失败，已保留项目骨架；请手动运行 git init 查看具体错误，不执行安装。")
+  } else {
+    message("Git 未启用，已跳过版本管理。")
+  }
 
   invisible(proj)
 }
