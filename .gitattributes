@@ -6,6 +6,7 @@
 *.md text eol=lf
 *.py text eol=lf
 *.R text eol=lf
+*.json text eol=lf
 *.svg text eol=lf
 
 # Vendored upstream snapshots retain source bytes so recorded SHA-256 values stay portable.

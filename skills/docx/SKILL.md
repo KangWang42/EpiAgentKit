@@ -57,6 +57,12 @@ python scripts/accept_changes.py input.docx output.docx
 
 Generate .docx files with JavaScript, then validate. This workflow requires the `docx` package in the existing Node.js environment. If it is unavailable, explain the missing prerequisite and the user's next setup step; do not install it.
 
+### Neutral Default Formatting
+
+- Unless the user or an existing template specifies a visual theme, use a white page, black text, regular font sizes, and no decorative fills. Build hierarchy with font size, weight, spacing, alignment, and restrained borders.
+- Keep every table cell white by default, including headers, first columns, and total rows. Do not automatically add dark or colored header bands, reversed text, gradients, or large gray backgrounds.
+- When editing an established document, preserve its existing styles and layout instead of imposing this default.
+
 ### Setup
 ```javascript
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun,
@@ -176,7 +182,7 @@ const doc = new Document({
 
 ```javascript
 // CRITICAL: Always set table width for consistent rendering
-// CRITICAL: Use ShadingType.CLEAR (not SOLID) to prevent black backgrounds
+// CRITICAL: Use ShadingType.CLEAR (not SOLID) when shading is explicitly needed
 const border = { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" };
 const borders = { top: border, bottom: border, left: border, right: border };
 
@@ -189,7 +195,7 @@ new Table({
         new TableCell({
           borders,
           width: { size: 4680, type: WidthType.DXA }, // Also set on each cell
-          shading: { fill: "D5E8F0", type: ShadingType.CLEAR }, // CLEAR not SOLID
+          shading: { fill: "FFFFFF", type: ShadingType.CLEAR }, // Neutral default: white, not decorative fill
           margins: { top: 80, bottom: 80, left: 120, right: 120 }, // Cell padding (internal, not added to width)
           children: [new Paragraph({ children: [new TextRun("Cell")] })]
         })

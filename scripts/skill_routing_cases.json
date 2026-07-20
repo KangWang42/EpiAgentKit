@@ -2,18 +2,25 @@
   "scope": "Metadata contract fixtures for human and automated boundary review; these cases do not simulate model semantic routing.",
   "cases": [
     {
+      "id": "maintain_epiagentkit_contracts",
+      "prompt": "重构 EpiAgentKit 的 CLAUDE.md，并同步优化相关 skills、hooks 和合同测试",
+      "primary": "epiagentkit-maintenance",
+      "companions": ["skill-creator"],
+      "excluded": ["project-init", "epi-project-audit"]
+    },
+    {
       "id": "new_empty_project",
       "prompt": "在空工作区初始化一个新的队列研究项目",
       "primary": "project-init",
       "companions": [],
-      "excluded": []
+      "excluded": ["epiagentkit-maintenance"]
     },
     {
       "id": "existing_project_analysis",
       "prompt": "在现有项目中开始 Cox 回归分析",
       "primary": "r-biostats",
       "companions": ["biostat-principles"],
-      "excluded": ["project-init", "publication-figures"]
+      "excluded": ["project-init", "publication-figures", "epiagentkit-maintenance"]
     },
     {
       "id": "analysis_with_plot",

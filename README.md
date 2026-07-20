@@ -121,6 +121,8 @@ cd EpiAgentKit
 python scripts/epiagentkit.py install
 ```
 
+Git 不是运行 EpiAgentKit 的必需条件。没有 Git 时可下载并解压仓库源码后运行同一安装命令；Agent 会跳过版本管理，不会初始化仓库或安装 Git。
+
 交互式安装会询问目标平台和导入范围，结束后自动运行 `doctor`。已有个人配置会保留，只有同名 EpiAgentKit 文件与受管 hook 会被更新。
 
 ### 常用安装方式
@@ -175,7 +177,7 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 论文与报告 | `academic-publishing` · `academic-humanizer` · `report-writing` |
 | 汇报与交付 | `sysu-ppt` · `consulting-delivery` |
 | 项目审查 | `epi-project-audit` |
-| 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `skill-creator` · `git-commit-helper` |
+| 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
 
 组合遵循“内容主流程 → 视觉或文件操作 → 终审”。例如，论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 文件时再加 `docx`；R 分析使用 `biostat-principles → r-biostats`，实际生成数据图时再加 `publication-figures`；非统计视觉统一使用 `research-visuals → imagegen`。除明确矢量要求或工具实际不可用外，必须先完成 Image 1 定向修正、适用的 Image 2 辅助修正和允许的整图重生成，才把 `svg-diagrams` 作为最终回退。
 
@@ -198,11 +200,11 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 把观察性结果校准为合适的论断强度 | 把关联写成已证实因果，或把探索性峰值包装成最终结论 |
 | 用 hooks 和项目审查减少可预防错误 | 替代研究者对设计、临床意义、统计口径和最终签发的责任 |
 
-全局规则授予 Agent 较大的项目整理权限，可能移动、归档或重排非原始文件。建议始终在 Git 管理下使用，并在启用前备份重要数据。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
+全局规则授予 Agent 较大的项目整理权限，可能移动、归档或重排非原始文件。Git 可用时建议用它保留可回退历史；没有 Git 时应先自行备份重要数据，工作流会跳过 Git，不会代为安装。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
 
 ## 维护与贡献
 
-Skill 优化不是只增不减：先确认要保留的旧行为，再决定重写、合并、下沉、脚本化、删除或新增，并用新旧代表性场景共同回归。修改规则、skills、hooks 或安装器后，至少运行：
+维护本仓库时先使用 `epiagentkit-maintenance`。优化不是只增不减：先确认要保留的旧行为，再决定重写、合并、下沉、脚本化、删除或新增，并用新旧代表性场景共同回归。修改规则、skills、hooks 或安装器后，至少运行：
 
 ```bash
 python scripts/audit_workflow_contracts.py
