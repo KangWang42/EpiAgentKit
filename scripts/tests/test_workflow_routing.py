@@ -246,6 +246,22 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("07_paper/results.yaml", body)
         self.assertNotIn("用户要求出图、画图、做图、生成 Fig", body)
 
+    def test_publication_figures_preserves_visual_grammar_and_redesigns_when_requested(
+        self,
+    ) -> None:
+        body = (ROOT / "skills" / "publication-figures" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("只更新数值、术语、标签、精度或注释时", body)
+        self.assertIn("除非存在明确不合规问题", body)
+        self.assertIn("保持原图的视觉语法", body)
+        self.assertIn("明确对图形样式不满", body)
+        self.assertIn("主动重新设计", body)
+        self.assertIn("同一项目", body)
+        self.assertIn("PubMed", body)
+        self.assertIn("不把纯白背景当作投稿要求", body)
+        self.assertNotIn("无 3D / 默认灰底 / 彩虹色 / 单独 JPEG", body)
+
     def test_results_machine_source_is_not_the_derived_markdown(self) -> None:
         body = (
             ROOT
