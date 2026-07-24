@@ -37,6 +37,8 @@ LINE_BUDGET = 200
 
 def configure_utf8_output() -> None:
     """Keep Windows diagnostics printable even when the active code page is GBK."""
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+    os.environ["PYTHONUTF8"] = "1"
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if callable(reconfigure):
@@ -435,7 +437,9 @@ def main() -> int:
             "Installation-time bundle closure only",
             '"evidence-research"',
             '"research-visuals"',
-            '"project-init": {"biostat-principles", "epi-project-audit"}',
+            '"project-init": {',
+            '"epi-study-design"',
+            '"python-biostats"',
             '"epiagentkit-maintenance": {"skill-creator"}',
             'SYNC_EXCLUDES = {"python-ecg-analysis"}',
             "item.name not in SYNC_EXCLUDES",
@@ -447,32 +451,31 @@ def main() -> int:
             "maintain_epiagentkit_contracts",
         ),
         "skills/project-init/SKILL.md": (
-            "已有项目开始分析不触发本 skill",
-            "简单作业、单次处理、快速核验",
+            "已有项目分析不触发",
+            "简单作业、快速核验",
             "**证据ID**",
-            "Git 不可用时跳过版本管理",
+            "未找到 Git 时继续创建项目",
             "不安装 Git",
         ),
         "skills/academic-publishing/SKILL.md": (
-            "已有文本的局部润色、压缩与语气校准由 academic-humanizer 主导",
-            "写→自检→标记完成→下一部件",
+            "已有文本的局部润色或压缩只用 academic-humanizer",
+            "一次只写一个部分 → 跑自检清单 → 全过 → 标记完成 → 才进下一部分",
         ),
         "skills/academic-publishing/references/chinese-thesis.md": (
             "数字机器单源 = `07_paper/results.yaml`",
             "重新派生 `0_result_summaries.md`",
         ),
         "skills/docx/SKILL.md": (
-            "only when Codex must actually",
-            "file-operation companion",
-            "If it is unavailable, explain the missing prerequisite",
-            "do not install it",
+            "only when a Word file is an input or deliverable",
+            "Do not use for prose-only requests",
+            "report the missing prerequisite without installing it",
             "Neutral Default Formatting",
             "Keep every table cell white by default",
             "preserve its existing styles and layout",
         ),
         "skills/pptx/SKILL.md": (
-            "only when Codex must actually",
-            "file-operation companion",
+            "only when a presentation file is an input or deliverable",
+            "Do not trigger for discussion of a talk without file work",
             "If any item is unavailable, explain the missing prerequisite",
             "do not install or upgrade it",
         ),
@@ -487,7 +490,7 @@ def main() -> int:
             "do not install them",
         ),
         "skills/report-writing/SKILL.md": (
-            "无论只要正文还是文件",
+            "用户只要正文时直接返回净稿",
             "只要正文时不调用 docx",
             "默认中性排版",
             "无填充、白底黑字",
@@ -499,8 +502,8 @@ def main() -> int:
             "上游依赖：开工前对齐 biostat-principles",
         ),
         "skills/publication-figures/SKILL.md": (
-            "发表级统计图、数据图和含坐标或尺度映射的结果图",
-            "非统计视觉不触发本技能",
+            "发表级统计图、数据图",
+            "其它非统计视觉默认调用 `research-visuals`",
             "先锁定图前合同",
             "只更新数值、术语、标签、精度或注释时",
             "除非存在明确不合规问题",
@@ -605,21 +608,21 @@ def main() -> int:
         "skills/svg-diagrams/SKILL.md": (
             "回退凭证",
             "当前可见 skills 清单没有 `research-visuals`",
-            "HTTP 524 是服务或传输失败，不是 SVG 回退凭证",
+            "HTTP 524 按 `research-visuals` 保留原图并停止",
             "连续两次 HTTP 524",
             "适用的 Image 2 优先于 SVG",
             "全部适用的 imagegen 路径实际耗尽",
             "序号与标题第一行垂直居中对齐",
             "包含关系图",
             "SVG XML 有效",
-            "README、技术文档",
+            "README 与技术文档",
             "模板必须保留的比例、品牌、字体、色彩、安全区",
         ),
         "skills/research-visuals/SKILL.md": (
             "Codex 使用内置 `imagegen` 技能及其 `image_gen` 工具",
-            "PPT、论文、报告和基金标书的封面",
-            "README、技术文档、项目主页、教程和 skill 示例",
-            "网页 hero、登录页侧栏",
+            "PPT、论文、标书、报告或网页章节",
+            "README、技术文档、项目主页、教程、skill 示例",
+            "网页 hero、登录页和章节氛围图",
             "证据型原始图像",
             "形成视觉简报",
             "双尺度检查",
@@ -1035,7 +1038,7 @@ def main() -> int:
         "skills/python-ecg-analysis/SKILL.md": (
             "对拟运行入口执行 `python <script> --help`",
         ),
-        "skills/r-biostats/references/result-summary-schema.md": (
+        "skills/biostat-principles/references/result-summary-schema.md": (
             'source("../skills/',
         ),
         "skills/consulting-delivery/scripts/consulting_scaffold.R": (

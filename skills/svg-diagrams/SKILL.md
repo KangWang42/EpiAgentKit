@@ -1,6 +1,6 @@
 ---
 name: svg-diagrams
-description: 为论文、报告、标书、PPT、README、技术文档和网页提供可编辑、内容精确的 SVG 非统计图解，作为 imagegen 的最终回退路径，包括流程图、技术路线图、结构图、层级图、包含关系图、概念框架、机制示意图、时间线、矩阵和系统架构图。仅在以下场景触发：(1) 用户明确要求 SVG、矢量源或完全可编辑图形；(2) research-visuals 已核实实际 imagegen 不可用或非 HTTP 524 的调用路径已耗尽；(3) Image 1 定向修正、适用的 Image 2 辅助修正和允许的整图重生成均已实际尝试，仍无法保证文字、数字、关系和方向准确；(4) 审校或修改现有 SVG。HTTP 524 是服务或传输失败，不是 SVG 回退凭证。泛化图解和跨载体配图必须先走 research-visuals；文字数字密集、已有候选图不准确或当前技能清单未列出 research-visuals 均不是 SVG 触发条件；统计数据图走 publication-figures。
+description: 创建、审校或修改可编辑且内容精确的 SVG 非统计图解。仅在用户明确要求 SVG/矢量源、编辑现有 SVG，或 research-visuals 已实际耗尽适用 imagegen 路径且仍无法保证文字和关系准确时使用。HTTP 524、文字密集或预测生成会失败均不是回退凭证；普通非统计视觉先走 research-visuals，统计图走 publication-figures。
 ---
 
 # SVG 图解回退

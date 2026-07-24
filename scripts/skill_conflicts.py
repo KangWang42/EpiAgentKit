@@ -42,6 +42,17 @@ CONFLICT_DOMAINS = {
         "流行病学项目的底层行为原则",
         "biostatistics principles",
     ),
+    "epi-study-design": (
+        "流行病学研究设计",
+        "研究方案与统计分析计划",
+        "pico peco estimand sap",
+        "epidemiologic study design",
+    ),
+    "epiagentkit-maintenance": (
+        "维护 epiagentkit",
+        "epiagentkit skills hooks 同步",
+        "epiagentkit maintenance",
+    ),
     "consulting-delivery": (
         "统计咨询交付",
         "咨询交付包",
@@ -93,6 +104,12 @@ CONFLICT_DOMAINS = {
         "中介效应、meta 分析",
         "r biostatistics",
     ),
+    "python-biostats": (
+        "python 统计分析",
+        "python 流行病学分析",
+        "python 生物统计",
+        "python biostatistics",
+    ),
     "research-visuals": (
         "科研视觉资产",
         "imagegen 科研视觉",
@@ -121,6 +138,12 @@ CONFLICT_DOMAINS = {
         "中山大学学术汇报",
         "中大组会",
         "sysu ppt",
+    ),
+    "skill-creator": (
+        "创建 skill",
+        "优化 agent skill",
+        "create or update an agent skill",
+        "skill creator",
     ),
     "xlsx": ("spreadsheet file", "电子表格文件", ".xlsx", ".xlsm"),
 }

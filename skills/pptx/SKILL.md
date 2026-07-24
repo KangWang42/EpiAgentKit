@@ -1,6 +1,6 @@
 ---
 name: pptx
-description: "Use this skill only when Codex must actually create, read, edit, validate, render, combine, split, or otherwise manipulate a .pptx presentation file. It covers templates, layouts, slide content extraction, speaker notes, comments, and PowerPoint file QA. For an academic presentation, use the relevant content workflow such as sysu-ppt first and add pptx as the file-operation companion. Do not trigger merely because the user discusses a talk or presentation without requiring a .pptx file."
+description: "Operate actual .pptx files: create, read, edit, render, validate, combine, split, or handle templates, layouts, notes and comments. Use the relevant presentation content workflow such as sysu-ppt first, then add pptx only when a presentation file is an input or deliverable. Do not trigger for discussion of a talk without file work."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
@@ -18,9 +18,8 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ## Output Version Hygiene
 
-- Keep exactly one current presentation with a stable semantic filename. Do not create sibling files named `v2`, `final`, `new`, `完善版`, `最终版`, or similar.
-- Before replacing a presentation, move the superseded `.pptx`, its matching source, rendered slide images, and version-specific assets together under `09_backup/YYYY-MM-DD_HHMM_<topic>_<stage>/`, preserving their relative paths.
-- Add a `MANIFEST.md` to the snapshot and prepend its location, current successor, and reason to `09_backup/INDEX.md`. Keep only the current source and output in the active workspace.
+- In a formal project, keep one current presentation with a stable semantic filename and archive superseded source, output, renders and version-specific assets together under the project's `09_backup/` contract.
+- In a lightweight task, do not create project archives; preserve the user's original and write only to the requested output path.
 - Make the generator write the stable current filename on every run. If two plausible current versions exist, ask the user which one is authoritative before archiving.
 
 ---
@@ -59,13 +58,13 @@ Use when no template or reference presentation is available.
 
 ## Design Ideas
 
-**Don't create boring slides.** Plain bullets on a white background won't impress anyone. Consider ideas from this list for each slide.
+Let the content workflow, template, audience and display conditions determine the visual system. Use decoration only when it clarifies hierarchy or meaning.
 
 ### Before Starting
 
-- **Pick a bold, content-informed color palette**: The palette should feel designed for THIS topic. If swapping your colors into a completely different presentation would still "work," you haven't made specific enough choices.
+- **Choose a content-informed palette**: Preserve an existing template or brand system; otherwise use a restrained, readable palette suited to the topic and room conditions.
 - **Dominance over equality**: One color should dominate (60-70% visual weight), with 1-2 supporting tones and one sharp accent. Never give all colors equal weight.
-- **Dark/light contrast**: Dark backgrounds for title + conclusion slides, light for content ("sandwich" structure). Or commit to dark throughout for a premium feel.
+- **Contrast**: Meet readability needs at the actual display size; do not require dark title or conclusion slides.
 - **Commit to a visual motif**: Pick ONE distinctive element and repeat it — rounded image frames, icons in colored circles, thick single-side borders. Carry it across every slide.
 
 ### Color Palettes
@@ -87,7 +86,7 @@ Choose colors that match your topic — don't default to generic blue. Use these
 
 ### For Each Slide
 
-**Every slide needs a visual element** — image, chart, icon, or shape. Text-only slides are forgettable.
+Use a chart, image, diagram, icon or shape only when it materially improves comprehension. A concise text slide is valid when the message is inherently verbal.
 
 **Layout options:**
 - Two-column (text left, illustration on right)
@@ -106,7 +105,7 @@ Choose colors that match your topic — don't default to generic blue. Use these
 
 ### Typography
 
-**Choose an interesting font pairing** — don't default to Arial. Pick a header font with personality and pair it with a clean body font.
+Use the template's fonts or fonts already available in the environment. Prioritize glyph coverage, legibility and portability over novelty.
 
 | Header Font | Body Font |
 |-------------|-----------|
@@ -192,7 +191,7 @@ Look for:
 - Text boxes too narrow causing excessive wrapping
 - Leftover placeholder content
 
-For each slide, list issues or areas of concern, even if minor.
+For each slide, report observed issues with their impact; do not invent defects to satisfy a checklist.
 
 Read and analyze these images:
 1. /path/to/slide-01.jpg (Expected: [brief description])
@@ -204,12 +203,10 @@ Report ALL issues found, including minor ones.
 ### Verification Loop
 
 1. Generate slides → Convert to images → Inspect
-2. **List issues found** (if none found, look again more critically)
-3. Fix issues
-4. **Re-verify affected slides** — one fix often creates another problem
-5. Repeat until a full pass reveals no new issues
-
-**Do not declare success until you've completed at least one fix-and-verify cycle.**
+2. List observed issues and their affected slides
+3. Fix issues that violate the content, layout or rendering contract
+4. Re-render and re-verify changed slides
+5. If the first inspection passes, record that evidence without making a gratuitous edit
 
 ---
 

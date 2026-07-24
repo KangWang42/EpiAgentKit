@@ -1,6 +1,6 @@
 ---
 name: git-commit-helper
-description: Generate clear, reviewable Conventional Commit messages by analyzing complete git diffs, validation evidence, compatibility effects, and rollback context. Use when the user asks to write commit messages, review staged changes, commit completed work, push changes, or improve repository history quality. Run only when Git is already available and the current directory is a repository; otherwise skip Git operations without installing Git or initializing a repository.
+description: Create or execute reviewable Conventional Commits from the complete diff, validation evidence and compatibility impact. Use for commit messages, staged-change review, commits, explicit push requests or repository-history cleanup. Only run when Git exists and the current directory is already a repository; never install Git or initialize one for this skill.
 ---
 
 # Git Commit Helper

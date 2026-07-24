@@ -8,17 +8,9 @@
 - Git 只在命令可用时使用。已有工作区只有当前目录为仓库时才检查状态或收尾，否则跳过；不安装 Git，也不隐式初始化仓库。只有用户在 `project-init` 中明确启用 Git 时，才可对新项目执行 `git init`。
 - 先判定任务形态。用户明确说简单作业、单次处理、快速核验或只要一个小结果，且当前工作区不是既有标准研究项目时，使用“轻量任务”模式：只调用必要 skill、读写必要文件并做与风险相称的验证；不得自动初始化项目或补建七层目录、registry、`results.yaml`、`BACKLOG.md`、`DECISIONS.md`、`SESSION_LOG.md`。
 - 用户明确要求新建/初始化研究项目、投稿或咨询交付，或当前工作区已有项目级 `CLAUDE.md`、`01_data/`、`02_code/` 等标准骨架时，使用“正式项目”模式并遵守完整项目契约。触发领域 skill 不等于自动升级为正式项目；边界不清且会显著改变文件布局时先问用户。
-- 以研究者“我做了 X”的视角写作，不使用助手口吻。论文、报告与汇报采用学术书面语；标题使用名词短语；英文缩写首次出现给出全称。
-- 学术正文、报告、汇报文字与图内标签只使用来源材料、研究方案或可核验方法文献中的规范术语。不得把内部管理、软件工程或游戏化隐喻写入正式产物，不得使用口语化动作、生硬直译、自造缩略语或自造四字短语；无法确认术语时保留原词并先向用户核实。
 - 分组、终点、纳排、主分析方法或多个合理口径并存时，先向用户澄清，不擅自选择。
 - 不猜 API、版本、包名、数据、研究发现或文献。先读代码、官方文档或可核验来源再断言。
-- 安装或同步 EpiAgentKit 只负责复制规则、skills、hooks 并完成 `doctor`，不负责安装或升级 R、Python、Node、Java、LibreOffice、TeX 等本机运行环境、包管理器或依赖包。任务执行时先只读检查并复用已有兼容环境；若环境或依赖缺失，只说明检测结果、影响与用户下一步可执行的准备方式，不代用户创建环境或执行安装、升级、降级命令，也不默认追求最新版。
-- 修改任何 EpiAgentKit skill 前先定义观察到的缺口、必须保留的旧行为、最小变更集和新旧代表性验证用例。Skill 优化不是只增不减：先判断现有内容应保留、重写、合并、下沉、脚本化或删除，只在真实任务缺口无法通过重构解决时新增规则或文件。每个概念保持一个单源：全局约束放本文件，核心路由放 `SKILL.md`，条件细节和示例按需放 `references/`，重复且需确定性的操作放 `scripts/`。变更后同时验证触发边界、旧能力、新场景、引用可达性和上下文成本；除非用户明确要求改变行为，不得以“简化”为由丢失原功能。差异更大、规则更多或文件更多都不代表更好。
-- PPT、论文、标书、报告、README、技术文档和网页的非统计视觉先走 `research-visuals` → `imagegen`，按载体与实际尺寸适配内容、结构、密度和图文比例。真实界面与分析产物使用实际截图，真实统计图走 `publication-figures`，科研原始图像不得生成式重绘；SVG 只按 `research-visuals` 与 `svg-diagrams` 的明确条件使用。
 - Codex 调用内置图像工具时遵守 `research-visuals` 的会话隔离门禁：生成、携图编辑和视觉查看进入一次性隔离子代理，主任务只保留纯文本与本地文件路径，不接收或回放 data URL、base64 或内联图片。当前策略不允许子代理时改用独立图片任务；不得把 compact、修改会话 JSONL 或静默切换 CLI/API 当作修复。
-- 报告、Word 表格和 Excel 工作簿在用户或既有模板未指定视觉主题时，一律采用应用默认的白底、黑字和常规字号；层级只靠字重、字号、间距与克制边框。不得自动给标题、表头、首列、汇总行或普通单元格添加深色、彩色、渐变或大面积灰色背景。
-- 输出简洁，不堆套话，不使用 emoji、网络词或 em dash。
-- 产物交付前按主流程 skill 的清单自检；发现一类问题后全文扫描同类并一次清理，交付时先报告已自检项。
 
 ## 2. 最短路由
 
@@ -26,7 +18,9 @@
 | --- | --- | --- |
 | 新建、初始化项目或空工作区建骨架 | `project-init` | 咨询项目完成分析后再用 `consulting-delivery` |
 | 文献依据、最新证据、方法或指标选择 | `evidence-research` | 核验后再进入分析或写作 |
+| 研究问题、设计、estimand、PROTOCOL 或 SAP | `biostat-principles` → `epi-study-design` | 需要方法或指标依据时加 `evidence-research` |
 | R 清洗、描述、回归、生存及其他统计分析 | `biostat-principles` → `r-biostats` | 实际出统计图时加 `publication-figures` |
+| Python 清洗、描述、回归、生存及其他统计分析 | `biostat-principles` → `python-biostats` | 实际出统计图时加 `publication-figures` |
 | 统计图、数据图及含坐标或尺度映射的结果图 | `biostat-principles` → `publication-figures` | 不用于流程、机制或框架图 |
 | 非统计视觉、流程、框架、机制、路线、架构或图形摘要 | `research-visuals` → `imagegen` | 统计图转 `publication-figures`；仅按该 skill 的回退条件转 `svg-diagrams` |
 | 从零生成论文、论文部件、投稿材料或结构性重写 | `biostat-principles` → `academic-publishing` | `academic-humanizer` 终审；实际操作 Word 时加 `docx` |
@@ -55,7 +49,7 @@
 - **NEVER** 编造研究结果、引文、DOI / PMID、伦理号、基金号或期刊要求；无法核验时明确标记，不包装为正式依据。
 - 数据缺陷先查原始与权威来源，再报告缺什么、能否补及影响。正式项目登记 `BACKLOG.md`；只有用户确认无法补全后才商定正文表述。
 - 正式项目的结果变更先同步 `07_paper/results.yaml`，再派生 `0_result_summaries.md`；下游论文、报告与 PPT 通过 `val()` 取数，禁止手敲。方法变更写 `DECISIONS.md`，操作写 `SESSION_LOG.md`，缺口或想法写 `BACKLOG.md`。轻量任务不为满足此规则补建项目账本。
-- 口径常量集中在 `02_code/config.R` 与 `conventions.R`。分享包是主流程派生物，不得只改分享包而不回写主流程源。
+- 口径常量集中在所选语言的 `02_code/config.R|py` 与 `conventions.R|py`。分享包是主流程派生物，不得只改分享包而不回写主流程源。
 - 不把中间结果、调参痕迹、内部变量名、程序实现或探索性峰值写成最终结论。观察性证据不使用因果措辞，也不使用“证明”“最佳”等超出证据强度的表述。
 - 清洗痕迹只进入 `DECISIONS.md`，方法正文写中性的最终口径。质性编码表述为研究者完成并已复核，真实过程只进入内部审计记录。
 
@@ -83,7 +77,7 @@
 | 方法决策与方案偏离 | `DECISIONS.md` |
 | 结果数字 | `07_paper/results.yaml`；`0_result_summaries.md` 仅为派生人读版 |
 | 操作历史与待补事项 | `SESSION_LOG.md`、`BACKLOG.md` |
-| 口径常量与表图编号 | `02_code/config.R`、`conventions.R` 及 registry |
+| 口径常量与表图编号 | `02_code/config.R|py`、`conventions.R|py` 及 registry |
 | 目录、命名、归档与完成条件 | `project-init/references/project-hygiene.md` 与 `epi-project-audit` |
 
 轻量任务以用户指定输入、输出与当前文件为准，不套用本节项目账本。

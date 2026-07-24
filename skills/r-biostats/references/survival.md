@@ -10,14 +10,15 @@ library(gtsummary)
 
 ## Kaplan-Meier
 
+曲线组件与最终样式服从 `publication-figures`。下例面向正式生存推断保留风险表；只有相邻载体已可靠提供风险集信息且不影响解释时才省略。log-rank 检验、置信带和中位生存仅在回答研究问题且可估时启用。
+
 ```r
 fit <- survfit(Surv(time, event) ~ group, data = data)
 
 ggsurvplot(fit,
-  pval = TRUE,
+  pval = FALSE,
   risk.table = TRUE,
   conf.int = TRUE,
-  palette = "lancet",
   xlab = "时间 (月)",
   ylab = "生存概率"
 )

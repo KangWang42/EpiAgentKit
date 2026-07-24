@@ -9,7 +9,17 @@ suppressPackageStartupMessages({
   library(showtext)
   library(sysfonts)
 })
-font_add("simhei", regular = "C:/Windows/Fonts/simhei.ttf")
+font_candidates <- Sys.glob(c(
+  "C:/Windows/Fonts/msyh.ttc",
+  "C:/Windows/Fonts/simhei.ttf",
+  "/System/Library/Fonts/PingFang.ttc",
+  "/usr/share/fonts/**/SourceHanSans*.otf"
+))
+plot_family <- "sans"
+if (length(font_candidates)) {
+  font_add("zh_sans", regular = font_candidates[[1]])
+  plot_family <- "zh_sans"
+}
 showtext_auto()
 
 BLUE <- "#0072B2"
@@ -22,11 +32,11 @@ make_spectrum <- function(items, xlab = "X →", ylab = "Y →", pal = c(BLUE, R
   suppressPackageStartupMessages(library(ggrepel))
   ggplot(items, aes(x, y, color = grp)) +
     geom_point(size = 6) +
-    geom_text_repel(aes(label = name), family = "simhei", size = 7,
+    geom_text_repel(aes(label = name), family = plot_family, size = 7,
                     box.padding = 0.7, seed = 1, segment.color = "grey70") +
     scale_color_manual(values = pal, name = NULL) +
     labs(x = xlab, y = ylab) +
-    theme_minimal(base_family = "simhei", base_size = 20) +
+    theme_minimal(base_family = plot_family, base_size = 20) +
     theme(legend.position = "top", legend.text = element_text(size = 20),
           panel.grid.minor = element_blank())
 }

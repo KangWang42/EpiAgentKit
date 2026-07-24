@@ -44,7 +44,7 @@ if (length(missing_pkgs) > 0) {
 # 顺序执行脚本 -----------------------------------------------
 scripts <- list.files("code", pattern = "^[0-9]{2}_.*\\.R$", full.names = TRUE) |> sort()
 
-set.seed(123)
+# 如脚本含随机过程，由对应脚本按 SAP 固定并记录 seed；入口不无条件重置。
 
 for (script in scripts) {
   message("执行：", script)

@@ -1,6 +1,6 @@
 ---
 name: docx
-description: "Use this skill only when Codex must actually create, read, edit, validate, render, or otherwise manipulate a Word .docx file. It covers OOXML, formatting, tables of contents, page layout, images, tracked changes, comments, and conversion. For paper, report, or professional-text content, use the relevant content skill first and add docx as the file-operation companion. Do not trigger merely because the user asks for report or manuscript prose without a Word file deliverable. Do not use for PDFs, spreadsheets, Google Docs, or unrelated coding."
+description: "Operate actual Word .docx files: create, read, edit, render, validate, convert, or handle layout, images, comments and tracked changes. Use the relevant paper or report content skill first, then add docx only when a Word file is an input or deliverable. Do not use for prose-only requests, PDFs, spreadsheets or Google Docs."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
@@ -15,7 +15,7 @@ A .docx file is a ZIP archive containing XML files.
 | Task | Approach |
 |------|----------|
 | Read/analyze content | `pandoc` or unpack for raw XML |
-| Create new document | Use `docx-js` - see Creating New Documents below |
+| Create new document | Use the content skill's established generator; otherwise use the compatible workflow below |
 | Edit existing document | Unpack → edit XML → repack - see Editing Existing Documents below |
 
 ### Converting .doc to .docx
@@ -55,7 +55,7 @@ python scripts/accept_changes.py input.docx output.docx
 
 ## Creating New Documents
 
-Generate .docx files with JavaScript, then validate. This workflow requires the `docx` package in the existing Node.js environment. If it is unavailable, explain the missing prerequisite and the user's next setup step; do not install it.
+If the active content skill provides a tested document generator, use it and apply this skill for validation and file QA. Otherwise generate with JavaScript as below. This workflow requires the `docx` package in the existing Node.js environment; if unavailable, report the missing prerequisite without installing it.
 
 ### Neutral Default Formatting
 
@@ -83,8 +83,7 @@ python scripts/office/validate.py doc.docx
 ### Page Size
 
 ```javascript
-// CRITICAL: docx-js defaults to A4, not US Letter
-// Always set page size explicitly for consistent results
+// Always set the requested or template-derived page size explicitly
 sections: [{
   properties: {
     page: {
@@ -104,7 +103,7 @@ sections: [{
 | Paper | Width | Height | Content Width (1" margins) |
 |-------|-------|--------|---------------------------|
 | US Letter | 12,240 | 15,840 | 9,360 |
-| A4 (default) | 11,906 | 16,838 | 9,026 |
+| A4 | 11,906 | 16,838 | 9,026 |
 
 **Landscape orientation:** docx-js swaps width/height internally, so pass portrait dimensions and let it handle the swap:
 ```javascript
@@ -118,7 +117,7 @@ size: {
 
 ### Styles (Override Built-in Headings)
 
-Use Arial as the default font (universally supported). Keep titles black for readability.
+Follow the existing template or requested locale. When neither specifies fonts, retain the application's ordinary defaults and keep titles black.
 
 ```javascript
 const doc = new Document({
@@ -275,7 +274,7 @@ sections: [{
 
 ### Critical Rules for docx-js
 
-- **Set page size explicitly** - docx-js defaults to A4; use US Letter (12240 x 15840 DXA) for US documents
+- **Set page size explicitly** - derive it from the user, template or target standard; do not rely on library defaults
 - **Landscape: pass portrait dimensions** - docx-js swaps width/height internally; pass short edge as `width`, long edge as `height`, and set `orientation: PageOrientation.LANDSCAPE`
 - **Never use `\n`** - use separate Paragraph elements
 - **Never use unicode bullets** - use `LevelFormat.BULLET` with numbering config
@@ -306,7 +305,7 @@ Extracts XML, pretty-prints, merges adjacent runs, and converts smart quotes to 
 
 Edit files in `unpacked/word/`. See XML Reference below for patterns.
 
-**Use "Claude" as the author** for tracked changes and comments, unless the user explicitly requests use of a different name.
+Use the author name supplied by the user or existing review workflow. If none is available, use the neutral value `Reviewer` and disclose that choice; do not insert an assistant or model name.
 
 **Use the Edit tool directly for string replacement. Do not write Python scripts.** Scripts introduce unnecessary complexity. The Edit tool shows exactly what is being replaced.
 
@@ -362,14 +361,14 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
 
 **Insertion:**
 ```xml
-<w:ins w:id="1" w:author="Claude" w:date="2025-01-01T00:00:00Z">
+<w:ins w:id="1" w:author="Reviewer" w:date="2025-01-01T00:00:00Z">
   <w:r><w:t>inserted text</w:t></w:r>
 </w:ins>
 ```
 
 **Deletion:**
 ```xml
-<w:del w:id="2" w:author="Claude" w:date="2025-01-01T00:00:00Z">
+<w:del w:id="2" w:author="Reviewer" w:date="2025-01-01T00:00:00Z">
   <w:r><w:delText>deleted text</w:delText></w:r>
 </w:del>
 ```
@@ -380,10 +379,10 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
 ```xml
 <!-- Change "30 days" to "60 days" -->
 <w:r><w:t>The term is </w:t></w:r>
-<w:del w:id="1" w:author="Claude" w:date="...">
+<w:del w:id="1" w:author="Reviewer" w:date="...">
   <w:r><w:delText>30</w:delText></w:r>
 </w:del>
-<w:ins w:id="2" w:author="Claude" w:date="...">
+<w:ins w:id="2" w:author="Reviewer" w:date="...">
   <w:r><w:t>60</w:t></w:r>
 </w:ins>
 <w:r><w:t> days.</w:t></w:r>
@@ -395,10 +394,10 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
   <w:pPr>
     <w:numPr>...</w:numPr>  <!-- list numbering if present -->
     <w:rPr>
-      <w:del w:id="1" w:author="Claude" w:date="2025-01-01T00:00:00Z"/>
+      <w:del w:id="1" w:author="Reviewer" w:date="2025-01-01T00:00:00Z"/>
     </w:rPr>
   </w:pPr>
-  <w:del w:id="2" w:author="Claude" w:date="2025-01-01T00:00:00Z">
+  <w:del w:id="2" w:author="Reviewer" w:date="2025-01-01T00:00:00Z">
     <w:r><w:delText>Entire paragraph content being deleted...</w:delText></w:r>
   </w:del>
 </w:p>
@@ -408,7 +407,7 @@ Without the `<w:del/>` in `<w:pPr><w:rPr>`, accepting changes leaves an empty pa
 **Rejecting another author's insertion** - nest deletion inside their insertion:
 ```xml
 <w:ins w:author="Jane" w:id="5">
-  <w:del w:author="Claude" w:id="10">
+  <w:del w:author="Reviewer" w:id="10">
     <w:r><w:delText>their inserted text</w:delText></w:r>
   </w:del>
 </w:ins>
@@ -419,7 +418,7 @@ Without the `<w:del/>` in `<w:pPr><w:rPr>`, accepting changes leaves an empty pa
 <w:del w:author="Jane" w:id="5">
   <w:r><w:delText>deleted text</w:delText></w:r>
 </w:del>
-<w:ins w:author="Claude" w:id="10">
+<w:ins w:author="Reviewer" w:id="10">
   <w:r><w:t>deleted text</w:t></w:r>
 </w:ins>
 ```
@@ -433,7 +432,7 @@ After running `comment.py` (see Step 2), add markers to document.xml. For replie
 ```xml
 <!-- Comment markers are direct children of w:p, never inside w:r -->
 <w:commentRangeStart w:id="0"/>
-<w:del w:id="1" w:author="Claude" w:date="2025-01-01T00:00:00Z">
+<w:del w:id="1" w:author="Reviewer" w:date="2025-01-01T00:00:00Z">
   <w:r><w:delText>deleted</w:delText></w:r>
 </w:del>
 <w:r><w:t> more text</w:t></w:r>

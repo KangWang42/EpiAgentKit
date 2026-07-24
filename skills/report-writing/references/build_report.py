@@ -14,7 +14,7 @@
     rep.three_line_table(header=[...], rows=[...])      # 或 rep.table_from_xlsx(path, sheet)
     rep.note("注：随机入组 N 按 ...")
     rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 路径由 registry/export map 提供
-    rep.save("报告.docx", also_md=True)                 # 默认同时落 .md；当前版稳定命名
+    rep.save("报告.docx", also_md=False)                # 仅在用户要求双格式时设 True
 
 正文内容必须由调用方按 skill 强制要求写入（数据有源、完整段落、零编造），
 本模块只负责"排版正确"，不负责"内容生成"。
@@ -254,7 +254,7 @@ class Report:
             self._md.append(f"**{caption}**\n")
 
     # ---- 落盘 ----
-    def save(self, docx_path, also_md=True):
+    def save(self, docx_path, also_md=False):
         self.doc.save(docx_path)
         out = [docx_path]
         if also_md:

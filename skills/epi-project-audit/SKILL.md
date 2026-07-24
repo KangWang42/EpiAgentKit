@@ -1,9 +1,7 @@
 ---
 name: epi-project-audit
 description: |
-  全局流行病学与生物统计项目审查 skill。把项目审查组织为带明确判定标准的 TODO 流程：六层审查逐项检查 → 失败自动给修复建议 → 全部通过后才能签发。
-  触发场景：用户说"检查项目"、"质控"、"复核结果"、"审稿前自查"、"统一框架"、"检查命名/代码/结果/论文一致性"、"全面查一下"。
-  上游依赖：biostat-principles（审查尺度）+ consulting-delivery（如果项目含咨询交付包）。
+  六层审查流行病学与生物统计项目的数据链、代码、结果、表图、正文和交付一致性，并以证据判定是否可签发。用于项目质控、结果复核、审稿前自查或全面一致性检查；只审查时不修改文件。上游为 biostat-principles，含咨询包时同时核对 consulting-delivery。
 ---
 
 # Epi Project Audit（6 层审查）
@@ -41,22 +39,9 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 把 findings 映射到对应 Layer。任何 ERROR 都阻止最终签发；WARN 必须解释，但不得把无 provenance 时的 mtime 提示升级成确定性不一致。该命令只做预检，不替代代码实跑、数字矩阵或科学判断，不注册为 Stop hook。
 
-### 1.2 问用户（强制）
+### 1.2 确定范围
 
-如果用户只说"检查一下"没指定范围，**必须先问**：
-
-```
-【澄清】本次审查的范围：
-  [A] 全量审查（推荐，涵盖 6 层）
-  [B] 只审代码可运行性
-  [C] 只审结果一致性
-  [D] 只审论文 / 交付物
-  [E] 只审某个具体目录或文件
-  
-默认 A。请确认或指定。
-```
-
-用户模糊回答 → 默认 [A]。
+用户未限制范围时直接执行六层全量审查，不为默认选择暂停。用户明确指定代码、结果、论文、交付物或某个路径时只审该范围，并在 verdict 中写明未覆盖层。
 
 ---
 
@@ -94,7 +79,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 - [ ] 目录结构符合七层规范（01_data / 02_code / 03_tables / 04_figures / 05_reports / 06_results / 07_paper / 09_backup）
 - [ ] `01_data/rawdata/` 及额外声明的 raw roots 存在，`check-project` 未发现 Git 工作区修改；非 Git 数据另核来源与只读证据
-- [ ] `02_code/` 内脚本**全部**按 `NN_描述.R` 编号且连续无断号；无 `test.R`、`final.R`、`temp.R`
+- [ ] `02_code/` 内阶段脚本按 `NN_描述.R|py` 编号且连续无断号；无来源不明的 `test.*`、`final.*`、`temp.*`
 - [ ] `02_code/` 编号脚本数 ≤ 10（config / conventions / lib / run_pipeline 与 vendored/ 不计）；探索 / 一次性脚本不在 `02_code/`（应在 `09_backup/`）
 - [ ] `03_tables/` / `04_figures/` 编号按论文行文顺序连续无断号；`TableS{N}` / `FigS{N}` 在 `supplementary/`；无 `Table_xxx` / `Fig_xxx` 无编号残留；交付 xlsx 内无 cover / 说明类解说性 sheet
 - [ ] 根目录无散落临时文件（`.csv`、`.xlsx`、`.png` 不在根）
@@ -140,15 +125,13 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 ### TODO 清单
 
-- [ ] **真实跑一遍**：`Rscript 02_code/NN_xxx.R` 逐个执行（或至少主分析）
+- [ ] **真实跑一遍**：用项目声明的 R 或 Python 入口执行完整主流程；成本过高时至少实跑主分析并说明未覆盖部分
 - [ ] 无 error，warning 已理解且合理
-- [ ] 脚本顶部有 `library()` 完整清单 + `set.seed()`
+- [ ] 依赖声明完整；只有随机流程需要固定并记录 seed
 - [ ] 用相对路径（grep `setwd`、grep `"C:/"`、grep `/Users/`）
-- [ ] 无 `for` 循环的数据处理（有也能说明必要性）
-- [ ] 无 `print()` / `cat()` 作为调试残留
-- [ ] 无 TSV 输出（grep `write\.tsv`、`write_tsv`）
-- [ ] 脚本之间靠 `06_results/` 落盘传值，不靠环境变量；表格化中间数据是 xlsx（rds 仅限模型等非表格对象）
-- [ ] 无写死的 `Table\d` / `Fig\d` 输出路径（grep `Table[0-9]|Fig[0-9]`；产出路径应经 `config.R` 的 `table_path()` / `fig_path()` 取，registry 见 project-init）
+- [ ] 循环、向量化或批处理选择可读且无索引错误；无临时调试输出残留
+- [ ] 中间格式与消费者和项目合同匹配，跨脚本依赖通过声明的落盘文件传递
+- [ ] 正式项目无写死的 `Table\d` / `Fig\d` 输出路径；产出经对应语言的 registry helper 生成
 - [ ] 结果包（`05_reports/*/`）内脚本不回读项目根（grep `\.\./`）
 
 ### 红线
@@ -162,9 +145,9 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 仅在“审查并修复”模式且满足 §十一权限边界时处理；“只审查”模式只记录证据与建议：
 
-- `print()` 残留 → 删除
+- 临时调试输出残留 → 删除；有用的长期进度或审计信息保留为语义日志
 - `setwd()` 绝对路径 → 改 `here::i_am()` 或 `Rproj` 提示
-- 散落 TSV → 转 CSV 或合入 XLSX
+- 输出格式不符合既有消费者合同 → 回到生产脚本统一生成
 
 ---
 
@@ -174,7 +157,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 ### 先跑自动审计（结果单一真源项目）
 
-若项目已用结果单一真源（`07_paper/results.yaml`，见 r-biostats `result-summary-schema.md`），**先跑**：
+若项目已用结果单一真源（`07_paper/results.yaml`，见 `biostat-principles/references/result-summary-schema.md`），**先跑**：
 
 ```bash
 python <此skill>/scripts/check_consistency.py <项目根>
@@ -185,12 +168,11 @@ python <此skill>/scripts/check_consistency.py <项目根>
 ### TODO 清单
 
 - [ ] 从 `07_paper/results.yaml` 取出**每一个关键数字**（样本量、主效应、P 值、95%CI、事件数），并核对派生 `0_result_summaries.md` 完全一致
-- [ ] 每个数字能在 `03_tables/` 的某张表里找到（完全相等）
-- [ ] 每个数字能在 `04_figures/` 对应图的风险表/脚注/图例里找到
-- [ ] 每个数字能在 `07_paper/` 的正文 / 摘要 / 讨论结论里找到
+- [ ] 每个关键数字至少有可审计的生产者和实际消费者；未使用该数字的表、图或正文记为不适用，不要求重复展示
+- [ ] 数字在其实际消费者之间一致，图形仅在设计需要时呈现风险表、脚注或数值标签
 - [ ] 数字精度全文统一（不能一处 0.45，一处 0.4453）
 - [ ] 亚组分析和主分析的样本量能对得上
-- [ ] 敏感性分析方向与主分析一致（如果不一致要有讨论）
+- [ ] 敏感性分析与主分析的差异已解释；方向不一致是需要评估的证据，不自动判定失败
 
 ### 红线
 
@@ -205,7 +187,7 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 
 | 关键数字 | results.yaml | 0_result_summaries.md | 03_tables/ | 04_figures/ | 07_paper/ | 一致？ |
 |---------|--------------|-----------------------|-----------|-------------|-----------|--------|
-| 样本量 N | 1234 | 1234 | Table1: 1234 | Fig1 risk table: 1234 | 摘要: 1234 | 一致 |
+| 样本量 N | 1234 | 1234 | Table1: 1234 | 不适用 | 摘要: 1234 | 一致 |
 | 主 HR | 1.45 | 1.45 | Table3: 1.45 | Fig2 forest: 1.45 | 摘要/讨论: 1.45 | 一致 |
 | P 值 | 0.004 | 0.004 | Table3: 0.004 | — | 摘要: 0.004 | 一致 |
 
@@ -219,20 +201,20 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 
 - [ ] 研究设计（队列/病例对照/横断面/RCT/Meta）明确
 - [ ] 主终点、分析人群和主要模型与冻结的 PROTOCOL/SAP 一致；偏离均在 `DECISIONS.md` 有时间、原因和确认记录
-- [ ] 主分析方法匹配研究设计（比如队列用 Cox 或 Poisson，不要用逻辑回归无视时间）
+- [ ] 主分析方法匹配 estimand、结局类型、时间结构、抽样和数据相关性；方法名称不能代替适用性论证
 - [ ] 纳排标准前后一致（方法节说的排除标准，和 CONSORT 流程图一致）
-- [ ] 样本量足够支撑分析（事件数 ≥ 10×协变量数 for Cox）
-- [ ] 模型诊断做了（PH 假设、线性假设、多重共线、异常值）
+- [ ] 样本量、有效事件数、参数复杂度、惩罚或收缩、验证方案和不确定性足以支持目标分析；不把单一经验阈值作为普遍红线
+- [ ] 完成与模型和 estimand 相关的诊断，并说明不适用项
 - [ ] 敏感性分析覆盖了主要的口径假设
 - [ ] 探索实验完整登记而非只保留“最佳”结果；主线采用项达到预设晋级标准，未采用项未混入主 `results.yaml`
-- [ ] 有 STROBE / CONSORT / PRISMA / AMSTAR 等对应报告规范遵循
+- [ ] 适用的 STROBE、CONSORT、PRISMA、TRIPOD 或其他报告规范已识别并核对
 
 ### 红线
 
 - 方法学严重错配（比如 RCT 分析忽略了随机分层）
 - 主要分析在看过结果后变更，却未记录为 SAP 偏离或探索性分析
 - 只报告成功尝试、无法还原全部方法搜索过程，或未满足主流程纳入条件的探索结果被写成主要结论
-- 事件数 < 10×协变量，过拟合风险高但未披露
+- 有效样本或事件信息相对模型复杂度不足，却未采用限制复杂度、惩罚、内部验证或不确定性披露
 - 缺关键假设检验却未说明
 
 ### 结论强度标定（核心）
@@ -291,7 +273,7 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 - Status: pass / pass with concerns / fail
 - Scope: [审查范围，哪些层]
 - Date: YYYY-MM-DD
-- Reviewer: Agent (`epi-project-audit` skill)
+- Reviewer: [用户提供的姓名或角色；未提供则写“未记录”]
 
 ## Layer-by-layer results
 

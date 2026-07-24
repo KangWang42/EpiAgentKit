@@ -4,17 +4,19 @@
 #
 # 用法：从 Claude Code 的 ~/.claude/skills、Codex 的 ~/.agents/skills，
 #       或 EPIAGENTKIT_SKILLS 指定目录 source 本脚本后运行：
-#   init_project("cohort_smoking_chd", type = 1, mode = "research")
-#   init_project("client_xxx_survival", type = 1, mode = "consulting")
+#   init_project("cohort_smoking_chd", type = 1, mode = "research", language = "r")
+#   init_project("client_xxx_survival", type = 1, mode = "consulting", language = "python")
 # ============================================================
 
 init_project <- function(name,
                          type = 1,
                          mode = c("research", "consulting"),
+                         language = c("r", "python"),
                          root = ".",
-                         git = TRUE,
+                         git = FALSE,
                          overwrite = FALSE) {
   mode <- match.arg(mode)
+  language <- match.arg(language)
   type_names <- c("cohort", "case_control", "cross_sectional",
                   "rct", "meta", "rwd", "methodology")
   stopifnot(type %in% seq_along(type_names))
@@ -37,10 +39,16 @@ init_project <- function(name,
     }
     found[[1]]
   }
-  helper_sources <- c(
-    emit_summary = find_skill_file("r-biostats", "scripts/emit_summary.R"),
-    fig_setup = find_skill_file("publication-figures", "scripts/fig_setup.R")
-  )
+  helper_sources <- if (language == "r") {
+    c(
+      emit_summary.R = find_skill_file("r-biostats", "scripts/emit_summary.R"),
+      fig_setup.R = find_skill_file("publication-figures", "scripts/fig_setup.R")
+    )
+  } else {
+    c(
+      emit_summary.py = find_skill_file("python-biostats", "scripts/emit_summary.py")
+    )
+  }
   consulting_scaffold_source <- if (mode == "consulting") {
     find_skill_file("consulting-delivery", "scripts/consulting_scaffold.R")
   } else NULL
@@ -89,7 +97,9 @@ init_project <- function(name,
     "3. `07_paper/results.yaml`（结果机器单源）",
     "4. `DECISIONS.md` 末尾 2–3 条",
     "5. `BACKLOG.md` 主表未完成项",
-    "6. `02_code/conventions.R` 与 `02_code/config.R`",
+    sprintf("6. `02_code/conventions.%s` 与 `02_code/config.%s`",
+            if (language == "r") "R" else "py",
+            if (language == "r") "R" else "py"),
     "7. `SESSION_LOG.md` 末 10 行",
     "",
     "## 当前状态（每次会话收尾更新，最多 10 行）",
@@ -103,6 +113,7 @@ init_project <- function(name,
     "## 项目基本信息",
     "",
     sprintf("- 研究类型：%s", type_name),
+    sprintf("- 分析语言：%s", toupper(language)),
     "- 研究问题：[一句话 PICOS]",
     "- 数据来源：[数据集名 + 时间段]",
     "- 主要终点：[具体定义]",
@@ -216,7 +227,8 @@ init_project <- function(name,
       "",
       "## 数据处理",
       "",
-      "- 变量定义与有序水平：见 `02_code/conventions.R`",
+      sprintf("- 变量定义与有序水平：见 `02_code/conventions.%s`",
+              if (language == "r") "R" else "py"),
       "- 缺失数据处理：",
       "- 异常值与数据质量规则：",
       "- 样本量 / 精度 / 功效依据：",
@@ -236,8 +248,11 @@ init_project <- function(name,
       "",
       "## 可复现性与偏离",
       "",
-      "- 随机种子：123",
-      "- 软件与包版本记录：`sessionInfo()` 或 renv 锁文件",
+      "- 随机过程、种子与拆分标识（如适用）：",
+      if (language == "r")
+        "- 软件与包版本记录：`sessionInfo()` 或项目既有锁文件"
+      else
+        "- 软件与包版本记录：Python 版本与项目既有锁文件",
       "- SAP 冻结日期 / 确认人：",
       "- 偏离记录：见 `DECISIONS.md`",
       "",
@@ -313,12 +328,13 @@ init_project <- function(name,
       sprintf("**研究类型**：%s", type_name),
       sprintf("**启动日期**：%s", today),
       sprintf("**模式**：%s", if (mode == "research") "研究" else "咨询"),
+      sprintf("**分析语言**：%s", toupper(language)),
       "",
       "## 目录结构",
       "",
       "```",
       "01_data/       # 原始数据（只读）",
-      "02_code/       # R 脚本",
+      sprintf("02_code/       # %s 脚本", if (language == "r") "R" else "Python"),
       "03_tables/     # 最终表",
       "04_figures/    # 最终图",
       "05_reports/    # 结果分享包",
@@ -334,7 +350,8 @@ init_project <- function(name,
       "1. 填写并确认 `PROTOCOL.md` 与 `SAP.md`，冻结主要口径和预设分析",
       "2. 把原始数据放入 `01_data/rawdata/`，填写 `01_data/README.md` 数据字典",
       "3. 同步 `CLAUDE.md` 的口径锁定节（Codex 由 `AGENTS.md` 指向该单源）",
-      "4. 开始清洗：打开 `02_code/01_data_cleaning.R`"),
+      sprintf("4. 开始清洗：打开 `02_code/01_data_cleaning.%s`",
+              if (language == "r") "R" else "py")),
     file.path(proj, "README.md"), useBytes = TRUE
   )
 
@@ -343,7 +360,8 @@ init_project <- function(name,
     c("# 结果单一真源（machine-readable）。数字只在此处改；",
       "# 下游论文/报告/PPT 一律 val(\"07_paper/results.yaml\", \"key\") 取数，禁手敲。",
       "# 改下游须先回写此处再向其余下游传播（双向一致性）。",
-      "# 写入与渲染用 02_code/vendored/emit_summary.R 的 add_result()；",
+      sprintf("# 写入与渲染用 02_code/vendored/emit_summary.%s 的 add_result()；",
+              if (language == "r") "R" else "py"),
       "# 0_result_summaries.md 由 render_summary_md() 从本文件生成，勿手改 md。",
       "meta:",
       "  project: \"[项目名]\"",
@@ -365,7 +383,8 @@ init_project <- function(name,
   writeLines(
     c("# 结果汇总（论文数据源 · 由 results.yaml 自动生成）",
       "",
-      "本文件由 `emit_summary.R::render_summary_md()` 从 `results.yaml` 渲染，**勿手改**。",
+      sprintf("本文件由 `emit_summary.%s` 的 `render_summary_md()` 从 `results.yaml` 渲染，**勿手改**。",
+              if (language == "r") "R" else "py"),
       "改数字 → 改 `results.yaml`（或重跑产出脚本的 add_result）→ 重跑 render_summary_md。",
       "所有图表 / docx / 论文正文的数字一律 val() 从 results.yaml 取，与本文件同源。",
       "",
@@ -397,99 +416,144 @@ init_project <- function(name,
   )
 
   # 02_code 口径与 registry 单一真源 --------------------
-  writeLines(
-    c("# 全项目口径常量单一真源 ----------------------------------",
-      "ORDERED_LEVELS <- list()",
-      "",
-      "lv <- function(name) {",
-      "  if (!name %in% names(ORDERED_LEVELS)) stop(\"未在 ORDERED_LEVELS 注册：\", name)",
-      "  ORDERED_LEVELS[[name]]",
-      "}",
-      "",
-      "PALETTE <- c(\"#00468B\", \"#ED0000\", \"#42B540\", \"#0099B4\",",
-      "             \"#925E9F\", \"#FDAF91\", \"#AD002A\", \"#1B1919\")",
-      "DIGITS_EST <- 2L",
-      "DIGITS_P <- 3L",
-      "P_FLOOR <- 0.001"),
-    file.path(proj, "02_code/conventions.R"), useBytes = TRUE
-  )
-
-  writeLines(
-    c("source(\"02_code/conventions.R\", encoding = \"UTF-8\")",
-      "",
-      "# 顺序 = 论文行文顺序 = 自动编号；新增 / 退役 / 调序只改下列清单。",
-      "TABLE_REGISTRY <- character()",
-      "TABLE_S_REGISTRY <- character()",
-      "FIG_REGISTRY <- character()",
-      "FIG_S_REGISTRY <- character()",
-      "",
-      "table_path <- function(stem) {",
-      "  i <- match(stem, TABLE_REGISTRY)",
-      "  if (!is.na(i)) return(sprintf(\"03_tables/Table%d_%s.xlsx\", i, stem))",
-      "  i <- match(stem, TABLE_S_REGISTRY)",
-      "  if (!is.na(i)) return(sprintf(\"03_tables/supplementary/TableS%d_%s.xlsx\", i, stem))",
-      "  stop(\"stem 不在 table registry：\", stem)",
-      "}",
-      "",
-      "fig_path <- function(stem, ext = \"png\") {",
-      "  ext <- tolower(ext)",
-      "  if (!ext %in% c(\"png\", \"pdf\")) stop(\"图件扩展名只允许 png 或 pdf\")",
-      "  i <- match(stem, FIG_REGISTRY)",
-      "  if (!is.na(i)) return(sprintf(\"04_figures/Fig%d_%s.%s\", i, stem, ext))",
-      "  i <- match(stem, FIG_S_REGISTRY)",
-      "  if (!is.na(i)) return(sprintf(\"04_figures/supplementary/FigS%d_%s.%s\", i, stem, ext))",
-      "  stop(\"stem 不在 figure registry：\", stem)",
-      "}"),
-    file.path(proj, "02_code/config.R"), useBytes = TRUE
-  )
+  if (language == "r") {
+    writeLines(
+      c("# 全项目口径常量单一真源 ----------------------------------",
+        "ORDERED_LEVELS <- list()",
+        "",
+        "lv <- function(name) {",
+        "  if (!name %in% names(ORDERED_LEVELS)) stop(\"未在 ORDERED_LEVELS 注册：\", name)",
+        "  ORDERED_LEVELS[[name]]",
+        "}",
+        "",
+        "PALETTE <- c(\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\",",
+        "             \"#E69F00\", \"#56B4E9\", \"#F0E442\", \"#000000\")",
+        "DIGITS_EST <- 2L",
+        "DIGITS_P <- 3L",
+        "P_FLOOR <- 0.001"),
+      file.path(proj, "02_code/conventions.R"), useBytes = TRUE
+    )
+    writeLines(
+      c("source(\"02_code/conventions.R\", encoding = \"UTF-8\")",
+        "",
+        "# 顺序 = 论文行文顺序 = 自动编号；新增 / 退役 / 调序只改下列清单。",
+        "TABLE_REGISTRY <- character()",
+        "TABLE_S_REGISTRY <- character()",
+        "FIG_REGISTRY <- character()",
+        "FIG_S_REGISTRY <- character()",
+        "",
+        "table_path <- function(stem) {",
+        "  i <- match(stem, TABLE_REGISTRY)",
+        "  if (!is.na(i)) return(sprintf(\"03_tables/Table%d_%s.xlsx\", i, stem))",
+        "  i <- match(stem, TABLE_S_REGISTRY)",
+        "  if (!is.na(i)) return(sprintf(\"03_tables/supplementary/TableS%d_%s.xlsx\", i, stem))",
+        "  stop(\"stem 不在 table registry：\", stem)",
+        "}",
+        "",
+        "fig_path <- function(stem, ext = \"png\") {",
+        "  ext <- tolower(ext)",
+        "  if (!ext %in% c(\"png\", \"pdf\")) stop(\"图件扩展名只允许 png 或 pdf\")",
+        "  i <- match(stem, FIG_REGISTRY)",
+        "  if (!is.na(i)) return(sprintf(\"04_figures/Fig%d_%s.%s\", i, stem, ext))",
+        "  i <- match(stem, FIG_S_REGISTRY)",
+        "  if (!is.na(i)) return(sprintf(\"04_figures/supplementary/FigS%d_%s.%s\", i, stem, ext))",
+        "  stop(\"stem 不在 figure registry：\", stem)",
+        "}"),
+      file.path(proj, "02_code/config.R"), useBytes = TRUE
+    )
+  } else {
+    writeLines(
+      c("# 全项目口径常量单一真源",
+        "ORDERED_LEVELS: dict[str, list[object]] = {}",
+        "PALETTE = [\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\",",
+        "           \"#E69F00\", \"#56B4E9\", \"#F0E442\", \"#000000\"]",
+        "DIGITS_EST = 2",
+        "DIGITS_P = 3",
+        "P_FLOOR = 0.001",
+        "",
+        "def levels(name: str) -> list[object]:",
+        "    if name not in ORDERED_LEVELS:",
+        "        raise KeyError(f\"未在 ORDERED_LEVELS 注册：{name}\")",
+        "    return ORDERED_LEVELS[name]"),
+      file.path(proj, "02_code/conventions.py"), useBytes = TRUE
+    )
+    writeLines(
+      c("# 顺序 = 论文行文顺序 = 自动编号；新增、退役或调序只改下列清单。",
+        "TABLE_REGISTRY: list[str] = []",
+        "TABLE_S_REGISTRY: list[str] = []",
+        "FIG_REGISTRY: list[str] = []",
+        "FIG_S_REGISTRY: list[str] = []",
+        "",
+        "def _registered(stem: str, main: list[str], supplementary: list[str], kind: str, ext: str) -> str:",
+        "    if stem in main:",
+        "        number = main.index(stem) + 1",
+        "        return f\"{'03_tables/Table' if kind == 'table' else '04_figures/Fig'}{number}_{stem}.{ext}\"",
+        "    if stem in supplementary:",
+        "        number = supplementary.index(stem) + 1",
+        "        root = '03_tables/supplementary/TableS' if kind == 'table' else '04_figures/supplementary/FigS'",
+        "        return f\"{root}{number}_{stem}.{ext}\"",
+        "    raise KeyError(f\"stem 不在 {kind} registry：{stem}\")",
+        "",
+        "def table_path(stem: str) -> str:",
+        "    return _registered(stem, TABLE_REGISTRY, TABLE_S_REGISTRY, 'table', 'xlsx')",
+        "",
+        "def fig_path(stem: str, ext: str = 'png') -> str:",
+        "    ext = ext.lower()",
+        "    if ext not in {'png', 'pdf'}:",
+        "        raise ValueError('图件扩展名只允许 png 或 pdf')",
+        "    return _registered(stem, FIG_REGISTRY, FIG_S_REGISTRY, 'figure', ext)"),
+      file.path(proj, "02_code/config.py"), useBytes = TRUE
+    )
+  }
 
   copied <- file.copy(
     unname(helper_sources),
-    file.path(proj, "02_code/vendored", paste0(names(helper_sources), ".R")),
+    file.path(proj, "02_code/vendored", names(helper_sources)),
     overwrite = TRUE
   )
   if (!all(copied)) stop("项目 helper 复制失败；初始化未通过可复现性检查")
 
-  # 02_code/01_data_cleaning.R ----------------------------
-  cleaning_r <- c(
-    "# ============================================================",
-    "# 脚本：02_code/01_data_cleaning.R",
-    "# 目的：从 01_data/rawdata/ 读取原始数据，清洗为分析用数据集",
-    "# 输入：01_data/rawdata/xxx.csv",
-    "# 输出：06_results/cohort_clean.xlsx（表格化数据一律 xlsx；06_results 按内容命名不编号）",
-    "#       06_results/sample_flow.xlsx（样本损失链中间表；最终流程图经 fig_path() 输出）",
-    "# ============================================================",
-    "",
-    "library(tidyverse)",
-    "library(here)",
-    "library(writexl)",
-    "",
-    'here::i_am("02_code/01_data_cleaning.R")',
-    'source("02_code/config.R", encoding = "UTF-8")',
-    "set.seed(123)",
-    "",
-    "# 1. 读取 ----------------------------------------------------",
-    '# raw <- readr::read_csv("01_data/rawdata/xxx.csv", show_col_types = FALSE)',
-    "",
-    "# 2. 样本量损失链 --------------------------------------------",
-    "# n_raw <- nrow(raw)",
-    "# step1 <- raw |> filter(!is.na(exposure))",
-    "# step2 <- step1 |> filter(age >= 18)",
-    "",
-    "# 3. 编码分类变量 --------------------------------------------",
-    "# 先在 conventions.R 注册 levels，再用 lv()；不要在阶段脚本散落水平顺序。",
-    "# cohort <- step2 |>",
-    "#   mutate(sex = factor(sex, levels = lv('sex')))",
-    "",
-    "# 4. 保存 ----------------------------------------------------",
-    '# writexl::write_xlsx(cohort, "06_results/cohort_clean.xlsx")',
-    "",
-    '# flowchart <- tibble(step = ..., n = ..., loss = ...)',
-    '# writexl::write_xlsx(flowchart, "06_results/sample_flow.xlsx")',
-    "",
-    'message("清洗完成（模板，待填充实际逻辑）")'
-  )
-  writeLines(cleaning_r, file.path(proj, "02_code/01_data_cleaning.R"), useBytes = TRUE)
+  # 02_code/01_data_cleaning.* ----------------------------
+  if (language == "r") {
+    cleaning <- c(
+      "# 脚本：02_code/01_data_cleaning.R",
+      "# 目的：从 01_data/rawdata/ 只读导入原始数据并生成分析数据",
+      "# 输入：01_data/rawdata/xxx.csv",
+      "# 输出：06_results/cohort_clean.xlsx；06_results/sample_flow.xlsx",
+      "",
+      "library(tidyverse)",
+      "library(here)",
+      "library(writexl)",
+      "",
+      'here::i_am("02_code/01_data_cleaning.R")',
+      'source("02_code/config.R", encoding = "UTF-8")',
+      "",
+      '# raw <- readr::read_csv("01_data/rawdata/xxx.csv", show_col_types = FALSE)',
+      "# 核对类型、键、重复、缺失、范围和每一步样本损失后再写出派生数据。",
+      '# writexl::write_xlsx(cohort, "06_results/cohort_clean.xlsx")',
+      '# writexl::write_xlsx(flowchart, "06_results/sample_flow.xlsx")',
+      "",
+      'message("清洗模板已加载；请填充项目已确认的实际逻辑")'
+    )
+    cleaning_path <- file.path(proj, "02_code/01_data_cleaning.R")
+  } else {
+    cleaning <- c(
+      '"""从 01_data/rawdata/ 只读导入原始数据并生成分析数据。"""',
+      "",
+      "from pathlib import Path",
+      "import pandas as pd",
+      "",
+      'PROJECT_ROOT = Path(__file__).resolve().parents[1]',
+      '# raw = pd.read_csv(PROJECT_ROOT / "01_data/rawdata/xxx.csv")',
+      "# 核对类型、键、重复、缺失、范围和每一步样本损失后再写出派生数据。",
+      '# cohort.to_excel(PROJECT_ROOT / "06_results/cohort_clean.xlsx", index=False)',
+      '# flowchart.to_excel(PROJECT_ROOT / "06_results/sample_flow.xlsx", index=False)',
+      "",
+      'print("清洗模板已加载；请填充项目已确认的实际逻辑")'
+    )
+    cleaning_path <- file.path(proj, "02_code/01_data_cleaning.py")
+  }
+  writeLines(cleaning, cleaning_path, useBytes = TRUE)
 
   # .gitignore --------------------------------------------
   writeLines(
@@ -502,10 +566,10 @@ init_project <- function(name,
       "06_results/*",
       "!06_results/.gitkeep",
       "",
-      "# 系统",
-      ".Rproj.user/",
-      ".Rhistory",
-      ".RData",
+      "# 系统与语言缓存",
+      if (language == "r") ".Rproj.user/" else "__pycache__/",
+      if (language == "r") ".Rhistory" else "*.py[cod]",
+      if (language == "r") ".RData" else ".pytest_cache/",
       ".DS_Store",
       "Thumbs.db",
       "~$*",
@@ -530,24 +594,26 @@ init_project <- function(name,
                  "06_results", "09_backup")
   invisible(file.create(file.path(proj, keep_dirs, ".gitkeep")))
 
-  # .Rproj ------------------------------------------------
-  writeLines(
-    c("Version: 1.0",
-      "",
-      "RestoreWorkspace: No",
-      "SaveWorkspace: No",
-      "AlwaysSaveHistory: Default",
-      "",
-      "EnableCodeIndexing: Yes",
-      "UseSpacesForTab: Yes",
-      "NumSpacesForTab: 2",
-      "Encoding: UTF-8",
-      "",
-      "AutoAppendNewline: Yes",
-      "StripTrailingWhitespace: Yes",
-      "LineEndingConversion: Posix"),
-    file.path(proj, paste0(name, ".Rproj")), useBytes = TRUE
-  )
+  # .Rproj 仅用于 R 项目 ---------------------------------
+  if (language == "r") {
+    writeLines(
+      c("Version: 1.0",
+        "",
+        "RestoreWorkspace: No",
+        "SaveWorkspace: No",
+        "AlwaysSaveHistory: Default",
+        "",
+        "EnableCodeIndexing: Yes",
+        "UseSpacesForTab: Yes",
+        "NumSpacesForTab: 2",
+        "Encoding: UTF-8",
+        "",
+        "AutoAppendNewline: Yes",
+        "StripTrailingWhitespace: Yes",
+        "LineEndingConversion: Posix"),
+      file.path(proj, paste0(name, ".Rproj")), useBytes = TRUE
+    )
+  }
 
   # 咨询模式：预建一个结果包骨架 --------------------------
   if (mode == "consulting") {
@@ -556,7 +622,8 @@ init_project <- function(name,
     sys.source(consulting_scaffold_source, envir = scaffold_env)
     scaffold_env$create_delivery_pack(
       pack_name,
-      root = file.path(proj, "05_reports")
+      root = file.path(proj, "05_reports"),
+      language = if (language == "r") "R" else "python"
     )
   }
 
@@ -589,13 +656,13 @@ init_project <- function(name,
   message("项目 [", name, "] 创建成功")
   message("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   message("路径：", normalizePath(proj))
-  message("类型：", type_name, "  |  模式：", mode)
+  message("类型：", type_name, "  |  模式：", mode, "  |  语言：", language)
   message("")
   message("下一步：")
   message("  1. 填写并确认 ", file.path(name, "PROTOCOL.md"), " 与 SAP.md")
   message("  2. 把原始数据放入 ", file.path(name, "01_data/rawdata/"), " 并填写数据字典")
   message("  3. 同步口径：打开 ", file.path(name, "CLAUDE.md"))
-  message("  4. 开始清洗：", file.path(name, "02_code/01_data_cleaning.R"))
+  message("  4. 开始清洗：", file.path(name, "02_code", basename(cleaning_path)))
   if (identical(git_state, "initialized")) {
     message("Git 已初始化；完成初始化与验证后按全局偏好自动 commit，用户明确要求时才 push。")
   } else if (identical(git_state, "unavailable")) {

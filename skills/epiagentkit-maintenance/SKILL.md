@@ -1,6 +1,6 @@
 ---
 name: epiagentkit-maintenance
-description: 维护和持续优化 EpiAgentKit 仓库的专用 skill，覆盖全局或项目 `CLAUDE.md` / `AGENTS.md`、skills、references、hooks、安装同步脚本、合同测试与 README。触发场景：(1) 用户要求完善、重构或精简 EpiAgentKit 规则；(2) 新建或修改本仓库 skill；(3) 新建、修改或排查 hooks；(4) 调整安装、同步、doctor、路由、跨平台一致性或维护规范；(5) 审查这些组件是否简洁、优雅、结构清楚、约束明确且无行为回退。普通研究项目的数据分析、写作或项目初始化不触发本 skill。修改 skill 时同时使用 `skill-creator`；Git 仅在命令可用且当前目录为仓库时使用，不可用时跳过且不得安装。
+description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills、references、hooks、安装同步、doctor、路由、合同测试和 README。用于完善、重构、排查或审查这些仓库组件；普通研究项目的数据分析、写作或项目初始化不触发本 skill。修改 skill 时同时使用 skill-creator；Git 仅在已可用且当前目录为仓库时使用。
 ---
 
 # EpiAgentKit 维护

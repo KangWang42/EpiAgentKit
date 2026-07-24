@@ -37,7 +37,7 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
                 "do not run `git init`",
             ),
             "skills/project-init/SKILL.md": (
-                "Git 不可用时跳过版本管理",
+                "未找到 Git 时继续创建项目",
                 "不安装 Git",
                 "Git 已跳过",
             ),
@@ -96,7 +96,7 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
 
     def test_file_skills_explain_missing_prerequisites_without_installing(self) -> None:
         expected = {
-            "skills/docx/SKILL.md": "do not install it",
+            "skills/docx/SKILL.md": "without installing it",
             "skills/pptx/SKILL.md": "do not install or upgrade it",
             "skills/pdf/SKILL.md": "do not install them",
             "skills/xlsx/SKILL.md": "do not install it",

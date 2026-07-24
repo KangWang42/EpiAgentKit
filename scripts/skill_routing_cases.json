@@ -133,6 +133,55 @@
       "primary": "sysu-ppt",
       "companions": ["research-visuals", "pptx"],
       "excluded": []
+    },
+    {
+      "id": "design_cohort_protocol_sap",
+      "prompt": "把这个队列研究想法完善成 PECO、estimand、主要终点、偏倚控制、样本量依据和 SAP，暂不运行分析",
+      "primary": "epi-study-design",
+      "companions": ["biostat-principles", "evidence-research"],
+      "excluded": ["project-init", "r-biostats", "python-biostats"]
+    },
+    {
+      "id": "existing_project_python_survival",
+      "prompt": "在现有 Python 项目中按已冻结 SAP 完成生存分析并核对 warning，不改研究设计",
+      "primary": "python-biostats",
+      "companions": ["biostat-principles"],
+      "excluded": ["project-init", "r-biostats", "epi-study-design"]
+    },
+    {
+      "id": "full_project_audit",
+      "prompt": "全面检查这个流行病学项目的数据链、代码、结果、表图和论文是否一致，只审查不修复",
+      "primary": "epi-project-audit",
+      "companions": ["biostat-principles"],
+      "excluded": ["project-init", "consulting-delivery"]
+    },
+    {
+      "id": "extract_scanned_pdf_tables",
+      "prompt": "读取这份扫描 PDF，做 OCR 并提取其中的表格，输出仍为可搜索 PDF 和核验文本",
+      "primary": "pdf",
+      "companions": [],
+      "excluded": ["docx", "xlsx"]
+    },
+    {
+      "id": "clean_spreadsheet_deliverable",
+      "prompt": "清洗这个表头错位的 xlsx，保留模板样式并输出修复后的工作簿",
+      "primary": "xlsx",
+      "companions": [],
+      "excluded": ["report-writing", "python-biostats"]
+    },
+    {
+      "id": "explicit_editable_svg",
+      "prompt": "请把现有流程图审校后输出为完全可编辑的 SVG 矢量源",
+      "primary": "svg-diagrams",
+      "companions": [],
+      "excluded": ["publication-figures", "research-visuals"]
+    },
+    {
+      "id": "commit_validated_changes",
+      "prompt": "审查完整 diff 和验证结果，为当前仓库提交这次已完成的修改，不要 push",
+      "primary": "git-commit-helper",
+      "companions": [],
+      "excluded": ["epiagentkit-maintenance"]
     }
   ]
 }

@@ -1,14 +1,7 @@
 ---
 name: academic-publishing
 description: |
-  中英双语学术论文、投稿材料与科研正式往来生成技能，覆盖中文期刊论著（GB/T 7713.2）、中文学位论文（GB/T 7713.1 长文）、
-  英文期刊（IMRaD）三条线。基于项目已有的分析代码、结果汇总、表图，逐部件写作并内部闭环（写→自检→标记完成→下一部件）
-  并拼装为规范 Word，零编造、无模板化写作痕迹。
-  触发场景：(1) 从零生成"论文/论文初稿/英文论文/paper/manuscript"，或"学位论文/硕士论文/博士论文/
-  毕业论文/答辩稿/综述章/致谢"；(2) 生成任一部件（引言/方法/结果/讨论/摘要/题名/introduction/
-  methods/discussion/abstract/title）的初稿，或做结构性重写；已有文本的局部润色、压缩与语气校准由 academic-humanizer 主导；(3) 写投稿材料（cover letter/投稿信、response to reviewers/审稿
-  回复/rebuttal、highlights、graphical abstract、编辑部邮件）；(4) 据 0_result_summaries.md 或分析结果起草稿件；
-  (5) 投稿前论文与材料的逻辑/数据/格式/合规自查；(6) 从零生成或结构性重写科研投稿相关正式回复。
+  基于已验证的代码、结果单源和表图生成或结构性重写中英文期刊论文、学位论文部件、摘要、题名、cover letter、审稿回复、highlights 和投稿正式往来，并做投稿前一致性自查。开工先用 biostat-principles，终审用 academic-humanizer；实际 Word 操作再配合 docx。已有文本的局部润色或压缩只用 academic-humanizer。
 ---
 
 # 学术期刊论文与投稿材料生成（中英双语 · Publication-Ready）

@@ -24,6 +24,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         )
         self.assertIn("def configure_utf8_output()", audit)
         self.assertIn('reconfigure(encoding="utf-8", errors="replace")', audit)
+        self.assertIn('os.environ["PYTHONIOENCODING"] = "utf-8"', audit)
         self.assertIn("configure_utf8_output()\n    raise SystemExit(main())", audit)
 
     def test_skill_maintenance_contract_is_regression_safe(self) -> None:
@@ -240,7 +241,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("发表级统计图、数据图", body)
-        self.assertIn("非统计视觉不触发本技能", body)
+        self.assertIn("其它非统计视觉默认调用 `research-visuals`", body)
         self.assertIn("先锁定图前合同", body)
         self.assertIn("多面板已完成两两去冗余", body)
         self.assertIn("07_paper/results.yaml", body)

@@ -1,6 +1,6 @@
 ---
 name: xlsx
-description: "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved."
+description: "Read, clean, create, edit, format, chart, validate or convert spreadsheet files (.xlsx, .xlsm, .csv, .tsv) when a spreadsheet is the primary input or deliverable. Do not trigger when the deliverable is primarily a document, report, standalone script, database pipeline or Google Sheets integration."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
@@ -8,8 +8,8 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ## All Excel files
 
-### Professional Font
-- Use a consistent, professional font (e.g., Arial, Times New Roman) for all deliverables unless otherwise instructed by the user
+### Fonts
+- Preserve the existing template. If none exists and the user gives no typography requirement, retain the application's ordinary default font and use sizing, weight and spacing for hierarchy.
 
 ### Neutral Default Formatting
 - Unless the user or an existing template explicitly requests a visual theme, keep worksheets in the application's default neutral style: white background, black text, regular font sizes, and no decorative fills.
@@ -18,7 +18,7 @@ license: Proprietary. LICENSE.txt has complete terms
 - Apply cell fills only when the user explicitly requests them or an existing template already uses them. A light highlight for a specific exception is not permission to color the whole table.
 
 ### Zero Formula Errors
-- Every Excel model MUST be delivered with ZERO formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?)
+- Any workbook that contains formulas must be delivered with zero unintended formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?). Intentional missing values must be represented explicitly, not hidden as errors.
 
 ### Preserve Existing Templates (when updating templates)
 - Study and EXACTLY match existing format, style, and conventions when modifying files
@@ -102,11 +102,15 @@ df.to_excel('output.xlsx', index=False)
 
 ## Excel File Workflows
 
-## CRITICAL: Use Formulas, Not Hardcoded Values
+## Calculation Mode
 
-**Always use Excel formulas instead of calculating values in Python and hardcoding them.** This ensures the spreadsheet remains dynamic and updateable.
+Choose the calculation contract before writing cells:
 
-### ❌ WRONG - Hardcoding Calculated Values
+- **Interactive workbook or model**: use Excel formulas and cell references so user-editable inputs recalculate.
+- **Verified statistical result or archival export**: write fixed values from the validated analysis source, preserve precision and provenance, and do not recreate the statistical analysis as spreadsheet formulas.
+- **Existing template**: preserve its established formula/value pattern unless the user asks to change it.
+
+### Interactive model: avoid hardcoding derived values
 ```python
 # Bad: Calculating in Python and hardcoding result
 total = df['Sales'].sum()
@@ -121,7 +125,7 @@ avg = sum(values) / len(values)
 sheet['D20'] = avg  # Hardcodes 42.5
 ```
 
-### ✅ CORRECT - Using Excel Formulas
+### Interactive model: use formulas
 ```python
 # Good: Let Excel calculate the sum
 sheet['B10'] = '=SUM(B2:B9)'
@@ -133,7 +137,7 @@ sheet['C5'] = '=(C4-C2)/C2'
 sheet['D20'] = '=AVERAGE(D2:D19)'
 ```
 
-This applies to ALL calculations - totals, percentages, ratios, differences, etc. The spreadsheet should be able to recalculate when source data changes.
+This applies to calculations that the workbook is responsible for. Values whose source of truth is an external validated analysis remain fixed and traceable.
 
 ## Common Workflow
 1. **Choose tool**: pandas for data, openpyxl for formulas/formatting
@@ -229,7 +233,7 @@ The script:
 - Recalculates all formulas in all sheets
 - Scans ALL cells for Excel errors (#REF!, #DIV/0!, etc.)
 - Returns JSON with detailed error locations and counts
-- Works on both Linux and macOS
+- Works where the bundled script can access a compatible existing LibreOffice installation
 
 ## Formula Verification Checklist
 

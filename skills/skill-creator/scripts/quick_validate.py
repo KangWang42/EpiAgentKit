@@ -3,11 +3,55 @@
 Quick validation script for skills - minimal version
 """
 
-import sys
-import os
 import re
+import sys
+from urllib.parse import unquote
+
 import yaml
 from pathlib import Path
+
+
+MAX_DESCRIPTION_CHARS = 512
+PLACEHOLDER_FILES = {
+    "scripts/example.py",
+    "references/api_reference.md",
+    "assets/example_asset.txt",
+}
+PROJECT_OUTPUT_ROOTS = {
+    "01_data",
+    "02_code",
+    "03_tables",
+    "04_figures",
+    "05_reports",
+    "06_results",
+    "07_paper",
+    "09_backup",
+    "output",
+    "dist",
+}
+
+
+def local_markdown_targets(content, skill_path):
+    """Yield relative Markdown link targets outside fenced code blocks."""
+    in_fence = False
+    for line_number, line in enumerate(content.splitlines(), start=1):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        for match in re.finditer(r"!?\[[^\]]*\]\(([^)]+)\)", line):
+            raw = match.group(1).strip()
+            if raw.startswith("<") and raw.endswith(">"):
+                raw = raw[1:-1]
+            raw = raw.split(maxsplit=1)[0].strip('"\'')
+            target = unquote(raw.split("#", 1)[0])
+            if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target, re.I):
+                continue
+            normalized = target.replace("\\", "/")
+            if normalized.split("/", 1)[0] in PROJECT_OUTPUT_ROOTS:
+                continue
+            yield line_number, target, (skill_path / target).resolve()
 
 def validate_skill(skill_path):
     """Basic validation of a skill"""
@@ -83,6 +127,10 @@ def validate_skill(skill_path):
     # Check name length (max 64 characters per spec)
     if len(name) > 64:
         return False, f"Name is too long ({len(name)} characters). Maximum is 64 characters."
+    if name != skill_path.name:
+        return False, (
+            f"Name '{name}' must match skill directory '{skill_path.name}'."
+        )
 
     # Extract and validate description
     description = frontmatter.get('description', '')
@@ -94,9 +142,11 @@ def validate_skill(skill_path):
     # Check for angle brackets
     if '<' in description or '>' in description:
         return False, "Description cannot contain angle brackets (< or >)"
-    # Check description length (max 1024 characters per spec)
-    if len(description) > 1024:
-        return False, f"Description is too long ({len(description)} characters). Maximum is 1024 characters."
+    if len(description) > MAX_DESCRIPTION_CHARS:
+        return False, (
+            f"Description is too long ({len(description)} characters). "
+            f"Maximum is {MAX_DESCRIPTION_CHARS}; move conditional detail into the body."
+        )
 
     body = content[match.end():].lstrip('\r\n')
     body_lines = len(body.splitlines())
@@ -105,6 +155,18 @@ def validate_skill(skill_path):
             f"SKILL.md body is too long ({body_lines} lines). "
             "Keep it under 500 lines and move conditional detail into references/."
         )
+
+    for relative in sorted(PLACEHOLDER_FILES):
+        if (skill_path / relative).is_file():
+            return False, f"Initializer placeholder must be removed or replaced: {relative}"
+
+    missing = [
+        f"line {line_number}: {target}"
+        for line_number, target, resolved in local_markdown_targets(content, skill_path)
+        if not resolved.exists()
+    ]
+    if missing:
+        return False, "Missing local Markdown target(s): " + "; ".join(missing)
 
     return True, "Skill is valid!"
 

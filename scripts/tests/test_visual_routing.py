@@ -186,7 +186,7 @@ class VisualRoutingTests(unittest.TestCase):
             "导出文件名或媒体序号只作存储线索",
         ):
             self.assertNotIn(conditional_detail, rules)
-        self.assertIn("HTTP 524 是服务或传输失败，不是 SVG 回退凭证", svg_fallback)
+        self.assertIn("HTTP 524 按 `research-visuals` 保留原图并停止", svg_fallback)
         self.assertIn("连续两次 HTTP 524", svg_fallback)
         self.assertIn("适用的 Image 2 优先于 SVG", svg_fallback)
         self.assertIn("全部适用的 imagegen 路径实际耗尽", svg_fallback)

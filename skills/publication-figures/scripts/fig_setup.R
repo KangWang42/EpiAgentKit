@@ -22,13 +22,13 @@ suppressWarnings(suppressMessages({
 }
 PLOT_FAMILY <- .register_cn_font()   # 含中文用它；纯英文图也安全
 
-# ---- 配色：优先 conventions.R 的 PALETTE，否则 ggsci lancet ----
+# ---- 配色：优先 conventions.R 的 PALETTE，否则 Okabe-Ito ----
 pub_palette <- function(n = NULL) {
   if (exists("PALETTE", inherits = TRUE)) return(get("PALETTE", inherits = TRUE))
-  if (has("ggsci")) {
-    cols <- ggsci::pal_lancet()(9)
-  } else cols <- c("#00468B","#ED0000","#42B540","#0099B4","#925E9F","#FDAF91","#AD002A","#1B1919")
-  if (is.null(n)) cols else cols[seq_len(n)]
+  cols <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7",
+            "#E69F00", "#56B4E9", "#F0E442", "#000000")
+  if (is.null(n)) return(cols)
+  if (n <= length(cols)) cols[seq_len(n)] else grDevices::hcl.colors(n, "Dark 3")
 }
 scale_color_pub <- function(...) ggplot2::scale_color_manual(values = pub_palette(), ...)
 scale_fill_pub  <- function(...) ggplot2::scale_fill_manual(values = pub_palette(), ...)
