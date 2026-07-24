@@ -24,13 +24,13 @@
 
 ## 3. `02_code/` 契约
 
-- 分析语言由用户、既有主流程或项目初始化时的 `language` 明确选择，并在项目 `CLAUDE.md` 记录；不为统一风格跨 R/Python 重写。
-- 编号脚本使用 `01..` 到 `0N..` 连续序列，不留 `test.R`、`temp.R`、`final.R` 等无编号文件。
+- 分析语言优先沿用既有主流程或用户明确选择，并在项目 `CLAUDE.md` 记录；新项目未指定时默认 R，Python 仅作为明确选择的补充，不为统一风格跨 R/Python 重写。
+- 编号脚本使用 `01..` 到 `0N..` 连续序列，不留 `test.R|py`、`temp.R|py`、`final.R|py` 等无编号文件。
 - `02_code/` 只保留从原始数据复现到最终结果的主流程阶段。编号脚本不超过 10 个；阶段内子分析用参数切分。
 - `config.R|py`、`conventions.R|py`、`lib/`、`vendored/` 与已有的 `run_pipeline` 不计入编号脚本数。
 - 正式研究主流程不另建 `run_all.R|py`、`main.R|py` 或无项目依据的一键入口；`consulting-delivery` 结果包规定的 `run_all.R|py` 除外。
 - 退役、被替代、临时诊断和探索脚本立即归档，不留在主流程目录。
-- R 风格、依赖声明、随机种子与执行规范见 `r-biostats/references/code-style.md`。
+- R 风格与执行规范见 `r-biostats/references/code-style.md`；Python 执行规范见 `python-biostats`。两者共用 `biostat-principles` 的复现与随机过程合同。
 
 ## 4. 表图与 registry
 

@@ -178,6 +178,92 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertFalse((r_project / ".git").exists())
             self.assertFalse((py_project / ".git").exists())
 
+    def test_global_writing_contract_and_r_first_default_are_preserved(self) -> None:
+        rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        for fragment in (
+            "研究者“我做了 X”的视角",
+            "不使用助手口吻",
+            "游戏化隐喻",
+            "英文缩写首次出现给出全称",
+            "未指定且无既有语言合同时默认 R",
+            "不要求把可工作的 R 主流程迁移到 Python",
+            "回复与交付说明简洁，不堆套话",
+        ):
+            self.assertIn(fragment, rules)
+        project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("分析语言：R（默认）或 Python", project_init)
+
+    def test_shared_result_schema_keeps_interpretation_recovery_workflow(self) -> None:
+        schema = (
+            ROOT / "skills/biostat-principles/references/result-summary-schema.md"
+        ).read_text(encoding="utf-8")
+        for fragment in (
+            "stale_interps(path)",
+            "confirm_interp(path, key, interp=...)",
+            "set_conclusion(path, text)",
+            'style="zh"|"en"',
+            'which="est|ci|p|est_ci|full"',
+            "不得仅为清除标记而调用 `confirm_interp()`",
+        ):
+            self.assertIn(fragment, schema)
+
+    def test_language_neutral_workflows_remain_coordinated(self) -> None:
+        principles = (ROOT / "skills/biostat-principles/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("R 用 `Rscript 02_code/NN_xxx.R`", principles)
+        self.assertIn("Python 用项目已有兼容解释器", principles)
+
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`r-biostats` 或 `python-biostats`", publishing)
+        self.assertNotIn("（r-biostats 产出）", publishing)
+
+        evidence = (ROOT / "skills/evidence-research/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        delivery = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("项目 Python skill", evidence + delivery)
+
+    def test_moved_contract_references_are_current(self) -> None:
+        migration = (ROOT / "docs/global-rule-migration.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("biostat-principles/references/result-summary-schema.md", migration)
+        self.assertNotIn("r-biostats/references/result-summary-schema.md", migration)
+
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        review = (
+            ROOT / "skills/academic-publishing/references/review-killers.md"
+        ).read_text(encoding="utf-8")
+        project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        figures = (ROOT / "skills/publication-figures/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        report = (ROOT / "skills/report-writing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("`CLAUDE.md` §4", publishing + review)
+        self.assertIn("`CLAUDE.md` §4 与 §7", project_init)
+        self.assertIn("`CLAUDE.md` §6 的术语合同", figures)
+        self.assertIn("`CLAUDE.md` §1 与 §8", report)
+
+    def test_multi_outcome_figures_use_set_level_coverage(self) -> None:
+        body = (ROOT / "skills/publication-figures/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("整组表图覆盖完整结局集合", body)
+        self.assertNotIn("多结局图含全部结局", body)
+
     def test_delivery_preserves_true_provenance(self) -> None:
         body = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
             encoding="utf-8"

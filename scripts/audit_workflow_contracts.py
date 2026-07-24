@@ -269,6 +269,11 @@ def main() -> int:
             "不负责安装或升级 R、Python",
             "只说明检测结果、影响与用户下一步可执行的准备方式",
             "不代用户创建环境或执行安装、升级、降级命令",
+            "研究者“我做了 X”的视角",
+            "不使用助手口吻",
+            "游戏化隐喻",
+            "未指定且无既有语言合同时默认 R",
+            "不要求把可工作的 R 主流程迁移到 Python",
         ),
         "AGENTS.md": (
             "Treat skill improvement as regression-safe optimization",
@@ -312,6 +317,13 @@ def main() -> int:
             "registry 有序清单是编号唯一来源",
             "MANIFEST.md",
             "BACKLOG.md",
+            "新项目未指定时默认 R",
+        ),
+        "skills/biostat-principles/references/result-summary-schema.md": (
+            "stale_interps(path)",
+            "confirm_interp(path, key, interp=...)",
+            "set_conclusion(path, text)",
+            "不得仅为清除标记而调用 `confirm_interp()`",
         ),
         "skills/evidence-research/SKILL.md": (
             "Rapid verification",
@@ -383,6 +395,9 @@ def main() -> int:
             "Git 不可用时只使用实验目录",
             "执行者也是监测者",
             "发生了什么、证据在哪里、影响什么、已经做了什么、还需要决定什么",
+            "R 用 `Rscript 02_code/NN_xxx.R`",
+            "Python 用项目已有兼容解释器",
+            "新的非交互进程执行声明入口",
         ),
         "skills/consulting-delivery/SKILL.md": (
             "09_backup/INDEX.md",
@@ -1024,6 +1039,7 @@ def main() -> int:
         ),
         "skills/publication-figures/SKILL.md": (
             "用户要求出图、画图、做图、生成 Fig",
+            "多结局图含全部结局",
         ),
         "skills/epi-project-audit/SKILL.md": (
             "python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project",

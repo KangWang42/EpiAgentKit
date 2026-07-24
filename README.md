@@ -28,9 +28,11 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 只需要描述当前任务，EpiAgentKit 会按任务类型加载必要 skill，并将结果落到可检查的文件、代码或交付物中。
 
+统计分析以 R 为默认主路径；Python 是显式选择或既有 Python 项目的可选补充，不要求迁移可工作的 R 主流程。
+
 | 研究任务 | 它会做什么 | 典型产物 |
 | --- | --- | --- |
-| 新建研究项目 | 建立 R 或 Python 标准目录、研究方案、统计分析计划、结果单源、表图 registry 与归档约定 | 可直接开工的研究或咨询项目骨架 |
+| 新建研究项目 | 默认建立 R 标准目录，也可按明确选择建立 Python 目录，并生成研究方案、统计分析计划、结果单源、表图 registry 与归档约定 | 可直接开工的研究或咨询项目骨架 |
 | 核验文献与方法依据 | 核对题名、作者、DOI/PMID、来源身份和撤稿状态，必要时组织正式证据检索 | 核验记录、证据矩阵、方法选择依据 |
 | 完善研究设计与 SAP | 把研究想法转成 PICO/PECO、estimand、终点、时间零点、偏倚控制、样本量或精度依据及预设分析 | 可审查的 PROTOCOL、SAP、未决事项与设计备忘录 |
 | 完成 R 统计分析 | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析，并按 `PLAN-CODE-RUN-VERIFY-DOC` 闭环 | 可复现 R 脚本、结果对象、Excel 表格与方法记录 |

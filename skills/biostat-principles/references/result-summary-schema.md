@@ -66,6 +66,19 @@ render_summary_md("07_paper/results.yaml", "07_paper/0_result_summaries.md")
 val("07_paper/results.yaml", "exposure_hr")
 ```
 
+`add_result()` 的 `digits`、P 值精度或阈值、`unit` 和 `style="zh"|"en"` 控制统一渲染；百分比单位不加空格。下游可用 `val(path, key, which="est|ci|p|est_ci|full")` 读取所需分量，但不得重新格式化。
+
+## 数字与解读闭环
+
+数字变化后若没有同步提供新解释，helper 保留旧解释并设置 `interp_review: true`。按以下顺序闭环：
+
+1. 用 `stale_interps(path)` 列出全部待复核键；
+2. 研究者核对方向、显著性、效应量级和证据强度后，用 `confirm_interp(path, key, interp=...)` 写入或确认解释；
+3. 跨结果总结论变化时用 `set_conclusion(path, text)` 更新；
+4. 重新运行 `render_summary_md()`，确认 `stale_interps(path)` 为空后才能签发。
+
+R 与 Python helper 使用相同函数名和行为。不得仅为清除标记而调用 `confirm_interp()`，也不得由数值自动生成结论。
+
 ## 一致性合同
 
 1. 结果由分析脚本通过 helper 写入 `results.yaml`，再生成派生 Markdown。
