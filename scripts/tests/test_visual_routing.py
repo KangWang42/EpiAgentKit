@@ -225,7 +225,7 @@ class VisualRoutingTests(unittest.TestCase):
         ):
             self.assertIn(fragment, body)
         for fragment in (
-            "会话隔离门禁",
+            "会话隔离要求",
             "主任务只保留纯文本与本地文件路径",
             "不接收或回放 data URL、base64 或内联图片",
             "不得把 compact、修改会话 JSONL 或静默切换 CLI/API 当作修复",

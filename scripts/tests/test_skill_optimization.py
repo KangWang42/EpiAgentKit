@@ -188,8 +188,14 @@ class SkillOptimizationTests(unittest.TestCase):
             "未指定且无既有语言合同时默认 R",
             "不要求把可工作的 R 主流程迁移到 Python",
             "回复与交付说明简洁，不堆套话",
+            "使用临床研究、流行病学与生物统计的准确术语",
+            "调用条件、检查要求、停止条件和隔离执行",
+            "平台术语没有稳定中文译名时保留原词并说明功能",
+            "不作字面翻译",
         ):
             self.assertIn(fragment, rules)
+        for inappropriate_term in ("\u95e8\u7981", "\u6273\u673a"):
+            self.assertNotIn(inappropriate_term, rules)
         project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
             encoding="utf-8"
         )
