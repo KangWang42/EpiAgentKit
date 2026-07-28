@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -177,6 +178,40 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertFalse((py_project / "py_demo.Rproj").exists())
             self.assertFalse((r_project / ".git").exists())
             self.assertFalse((py_project / ".git").exists())
+            for project in (r_project, py_project):
+                manifest = json.loads(
+                    (project / ".epiagentkit-layout.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(manifest["schema_version"], 1)
+                self.assertEqual(manifest["policy"], "declare-before-create")
+                declared = {entry["path"] for entry in manifest["entries"]}
+                actual = {
+                    path.relative_to(project).as_posix()
+                    for path in project.rglob("*")
+                    if ".git" not in path.relative_to(project).parts
+                }
+                self.assertEqual(actual, declared)
+                checked = subprocess.run(
+                    [
+                        sys.executable,
+                        str(ROOT / "hooks/final_project_check.py"),
+                        str(project),
+                        "--json",
+                    ],
+                    cwd=ROOT,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+                check_payload = json.loads(checked.stdout)
+                self.assertFalse(
+                    any(
+                        item["check"].startswith("layout.")
+                        for item in check_payload["findings"]
+                    ),
+                    check_payload["findings"],
+                )
 
     def test_global_writing_contract_and_r_first_default_are_preserved(self) -> None:
         rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")

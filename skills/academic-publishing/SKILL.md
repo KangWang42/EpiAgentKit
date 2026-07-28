@@ -28,9 +28,9 @@ description: |
 7. **证据约束的可发表文风**：所有语言先按 `../academic-humanizer/references/patterns-and-preservation.md` 做事实、内容功能、
    论证结构、段落节奏和作者声纹审查；中文再过 `chinese-style-audit.md`，英文再过 `english-phrasebank.md`。
    研究者第一作者视角（"本研究/we"），结构由研究问题、estimand、表图和目标期刊决定，不套固定段数、固定分条或逐因素段式。
-8. **局部修改也走完整标准**（CRITICAL，最易出错）：哪怕只改一句 / 一段 / 一节，动前先按 §一加载该部件对应的
-   全部 reference，动后立即对被改部分跑该部件自检 + §九 一致性检查，并复扫确认与其它部件口径一致——
-   "改了方法不同步摘要 / 改了一节主语风格与全文不一致"是最常见错误。执行项见 §九。
+8. **修订先分型再执行**：读取 `../academic-humanizer/references/revision-workflow.md`。已有文本的局部内容修订或终审以
+   `academic-humanizer` 为主，只加载目标部件和修改清单所需资料；纯格式修复走 `docx`，不得借机改写正文。只有从零写作、
+   全文或章节级结构性重写、以及需要逐条闭环的正式审稿修订由本技能主导。无论范围大小，修改后核对相关部件和证据链。
 9. **编辑前建立不可变事实清单**：提取数字、统计方向、引文、公式、表图指向、终点定义和主要论断；改后逐项比对。
    原文内部冲突先报告，不自行选值、改引文或改变结论方向。
 
@@ -63,6 +63,8 @@ description: |
 |----------|------|------|
 | 整篇论文 / 初稿 | 全套写作 reference + §二 流程 | 走完整的分部件完成顺序 |
 | 单个部件（引言/方法/结果/讨论/摘要/题名） | 对应 reference 的该节 | 仍跑该部件自检清单 |
+| 已有文本的局部内容修订 / 压缩 / 终审 | `academic-humanizer/references/revision-workflow.md` + 目标部件 reference | 由 `academic-humanizer` 主导，锁定精确范围；不加载或改写无关部件 |
+| 已有 Word 的纯格式修复 | `academic-humanizer/references/revision-workflow.md` + `docx` | 可见文字和数据保持不变；只改获授权格式项 |
 | Cover Letter / Response to Reviewers / Highlights / Graphical Abstract / Title Page / 声明 | `references/submission-materials.md` | 投稿材料，需先有定稿数据 |
 | 编辑部往来 / 延期 / 撤稿 / 更正 / 科研邮件 | `references/submission-materials.md` + `../academic-humanizer/references/writing-modes.md` | 正式回复，事实与动作必须可核 |
 | 基金申请书润色 / Specific Aims / Project Summary | `academic-humanizer` | 保留愿景，按“承诺—可行性”审校；不套论文收缩规则 |
@@ -86,6 +88,10 @@ description: |
 读完产出一张内部"事实卡"和一张论文主轴表：研究类型、设计、对象、暴露/自变量、结局、主要和次要 estimand、
 对应方法、结果、表图、讨论问题与证据边界。相关结果可以共享解释或文献对照，不为每条结果强配机制和意义。
 如有作者既往论文或已认可段落，同时建立声纹卡：术语、主语、hedging、连接方式、句式节奏和段落密度。
+
+已有稿件或审稿轮次同时建立 `revision-state.json`：列出全部合理输入候选并锁定唯一当前稿、轮次、格式合同、用户纠正、
+允许与禁止范围、待补材料和稳定语义名交付集。运行 `academic-humanizer/scripts/validate_revision_state.py`；多个候选未选定或
+上一轮锁定决策静默变化时停止，不按修改时间、文件名或“最终版”后缀自动选择。
 
 ### 2.2 写作顺序（两种语言一致）
 
@@ -120,12 +126,13 @@ description: |
   sections/           中文稿各部件 .md（01_metadata … 07_references）
   sections_en/        英文稿各部件 .md（01_title_page … 09_abstract）
   submission/         cover_letter.md / response_to_reviewers.md / highlights.md / graphical_abstract.md
+                      revision-state.json（正式修订状态单源）
   0_result_summaries.md   数据源（只读）
-  论文终稿.docx / manuscript.docx   最终输出
+  manuscript.docx / manuscript_marked.docx   稳定语义名当前 clean / 标注稿
 ```
 
-每个部件写入独立文件，不改其他部件文件。修订已认可的章节用**最小修改原则**：只改用户标注点，
-其余不动，改完 grep 验证禁用词归零。
+每个部件写入独立文件，不改其他部件文件。修订已认可章节时按 `revision-state.json` 的定位清单执行最小修改，范围外正文、
+数字、引文、表图与格式默认不动。旧轮次和过程文件按 `project-hygiene.md` 可恢复归档，活动目录只留一组当前交付物。
 
 ---
 
@@ -157,7 +164,7 @@ description: |
 
 ## 五、投稿前四查（交付前必过）
 
-**先逐条过 `references/review-killers.md` 的适用高风险问题，再做四查**：
+**先按 `references/statistical-reporting.md` 完成证据链与设计适配检查，再逐条过 `references/review-killers.md` 的适用高风险问题，最后做四查**：
 
 1. **逻辑查**：题名↔全文、摘要↔结果、引言 Gap↔结果是否回答、讨论是否回扣 Gap、结论无新内容、
    **探索性结果未在讨论/结论升格、未据此提具体建议**（review-killers §2）。
@@ -181,6 +188,7 @@ description: |
 - 作者列表、单位、通讯作者、基金号、伦理批号、ORCID 缺失（投稿材料需要）。
 - `0_result_summaries.md` 不存在或与表图对不上。
 - 用户已写好部分章节要修订 → 确认是"最小修改"还是"可重写"。
+- 多个合理当前稿并存、目标位置不唯一或允许/禁止修改范围冲突 → 列出候选并请用户锁定，不自行选最新文件或模糊替换。
 - **数据有缺陷（缺失 / 需反推分母 / 口径不全 / 需近似）→ 先问能否补真实数据（年鉴 / 普查 / 标准人口库）、用户能提供什么；
   同时写进 BACKLOG。补全前论文按现有口径照常推进，补不全再问期望表述。NEVER 把缺陷自行写成"局限"或把清洗痕迹写进正文**（见全局 `CLAUDE.md` §4）。
 
@@ -196,6 +204,7 @@ description: |
 | `references/chinese-thesis.md` | 写中文**学位论文**（硕/博）/部件 | 学校规范核验、长文部件、内容深度、前后置部件、分部件工作流与学位论文自检 |
 | `references/thesis-formatting.md` | 学位论文**排版/拼装** | 页面设置、逐部件字体字号表、按章图表公式编号、三级目录自动生成、双页码段、python-docx 拼装差异点、黄色高亮占位实现 |
 | `references/section-content-playbook.md` | **写中文学位论文/论著前必读** | 目的—方法—结果—表图—讨论主轴、各部件内容功能、设计特异重点与非模板化结构终审 |
+| `references/statistical-reporting.md` | 写方法、结果、讨论、结论或做投稿前一致性审查 | 按研究设计选择的变量、缺失、模型、效应量、区间、样本流、表图和章节双向证据链检查 |
 | `references/chinese-academic-style.md` | **写任何中文稿前的文风标尺** | 学术中文文风正向规范：严肃度标定、视角人称、句子与段落、因果措辞、术语一致和文风自检 |
 | `references/chinese-style-audit.md` | 中文稿写作/润色审校 | 模板化表达、证据强度、语体与 grep 审计线索；命中需结合语境判断 |
 | `references/english-writing.md` | 写英文论文/部件 | 论文主轴、各部件功能、内容驱动的引言/结果/讨论、Methods、Conclusion、Abstract 与 Title |

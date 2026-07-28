@@ -59,7 +59,9 @@ present; corresponding author info complete.
 
 ## 2 Response to Reviewers / rebuttal
 
-> Not in the source skills — added here. The single most outcome-determining material after the manuscript.
+Use the revision-state and response-matrix contract in
+`../../academic-humanizer/references/revision-workflow.md` and
+`../../academic-humanizer/references/writing-modes.md`. Do not maintain an independent response copy that can drift from the manuscript.
 
 Principles:
 - Open with a brief thank-you and a one-line summary of major changes.
@@ -68,8 +70,10 @@ Principles:
   (page/line or section). Show the change, do not just assert it.
 - Be courteous even when disagreeing; if declining a change, justify with evidence, not opinion.
 - Keep the manuscript and the response consistent — every claimed change must actually exist in the revision.
-- Build a response matrix before drafting: comment number · requested action · action taken · evidence/reason ·
-  manuscript location · verification status. Do not write “we added/performed/revised” until the change is verified.
+- Record every point in `revision-state.json` with its issue type, required action, location, before/after summary,
+  evidence, change id, workflow status, and response. Do not write “we added/performed/revised” until the action is verified.
+- Treat the clean manuscript as the final-visible baseline. Derive clean, marked, and response artifacts from the same change ids;
+  after resolving marks, visible text, tables, figures, captions, and order must match the clean file.
 - Use a visible convention: reviewer comments in one style, responses in another (e.g. **R1.1**, *Response:*).
 
 Layout:
@@ -99,9 +103,9 @@ Response functions:
 - Out of scope: This is an important question but beyond the scope of the current study; we now note it as a
   direction for future work (p.X).
 
-Self-check: every comment answered in order; each response cites exact revised wording + location; tone
-courteous; declines are justified; manuscript and response are mutually consistent; new analyses are present
-in the result source, tables/figures, manuscript, and response.
+Self-check: every comment has an allowed workflow status; every closed response cites the verified action,
+evidence, before/after summary, and location; declines are justified; new analyses are present in the result source,
+tables/figures, manuscript, and response. Run `validate_revision_state.py --signoff`; any open point blocks submission sign-off.
 
 ---
 

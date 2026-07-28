@@ -1,0 +1,87 @@
+# 学术文本修订合同
+
+本文件是已有学术文本、投稿稿件和 Word 稿件修订分流、状态卡与最小修改边界的单源。从零写作与论文级结构性重写仍由 `academic-publishing` 主导；实际 Word 操作叠加 `docx`。
+
+## 1. 修订类型矩阵
+
+| 类型 | 主流程 | 允许动作 | 默认禁止 | 验收 |
+| --- | --- | --- | --- | --- |
+| 从零写作 | `academic-publishing` | 按结果单源建立章节与投稿材料 | 编造结果、引文或期刊要求 | 部件自检与全文证据链一致 |
+| 结构性重写 | `academic-publishing` → `academic-humanizer` | 在明确授权的章节或全文重排论证、合并和改写 | 静默改变 estimand、结果方向或引文 | 新结构完成目的—方法—结果—讨论闭环，事实锁不变 |
+| 局部内容修订 | `academic-humanizer` | 只改清单中可定位的句、段、表格单元格或题注 | 扩写范围、顺手统一全文、改变范围外措辞或格式 | 目标修改完成，范围外事实、正文、表图和格式不变 |
+| 纯格式修复 | 对应内容 skill → `docx` | 只修用户或正式规范点名的样式、分页、域、表格或图片版式 | 改写正文、全局套用新主题 | 可见文字和数据不变，授权格式项通过渲染核验 |
+| 终审 | `academic-humanizer` | 报告事实冲突、证据强度、术语、结构和语体问题；按授权做最小修复 | 未经授权重构全文 | 不可变事实与作者声纹保持，待确认项单列 |
+| 审稿闭环 | `academic-publishing` → `academic-humanizer`；Word 时加 `docx` | 逐条落实、定位、验证并从同一修改记录派生交付物 | 把“已读”当闭环、声称未执行动作 | 每条意见有状态、证据、位置和真实回复；未闭环项阻止签发 |
+
+用户请求同时含多种类型时先拆成内容层和格式层，分别执行和验证。只有用户明确授权或正式格式合同明确要求时，才进行全局规范化。
+
+## 2. 投稿修订状态卡
+
+每轮正式修订前建立稳定语义名 `revision-state.json`。轻量的纯文本润色无需为此创建项目文件，但仍在当前任务中记录同样的输入、范围与事实锁。状态卡至少包含：
+
+```json
+{
+  "schema_version": 1,
+  "round": "<current round>",
+  "input_candidates": ["<candidate path>"],
+  "selected_input": "<one selected path>",
+  "format_contract": "<verified journal, institution, or neutral contract>",
+  "locked_decisions": {
+    "<decision key>": {"value": "<locked value>", "source": "<user or project record>"}
+  },
+  "allowed_scope": ["<exact content or structure locator>"],
+  "forbidden_scope": ["<protected content or structure locator>"],
+  "pending_materials": [],
+  "deliverables": {
+    "clean": "<stable clean path>",
+    "marked": "<stable marked path>",
+    "response": "<stable response path>"
+  },
+  "review_comments": []
+}
+```
+
+- `input_candidates` 有多个合理当前稿而 `selected_input` 未锁定时停止，不按修改时间、文件名或后缀自动选择。
+- 用户最新明确纠正写入 `locked_decisions`。后续轮次必须携带；改变时用 `supersedes` 记录旧值、新值、来源和原因，不得静默覆盖。
+- `allowed_scope` 使用可核验位置，如章节标题、段落索引、表格—行—列或审稿意见编号。`forbidden_scope` 明确数字、引文、图表、格式或已认可表述等保护项。
+- `pending_materials` 保存缺失数据、真实引文、作者信息或期刊要求；无法核验的引文继续使用统一占位符，不生成候选文献。
+
+运行：
+
+```bash
+python scripts/validate_revision_state.py revision-state.json --previous previous-state.json --json
+python scripts/validate_revision_state.py revision-state.json --signoff --json
+```
+
+第一条检查输入、范围和锁定决策是否回退；第二条把所有未闭环审稿意见判为阻断性问题。
+
+## 3. 可定位修改清单
+
+执行前逐项记录：
+
+`change id | 来源要求 | 精确位置 | 修改前摘要 | 计划动作 | 内容或格式层 | 证据来源 | 范围外保护 | 验证状态`
+
+- 修改前先确认定位唯一。目标出现多次、跨越域或复杂 run、或候选位置无法区分时，不做模糊全文替换；列出候选位置并请求确认。
+- 内容层先完成事实锁、证据链和语义验证；格式层随后执行，不用格式修复顺手改写正文。
+- 对已有 Word，精确定位、clean/标注稿派生和范围外差异检查使用 `docx` 的确定性脚本。脚本拒绝不唯一或结构复杂的目标时，保留原稿并报告安全停止原因。
+
+## 4. 审稿意见闭环
+
+每条意见使用以下字段：
+
+`意见编号 | 问题类型 | 所需动作 | 修改位置 | 修改前后摘要 | 证据来源 | change id | 状态 | 回复文本`
+
+状态只用：`pending`、`modified_pending_validation`、`closed`、`needs_user_decision`。
+
+- `closed` 必须同时具备实际动作、准确位置、修改前后摘要、证据来源和与已完成动作一致的回复。
+- 新分析先同步代码、结果单源、表图和正文，再写回复；未运行、未修改或未上传的动作不得使用完成时态。
+- clean 稿是本轮最终可见内容基线；clean、标注稿与回复从同一 change id 集合派生。移除标注后，两版可见文字、表格、图片、题注和顺序必须一致。
+- 默认只标记本轮实际变化和用户指定待补项；颜色、作者名与标记方式由当前修订合同配置，不标记未修改内容。
+
+## 5. 完成条件
+
+- 唯一输入、轮次、格式合同、允许与禁止范围、待补材料和目标交付物均已锁定。
+- 不可变事实、数字、引文、公式、表图和锁定决策无回退。
+- 内容修改与格式修改分别验证，范围外差异为零或均有明确授权。
+- clean 与标注稿同源且最终可见内容一致；回复中每项完成声明可追溯。
+- 实际 Word 文件已通过结构、匿名信息、范围差异、渲染和逐页检查；临时文件位于隔离目录。

@@ -8,6 +8,7 @@
 - 目录是否符合项目约定（如 `01_data/`, `02_code/`, `03_tables/`, `04_figures/`, `07_paper/`, `09_backup/`）
 - 脚本命名是否规范（如 `NN_description.R`、`FigN_xxx.*`、`TableN_xxx.*`）
 - 根目录是否存在临时文件、过期导出、重复版本
+- `.epiagentkit-layout.json` 是否在产物创建前登记每个活动目录和文件的精确位置、owner、purpose、producer、consumer 与 lifecycle；现有路径是否全部已声明
 - `PROTOCOL.md` / `SAP.md` 是否在分析前冻结，入口 `CLAUDE.md` / `AGENTS.md` 是否保持 200 行以内并以索引为主
 - 日志文件是否存在并持续更新：`SESSION_LOG.md`、`DECISIONS.md`
 - `09_backup/EXPERIMENTS.md` 是否登记全部尝试（含失败/未采用），单次实验是否有 `PLAN.md` 与 `FINDINGS.md`
@@ -53,6 +54,7 @@
 - 表格 vs 正文结果段
 - `results.yaml` ↔ 派生 `0_result_summaries.md` ↔ 终稿 ↔ 分享包
 - 主分析 vs 敏感性分析 vs 附录
+- 研究问题/estimand ↔ 方法 ↔ 完整结果 ↔ 表图 ↔ 讨论 ↔ 结论；变量定义、编码、参考类别、缺失、样本流、模型层级和阴性结果均按适用设计报告
 
 红旗：
 - 同一指标在不同文件数值不一致
@@ -90,6 +92,10 @@
 - README 是否能让人独立理解项目状态
 - 关键输出是否都已同步更新
 - 旧版副本是否仍在误导使用者
+- 正式修订状态卡是否只有一个已选输入，用户锁定口径是否跨轮次保留，未闭环审稿意见是否阻止签发
+- clean 与标注稿是否同源、移除标注后可见内容一致，标注是否只覆盖本轮实际修改
+- Word 是否完成结构、范围外差异、交叉引用、图片有效 dpi、匿名信息、实际渲染和逐页检查
+- ERROR、WARN、INFO 是否按阻断性分层，每条是否给出规则、证据位置、影响和建议动作
 
 最终判定：
 - **pass**：无关键错误，结论与证据匹配

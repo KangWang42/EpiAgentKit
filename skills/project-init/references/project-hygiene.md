@@ -4,10 +4,25 @@
 
 ## 1. 活跃工作区
 
-- 项目根只保留规则、方案、日志、`.gitignore`、`.epiagentkit-raw-roots`、可选 `.epiagentkit-check.json`、R 项目的 `.Rproj` 与标准编号目录；具体骨架以 `project-init` 模板为准。
+- 项目根只保留规则、方案、日志、`.gitignore`、`.epiagentkit-raw-roots`、`.epiagentkit-layout.json`、可选 `.epiagentkit-check.json`、R 项目的 `.Rproj` 与标准编号目录；具体骨架以 `project-init` 模板为准。
 - 临时、诊断、迁移和探索产物不得散落在根目录；一次性脚本完成后移入 `09_backup/<日期>_scripts_oneoff/`。
 - 同一交付物只保留一组稳定语义名当前版。不得累积 `v2`、`new`、`final`、`最终版`、`完善版` 等并列文件。
 - 移动产物时同步修改生成脚本的输出路径与正文引用；完成后全文搜索旧路径、旧编号与散落残留。
+
+### 1.1 预声明布局合同
+
+正式项目的每个活动目录、文件和位置必须先进入 `.epiagentkit-layout.json`，再创建或写入。初始化器登记标准骨架；后续分析、表图、论文、报告、PPT、咨询包和必要子目录在生成前追加精确条目。不得先把文件落在方便位置，再在收尾时猜测归属。
+
+每个条目至少记录：
+
+`path | kind(file/dir) | owner | purpose | producer | consumer | lifecycle(planned/active/current_deliverable)`
+
+- `path` 使用项目相对路径并指向唯一位置；禁止绝对路径、`..`、宽泛 glob 和同一语义的多处镜像。
+- `owner` 是负责该产物合同的 skill 或项目角色；`producer` 与 `consumer` 说明谁生成、谁读取；`lifecycle` 区分固定骨架、计划产物和当前交付物。
+- 新增目录前先声明目录及其用途，再声明其中每个计划文件。表图的精确文件名还要进入 registry；结果数字仍进入 `results.yaml`，布局清单不复制结果内容。
+- 临时解包、渲染、测试和诊断目录不进入活动布局；使用系统隔离临时目录，完成后安全清理。`09_backup/` 内历史由 `INDEX.md` 与每批 `MANIFEST.md` 管理，不逐文件重复登记。
+- 原始数据根保持只读，其内部来源文件不由布局合同重新命名；原始根本身和数据字典位置仍需声明。
+- `check-project` 对已存在但未声明的活动路径报 ERROR，对已声明但尚未生成的 `planned` 条目不报错。旧项目没有布局清单时先报 WARN 并要求在下次正式变更前建立，不静默搬动现有文件。
 
 ## 2. 替换与归档
 
@@ -21,6 +36,21 @@
 2. 在 `09_backup/INDEX.md` 顶部登记时间、主题、类型、目录、当前版路径与原因。
 3. 从活跃工作区移走旧版，不以复制替代归档，不删除历史索引。
 4. 多个候选版无法判断主次时先问用户。
+
+归档先运行 dry-run，核对精确目标与目的地，再执行：
+
+```bash
+python <project-init技能目录>/scripts/archive_deliverables.py <项目根> \
+  --target <被替代的精确相对路径> \
+  --current <稳定语义名当前交付路径> \
+  --topic <主题> --stage <阶段> --reason <原因> --json
+python <project-init技能目录>/scripts/archive_deliverables.py <项目根> \
+  --target <被替代的精确相对路径> \
+  --current <稳定语义名当前交付路径> \
+  --topic <主题> --stage <阶段> --reason <原因> --execute --json
+```
+
+脚本拒绝 glob、项目根、原始数据根、备份根、项目外路径、父子重叠目标和覆盖已有批次；保留原相对路径、文件哈希、`MANIFEST.md` 与 `INDEX.md`，执行失败时回滚已移动目标。
 
 ## 3. `02_code/` 契约
 
@@ -67,6 +97,7 @@
 - 所有代码、表、图编号连续，生成脚本与正文引用同步。
 - 有序分类水平来自所选语言的 `conventions.R|py`，脚本不散写 level、配色、P 值格式或 registry。
 - 当前工作区每类交付物只有一组稳定名当前版，旧版批次有 MANIFEST 与 INDEX 记录。
+- `.epiagentkit-layout.json` 覆盖全部活动目录与文件；新产物在创建前已登记，未声明路径为零。
 - 一次性脚本、退役文件和探索结果已归档；根目录无零散产物。
 - 统计图、非统计图解、论文、报告与咨询包分别通过对应 skill 的终检。
 

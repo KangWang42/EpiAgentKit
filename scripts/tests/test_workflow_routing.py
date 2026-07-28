@@ -230,6 +230,34 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertNotIn("每个章节、每个段落都先给", report)
         self.assertNotIn("每报一个数就跟一句", report)
 
+    def test_manuscript_revision_routes_by_change_type_and_scope(self) -> None:
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+        self.assertEqual(
+            cases["existing_word_paragraph_revision"]["primary"],
+            "academic-humanizer",
+        )
+        self.assertIn("docx", cases["existing_word_paragraph_revision"]["companions"])
+        self.assertEqual(cases["existing_word_format_only_repair"]["primary"], "docx")
+        self.assertEqual(
+            cases["existing_manuscript_structural_rewrite"]["primary"],
+            "academic-publishing",
+        )
+        self.assertEqual(
+            cases["reviewer_response_closure"]["expected_action"],
+            "close_each_comment_across_same_source_deliverables",
+        )
+        self.assertEqual(
+            cases["ambiguous_current_manuscript"]["expected_action"],
+            "stop_and_request_unique_input_selection",
+        )
+
     def test_analysis_agent_reports_anomalies_as_monitor(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         principles = (ROOT / "skills" / "biostat-principles" / "SKILL.md").read_text(

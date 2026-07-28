@@ -429,9 +429,10 @@ def main() -> int:
             "新的非交互进程执行声明入口",
         ),
         "skills/consulting-delivery/SKILL.md": (
-            "09_backup/INDEX.md",
+            "`INDEX.md`",
             "MANIFEST.md",
-            "唯一当前交付包",
+            "稳定语义名当前包",
+            ".epiagentkit-layout.json",
             "R 或 Python 分析",
             "run_all.R` 或 `run_all.py",
             "scripts/run_check_project.py",
@@ -1529,7 +1530,7 @@ def main() -> int:
         root_value = delivery_root.as_posix()
         driver.write_text(
             f'source("{scaffold}", encoding = "UTF-8")\n'
-            f'create_delivery_pack("结果-1-1-Python交付", root = "{root_value}", '
+            f'create_delivery_pack("分析结果包", root = "{root_value}", '
             'language = "python")\n',
             encoding="utf-8",
         )
@@ -1541,7 +1542,7 @@ def main() -> int:
             encoding="utf-8",
             errors="replace",
         )
-        pack = delivery_root / "结果-1-1-Python交付"
+        pack = delivery_root / "分析结果包"
         expected_python_pack = (
             pack / "run_all.py",
             pack / "requirements.txt",

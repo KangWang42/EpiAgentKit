@@ -51,6 +51,46 @@
       "excluded": ["academic-publishing", "docx"]
     },
     {
+      "id": "existing_word_paragraph_revision",
+      "prompt": "只修改现有 Word 论文中已指定的一个讨论段落，同时输出 clean 稿和带修订稿，其他内容与格式保持不变",
+      "primary": "academic-humanizer",
+      "companions": ["docx"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "lock_exact_scope_and_derive_clean_marked_from_one_record"
+    },
+    {
+      "id": "existing_word_format_only_repair",
+      "prompt": "只修复现有 Word 稿件的页边距和表格边框，不得改动任何可见文字或数据",
+      "primary": "docx",
+      "companions": [],
+      "excluded": ["academic-publishing"],
+      "expected_action": "preserve_visible_content_and_validate_format_scope"
+    },
+    {
+      "id": "existing_manuscript_structural_rewrite",
+      "prompt": "根据已验证结果和现有稿件，重新组织整篇论文的章节结构并输出新的 Word 投稿稿",
+      "primary": "academic-publishing",
+      "companions": ["academic-humanizer", "docx"],
+      "excluded": [],
+      "expected_action": "run_structural_rewrite_workflow"
+    },
+    {
+      "id": "reviewer_response_closure",
+      "prompt": "逐条闭环审稿意见，同步生成 response、clean Word 和带修订 Word，并核验每条意见的修改证据",
+      "primary": "academic-publishing",
+      "companions": ["academic-humanizer", "docx"],
+      "excluded": [],
+      "expected_action": "close_each_comment_across_same_source_deliverables"
+    },
+    {
+      "id": "ambiguous_current_manuscript",
+      "prompt": "文件夹里有两份都可能是当前稿的 Word 文件，请继续修订论文，但我还没有指定使用哪一份",
+      "primary": "academic-humanizer",
+      "companions": ["docx"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "stop_and_request_unique_input_selection"
+    },
+    {
       "id": "report_prose_only",
       "prompt": "先起草一份进展报告正文，不生成文件",
       "primary": "report-writing",

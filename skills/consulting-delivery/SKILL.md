@@ -60,15 +60,16 @@ description: |
 
 ## 三、命名与编号
 
-| 对象 | 格式 | 示例 |
+| 对象 | 格式 | 中性示例 |
 |------|------|------|
-| 文件夹 | `结果-M-D[-主题]`（用户指定名优先） | `结果-4-20-训练测试集` |
-| 压缩包 | 同文件夹名 `.zip` | `结果-4-20-训练测试集.zip` |
+| 文件夹 | 稳定语义名（用户指定名优先） | `分析结果包` |
+| 压缩包 | 同文件夹名 `.zip` | `分析结果包.zip` |
 | 包内脚本 | `NN_描述.R` 或 `NN_描述.py` 从 01 起 | `01_data_prep.R` |
 | 包内表 | `TableN_描述.xlsx`（或 `TN_`/`TSN_`） | `Table1_baseline.xlsx` |
 | 包内图 | `FigN_描述.pdf/.png`（或 `FN_`/`FSN_`） | `Fig2_forest.pdf` |
 
-**禁止命名**：`最终版`、`最新`、`final2`、`new`、`修订`、`v2`、`修改后`。`05_reports/` 同一主题只保留一个当前包；反馈迭代前先把上一交付批次整包归档，再在当前包路径重建。用户明确要求日期入名时可更新当前包日期，但旧日期包不得继续留在 `05_reports/`。
+**禁止命名**：`最终版`、`最新`、`final2`、`new`、`修订`、`v2`、`修改后`。`05_reports/` 同一主题只保留一个稳定语义名当前包；
+日期、轮次和内部版本进入归档批次、MANIFEST 或状态记录，不反复叠加到对外交付名。用户明确要求日期入名时服从，但旧日期包不得继续留在活动目录。
 
 **包内编号连续性（CRITICAL，与项目主文件夹同一标准）**：
 - `data/`（含子目录）、`tables/`、`figures/` 内所有文件及 `code/` 的分析脚本一律带编号前缀且从 01（或 T1/F1）起连续，包括复制进来的原始数据与质性材料；`code/config.*`、`code/conventions.*` 作为单源 helper 不编号。
@@ -81,7 +82,7 @@ description: |
 ## 四、标准目录结构（CRITICAL）
 
 ```
-05_reports/结果-4-20-训练测试集/
+05_reports/分析结果包/
 ├── 00_客户说明.md              ← 逐文件清单（模板 §3）
 ├── 01_方法与结果.docx          ← 可直接阅读的方法+结果（要求 §4）
 ├── run_all.R / run_all.py      ← 与主流程语言一致的一键复现入口
@@ -95,7 +96,8 @@ description: |
 
 **根目录只允许上面这些内容**。散落 `.csv`、截图、缓存、临时稿 → 全部清出或移入子目录。
 
-骨架用 `scripts/consulting_scaffold.R` 的 `create_delivery_pack("结果-4-20-主题", language = "R")` 或 `language = "python"` 创建。
+骨架用 `scripts/consulting_scaffold.R` 的 `create_delivery_pack("分析结果包", language = "R")` 或 `language = "python"` 创建；
+创建前先在 `.epiagentkit-layout.json` 声明目录及包内全部计划文件。
 
 ---
 
@@ -113,16 +115,8 @@ description: |
 
 ## 六、REPRODUCE 阶段（强制）
 
-```bash
-# 1. 新开一个临时目录，复制交付包进去
-cp -r "05_reports/结果-4-20-训练测试集" /tmp/test_pack
-# 2A. R 包：启动新 R session（不继承当前环境）
-Rscript --vanilla -e "setwd('/tmp/test_pack'); source('run_all.R')"
-# 2B. Python 包：使用用户已准备好的隔离环境
-/path/to/existing/environment/python /tmp/test_pack/run_all.py
-```
-
-Windows 使用用户已准备好的隔离环境中的 `python.exe` 执行同一流程。**通过标准**：复现入口无 error；所有预期 table / figure 都生成；数字与原 `03_tables/` 完全一致。
+把当前包复制到系统创建的隔离临时目录，再以不继承交互对象的新会话执行 `run_all.R` 或项目已锁定解释器的 `run_all.py`。
+临时路径可含中文和空格；不得把固定绝对路径写入脚本或模板。**通过标准**：复现入口无 error；所有预期 table / figure 都生成；数字与原 `03_tables/` 完全一致。
 不通过 → 多是路径硬编码、依赖未声明、脚本顺序隐式依赖；回 ISOLATE 修。
 
 ---
@@ -178,20 +172,12 @@ docx 写完后必须过 `academic-humanizer`（不可变事实清单 → 模式�
 
 ## 九、版本迭代规则
 
-客户反馈后要改结果 → 先把上一版文件夹、同名 zip、对应主流程旧代码与核验记录整组移入 `09_backup/YYYY-MM-DD_HHMM_<主题>_<反馈阶段>/`，保留原相对目录并写 `MANIFEST.md`；随后在 `05_reports/` 重建唯一当前包，并在 `09_backup/INDEX.md` 顶部登记归档时间、目录、当前包路径和原因。
+客户反馈后要改结果 → 先把上一版文件夹、同名压缩包、对应主流程旧代码与核验记录作为精确目标，使用
+`project-init/scripts/archive_deliverables.py` 先 plan 后 execute，整组移入 `09_backup/YYYY-MM-DD_HHMM_<主题>_<反馈阶段>/`。
+脚本保留原相对目录、文件哈希、`MANIFEST.md` 与 `INDEX.md`，不覆盖同名批次；多个合理当前包无法判定时先问用户。
+随后在 `.epiagentkit-layout.json` 预声明新的稳定语义名当前包及内部文件位置，再在 `05_reports/` 重建唯一当前交付集。
 
-```
-05_reports/
-└── 结果-5-02-训练测试集/           ← 唯一当前交付包
-
-09_backup/2026-05-02_1430_训练测试集_客户反馈/
-├── MANIFEST.md
-└── 05_reports/
-    ├── 结果-4-25-训练测试集/
-    └── 结果-4-25-训练测试集.zip
-```
-
-**禁止**：未留快照就覆盖上一版、用 `final_v2` 命名、让多个日期包并列留在 `05_reports/`、只归档成品却遗漏与该版绑定的代码或核验记录。
+**禁止**：未留可恢复归档就覆盖上一版、用叠加版本后缀命名、让多个轮次包并列留在 `05_reports/`、先创建未声明路径、只归档成品却遗漏与该版绑定的代码或核验记录。
 
 ---
 

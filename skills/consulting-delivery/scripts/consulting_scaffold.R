@@ -6,8 +6,12 @@
 create_delivery_pack <- function(name, root = "05_reports", overwrite = FALSE,
                                  language = c("R", "python")) {
   language <- match.arg(language)
-  if (!grepl("^结果-\\d+-\\d+", name)) {
-    warning("建议命名为 '结果-M-D[-主题]' 格式，例如 '结果-4-20-训练测试集'")
+  if (!nzchar(trimws(name))) {
+    stop("交付包名称不能为空")
+  }
+  if (grepl("(^|[_. -])(v[0-9]+|new|final|latest|最终版|最新版|修改版)([_. -]|$)", name,
+            ignore.case = TRUE)) {
+    warning("交付包应使用稳定语义名；轮次与日期写入归档 MANIFEST，不叠加版本后缀")
   }
 
   pack <- file.path(root, name)
