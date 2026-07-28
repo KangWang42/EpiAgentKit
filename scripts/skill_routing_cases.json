@@ -54,14 +54,14 @@
       "id": "report_prose_only",
       "prompt": "先起草一份进展报告正文，不生成文件",
       "primary": "report-writing",
-      "companions": [],
+      "companions": ["academic-humanizer"],
       "excluded": ["docx"]
     },
     {
       "id": "report_word_output",
       "prompt": "起草分析报告并生成 docx",
       "primary": "report-writing",
-      "companions": ["docx"],
+      "companions": ["academic-humanizer", "docx"],
       "excluded": ["academic-publishing"]
     },
     {
@@ -70,6 +70,30 @@
       "primary": "sysu-ppt",
       "companions": ["pptx"],
       "excluded": []
+    },
+    {
+      "id": "generic_presentation_template_unspecified",
+      "prompt": "帮我制作一份开题 PPT，模板来源还没有确定",
+      "primary": "pptx",
+      "companions": [],
+      "excluded": ["sysu-ppt"],
+      "expected_action": "clarify_template_source_before_creation"
+    },
+    {
+      "id": "other_institution_presentation",
+      "prompt": "用我提供的其他学校官方模板制作答辩 PPT",
+      "primary": "pptx",
+      "companions": [],
+      "excluded": ["sysu-ppt"],
+      "expected_action": "preserve_supplied_template"
+    },
+    {
+      "id": "neutral_presentation_without_template",
+      "prompt": "这份汇报不使用学校模板，请按中性风格从零生成 PPTX",
+      "primary": "pptx",
+      "companions": [],
+      "excluded": ["sysu-ppt"],
+      "expected_action": "create_from_scratch_after_explicit_neutral_choice"
     },
     {
       "id": "evidence_before_method",

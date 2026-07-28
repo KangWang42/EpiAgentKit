@@ -1,31 +1,31 @@
 # English IMRaD Writing reference
 
-> SKILL.md §二 的英文执行细节。各部件框架 + 写作流程 + 自检清单。句式从 `english-phrasebank.md` 取；
-> 时态/hedging/over-claim 规范同样在 phrasebank。数据一律取自 `07_paper/results.yaml` 及其派生
+> SKILL.md §二 的英文执行细节。各部件框架、写作流程与自检清单见本文件；使用 `english-phrasebank.md`
+> 审查时态、衔接、hedging、论断强度和模板痕迹，不从中复制套句。数据一律取自 `07_paper/results.yaml` 及其派生
 > `0_result_summaries.md`。润色或改写同时执行 `academic-humanizer` 的不可变事实清单与论断—证据检查。
 
 ## Contents
-1. IMRaD skeleton + section purposes + result-interpretation-contribution map
+1. Manuscript spine and section purposes
 2. Title
 3. Abstract
-4. Introduction (CRGP)
+4. Introduction
 5. Literature review (synthesis, not list)
 6. Aims / Significance / Scope
 7. Methods (reproducible)
-8. Results (LOC–KD–COM)
-9. Discussion (7-part)
+8. Results
+9. Discussion
 10. Conclusion
 11. Per-section self-check checklists
 
 ---
 
-## 1 IMRaD skeleton
+## 1 Manuscript spine
 
 Order in manuscript: Title → Abstract → Keywords → Introduction → Methods → Results → Discussion →
 (Conclusion) → References → Tables/Figures → Supplementary → Declarations. (Cover letter is separate;
 see `submission-materials.md`.)
 
-Each section answers one question:
+When the venue uses IMRaD, each section answers one question:
 - Introduction — **why** was the study done?
 - Methods — **how** was it done?
 - Results — **what** was found?
@@ -34,10 +34,11 @@ Each section answers one question:
 
 **Writing order**: Results + Methods first, then Introduction + Discussion, then Abstract + Title + cover letter.
 
-**Build a result–interpretation–contribution map before Discussion.** For each of 3–5 key results, fix:
-(a) one interpretation/mechanism point, (b) one literature comparison point, (c) one significance point.
-The Discussion must use this map. Cross-check coherence: the Introduction's gap must be answered by
-Methods+Results, and the Discussion must return to the Introduction's gap.
+**Build an objective–method–result–discussion map before drafting.** Record each primary and secondary
+question, its estimand or analytic target, the method that answers it, the corresponding table or figure,
+the result, and the boundary on interpretation. Related results may share one literature comparison or
+explanation; do not force every result to have a mechanism and significance sentence. Cross-check that the
+Introduction's gap is answered by Methods and Results and that the Discussion returns to that gap.
 
 Before revising existing prose, also build a fact lock containing every number, citation, equation,
 table/figure pointer, technical term, and claim direction. If the author supplies prior work, note their
@@ -77,21 +78,22 @@ design, and discipline.
 
 ---
 
-## 4 Introduction — CRGP
+## 4 Introduction
 
-Four moves, general → specific, every sentence serving the final aim:
+Use the moves that the evidence and venue require. They often progress from a concrete problem to the closest
+evidence, a specific gap, and the study purpose, but they do not require four paragraphs or a fixed order:
 
 1. **Context** — real-world/theoretical importance of the problem; why it matters now; add epidemiologic/
    policy/mechanistic background as needed.
 2. **Review** — what prior studies found and showed; move from broad to closest-to-this-study. Synthesize,
    do not list paper-by-paper.
 3. **Gap** — what is specifically missing and why this study is needed. The gap must directly lead to the aim.
-4. **Purpose** — exactly what this study addresses; directly answers the gap.
+4. **Purpose** — exactly what this study addresses and how it maps to the gap.
 
 **Gap must be specific**, not "few studies." Name the gap type: population / exposure / outcome / method
 (non-linearity, lag, interaction, causal inference) / mechanism / practice (policy or clinical decision).
 
-Self-check: funnels general→specific; every paragraph serves the aim; gap is specific not vague; purpose
+Self-check: each paragraph serves the aim; gap is specific not vague; purpose
 maps 1-to-1 to the gap; does not over-report results; `[ref]` placeholders mark needed citations.
 
 ---
@@ -100,7 +102,8 @@ maps 1-to-1 to the gap; does not over-report results; `[ref]` placeholders mark 
 
 Not a pile of references — organize, evaluate, and lead to the gap. Build a literature matrix first
 (topic/mechanism/variable · population/data · method · findings · strengths · limitations · relation to
-this study). Each paragraph: topic sentence → evidence synthesis → critical evaluation → gap/transition.
+this study). A paragraph may synthesize evidence, evaluate it, or establish a transition; do not require every
+paragraph to perform all three moves in the same order.
 
 Three evaluation moves: positive (affirm contribution), negative (point out limitation), neutral (inference
 or unresolved question). Only turn into a **specific gap** the limitations this study actually addresses;
@@ -138,18 +141,12 @@ Principles: follow the actual workflow; past tense for completed actions; define
 statistical methods must map to the research question; do **not** interpret results here; report the
 relevant reporting guideline (STROBE / CONSORT / PRISMA …).
 
-**State what was done, not why/how it was decided** (the most common failure). Methods is not an analysis
-diary or a justification of choices. Cut these four to a half-clause or delete: (1) motivation/justification
-("to avoid collinearity…", "because the distribution was skewed…", "given that…"); (2) exclusion reasoning
-("variable X was not included because it was unrelated…" → just state how X was handled); (3) pre-analysis
-process / data-quality checks / diagnostics narration ("before analysis we checked completeness/missingness",
-"we ran VIF/Shapiro/Cook…") — keep a diagnostic only when it determines which estimate is reported (e.g.
-"because heteroscedasticity was detected, CIs are bootstrap-based"); (4) textbook definitions of a method
-("MCA is a dimension-reduction technique that projects categories into a low-dimensional space…") → "we
-applied MCA to the 12 categorical variables and retained the first three dimensions (44.0% of inertia)."
-Signal that you drifted: "because / in order to / given / since / is a method that / before analysis we
-checked." Build a composite the right way: "items A, B, C were summed into an accessibility score (0–6,
-Cronbach α=0.75)" — not why it was not dichotomized, not why X was excluded, not what was checked first.
+Distinguish reproducible rationale from an analysis diary. Keep reasons that affect bias, interpretation, or
+reproducibility, including participant exclusions, missing-data handling, variable construction, quality
+control, protocol deviations, diagnostics that determine the reported estimate, and validation status. Remove
+version history, abandoned trials, file paths, internal variable names, rendering details, and textbook
+definitions of familiar methods. For a new or modified method, explain enough rationale and parameters for a
+reviewer to assess it.
 
 Self-check: design stated first; inclusion/exclusion clear; exposure & outcome definitions reproducible;
 models map to the aim; analysis platform and significance level stated when required; reporting guideline followed; no
@@ -157,15 +154,16 @@ engineering noise (random seed, render engine, package build).
 
 ---
 
-## 8 Results — LOC–KD–COM
+## 8 Results
 
-1. **LOC** (locate) — point the reader to the table/figure.
-2. **KD** (key data) — surface only the important numbers, not every cell.
-3. **COM** (comment) — brief necessary interpretation/comparison, without drifting into Discussion.
+Order results by objectives or estimands, time, or the actual analysis sequence. Report participant flow and
+analysis sets before primary, secondary, sensitivity, and exploratory findings. Use prose, subheadings, or a
+list only when the relationship among results supports that form.
 
-Report only: highest/lowest values · overall trend · key comparisons · outliers · results tied to the
-hypothesis · results supporting the main conclusion. One subsection per research question. Every table/
-figure must be cited in text; key tables/figures must be embedded in text (not "see Table N" with no data).
+Surface key estimates, denominators, time points, uncertainty, and model levels without rewriting every table
+cell. Cite every table and figure in text. Related numbers may be reported together and interpreted once; do
+not append a generic significance sentence to every value. Report null, uncertain, and discordant findings as
+faithfully as positive findings.
 
 Forbidden in Results: rewriting whole tables into prose; heavy literature citation; deep mechanism;
 repeating Methods; reporting results unrelated to the aim.
@@ -175,18 +173,19 @@ exhaustively listed; no Discussion content; numbers/%/CI/P exactly match the tab
 
 ---
 
-## 9 Discussion (7-part)
+## 9 Discussion
 
-1. **Principal findings** — open by summarizing 2–4 main findings; do not repeat all numbers.
-2. **Comparison with previous studies** — state consistent or inconsistent, and explain why (population,
-   exposure assessment, model specification…). Not just "consistent."
-3. **Interpretation / mechanisms** — cautious, not asserted as fact.
-4. **Strengths** — concrete (large sample, prospective design, high-quality data, repeated measures, robust
-   sensitivity analyses, novel exposure/outcome/interaction, policy/clinical relevance), no empty praise.
-5. **Limitations** — each = what the limitation is + why it exists + its effect on interpretation / how to
-   handle it.
-6. **Implications** — proportionate to the strength of evidence; no over-claim.
-7. **Conclusion** — short close.
+Select and order the moves needed to explain the most important findings: principal findings, comparison with
+previous studies, interpretation or mechanisms, implications, strengths, limitations, applicability, and a
+short close. The venue and argument decide how many paragraphs or subheadings are needed.
+
+- Group findings that share evidence or an explanation; do not assign one subsection to every significant
+  factor or repeat a fixed finding–comparison–mechanism–implication sequence.
+- Compare populations, measurements, analyses, and estimates rather than writing only "consistent with."
+- Offer a mechanism only when supported by data or literature; not every finding needs one.
+- State limitations in terms of their effect on bias, precision, or applicability. Add mitigation only when it
+  actually occurred, and do not force a fixed number of limitations.
+- Make implications proportionate to design and uncertainty.
 
 Self-check: returns to the Introduction's gap; explains each main finding; compares specifically with prior
 work; avoids causal over-inference; limitations real/specific/explained; ending concise.
@@ -195,9 +194,9 @@ work; avoids causal over-inference; limitations real/specific/explained; ending 
 
 ## 10 Conclusion (if a separate section)
 
-Short, contribution-oriented, no over-claim. A short paper usually needs one paragraph: what was found,
-what it suggests, and the evidence-proportionate contribution. Do not add a new limitation or future-work
-sentence merely to complete a template; place limitations in the Discussion unless the venue requires otherwise.
+Keep it concise and proportionate to the evidence. State what was found, where it applies, and the contribution
+that follows. Do not force a positive close, a fixed number of findings, or a future-work sentence. Include a
+material boundary when omitting it would change how readers interpret the conclusion or the venue requires it.
 
 Forbidden: new results; large new literature; causal over-claim; repeating the abstract; data-unrelated
 policy claims.
@@ -212,10 +211,10 @@ Run before marking any section complete:
 |---------|-----------|
 | Title | reflects design; no over-claim; meets journal title rules |
 | Abstract | explicit objective; key numbers w/ CI/P; conclusion = results; within word limit |
-| Introduction | general→specific; specific gap; purpose maps to gap; no result leak |
+| Introduction | specific gap; purpose maps to gap; no result leak; no fixed paragraph template |
 | Methods | reproducible; models map to aim; analysis platform/α stated when required; guideline followed |
-| Results | per-question subsections; tables/figures cited & embedded; numbers match source; no interpretation |
-| Discussion | returns to gap; each finding explained; specific comparison; limitations w/ 3 elements |
+| Results | order matches objectives/estimands; tables/figures cited; numbers match source; no table-by-table rewrite |
+| Discussion | returns to gap; related findings grouped; specific comparisons; limitations and implications proportionate |
 | Conclusion | no new content; no over-claim; proportionate |
 
 Cross-section coherence (whole-draft): sample size consistent everywhere; same number in Abstract = Results

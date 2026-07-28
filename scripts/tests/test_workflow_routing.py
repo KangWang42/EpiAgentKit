@@ -124,6 +124,112 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in ("默认中性排版", "无填充、白底黑字"):
             self.assertIn(fragment, report)
 
+    def test_presentation_template_source_is_routed_before_creation(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
+        sysu = (ROOT / "skills/sysu-ppt/SKILL.md").read_text(encoding="utf-8")
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+
+        self.assertIn("来源未明确时先问", global_rules)
+        self.assertIn("Template Routing Gate", pptx)
+        self.assertIn("中大官方模板、其他学校/机构或特定汇报类型", pptx)
+        self.assertIn("Load any matching presentation-content workflow or reference", pptx)
+        self.assertIn("Use the template-editing workflow, not the from-scratch workflow", pptx)
+        self.assertIn("不得把未说明学校的通用 PPT 自动套成中大模板", sysu)
+        self.assertIn("绕过 `sysu_init()`", sysu)
+        self.assertEqual(
+            cases["generic_presentation_template_unspecified"]["primary"],
+            "pptx",
+        )
+        self.assertEqual(
+            cases["generic_presentation_template_unspecified"]["expected_action"],
+            "clarify_template_source_before_creation",
+        )
+        self.assertIn(
+            "sysu-ppt",
+            cases["other_institution_presentation"]["excluded"],
+        )
+        self.assertEqual(
+            cases["sysu_presentation_file"]["primary"],
+            "sysu-ppt",
+        )
+
+    def test_papers_and_reports_use_content_driven_editorial_review(self) -> None:
+        publishing = (
+            ROOT / "skills/academic-publishing/SKILL.md"
+        ).read_text(encoding="utf-8")
+        playbook = (
+            ROOT
+            / "skills/academic-publishing/references/section-content-playbook.md"
+        ).read_text(encoding="utf-8")
+        chinese_paper = (
+            ROOT / "skills/academic-publishing/references/chinese-paper.md"
+        ).read_text(encoding="utf-8")
+        chinese_thesis = (
+            ROOT / "skills/academic-publishing/references/chinese-thesis.md"
+        ).read_text(encoding="utf-8")
+        english = (
+            ROOT / "skills/academic-publishing/references/english-writing.md"
+        ).read_text(encoding="utf-8")
+        phrasebank = (
+            ROOT / "skills/academic-publishing/references/english-phrasebank.md"
+        ).read_text(encoding="utf-8")
+        humanizer = (
+            ROOT / "skills/academic-humanizer/SKILL.md"
+        ).read_text(encoding="utf-8")
+        editorial = (
+            ROOT
+            / "skills/academic-humanizer/references/patterns-and-preservation.md"
+        ).read_text(encoding="utf-8")
+        report = (ROOT / "skills/report-writing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+
+        for fragment in (
+            "目的—方法—结果—表图—讨论主轴",
+            "结构由研究问题、estimand、表图和目标期刊决定",
+            "不以机械归零代替审校",
+        ):
+            self.assertIn(fragment, publishing)
+        for fragment in (
+            "本文件不提供固定段数",
+            "不要以固定“总判断",
+            "不得通过措辞隐藏",
+            "不要求固定五块、七段",
+        ):
+            self.assertIn(fragment, playbook)
+        self.assertIn("不要求恰好四段", chinese_paper)
+        self.assertIn("不设置通用页数、字数、章节数", chinese_thesis)
+        self.assertIn("do not require four paragraphs", english)
+        self.assertIn("Do not begin from a stock sentence", phrasebank)
+        self.assertIn("内容功能、论证结构、段落节奏", humanizer)
+        self.assertIn("可迁移性测试", editorial)
+        self.assertIn("文档层面结论先行", report)
+        self.assertIn("不是每一节、每一段都必须套", report)
+        self.assertIn(
+            "academic-humanizer", cases["report_prose_only"]["companions"]
+        )
+
+        self.assertNotIn("CRGP 引言 / LOC-KD-COM", publishing)
+        self.assertNotIn("每个显著因素一个小节", playbook)
+        self.assertNotIn("每个章节、每个段落都先给", report)
+        self.assertNotIn("每报一个数就跟一句", report)
+
     def test_analysis_agent_reports_anomalies_as_monitor(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         principles = (ROOT / "skills" / "biostat-principles" / "SKILL.md").read_text(

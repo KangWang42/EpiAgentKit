@@ -107,7 +107,7 @@ run._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   # 中文走 eastAsia
 
 ## 8 加亮占位（人补处）的实现
 
-`chinese-thesis.md` §8 规定两类需人补标记：`[待补充：xxx]`、`[NEED CONFIRMATION：xxx]`。拼装时让它们在
+`chinese-thesis.md` 的长文工作流规定两类需人补标记：`[待补充：xxx]`、`[NEED CONFIRMATION：xxx]`。拼装时让它们在
 docx 里**醒目可查**：
 ```python
 from docx.enum.text import WD_COLOR_INDEX

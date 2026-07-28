@@ -1,6 +1,6 @@
 ---
 name: pptx
-description: "Operate actual .pptx files: create, read, edit, render, validate, combine, split, or handle templates, layouts, notes and comments. Use the relevant presentation content workflow such as sysu-ppt first, then add pptx only when a presentation file is an input or deliverable. Do not trigger for discussion of a talk without file work."
+description: "Operate actual .pptx files: create, read, edit, render, validate, combine, split, or handle templates, layouts, notes and comments. For new or rebuilt decks, choose the SYSU official template, another institution or type, a user template, or a neutral design before creating slides. Use the relevant content workflow first, then add pptx only when a presentation file is an input or deliverable. Do not trigger for discussion of a talk without file work."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
@@ -13,6 +13,34 @@ license: Proprietary. LICENSE.txt has complete terms
 | Read/analyze content | `python -m markitdown presentation.pptx` |
 | Edit or create from template | Read [editing.md](editing.md) |
 | Create from scratch | Read [pptxgenjs.md](pptxgenjs.md) |
+
+---
+
+## Template Routing Gate
+
+Before creating or substantially rebuilding a presentation, determine the template source. If the user has not already specified it and no authoritative input presentation settles it, ask one concise question:
+
+> 请确认模板来源：中大官方模板、其他学校/机构或特定汇报类型、您提供的模板，还是无模板的中性设计？
+
+Do not ask again when the request, an attached `.pptx`, or the current project already identifies one authoritative template. If several plausible current templates exist and authority cannot be inferred, ask which one to use.
+
+Route the answer as follows:
+
+| Template source | Route |
+|---|---|
+| SYSU official | Load `sysu-ppt`, create through its official asset and toolkit workflow, then use this skill for file QA |
+| Other school, institution, conference, or presentation type | Load any matching presentation-content workflow or reference, then use its supplied or project-authoritative `.pptx`; inspect it with [editing.md](editing.md) before writing content |
+| User-provided template or reference deck | Treat that file as authoritative unless the user says it is inspiration only; preserve its masters, layouts, theme, branding, and fixed components |
+| No template | Confirm the neutral route, then read [pptxgenjs.md](pptxgenjs.md) and create from scratch |
+
+Do not invent an official logo, color system, master, or institutional identity when the named organization has not supplied a template. Ask for the file or offer a neutral design. Reading, extracting, or making a bounded edit to an existing presentation does not require this routing question because the existing file is already the source.
+
+For every template-derived deck:
+
+1. Inspect the template before drafting slides.
+2. Use the template-editing workflow, not the from-scratch workflow.
+3. Preserve required master/layout/theme relationships and brand assets while adapting content geometry for readability.
+4. Verify in the rendered output that the intended template is visibly present and that no placeholder text remains.
 
 ---
 

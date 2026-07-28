@@ -1,168 +1,94 @@
-# English Functional Phrasebank and Evidence-Bound Style
+# English Functional Writing Cues and Evidence-Bound Style
 
-> Rhetorical functions by section, plus tense, hedging, coherence, evidence strength, and template-trace rules.
-> Use each item only as a structural cue. Replace generic nouns and verbs with study-specific content; never
-> paste a template unchanged. Pair with `english-writing.md`, `submission-materials.md`, and `academic-humanizer`.
+> Use these cues to decide what a sentence must do, not to retrieve ready-made sentences. Draft from the study's evidence and terminology first. Pair with `english-writing.md`, `submission-materials.md`, and `academic-humanizer`.
 
 ## Contents
-1. Tense rules by section
-2. Coherence principles
-3. Logical connectors
-4. Hedging vs over-claim (blacklist)
-5. Phrasebank by section/function
-6. Fact-lock and voice checks
 
----
+1. Tense by function
+2. Coherence
+3. Hedging and claim strength
+4. Drafting cues by section
+5. Template-trace audit
+6. Fact lock and author voice
 
-## 1 Tense rules
+## 1 Tense by function
 
-| Context | Tense |
-|---------|-------|
-| Introduction — background facts | present simple |
-| Introduction — specific prior findings | past simple / present perfect |
-| Methods | past simple |
-| Results — this study's findings | past simple |
-| Results — interpretation of a finding | present simple / cautious modal |
-| Discussion — this study's results | past simple |
-| Discussion — general meaning / mechanism | present simple |
-| Conclusion | per function (past / present perfect / present) |
-| Abstract | match the corresponding section |
+| Function | Usual tense |
+|---|---|
+| Current background fact | Present simple |
+| Specific prior study | Past simple; present perfect for a continuing body of evidence |
+| Completed methods | Past simple |
+| This study's result | Past simple |
+| Interpretation or general mechanism | Present simple or cautious modal |
+| Conclusion | Match the function rather than forcing one tense |
 
----
+These are defaults, not mechanical replacements. Preserve tense required by the venue, quoted material, or a clear temporal relationship.
 
-## 2 Coherence principles
+## 2 Coherence
 
-- Repeat key technical terms; do not swap synonyms just to avoid repetition (it confuses readers).
-- Use transition words to mark logical relations.
-- First sentence of each paragraph states its function; last sentence may summarize or transition.
-- One topic per paragraph.
+- Repeat stable technical terms; do not swap synonyms merely to reduce repetition.
+- Make the logical relation recoverable from the evidence and sentence order. Add a connector only when it clarifies addition, contrast, cause, comparison, or qualification.
+- Keep one main function per paragraph unless two moves are tightly connected.
+- The first sentence need not use a fixed topic-sentence pattern, and the last sentence need not summarize or transition.
+- Read adjacent paragraphs together. If they repeat the same subject, clause order, connector, and closing move, repair the underlying structure or merge them.
 
----
+## 3 Hedging and claim strength
 
-## 3 Logical connectors
+Avoid unless the design and evidence support them: `proves`, `definitely`, `completely`, `undoubtedly`, causal language for non-causal designs, `dramatically`, `groundbreaking`, `pivotal`, `paramount`, `best`, and unqualified superiority.
 
-- Addition: In addition · Furthermore · Moreover
-- Contrast: However · Nevertheless · In contrast
-- Cause/effect: Therefore · Thus · This may be explained by
-- Comparison: Similarly · Consistent with · In contrast to
-- Hedging: may · could · might · appears to · suggests that · is likely to
+Choose verbs from the evidence:
 
-Do not stack connectors. There is no fixed quota: keep only those needed to state a real logical relation.
+- descriptive: `was observed`, `was higher`, `was associated with`;
+- cautious interpretation: `suggests`, `may reflect`, `is consistent with`;
+- designed causal contrast: state the estimand, intervention, population, outcome, and uncertainty rather than relying on a strong verb;
+- exploratory analysis: `suggested`, `was directionally consistent`, `requires confirmation`.
 
----
+Keep legitimate hedging, necessary passive voice, `we`, technical terms, equations, symbols, citation keys, and deliberate terminology repetition.
 
-## 4 Hedging vs over-claim (blacklist)
+## 4 Drafting cues by section
 
-**Avoid** (unless design genuinely supports it): proves · definitely · completely · undoubtedly ·
-`causal effect` (only if design supports causal inference) · dramatically · novel-and-important framing ·
-"plays a crucial/vital/pivotal role" · "sheds important light" · "of paramount importance."
+Answer the relevant questions with exact study content. Do not begin from a stock sentence and substitute X, Y, and Z.
 
-**Replace with**: suggests · indicates · provides evidence that · is associated with · may contribute to.
+### 4.1 Introduction
 
-Template-like academic tells to scrub (in addition to over-claim): formulaic "It is worth noting that…";
-"plays a significant role"; "a growing body of literature"; over-use of "Moreover/Furthermore/Additionally"
-as paragraph openers; em-dash overuse; rule-of-three lists everywhere; "-ing"-clause shallow analysis
-("highlighting the importance of…", "underscoring the need for…"); vague attribution ("studies have shown",
-"it is widely believed") — name the study instead. Vary sentence structure only when it improves clarity;
-do not enforce artificial word-count or sentence-length patterns.
+- Context: What verified burden, mechanism, policy issue, or decision makes this question consequential?
+- Evidence: What do the closest studies agree on, and where do populations, measurements, methods, or estimates differ?
+- Gap: What quantity, population, time window, mechanism, or decision remains unresolved and is answerable here?
+- Aim: What primary and secondary questions does this study estimate or test?
 
-Preserve legitimate scholarship: calibrated hedging, necessary passive voice, `we`, technical terms,
-equations, symbols, citation keys, and deliberate repetition of a stable term. A pattern match is an audit
-signal, not an automatic deletion rule.
+### 4.2 Methods
 
----
+Write subject + action + object + the parameters or definitions needed for replication. Include rationale when it affects bias, interpretation, or reproducibility. Report exclusions, missing data, quality control, deviations, diagnostics, and validation status where they help a reviewer assess the work. Remove abandoned attempts and engineering logs.
 
-## 5 Phrasebank by section/function
+### 4.3 Results
 
-> Functional cues only. X/Y/Z = variables; replace them with exact project terms. Cite real studies, never invent.
-> Prefer content-specific openings over these cues whenever the evidence already supplies a stronger sentence.
+Name the comparison or estimand, then report the estimate, uncertainty, denominator, time point, and model level needed to interpret it. Group related numbers. Point to a table or figure where useful, but do not make every paragraph begin with `Table N shows` or end with `These results suggest`.
 
-### 5.1 Introduction — Context
-- X is a major public health concern because …
-- X has been increasingly recognized as …
-- With the increasing burden of X, understanding Y is important.
-- Previous evidence suggests that …
+### 4.4 Discussion
 
-### 5.2 Introduction — Review
-- Previous studies have reported that …
-- Several studies have examined …
-- Evidence from prior research suggests …
-- However, these studies have mainly focused on …
+Select the moves supported by evidence: summarize a principal finding, compare a specific prior estimate, explain a discrepancy, consider a supported mechanism, state an implication, or delimit applicability. Related findings may share one paragraph. Do not force each paragraph through all moves.
 
-### 5.3 Introduction — Gap
-- However, little is known about …
-- It remains unclear whether …
-- Few studies have examined …
-- Existing studies have not fully addressed …
-- The extent to which X modifies the association between Y and Z remains uncertain.
+### 4.5 Abstract and conclusion
 
-### 5.4 Introduction — Purpose / Aim
-- Therefore, this study aimed to …
-- To address this gap, we investigated …
-- We examined whether …
-- We further assessed …
-- The primary objective was to evaluate … ; the secondary objective was to assess …
+Compress the actual objective, design, population, main estimate, uncertainty, scope, and evidence-proportionate contribution. Do not append `further research is needed`, `these findings highlight`, or a generic impact clause merely to create a conventional ending.
 
-### 5.5 Literature evaluation
-- Positive: This study provides important evidence that … / These findings offer valuable insight into … /
-  The study is noteworthy in that …
-- Negative: However, the generalizability of these findings is limited by … / These studies were restricted
-  to … / Most previous studies did not account for … / The evidence remains inconclusive because …
-- Neutral: These findings suggest that … / One possible implication is that … / Taken together, previous
-  studies imply that …
+## 5 Template-trace audit
 
-### 5.6 Significance / Scope
-- Significance: These findings may contribute to a better understanding of … / This study may provide
-  evidence for … / The results may help inform … / The findings may provide a basis for …
-- Scope: This study focused on … / The analysis was restricted to … / X was not considered because … /
-  Y was beyond the scope of this study.
+Review, do not automatically delete, the following:
 
-### 5.7 Methods
-- We conducted a … / Data were obtained from … / Participants were included if … / We excluded
-  participants with … / X was defined as … / The primary outcome was … / Covariates included … / We used
-  multivariable regression models to … / Sensitivity analyses were performed to … / Analyses were
-  conducted using [analysis platform]; statistical significance was set at …
+- `It is worth noting that`, `plays a crucial role`, `a growing body of literature`;
+- repeated paragraph openings with `Moreover`, `Furthermore`, `Additionally`, or `However`;
+- repeated `These findings suggest/highlight/underscore` closings;
+- rule-of-three lists across multiple sections;
+- strings of `-ing` clauses that replace analysis with `highlighting` or `underscoring`;
+- vague attribution such as `studies have shown` without a specific source;
+- identical finding–comparison–mechanism–implication paragraph shapes;
+- abstract nouns such as `the implementation of the improvement of` where a concrete subject and verb are available.
 
-### 5.8 Results — LOC / KD / COM
-- LOC: Table 1 shows … / Figure 2 presents … / As shown in Figure 3, … / The distribution of X is shown in
-  Table 1.
-- KD: X was higher among … / The association remained significant after … / We observed a dose-response
-  relationship between … / Compared with …, participants exposed to … had … / The strongest association was
-  observed in …
-- COM: These results suggest that … / This pattern indicates … / The results were consistent across …
+Use the migration test: if a sentence or paragraph could move unchanged to an unrelated manuscript, replace it with verified study-specific content or remove it. Pattern matches in titles, technical terms, or genuinely necessary transitions may remain with a reason.
 
-### 5.9 Discussion
-- Principal findings: In this study, we found that … / Our results indicate that … / The main findings were
-  as follows …
-- Comparison: Our findings are consistent with previous studies showing that … / In contrast to prior
-  research, we found that … / This discrepancy may be explained by … / Differences in study population,
-  exposure assessment, or model specification may account for …
-- Mechanism: A possible explanation is that … / This association may be partly explained by … / One
-  plausible mechanism involves … / Further studies are needed to clarify the mechanism.
-- Limitations: Several limitations should be noted. First, … / This may have led to … / However, we
-  attempted to minimize this bias by … / Future studies should …
-- Implications: These findings may have implications for … / Our results suggest the need for … / This study
-  provides evidence that may inform …
+## 6 Fact lock and author voice
 
-### 5.10 Conclusion
-- In conclusion, this study showed that … / Our findings suggest that … / These results provide evidence
-  for … / This study extends previous work by … / Further research is needed to … / The findings may inform …
+Before editing, record every number, unit, citation, equation, table or figure pointer, population, outcome, time window, and claim direction. After editing, compare them one by one. A fluent rewrite that changes any item fails review.
 
-### 5.11 Abstract
-- Background: X is associated with …, but evidence on Y remains limited.
-- Objective: We aimed to examine …
-- Methods: We conducted a … study using …
-- Results: Among …, we found that …
-- Conclusions: These findings suggest that …
-
----
-
-## 6 Fact-lock and voice checks
-
-Before editing, record every number, unit, citation, equation, table/figure pointer, population, outcome,
-time window, and claim direction. After editing, compare them one by one. Do not change a factual token to
-improve rhythm.
-
-If the author supplies a writing sample, match only stable features: sentence rhythm, preferred subjects,
-connective habits, terminology, and placement of hedging. Do not copy source sentences or manufacture a
-more casual persona. Without a sample, default to precise, restrained, venue-appropriate prose.
+If the author supplies prior writing, match stable features such as sentence rhythm, preferred subjects, connective habits, terminology, and placement of hedging. Do not copy source sentences or manufacture a casual persona. Without a sample, use precise, restrained, venue-appropriate prose and let the study's actual evidence create variation.

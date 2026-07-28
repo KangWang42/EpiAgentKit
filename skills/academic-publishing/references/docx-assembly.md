@@ -24,7 +24,7 @@
 
 ## 2 字体字号（中文稿）
 
-按 `chinese-paper.md` §3.1 字体字号表逐段构造。关键实现：双字体——
+按目标期刊或学校模板逐段构造；未指定时采用 `docx` 的中性默认。关键实现：双字体——
 ```
 run.font.name = 'Times New Roman'                       # 西文/数字
 run._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   # 中文
