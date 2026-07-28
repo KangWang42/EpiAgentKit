@@ -13,7 +13,7 @@ try:
 except ImportError as exc:  # pragma: no cover - environment-dependent guard
     raise RuntimeError(
         "emit_summary.py requires PyYAML in the active project environment; "
-        "prepare it outside EpiAgentKit, then rerun."
+        "install it there under the shared runtime-dependency policy, then rerun."
     ) from exc
 
 

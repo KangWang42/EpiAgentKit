@@ -28,7 +28,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 只需要描述当前任务，EpiAgentKit 会按任务类型加载必要 skill，并将结果落到可检查的文件、代码或交付物中。
 
-统计分析以 R 为主要和默认路径，标准研究工作流不要求用户具备 Python 环境。Python 仅作为明确选择或既有 Python 项目的可选补充；R 环境或依赖缺失时先报告影响，不自动改用 Python，也不迁移可工作的 R 主流程。
+统计分析以 R 为主要和默认路径，标准研究工作流不要求用户具备 Python 环境。Python 仅作为明确选择或既有 Python 项目的可选补充；R 运行时缺失时先报告影响，普通 R 包缺失时优先在项目隔离环境补齐，不自动改用 Python，也不迁移可工作的 R 主流程。
 
 | 研究任务 | 它会做什么 | 典型产物 |
 | --- | --- | --- |
@@ -117,7 +117,7 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 ## 30 秒安装
 
-配置管理器需要 Python 3.10 或更高版本。R 仅在运行 R 分析、R 统计图或 officer PPT 时需要；Python 统计分析复用用户项目中已准备的兼容环境和依赖，EpiAgentKit 不代为安装或升级。
+配置管理器需要 Python 3.10 或更高版本。R 仅在运行 R 分析、R 统计图或 officer PPT 时需要。EpiAgentKit 的安装与同步不会改动本机运行时；实际分析若缺少已选方案所需的普通 R/Python 包，会优先从官方仓库安装到项目隔离环境。系统依赖、非官方来源和不兼容升级仍需先确认，替代包或替代方法不会被静默启用。
 
 ```bash
 git clone https://github.com/KangWang42/EpiAgentKit.git

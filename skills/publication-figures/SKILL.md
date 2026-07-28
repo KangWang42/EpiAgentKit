@@ -40,7 +40,7 @@ description: 为 R 或 Python 真实数据选择、绘制、返工和审查发�
 - **T2/T3 必须打开 ≥1 个匹配配方，并说明借鉴了什么**（技法/配色/拼接），不可空手手写。
 - **不要求精确同款**：找不到完全对应的图，就取**最接近的**配方；或从**相邻配方**借可迁移技法——分面布局（`facet_*`/ggh4x/reorder_within）、合图拼接（patchwork/cowplot/无缝拼图）、注释（双箭头/曲形文本/显著性标记/发光点强调）、配色与排版。多个配方的技法可**组合**（见 `recipes_advanced_index.md` 的"创新/合并思路示例"，如云雨图+曲形文本、热图+边际折线）。意图相近即可充分参考，技法可跨图型迁移。
 - 配方脚本是**技法参考**（base `pdf()`+硬编码路径+默认尺寸，不达发表级）；落地一律按 §1–§12 重写。
-- 配方库中的 `install.packages()`、`BiocManager::install()`、`devtools::install_*()` 等行是上游环境准备痕迹，只能识别依赖，**不得执行或复制进主流程**。当前环境缺包时报告包名、用途与影响，让用户自行准备后再继续。
+- 配方库中的 `install.packages()`、`BiocManager::install()`、`devtools::install_*()` 等行是未经本项目核验的上游环境准备痕迹，**不得原样执行或复制进主流程**。先从实际采用的绘图方案提取最小依赖；缺少 CRAN、Bioconductor 或 PyPI 的普通包时按 `../biostat-principles/references/runtime-dependencies.md` 安装到项目隔离环境，非官方来源或系统依赖先征得用户同意，安装失败不得静默改用另一种图形实现。
 - 库维护：`scripts/build_catalog.R` 重生成 catalog（扫 skill 自带配方重建索引；维护者可用 `PUBLICATION_FIGURES_SOURCE` 指定只读全库并同步教程/预览，**普通使用者无需此源**——skill 已自带 work.R+教程+预览，未设置时自动跳过同步，仅重建索引）。
 
 ### 0.3 落规范 → 自检 → Read 验证（§1–§12 + §10 清单 + §12ter 三查）

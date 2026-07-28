@@ -11,14 +11,16 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
     def read(self, relative: str) -> str:
         return (ROOT / relative).read_text(encoding="utf-8")
 
-    def test_global_policy_reuses_compatible_existing_environments(self) -> None:
+    def test_global_policy_installs_official_analysis_packages_in_project_env(self) -> None:
         rules = self.read("CLAUDE.md")
         for fragment in (
-            "复用已有兼容环境",
-            "不负责安装或升级 R、Python",
+            "不安装或升级 R、Python",
+            "普通 R/Python 分析包",
+            "官方来源安装到项目隔离环境",
+            "不改用户级、全局或 Codex/插件共享环境",
             "不默认追求最新版",
-            "只说明检测结果、影响与用户下一步可执行的准备方式",
-            "不代用户创建环境或执行安装、升级、降级命令",
+            "非官方来源安装前必须先征得用户同意",
+            "不得静默改用替代包、替代方法或另一种分析语言",
             "Git 只在命令可用时使用",
             "不安装 Git，也不隐式初始化仓库",
             "只有用户在 `project-init` 中明确启用 Git 时",
@@ -52,26 +54,53 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
             for fragment in fragments:
                 self.assertIn(fragment, body, relative)
 
-    def test_analysis_and_delivery_skills_do_not_install_missing_dependencies(self) -> None:
+    def test_analysis_skills_follow_shared_install_first_policy(self) -> None:
         expected = {
-            "skills/r-biostats/SKILL.md": (
-                "依赖或运行环境缺失时说明检测结果",
-                "不代为安装",
+            "skills/biostat-principles/SKILL.md": (
+                "references/runtime-dependencies.md",
+                "普通分析包先在项目隔离环境补齐",
+                "任何替代实现均须用户同意",
             ),
-            "skills/consulting-delivery/SKILL.md": (
-                "复现检查只使用本机已有的兼容 R/Python 环境",
-                "不得创建虚拟环境或执行安装、升级命令",
+            "skills/r-biostats/SKILL.md": (
+                "普通 R 包缺失时",
+                "优先补齐",
+                "安装失败不得静默换包或换方法",
+            ),
+            "skills/python-biostats/SKILL.md": (
+                "普通 Python 包缺失时",
+                "优先补齐",
+                "非官方来源或不兼容升级先征得用户同意",
             ),
             "skills/publication-figures/SKILL.md": (
                 "配方库中的 `install.packages()`",
-                "不得执行或复制进主流程",
-                "让用户自行准备后再继续",
+                "不得原样执行或复制进主流程",
+                "安装到项目隔离环境",
+                "安装失败不得静默改用另一种图形实现",
             ),
         }
         for relative, fragments in expected.items():
             body = self.read(relative)
             for fragment in fragments:
                 self.assertIn(fragment, body, relative)
+
+    def test_shared_dependency_policy_preserves_install_boundaries(self) -> None:
+        policy = self.read(
+            "skills/biostat-principles/references/runtime-dependencies.md"
+        )
+        for fragment in (
+            "只有普通分析包进入自动安装",
+            "不得写入用户级、系统级、全局 site-library",
+            "只安装缺失包及必要的传递依赖",
+            "不为追求最新版升级无关包",
+            "安装失败时，停下并报告",
+            "未经用户同意，不得改用功能相近的包",
+        ):
+            self.assertIn(fragment, policy)
+
+    def test_delivery_reproduction_still_does_not_change_environment(self) -> None:
+        body = self.read("skills/consulting-delivery/SKILL.md")
+        self.assertIn("复现检查只使用本机已有的兼容 R/Python 环境", body)
+        self.assertIn("不得创建虚拟环境或执行安装、升级命令", body)
 
     def test_file_skills_do_not_present_install_commands_as_defaults(self) -> None:
         forbidden = {
