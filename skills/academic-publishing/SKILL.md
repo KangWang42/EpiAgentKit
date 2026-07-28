@@ -25,9 +25,9 @@ description: |
 5. **逐部分完成检查**：一次只写一个部分 → 跑自检清单 → 全过 → 标记完成 → 才进下一部分。
    **禁止一次性吐全文**。
 6. **疑点先问**：分组 / 终点 / 纳排 / 主分析方法 / 目标期刊 / 作者信息不明确 → 先问用户（§六）。
-7. **证据约束的自然学术文风**：所有语言先过 `academic-humanizer` 的不可变事实清单与论断—证据一致性审查；中文再过
-   `chinese-style-audit.md`，英文再过 `english-phrasebank.md`。研究者第一作者视角（"本研究/we"），
-   不暴露版本演进、调参或工程细节，不用固定句长配额制造表面变化。
+7. **证据约束的可发表文风**：所有语言先按 `../academic-humanizer/references/patterns-and-preservation.md` 做事实、内容功能、
+   论证结构、段落节奏和作者声纹审查；中文再过 `chinese-style-audit.md`，英文再过 `english-phrasebank.md`。
+   研究者第一作者视角（"本研究/we"），结构由研究问题、estimand、表图和目标期刊决定，不套固定段数、固定分条或逐因素段式。
 8. **局部修改也走完整标准**（CRITICAL，最易出错）：哪怕只改一句 / 一段 / 一节，动前先按 §一加载该部件对应的
    全部 reference，动后立即对被改部分跑该部件自检 + §九 一致性检查，并复扫确认与其它部件口径一致——
    "改了方法不同步摘要 / 改了一节主语风格与全文不一致"是最常见错误。执行项见 §九。
@@ -48,9 +48,9 @@ description: |
 | 中文 + **学位论文**（学位论文/硕士论文/博士论文/毕业论文/学硕/专硕/博论/答辩稿/综述章/致谢/80–120 页长文） | **中文学位论文** | `references/chinese-thesis.md` + `references/thesis-formatting.md` + `references/section-content-playbook.md` + `references/chinese-academic-style.md` + `references/chinese-style-audit.md` |
 | 用户提"英文论文 / English / manuscript / 投 SCI / 投某英文期刊" | **英文** | `references/english-writing.md` + `references/english-phrasebank.md` |
 
-期刊论著与学位论文**篇幅/结构/排版/字数完全不同**（详 `chinese-thesis.md` §9 差异表）：分不清就问（§六）。
+期刊论著与学位论文的篇幅、部件、展开度和排版来源不同：分不清就问（§六），不得套用同一固定结构。
 中英文不混写：一篇稿子一种语言。**学位论文是长文**——逐部件写、各存独立 md、按学校规范排版、需人补处加亮占位
-（见 `chinese-thesis.md` §8 + `thesis-formatting.md`）。
+（见 `chinese-thesis.md` 的长文工作流与 `thesis-formatting.md`）。
 
 **图表内文字必须与论文语言一致（CRITICAL，最易漏）**：正文换语言时，图表里的文字也要换——
 轴标签 / 图例 / 注释 / 表头 / **因子水平标签** / 单位都随论文语言。**英文稿 NEVER 沿用中文图表**：
@@ -83,9 +83,9 @@ description: |
 5. `02_code/` 关键脚本顶部 — 确认变量定义、模型设定、软件版本，方法节据此写，**不臆测**。
 6. 项目级 `CLAUDE.md` — 研究背景与当前口径锁定。
 
-读完产出一张内部"事实卡"：研究类型、设计、对象、暴露/自变量、结局、主分析、关键结果 3–5 条、
-每条结果对应的解释点+文献对照点+意义点（英文走 `english-writing.md` 的"结果—解释—贡献"映射表）。如有作者
-既往论文或已认可段落，同时建立声纹卡：术语、主语、hedging、连接方式、句式节奏和段落密度。
+读完产出一张内部"事实卡"和一张论文主轴表：研究类型、设计、对象、暴露/自变量、结局、主要和次要 estimand、
+对应方法、结果、表图、讨论问题与证据边界。相关结果可以共享解释或文献对照，不为每条结果强配机制和意义。
+如有作者既往论文或已认可段落，同时建立声纹卡：术语、主语、hedging、连接方式、句式节奏和段落密度。
 
 ### 2.2 写作顺序（两种语言一致）
 
@@ -106,14 +106,12 @@ description: |
           [拼装 Word] → 验证 → END
 ```
 
-每个部件：**WRITE 写入独立 md → SELF-CHECK 跑该部件自检清单 → 字数核对 → APPROVE 标记完成 → NEXT**。
-- 中文各部件的字数区间、结构、自检清单见 `chinese-paper.md`（期刊）/ `chinese-thesis.md`（学位论文）。
-- 英文各部件的框架（CRGP 引言 / LOC-KD-COM 结果 / 讨论七段 / 摘要)与自检见 `english-writing.md`，
-  句式从 `english-phrasebank.md` 取。
+每个部件：**WRITE 写入独立 md → SELF-CHECK 跑事实、内容、结构和语体检查 → 对齐期刊或学校字数 → APPROVE 标记完成 → NEXT**。
+- 中文期刊与学位论文分别见 `chinese-paper.md` 和 `chinese-thesis.md`，但段数、节数和列表数量均由官方规范与内容关系决定。
+- 英文各部件的功能与自检见 `english-writing.md`；`english-phrasebank.md` 只提供写作问题和证据强度提示，不得复制套句。
 
-**粒度与字数（学位论文长文）**：详细度高的章节细到三级小节逐个写，**一节过薄（三五行带过）= 未完成**；内容多
-的章拆成小点、一个小点写足再写下一个。字数达标靠补"该写而没写"的实质内容，绝不空话/重复/形容词凑字。
-小节密度硬要求与逐部件字数表见 `chinese-thesis.md` §3.1 / §3，交付前逐部件核对。
+**粒度与字数（学位论文长文）**：小节是否充分以研究功能、证据、复现信息和解释是否完整判断，不以三五行、固定页数、
+公式数量或图表数量判定。内容不足时补真实且必要的内容、合并过薄小节或调整层级，绝不以空话、重复或形容词凑字。
 
 ### 2.4 文件落位
 
@@ -159,7 +157,7 @@ description: |
 
 ## 五、投稿前四查（交付前必过）
 
-**先逐条过 `references/review-killers.md`（13 条审稿硬伤），再做四查**：
+**先逐条过 `references/review-killers.md` 的适用高风险问题，再做四查**：
 
 1. **逻辑查**：题名↔全文、摘要↔结果、引言 Gap↔结果是否回答、讨论是否回扣 Gap、结论无新内容、
    **探索性结果未在讨论/结论升格、未据此提具体建议**（review-killers §2）。
@@ -194,16 +192,16 @@ description: |
 
 | 文件 | 何时读 | 内容 |
 |------|--------|------|
-| `references/chinese-paper.md` | 写中文**期刊论著**/部件 | GB/T 7713.2 流程、各部件结构+字数+自检清单、中文期刊投稿适配、排版规范 |
-| `references/chinese-thesis.md` | 写中文**学位论文**（硕/博）/部件 | 长文结构与 sections/ 分文件、各部件页数字数目标、前后置部件（封面/双声明/中英摘要/缩略语/综述/致谢/在读成果/附录）写法、长文分部件工作流、需人补加亮约定、与期刊论著差异表、学位论文自检 |
+| `references/chinese-paper.md` | 写中文**期刊论著**/部件 | 期刊规范核验、各部件内容合同、非固定结构与全稿自检 |
+| `references/chinese-thesis.md` | 写中文**学位论文**（硕/博）/部件 | 学校规范核验、长文部件、内容深度、前后置部件、分部件工作流与学位论文自检 |
 | `references/thesis-formatting.md` | 学位论文**排版/拼装** | 页面设置、逐部件字体字号表、按章图表公式编号、三级目录自动生成、双页码段、python-docx 拼装差异点、黄色高亮占位实现 |
-| `references/section-content-playbook.md` | **写中文学位论文/论著前必读** | 从真实论文反推的"各部分到底写什么、怎么写"：章节骨架、摘要四段、统计分析编号清单、量表工具五要素、讨论逐因素成节、结论逐条无统计量、合格稿与模板化稿对照 |
+| `references/section-content-playbook.md` | **写中文学位论文/论著前必读** | 目的—方法—结果—表图—讨论主轴、各部件内容功能、设计特异重点与非模板化结构终审 |
 | `references/chinese-academic-style.md` | **写任何中文稿前的文风标尺** | 学术中文文风正向规范：严肃度标定、视角人称、句子与段落、因果措辞、术语一致和文风自检 |
 | `references/chinese-style-audit.md` | 中文稿写作/润色审校 | 模板化表达、证据强度、语体与 grep 审计线索；命中需结合语境判断 |
-| `references/english-writing.md` | 写英文论文/部件 | IMRaD 框架、CRGP 引言、文献综述、Aims/Significance/Scope、Methods、LOC-KD-COM 结果、Discussion 七段、Conclusion、Abstract、Title |
-| `references/english-phrasebank.md` | 写/润色英文 | 按章节×功能分类的句式库、时态规范、连接词、hedging、over-claim 黑名单、连贯性原则 |
+| `references/english-writing.md` | 写英文论文/部件 | 论文主轴、各部件功能、内容驱动的引言/结果/讨论、Methods、Conclusion、Abstract 与 Title |
+| `references/english-phrasebank.md` | 写/润色英文 | 各部件写作问题、时态、连接、hedging、论断强度、template-trace 与作者声纹检查；不提供可复制套句 |
 | `references/submission-materials.md` | 写投稿材料与正式往来 | Cover Letter、Response to Reviewers/rebuttal、Highlights、Graphical Abstract、Title Page、Declarations、编辑部与科研邮件 |
-| `references/review-killers.md` | **每篇稿写完/拼装前必读** | 审稿即退/留差印象的高频硬伤：图表连续编号、探索性结果不得升格、量表方向性、筛查vs全纳入、构念命名、效应量措辞、降维解释力、异常构成解释、STROBE/COREQ/GRAMMS、纳入标准操作化、摘要字数、数字/P/术语/引号统一、篇幅控制 |
+| `references/review-killers.md` | **每篇稿写完/拼装前必读** | 一致性、探索性升格、量表方向、变量策略、效应量、非预期构成、报告清单、透明度、摘要、术语、篇幅与预测模型高风险问题 |
 | `references/docx-assembly.md` | 拼装 Word | python-docx 流程、字体字号表、三线表、双字体、OMML、上下标、中英排版差异 |
 
 ---
@@ -217,22 +215,15 @@ description: |
 
 ---
 
-## 九、改动后语言 / 逻辑一致性自检（强制要求 8 配套，每次生成或修改后必跑）
+## 九、改动后事实、内容、结构与语体自检
 
-任何生成或修改完一个部件/一段后，立即对该部分逐条过下表，再对全文复扫确认一致；中文稿 grep 命中即改归零。
+任何生成或修改完一个部件后，先检查该部件，再通读全文相关部件。固定执行四层检查：
 
-| 检查项 | 规则出处 | grep 自查（命中=改） |
-|---|---|---|
-| 方法/结果每个操作句有明确主语（变换不堆砌） | `chinese-academic-style.md` §2、`section-content-playbook.md` §10.1 | `grep -nE "(^\|。\|；\|后，\|时，)(采用\|计算\|提取\|纳入\|检索\|参照\|评估\|拟合\|绘制\|反推\|重新计算\|以报告)" 04_methods.md 05_results.md`；命中句逐一确认主语（排除"纳入标准/纳入的"等名词性假阳性），缺则补"本研究/研究者/结果/该队列"等并变换，**不每句机械"本研究"** |
-| 不以教科书式定义介绍本研究的研究类型/方法 | `section-content-playbook.md` §10.1、§10.4 | `grep -nE "本(研究\|文\|综述)(为\|是)[^，。]{0,25}[，,]即"`；命中即删定义、直接写"本研究按…框架对…进行…/做了什么" |
-| 研究目的段不用轻连接词开头 | `chinese-academic-style.md` §6ter | `grep -nE "^(基于此\|综上\|由此\|据此\|因此)[，,]本(研究\|文)"`；命中改为承接前文空白的实义过渡（"针对…现状，本研究…"） |
-| 结论/摘要结论禁局限禁验证展望句 | playbook §8.2、`review-killers.md` §13b | `grep -nE "尚需.{0,20}验证|有待.{0,10}证实|受小样本.{0,10}约束|乐观偏差|泛化能力.{0,6}不足"` 命中若在结论/摘要结论=改 |
-| 禁随意/不负责任表达 | `chinese-academic-style.md` §6bis、`review-killers.md` §13c | `grep -nE "值得指出的是\|最关键现象出现在\|乍看.{0,8}实际上\|不难发现\|我们可以看到"` 归零 |
-| 段首禁套路化评价式开头 | `chinese-academic-style.md` §6ter | 人工读：是否"对…不仅关系到…还直接影响…/众所周知…"开头 |
-| 关键术语首次中英全称+缩写，全文贯穿 | `chinese-academic-style.md` §6、`review-killers.md` §12 | 人工核每个新概念首次出现 |
-| 结果分条要点式（结论先行），非数字流水账 | playbook §6.2 | 人工读主结果段 |
-| 数字/术语/主语风格全文一致 | `review-killers.md` §12 | 跑审计脚本（见下）看数字集合 / 未用引用 / 模板化套话 |
-| 模板化套话清理 | `chinese-style-audit.md` | 审计脚本的套话命中或 reference 搜索线索；合法术语与引文不机械删除 |
+1. **事实层**：数字、分母、时间范围、统计方向、引文、公式、表图、终点与不可变事实清单一致。
+2. **内容层**：每段能说明其问题、证据、功能和读者结论；可原样迁移到无关论文的段落删除或具体化。
+3. **结构层**：目的、estimand、方法、结果、表图和讨论逐项对应；没有固定四段引言、固定五节或七段讨论、强制结果分条、逐因素小节和固定三条建议。
+4. **语体层**：作者声纹、目标期刊 register、术语与 hedging 一致；无助手口吻、宣传腔、抽象名词链、机械连接和重复段落收口。
 
-**每次改动后跑一遍审计**：若项目有审计脚本（如 `09_paper.py --step audit`）则运行，它自动扫占位符 / 未用引用 /
-章节完整性 / Table-Fig 对应 / 模板化套话 / 随意表达，覆盖上表多数机检项；无此脚本则按上表 grep 逐项人工自查。
+中文稿按 `chinese-style-audit.md` 的搜索线索逐条人工判定；英文稿按 `english-phrasebank.md` 的 template-trace audit 判定。
+命中可以删除、具体化、降级、合并或有理由保留，不以机械归零代替审校。若项目有审计脚本，同时运行占位符、未用引文、
+章节完整性和 Table-Figure 对应检查，但自动搜索不能替代整篇内容与结构通读。

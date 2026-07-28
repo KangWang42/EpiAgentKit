@@ -27,8 +27,9 @@
 | 非统计视觉、流程、框架、机制、路线、架构或图形摘要 | `research-visuals` → `imagegen` | 统计图转 `publication-figures`；仅按该 skill 的回退条件转 `svg-diagrams` |
 | 从零生成论文、论文部件、投稿材料或结构性重写 | `biostat-principles` → `academic-publishing` | `academic-humanizer` 终审；实际操作 Word 时加 `docx` |
 | 编辑、润色或压缩已有学术文本 | `academic-humanizer` | 实际操作 Word 时加 `docx` |
-| 报告正文或报告文件 | `report-writing` | 实际操作 Word 时加 `docx` |
-| 中山大学学术汇报 | `sysu-ppt` | 实际操作演示文件时加 `pptx` |
+| 报告正文或报告文件 | `report-writing` → `academic-humanizer` | 先按读者和决策组织内容，再做事实、结构、措辞和作者视角终审；实际操作 Word 时加 `docx` |
+| 新建或重做 PPT / 演示文件 | 先判模板来源，再用 `pptx` | 来源未明确时先问“中大官方、其他学校/机构或汇报类型、用户提供模板、无模板中性设计”；已明确或已有 PPT 时不重复问 |
+| 中山大学学术汇报 | `sysu-ppt` | 仅在用户已明确中大或选定中大官方模板后使用；实际操作演示文件时加 `pptx` |
 | 咨询结果最终外发打包 | `biostat-principles` → `consulting-delivery` | 仅在分析已完成并验证后运行 |
 | 项目质控、结果复核与一致性检查 | `biostat-principles` → `epi-project-audit` | 项目含咨询包时同时核对咨询交付规则 |
 | Word、PowerPoint、Excel 或 PDF 的实际读写与验证 | `docx` / `pptx` / `xlsx` / `pdf` | 只负责实际文件操作，不取代内容主流程 |

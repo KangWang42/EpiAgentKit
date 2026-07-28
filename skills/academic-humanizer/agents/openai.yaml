@@ -1,4 +1,4 @@
 interface:
   display_name: "Academic Humanizer"
-  short_description: "Evidence-bound editing for papers, grants, and reviewer replies"
-  default_prompt: "Use $academic-humanizer to revise this academic draft while preserving every fact, number, citation, and equation."
+  short_description: "Evidence-bound editing for papers and research reports"
+  default_prompt: "Use $academic-humanizer to revise this research text for evidence, structure, author voice, and publication-ready prose without changing facts."
