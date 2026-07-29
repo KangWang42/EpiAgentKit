@@ -224,13 +224,15 @@ class VisualRoutingTests(unittest.TestCase):
             "不能把 compact 或直接修改会话 JSONL 当作修复",
         ):
             self.assertIn(fragment, body)
-        for fragment in (
-            "会话隔离要求",
-            "主任务只保留纯文本与本地文件路径",
-            "不接收或回放 data URL、base64 或内联图片",
-            "不得把 compact、修改会话 JSONL 或静默切换 CLI/API 当作修复",
+        self.assertIn("非统计视觉先走 `research-visuals` → `imagegen`", rules)
+        for implementation_detail in (
+            "一次性隔离子代理",
+            "data URL",
+            "base64",
+            "修改会话 JSONL",
+            "静默切换 CLI/API",
         ):
-            self.assertIn(fragment, rules)
+            self.assertNotIn(implementation_detail, rules)
 
     def test_vendored_figure_references_match_reviewed_snapshots(self) -> None:
         external = ROOT / "skills" / "research-visuals" / "references" / "external"

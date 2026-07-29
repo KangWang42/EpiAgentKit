@@ -21,7 +21,7 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
             "不默认追求最新版",
             "非官方来源安装前必须先征得用户同意",
             "不得静默改用替代包、替代方法或另一种分析语言",
-            "Git 只在命令可用时使用",
+            "Git 只在命令可用且当前目录为仓库时使用",
             "不安装 Git，也不隐式初始化仓库",
             "只有用户在 `project-init` 中明确启用 Git 时",
         ):
