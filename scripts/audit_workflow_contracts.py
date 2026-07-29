@@ -230,12 +230,8 @@ def main() -> int:
         ),
         "CLAUDE.md": (
             "主流程 skill",
-            "只负责实际文件操作，不取代内容主流程",
+            "只负责载体操作，不取代内容主流程",
             "evidence-research",
-            "Skill 优化不是只增不减",
-            "保留、重写、合并、下沉、脚本化或删除",
-            "每个概念保持一个单源",
-            "同时验证触发边界、旧能力、新场景、引用可达性和上下文成本",
             "非统计视觉先走 `research-visuals` → `imagegen`",
             "按载体、读者、证据属性、信息功能和实际显示尺寸设计",
             "真实界面、终端、文档与分析产物用实际渲染截图",
@@ -255,8 +251,7 @@ def main() -> int:
             "主动向用户报告",
             "停在安全点等待确认",
             "不静默修补后继续",
-            "epiagentkit-maintenance",
-            "Git 只在命令可用时使用",
+            "Git 只在命令可用且当前目录为仓库时使用",
             "不安装 Git，也不隐式初始化仓库",
             "只有用户在 `project-init` 中明确启用 Git 时",
             "只有用户当轮明确要求 push 时才推送",
@@ -265,7 +260,8 @@ def main() -> int:
             "轻量任务",
             "不得自动初始化项目",
             "正式项目审查或交付签发前",
-            "安装或同步 EpiAgentKit 只负责复制规则、skills、hooks",
+            "日常中间步骤只做与风险相称的验证",
+            ".epiagentkit-layout.json",
             "不安装或升级 R、Python",
             "普通 R/Python 分析包",
             "官方来源安装到项目隔离环境",
@@ -282,7 +278,8 @@ def main() -> int:
             "流行病学与生物统计分析以 R 为主要语言",
             "未指定且无既有语言合同时直接使用 R",
             "Python 不是标准研究工作流的前置条件",
-            "R 运行时缺失时按第 3 节报告，R 包缺失时先按第 3 节补齐",
+            "R 运行时缺失时报告影响",
+            "普通 R 包缺失时先按依赖规则补齐",
         ),
         "AGENTS.md": (
             "Treat skill improvement as regression-safe optimization",
@@ -429,9 +426,10 @@ def main() -> int:
             "新的非交互进程执行声明入口",
         ),
         "skills/consulting-delivery/SKILL.md": (
-            "09_backup/INDEX.md",
+            "`INDEX.md`",
             "MANIFEST.md",
-            "唯一当前交付包",
+            "稳定语义名当前包",
+            ".epiagentkit-layout.json",
             "R 或 Python 分析",
             "run_all.R` 或 `run_all.py",
             "scripts/run_check_project.py",
@@ -1008,6 +1006,14 @@ def main() -> int:
             "<EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
             "\u95e8\u7981",
             "\u6273\u673a",
+            "Skill 优化不是只增不减",
+            "epiagentkit-maintenance",
+            "sync --target all",
+            "doctor --target all",
+            "一次性隔离子代理",
+            "data URL",
+            "base64",
+            "修改会话 JSONL",
         ),
         "README.md": (
             '审查只看代码即可通过',
@@ -1529,7 +1535,7 @@ def main() -> int:
         root_value = delivery_root.as_posix()
         driver.write_text(
             f'source("{scaffold}", encoding = "UTF-8")\n'
-            f'create_delivery_pack("结果-1-1-Python交付", root = "{root_value}", '
+            f'create_delivery_pack("分析结果包", root = "{root_value}", '
             'language = "python")\n',
             encoding="utf-8",
         )
@@ -1541,7 +1547,7 @@ def main() -> int:
             encoding="utf-8",
             errors="replace",
         )
-        pack = delivery_root / "结果-1-1-Python交付"
+        pack = delivery_root / "分析结果包"
         expected_python_pack = (
             pack / "run_all.py",
             pack / "requirements.txt",

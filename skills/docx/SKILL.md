@@ -16,7 +16,7 @@ A .docx file is a ZIP archive containing XML files.
 |------|----------|
 | Read/analyze content | `pandoc` or unpack for raw XML |
 | Create new document | Use the content skill's established generator; otherwise use the compatible workflow below |
-| Edit existing document | Unpack → edit XML → repack - see Editing Existing Documents below |
+| Edit existing document | Lock scope → derive clean/marked files from one exact revision record → compare scope and visible equivalence |
 
 ### Converting .doc to .docx
 
@@ -293,13 +293,22 @@ sections: [{
 
 ## Editing Existing Documents
 
-**Follow all 3 steps in order.**
+Use the active content skill to decide whether the request is a local content revision, structural rewrite, format-only repair, final review, or reviewer-response closure. For academic texts, load
+`../academic-humanizer/references/revision-workflow.md` and lock the unique input, allowed and forbidden scope, facts, user corrections, and target deliverables before touching the package.
+
+Read `references/scoped-revision.md` completely for the revision-record schema, deterministic clean/marked derivation, scope comparison, anonymity audit, rendering, and final validation. Separate content changes from format changes and validate them independently. Do not use fuzzy full-document replacement. If an exact target is absent, repeated, inside a field or drawing, or spans incompatible run structure, stop and report candidate locations.
+
+Use `scripts/revise_docx.py` first for exact text changes in ordinary body or table-cell paragraphs, then use `scripts/compare_docx.py` for authorized-scope and clean/marked visible-equivalence checks. Use `scripts/audit_docx.py` before delivery. Carry locked decisions across rounds; changing one requires an explicit superseding record.
+
+### Advanced OOXML editing
+
+Use this path only for supported changes that the deterministic revision script correctly refuses, such as fields, bookmarks, comments, pre-existing tracked changes, drawings, or complex mixed formatting. Create an exact locator list first and keep all work in an isolated temporary directory.
 
 ### Step 1: Unpack
 ```bash
-python scripts/office/unpack.py document.docx unpacked/
+python scripts/office/unpack.py document.docx isolated/unpacked/ --merge-runs false --simplify-redlines false
 ```
-Extracts XML, pretty-prints, merges adjacent runs, and converts smart quotes to XML entities (`&#x201C;` etc.) so they survive editing. Use `--merge-runs false` to skip run merging.
+Disabling run merging and redline simplification avoids unrelated structural changes during a minimal revision.
 
 ### Step 2: Edit XML
 
@@ -307,7 +316,7 @@ Edit files in `unpacked/word/`. See XML Reference below for patterns.
 
 Use the author name supplied by the user or existing review workflow. If none is available, use the neutral value `Reviewer` and disclose that choice; do not insert an assistant or model name.
 
-**Use the Edit tool directly for string replacement. Do not write Python scripts.** Scripts introduce unnecessary complexity. The Edit tool shows exactly what is being replaced.
+Use structural XML edits against the recorded locator. A one-off replacement must still be exact and unique; repeated or fragile operations belong in a tested reusable script. Never apply a document-wide regex to prose, statistical symbols, captions, fields, or styles.
 
 **CRITICAL: Use smart quotes for new content.** When adding text with apostrophes or quotes, use XML entities to produce smart quotes:
 ```xml
@@ -331,7 +340,7 @@ Then add markers to document.xml (see Comments in XML Reference).
 
 ### Step 3: Pack
 ```bash
-python scripts/office/pack.py unpacked/ output.docx --original document.docx
+python scripts/office/pack.py isolated/unpacked/ output.docx --original document.docx
 ```
 Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate false` to skip.
 
@@ -346,6 +355,10 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
 
 - **Replace entire `<w:r>` elements**: When adding tracked changes, replace the whole `<w:r>...</w:r>` block with `<w:del>...<w:ins>...` as siblings. Don't inject tracked change tags inside a run.
 - **Preserve `<w:rPr>` formatting**: Copy the original run's `<w:rPr>` block into your tracked change runs to maintain bold, font size, etc.
+
+### Required validation after any edit
+
+Follow every applicable layer in `references/scoped-revision.md`: package validation, authorized-scope comparison, clean/marked equivalence, structural and anonymity audit, content reconciliation, render and page inspection, then reopen the final DOCX. A file opening successfully is not sufficient. Keep intermediate XML, renderings, and test copies outside the active delivery directory.
 
 ---
 

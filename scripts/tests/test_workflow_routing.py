@@ -30,24 +30,56 @@ class WorkflowRoutingTests(unittest.TestCase):
     def test_skill_maintenance_contract_is_regression_safe(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         repo_rules = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        maintenance = (
+            ROOT / "skills/epiagentkit-maintenance/SKILL.md"
+        ).read_text(encoding="utf-8")
         creator = (ROOT / "skills/skill-creator/SKILL.md").read_text(
             encoding="utf-8"
         )
 
-        self.assertIn("Skill 优化不是只增不减", global_rules)
-        self.assertIn("同时验证触发边界、旧能力、新场景", global_rules)
         self.assertIn("regression-safe optimization", repo_rules)
+        self.assertIn("观察到的缺口", maintenance)
+        self.assertIn("必须保留的行为", maintenance)
+        self.assertIn("最小变更集", maintenance)
+        self.assertIn("代表性验证", maintenance)
+        self.assertIn("sync --target all", maintenance)
+        self.assertIn("doctor --target all", maintenance)
         self.assertIn("Optimize, Don't Accumulate", creator)
         self.assertIn("remove superseded text in the same edit", creator)
+        for maintenance_detail in (
+            "Skill 优化不是只增不减",
+            "epiagentkit-maintenance",
+            "sync --target all",
+            "doctor --target all",
+        ):
+            self.assertNotIn(maintenance_detail, global_rules)
 
     def test_global_rules_are_concise_complete_and_single_source(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         lines = global_rules.splitlines()
 
-        self.assertLessEqual(len(lines), 200)
+        self.assertLessEqual(len(lines), 100)
+        self.assertLessEqual(len(global_rules), 5600)
         self.assertLessEqual(max(map(len, lines)), 300)
-        for skill in available_skills(ROOT):
-            self.assertIn(skill, global_rules, skill)
+        for daily_skill in (
+            "project-init",
+            "evidence-research",
+            "biostat-principles",
+            "r-biostats",
+            "python-biostats",
+            "publication-figures",
+            "research-visuals",
+            "academic-publishing",
+            "academic-humanizer",
+            "report-writing",
+            "pptx",
+            "consulting-delivery",
+            "epi-project-audit",
+            "docx",
+            "xlsx",
+            "pdf",
+        ):
+            self.assertIn(daily_skill, global_rules, daily_skill)
 
         for quality_rule in (
             "功能与读者匹配",
@@ -137,7 +169,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             )["cases"]
         }
 
-        self.assertIn("来源未明确时先问", global_rules)
+        self.assertIn("先判模板来源", global_rules)
         self.assertIn("Template Routing Gate", pptx)
         self.assertIn("中大官方模板、其他学校/机构或特定汇报类型", pptx)
         self.assertIn("Load any matching presentation-content workflow or reference", pptx)
@@ -229,6 +261,34 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertNotIn("每个显著因素一个小节", playbook)
         self.assertNotIn("每个章节、每个段落都先给", report)
         self.assertNotIn("每报一个数就跟一句", report)
+
+    def test_manuscript_revision_routes_by_change_type_and_scope(self) -> None:
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+        self.assertEqual(
+            cases["existing_word_paragraph_revision"]["primary"],
+            "academic-humanizer",
+        )
+        self.assertIn("docx", cases["existing_word_paragraph_revision"]["companions"])
+        self.assertEqual(cases["existing_word_format_only_repair"]["primary"], "docx")
+        self.assertEqual(
+            cases["existing_manuscript_structural_rewrite"]["primary"],
+            "academic-publishing",
+        )
+        self.assertEqual(
+            cases["reviewer_response_closure"]["expected_action"],
+            "close_each_comment_across_same_source_deliverables",
+        )
+        self.assertEqual(
+            cases["ambiguous_current_manuscript"]["expected_action"],
+            "stop_and_request_unique_input_selection",
+        )
 
     def test_analysis_agent_reports_anomalies_as_monitor(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")

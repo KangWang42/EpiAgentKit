@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -177,6 +178,40 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertFalse((py_project / "py_demo.Rproj").exists())
             self.assertFalse((r_project / ".git").exists())
             self.assertFalse((py_project / ".git").exists())
+            for project in (r_project, py_project):
+                manifest = json.loads(
+                    (project / ".epiagentkit-layout.json").read_text(encoding="utf-8")
+                )
+                self.assertEqual(manifest["schema_version"], 1)
+                self.assertEqual(manifest["policy"], "declare-before-create")
+                declared = {entry["path"] for entry in manifest["entries"]}
+                actual = {
+                    path.relative_to(project).as_posix()
+                    for path in project.rglob("*")
+                    if ".git" not in path.relative_to(project).parts
+                }
+                self.assertEqual(actual, declared)
+                checked = subprocess.run(
+                    [
+                        sys.executable,
+                        str(ROOT / "hooks/final_project_check.py"),
+                        str(project),
+                        "--json",
+                    ],
+                    cwd=ROOT,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+                check_payload = json.loads(checked.stdout)
+                self.assertFalse(
+                    any(
+                        item["check"].startswith("layout.")
+                        for item in check_payload["findings"]
+                    ),
+                    check_payload["findings"],
+                )
 
     def test_global_writing_contract_and_r_first_default_are_preserved(self) -> None:
         rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
@@ -188,8 +223,9 @@ class SkillOptimizationTests(unittest.TestCase):
             "流行病学与生物统计分析以 R 为主要语言",
             "未指定且无既有语言合同时直接使用 R",
             "Python 不是标准研究工作流的前置条件",
-            "R 运行时缺失时按第 3 节报告，R 包缺失时先按第 3 节补齐",
-            "不要求把可工作的 R 主流程迁移到 Python",
+            "R 运行时缺失时报告影响",
+            "普通 R 包缺失时先按依赖规则补齐",
+            "不要求迁移可工作的 R 主流程",
             "回复与交付说明简洁，不堆套话",
             "使用临床研究、流行病学与生物统计的准确术语",
             "调用条件、检查要求、停止条件和隔离执行",
@@ -275,10 +311,10 @@ class SkillOptimizationTests(unittest.TestCase):
         report = (ROOT / "skills/report-writing/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("`CLAUDE.md` §4", publishing + review)
-        self.assertIn("`CLAUDE.md` §4 与 §7", project_init)
-        self.assertIn("`CLAUDE.md` §6 的术语合同", figures)
-        self.assertIn("`CLAUDE.md` §1 与 §8", report)
+        self.assertIn("`CLAUDE.md` §3", publishing + review)
+        self.assertIn("`CLAUDE.md` §3 与 §7", project_init)
+        self.assertIn("`CLAUDE.md` §5 的术语合同", figures)
+        self.assertIn("`CLAUDE.md` §1 与 §6", report)
 
     def test_multi_outcome_figures_use_set_level_coverage(self) -> None:
         body = (ROOT / "skills/publication-figures/SKILL.md").read_text(

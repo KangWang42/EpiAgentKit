@@ -78,9 +78,6 @@ init_project <- function(name,
                    dir.create, recursive = TRUE, showWarnings = FALSE))
 
   today <- format(Sys.Date(), "%Y-%m-%d")
-  today_md <- sprintf("%d-%d",
-                      as.integer(format(Sys.Date(), "%m")),
-                      as.integer(format(Sys.Date(), "%d")))
   type_name <- type_names[type]
 
   # 项目规则：CLAUDE.md 为单源，AGENTS.md 指示 Codex 读取它 ----
@@ -617,7 +614,7 @@ init_project <- function(name,
 
   # 咨询模式：预建一个结果包骨架 --------------------------
   if (mode == "consulting") {
-    pack_name <- sprintf("结果-%s-主题占位", today_md)
+    pack_name <- "分析结果包"
     scaffold_env <- new.env(parent = globalenv())
     sys.source(consulting_scaffold_source, envir = scaffold_env)
     scaffold_env$create_delivery_pack(
@@ -626,6 +623,103 @@ init_project <- function(name,
       language = if (language == "r") "R" else "python"
     )
   }
+
+  # 活动布局清单：所有目录和文件先声明位置与责任，再允许后续写入 ----
+  json_escape <- function(value) {
+    value <- gsub("\\\\", "\\\\\\\\", value)
+    value <- gsub('"', '\\\\"', value, fixed = TRUE)
+    value
+  }
+  layout_role <- function(relative_path) {
+    top <- strsplit(relative_path, "/", fixed = TRUE)[[1]][1]
+    if (top == "01_data") {
+      c(owner = "biostat-principles", purpose = "raw-data boundary and data dictionary",
+        producer = "project-init or verified source", consumer = "analysis workflow")
+    } else if (top == "02_code") {
+      c(owner = if (language == "r") "r-biostats" else "python-biostats",
+        purpose = "reproducible analysis source", producer = "analysis workflow",
+        consumer = "project pipeline")
+    } else if (top == "03_tables") {
+      c(owner = if (language == "r") "r-biostats" else "python-biostats",
+        purpose = "registered statistical tables", producer = "analysis workflow",
+        consumer = "paper report and audit workflows")
+    } else if (top == "04_figures") {
+      c(owner = "publication-figures", purpose = "registered figures",
+        producer = "figure workflow", consumer = "paper report and presentation workflows")
+    } else if (top == "05_reports") {
+      c(owner = if (mode == "consulting") "consulting-delivery" else "report-writing",
+        purpose = "stable current report or delivery set", producer = "delivery workflow",
+        consumer = "external reader and audit workflow")
+    } else if (top == "06_results") {
+      c(owner = if (language == "r") "r-biostats" else "python-biostats",
+        purpose = "derived machine-readable results", producer = "analysis workflow",
+        consumer = "downstream analysis and reporting")
+    } else if (top == "07_paper") {
+      c(owner = "academic-publishing", purpose = "result source and manuscript materials",
+        producer = "analysis and publishing workflows", consumer = "submission and audit workflows")
+    } else if (top == "09_backup") {
+      c(owner = "project-init", purpose = "recoverable archive indexes",
+        producer = "archive workflow", consumer = "audit and recovery workflows")
+    } else {
+      c(owner = "project-init", purpose = "project control and governance",
+        producer = "project-init", consumer = "all project workflows")
+    }
+  }
+  all_paths <- list.files(
+    proj, all.files = TRUE, recursive = TRUE, full.names = TRUE,
+    include.dirs = TRUE, no.. = TRUE
+  )
+  all_paths <- c(all_paths, file.path(proj, ".epiagentkit-layout.json"))
+  proj_normalized <- normalizePath(proj, winslash = "/", mustWork = TRUE)
+  relative_paths <- vapply(
+    all_paths,
+    function(path) {
+      normalized <- normalizePath(path, winslash = "/", mustWork = FALSE)
+      substring(normalized, nchar(proj_normalized) + 2L)
+    },
+    character(1)
+  )
+  keep <- !grepl("^\\.git(/|$)", relative_paths)
+  all_paths <- all_paths[keep]
+  relative_paths <- relative_paths[keep]
+  ordering <- order(relative_paths)
+  all_paths <- all_paths[ordering]
+  relative_paths <- relative_paths[ordering]
+  entry_lines <- vapply(
+    seq_along(relative_paths),
+    function(index) {
+      rel <- relative_paths[index]
+      kind <- if (dir.exists(all_paths[index])) "dir" else "file"
+      role <- layout_role(rel)
+      sprintf(
+        paste0(
+          '    {"path": "%s", "kind": "%s", "owner": "%s", ',
+          '"purpose": "%s", "producer": "%s", "consumer": "%s", ',
+          '"lifecycle": "active"}'
+        ),
+        json_escape(rel), kind, json_escape(role[["owner"]]),
+        json_escape(role[["purpose"]]), json_escape(role[["producer"]]),
+        json_escape(role[["consumer"]])
+      )
+    },
+    character(1)
+  )
+  if (length(entry_lines) > 1L) {
+    entry_lines[-length(entry_lines)] <- paste0(entry_lines[-length(entry_lines)], ",")
+  }
+  writeLines(
+    c(
+      "{",
+      '  "schema_version": 1,',
+      '  "policy": "declare-before-create",',
+      '  "entries": [',
+      entry_lines,
+      "  ]",
+      "}"
+    ),
+    file.path(proj, ".epiagentkit-layout.json"),
+    useBytes = TRUE
+  )
 
   # Git（可选；不可用时不安装，也不阻止项目创建）----------
   git_state <- "disabled"
@@ -663,6 +757,7 @@ init_project <- function(name,
   message("  2. 把原始数据放入 ", file.path(name, "01_data/rawdata/"), " 并填写数据字典")
   message("  3. 同步口径：打开 ", file.path(name, "CLAUDE.md"))
   message("  4. 开始清洗：", file.path(name, "02_code", basename(cleaning_path)))
+  message("  5. 新建任何目录或文件前，先登记 ", file.path(name, ".epiagentkit-layout.json"))
   if (identical(git_state, "initialized")) {
     message("Git 已初始化；完成初始化与验证后按全局偏好自动 commit，用户明确要求时才 push。")
   } else if (identical(git_state, "unavailable")) {

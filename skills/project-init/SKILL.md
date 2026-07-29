@@ -56,6 +56,7 @@ description: |
 ├── BACKLOG.md             # 待补清单（缺文献/数据/方法/规划，全程只增不删）
 ├── .gitignore             # 忽略数据和临时
 ├── .epiagentkit-raw-roots # 可选额外原始数据根，每行一个项目相对路径
+├── .epiagentkit-layout.json # 全部活动目录、文件、位置、责任和生命周期预声明清单
 ├── .Rproj                 # 仅 R 项目生成
 ├── 01_data/
 │   ├── rawdata/           # 只读
@@ -81,7 +82,7 @@ description: |
 
 咨询模式在研究模式基础上，额外：
 
-- `05_reports/结果-{今日}-{主题占位}/` 按所选语言预建空交付包（`run_all.R` 或 `run_all.py`）
+- `05_reports/分析结果包/` 以稳定语义名按所选语言预建空交付包（`run_all.R` 或 `run_all.py`）；日期与轮次只进入归档记录
 - `CLAUDE.md` 追加"交付前必过 consulting-delivery 终检"
 - `DECISIONS.md` 追加首条"咨询任务，客户口径见 `DECISIONS.md` 顶部"
 
@@ -113,6 +114,9 @@ init_project(
 ```
 
 `git = TRUE` 必须对应用户本轮的明确选择。脚本先用 `Sys.which("git")` 检测；未找到 Git 时继续创建项目并明确报告跳过，不执行安装。
+
+初始化器会把实际骨架逐项写入 `.epiagentkit-layout.json`。之后任何新目录或文件都要在创建前追加精确相对路径、类型、owner、purpose、producer、consumer 和 lifecycle；
+表图同时先登记 registry。`check-project` 把活动区内未声明路径判为 ERROR，旧项目缺清单时先给 WARN，不自动整理或补建。
 
 ---
 
@@ -211,7 +215,7 @@ init_project(
 
 全项目周期累积的"待补/想法/下一步"单一入口。**只增不删**——发现即记，做完勾掉留痕。
 关键不在建文件，而在 agent 任何阶段（清洗 / 分析 / 出图 / 写作 / 审查）一发现缺口就立即追加，
-不靠记忆、不留到"以后"（全局 `CLAUDE.md` §4 与 §7 已设单源要求）。
+不靠记忆、不留到"以后"（全局 `CLAUDE.md` §3 与 §7 已设单源要求）。
 
 ```markdown
 # BACKLOG · 待补清单
@@ -354,11 +358,12 @@ LineEndingConversion: Posix
   - config.R|py / conventions.R|py / 对应语言 vendored helper 与空 registry 就绪
   - 探索实验索引 09_backup/EXPERIMENTS.md 就绪
   - 版本归档索引 09_backup/INDEX.md 就绪
+  - `.epiagentkit-layout.json` 已登记全部初始目录和文件；后续产物先登记再创建
   - 数据字典模板已生成
   - 清洗脚本模板已生成 (02_code/01_data_cleaning.R|py)
   - .gitignore 已配置（原始数据不入 git）
   - Git：已初始化并按全局偏好收尾，或因未启用 / 不可用而跳过；缺少 Git 不阻止签发
-  - [咨询模式] 交付包骨架已预建：05_reports/结果-{今日}/
+  - [咨询模式] 稳定语义名交付包骨架已预建并登记布局：05_reports/分析结果包/
   
 下一步：
   1. 填写并确认 PROTOCOL.md 与 SAP.md

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -18,6 +19,7 @@ from _path_guard import raw_roots
 
 
 CHECK_CONTRACT_FILE = ".epiagentkit-check.json"
+LAYOUT_MANIFEST = ".epiagentkit-layout.json"
 DEFAULT_CONTRACT: dict[str, Any] = {
     "code_helper_files": [
         "config.R",
@@ -62,6 +64,13 @@ OLD_NAME_PATTERN = re.compile(
     re.IGNORECASE,
 )
 LOG_PATTERN = re.compile(r"\b(error|warning|traceback|failed|nan)\b", re.IGNORECASE)
+LOG_LEVELS = {
+    "error": "ERROR",
+    "traceback": "ERROR",
+    "failed": "ERROR",
+    "warning": "WARN",
+    "nan": "WARN",
+}
 SECRET_KEY_PATTERN = re.compile(
     r"""(?ix)
     ["']?(api[_-]?key|access[_-]?token|refresh[_-]?token|secret|
@@ -128,12 +137,216 @@ def finding(
     path: Path | None = None,
     key: str | None = None,
 ) -> None:
-    item = {"level": level, "check": check}
+    evidence = ""
+    if path is not None:
+        evidence = str(path)
+    if key is not None:
+        evidence = f"{evidence} [{key}]".strip()
+    category = check.split(".", 1)[0]
+    guidance = {
+        "contract": (
+            "The project-specific validation contract cannot be applied reliably.",
+            "Repair the contract before sign-off.",
+        ),
+        "layout": (
+            "A project path is undeclared, invalid, or inconsistent with its planned location.",
+            "Declare the exact path and ownership before creation, or restore the declared layout.",
+        ),
+        "rawdata": (
+            "Raw-data immutability or provenance may be compromised.",
+            "Return to the authoritative source and resolve the provenance issue without modifying raw data.",
+        ),
+        "code": (
+            "The reproducible analysis sequence is incomplete or ambiguous.",
+            "Restore the declared numbered pipeline and rerun it.",
+        ),
+        "tables": (
+            "Table numbering or identity is ambiguous.",
+            "Reconcile the table registry, producer, and manuscript references.",
+        ),
+        "figures": (
+            "Figure numbering or identity is ambiguous.",
+            "Reconcile the figure registry, producer, and manuscript references.",
+        ),
+        "naming": (
+            "A version-like active name can cause the wrong deliverable to be selected.",
+            "Archive the replaced artifact and keep one stable semantic current name.",
+        ),
+        "results": (
+            "The result source and its downstream artifacts may be out of sync.",
+            "Return to the result producer, regenerate downstream artifacts, and verify provenance.",
+        ),
+        "provenance": (
+            "File origin or synchronization cannot be proven deterministically.",
+            "Regenerate or update the provenance receipt and investigate every mismatch.",
+        ),
+        "logs": (
+            "The execution log contains a term that requires technical review.",
+            "Inspect the full cited line and upstream step; fix blocking errors and explain non-blocking warnings.",
+        ),
+        "secrets": (
+            "A possible credential or secret is present in the active project.",
+            "Remove it safely, rotate exposed credentials, and keep only a configuration key reference.",
+        ),
+        "submission": (
+            "The active manuscript revision or reviewer-response record is not ready for sign-off.",
+            "Resolve the cited state-card issue and revalidate the submission set.",
+        ),
+        "project": (
+            "The requested project cannot be checked.",
+            "Provide an existing formal-project directory.",
+        ),
+    }.get(
+        category,
+        (
+            "The project contract requires review at the cited evidence location.",
+            "Inspect the evidence and apply the owning workflow's corrective action.",
+        ),
+    )
+    item = {
+        "level": level,
+        "check": check,
+        "rule": check,
+        "evidence": evidence or check,
+        "impact": guidance[0],
+        "action": guidance[1],
+    }
     if path is not None:
         item["path"] = str(path)
     if key is not None:
         item["key"] = key
     findings.append(item)
+
+
+def layout_actual_paths(
+    project: Path,
+    roots: list[Path],
+    contract: dict[str, Any],
+) -> dict[Path, str]:
+    actual: dict[Path, str] = {}
+    backup = (project / "09_backup").resolve(strict=False)
+    prune_names = {Path(value).name.casefold() for value in contract["prune_dirs"]}
+    prune_names.discard("09_backup")
+    for current_raw, directories, files in os.walk(project, topdown=True, followlinks=False):
+        current = Path(current_raw).resolve(strict=False)
+        if any(current == root for root in roots):
+            directories[:] = []
+            continue
+        kept: list[str] = []
+        if current != backup:
+            for name in directories:
+                child = (current / name).resolve(strict=False)
+                if name.casefold() in prune_names or any(root in child.parents for root in roots):
+                    continue
+                rel = relative(child, project)
+                actual[rel] = "dir"
+                kept.append(name)
+        directories[:] = [] if current == backup else kept
+        for name in files:
+            path = (current / name).resolve(strict=False)
+            if any(root in path.parents for root in roots):
+                continue
+            actual[relative(path, project)] = "file"
+    return actual
+
+
+def layout_check(
+    project: Path,
+    roots: list[Path],
+    contract: dict[str, Any],
+    findings: list[dict[str, str]],
+) -> None:
+    manifest_path = project / LAYOUT_MANIFEST
+    if not manifest_path.is_file():
+        finding(findings, "WARN", "layout.manifest_missing", Path(LAYOUT_MANIFEST))
+        return
+    try:
+        payload = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as error:
+        finding(findings, "ERROR", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), type(error).__name__)
+        return
+    entries = payload.get("entries") if isinstance(payload, dict) else None
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema_version") != 1
+        or payload.get("policy") != "declare-before-create"
+        or not isinstance(entries, list)
+    ):
+        finding(findings, "ERROR", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), "schema")
+        return
+    declared: dict[Path, tuple[str, str]] = {}
+    required = ("path", "kind", "owner", "purpose", "producer", "consumer", "lifecycle")
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict) or any(not isinstance(entry.get(key), str) or not entry[key].strip() for key in required):
+            finding(findings, "ERROR", "layout.entry_invalid", Path(LAYOUT_MANIFEST), f"entry@{index}")
+            continue
+        raw_path = entry["path"].replace("\\", "/")
+        raw_parts = Path(raw_path).parts
+        if Path(raw_path).is_absolute() or raw_path.startswith("/") or ".." in raw_parts:
+            finding(findings, "ERROR", "layout.path_escape", Path(LAYOUT_MANIFEST), f"entry@{index}")
+            continue
+        candidate = (project / raw_path).resolve(strict=False)
+        try:
+            rel = relative(candidate, project)
+        except ValueError:
+            finding(findings, "ERROR", "layout.path_escape", Path(LAYOUT_MANIFEST), f"entry@{index}")
+            continue
+        if entry["kind"] not in {"file", "dir"} or entry["lifecycle"] not in {"planned", "active", "current_deliverable"}:
+            finding(findings, "ERROR", "layout.entry_invalid", rel, "kind_or_lifecycle")
+            continue
+        if rel in declared:
+            finding(findings, "ERROR", "layout.path_duplicate", rel)
+            continue
+        declared[rel] = (entry["kind"], entry["lifecycle"])
+
+    actual = layout_actual_paths(project, roots, contract)
+    for rel, kind in actual.items():
+        if rel not in declared:
+            finding(findings, "ERROR", "layout.path_undeclared", rel, kind)
+        elif declared[rel][0] != kind:
+            finding(findings, "ERROR", "layout.kind_mismatch", rel, f"declared={declared[rel][0]};actual={kind}")
+    for rel, (kind, lifecycle) in declared.items():
+        declared_path = (project / rel).resolve(strict=False)
+        inside_raw_root = any(root == declared_path or root in declared_path.parents for root in roots)
+        if lifecycle != "planned" and rel not in actual and not inside_raw_root:
+            finding(findings, "WARN", "layout.declared_missing", rel, kind)
+
+
+def submission_state_check(project: Path, findings: list[dict[str, str]]) -> None:
+    state_path = project / "07_paper" / "submission" / "revision-state.json"
+    if not state_path.is_file():
+        return
+    validator = (
+        Path(__file__).resolve().parents[1]
+        / "skills"
+        / "academic-humanizer"
+        / "scripts"
+        / "validate_revision_state.py"
+    )
+    if not validator.is_file():
+        finding(findings, "ERROR", "submission.validator_missing", relative(state_path, project))
+        return
+    try:
+        spec = importlib.util.spec_from_file_location("epiagentkit_revision_state", validator)
+        if spec is None or spec.loader is None:
+            raise ImportError("validator loader unavailable")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        state_findings = module.validate_state_file(state_path, signoff=True)
+    except Exception as error:
+        finding(findings, "ERROR", "submission.state_unreadable", relative(state_path, project), type(error).__name__)
+        return
+    for item in state_findings:
+        record = {
+            "level": item.get("level", "ERROR"),
+            "check": f"submission.{item.get('rule', 'state_invalid')}",
+            "rule": item.get("rule", "state_invalid"),
+            "evidence": item.get("evidence", str(relative(state_path, project))),
+            "impact": item.get("impact", "The submission state is not ready for sign-off."),
+            "action": item.get("action", "Repair and revalidate the revision state card."),
+            "path": str(relative(state_path, project)),
+        }
+        findings.append(record)
 
 
 def relative(path: Path, project: Path) -> Path:
@@ -432,9 +645,15 @@ def log_check(
             continue
         text = path.read_text(encoding="utf-8-sig", errors="replace")
         for line_number, line in enumerate(text.splitlines(), start=1):
-            match = LOG_PATTERN.search(line)
-            if match:
-                finding(findings, "ERROR", "logs.abnormal_term", rel, f"{match.group(1).casefold()}@{line_number}")
+            terms = {match.group(1).casefold() for match in LOG_PATTERN.finditer(line)}
+            for term in sorted(terms):
+                finding(
+                    findings,
+                    LOG_LEVELS[term],
+                    "logs.abnormal_term",
+                    rel,
+                    f"{term}@{line_number}",
+                )
 
 
 def entropy(value: str) -> float:
@@ -530,6 +749,7 @@ def run_checks(project: Path) -> list[dict[str, str]]:
     contract = load_contract(project, findings)
     protected = raw_roots(project)
     git_raw_check(project, protected, findings)
+    layout_check(project, protected, contract, findings)
     code_check(project, contract, findings)
     artifact_sequence_check(project / "03_tables", TABLE_PATTERN, "tables", findings)
     artifact_sequence_check(project / "04_figures", FIGURE_PATTERN, "figures", findings)
@@ -537,6 +757,7 @@ def run_checks(project: Path) -> list[dict[str, str]]:
     result_sync_check(project, contract, findings)
     log_check(project, protected, contract, findings)
     secret_check(project, protected, contract, findings)
+    submission_state_check(project, findings)
     return findings
 
 
@@ -566,6 +787,8 @@ def main(argv: list[str] | None = None) -> int:
             if item.get("key"):
                 detail = f"{detail} [{item['key']}]".strip()
             print(f"[{item['level']}] {item['check']}: {detail}".rstrip())
+            print(f"  Impact: {item['impact']}")
+            print(f"  Action: {item['action']}")
         print(
             f"Final project check {'passed' if not errors else 'failed'}: "
             f"{len(errors)} error(s), "

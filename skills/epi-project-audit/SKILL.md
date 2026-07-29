@@ -78,6 +78,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 ### TODO 清单
 
 - [ ] 目录结构符合七层规范（01_data / 02_code / 03_tables / 04_figures / 05_reports / 06_results / 07_paper / 09_backup）
+- [ ] `.epiagentkit-layout.json` 使用 declare-before-create 合同，全部活动目录和文件均有精确位置、owner、purpose、producer、consumer 与 lifecycle；无未声明路径
 - [ ] `01_data/rawdata/` 及额外声明的 raw roots 存在，`check-project` 未发现 Git 工作区修改；非 Git 数据另核来源与只读证据
 - [ ] `02_code/` 内阶段脚本按 `NN_描述.R|py` 编号且连续无断号；无来源不明的 `test.*`、`final.*`、`temp.*`
 - [ ] `02_code/` 编号脚本数 ≤ 10（config / conventions / lib / run_pipeline 与 vendored/ 不计）；探索 / 一次性脚本不在 `02_code/`（应在 `09_backup/`）
@@ -187,9 +188,9 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 
 | 关键数字 | results.yaml | 0_result_summaries.md | 03_tables/ | 04_figures/ | 07_paper/ | 一致？ |
 |---------|--------------|-----------------------|-----------|-------------|-----------|--------|
-| 样本量 N | 1234 | 1234 | Table1: 1234 | 不适用 | 摘要: 1234 | 一致 |
-| 主 HR | 1.45 | 1.45 | Table3: 1.45 | Fig2 forest: 1.45 | 摘要/讨论: 1.45 | 一致 |
-| P 值 | 0.004 | 0.004 | Table3: 0.004 | — | 摘要: 0.004 | 一致 |
+| 样本量 | `<source value>` | `<derived value>` | `<table location>` | 不适用或 `<figure location>` | `<text location>` | 一致/不一致 |
+| 主要效应 | `<source value>` | `<derived value>` | `<table location>` | `<figure location>` | `<text location>` | 一致/不一致 |
+| 统计检验 | `<source value>` | `<derived value>` | `<table location>` | 不适用或 `<figure location>` | `<text location>` | 一致/不一致 |
 
 任何一行不一致 → Layer 4 fail。
 
@@ -208,6 +209,7 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 - [ ] 敏感性分析覆盖了主要的口径假设
 - [ ] 探索实验完整登记而非只保留“最佳”结果；主线采用项达到预设晋级标准，未采用项未混入主 `results.yaml`
 - [ ] 适用的 STROBE、CONSORT、PRISMA、TRIPOD 或其他报告规范已识别并核对
+- [ ] 按 `academic-publishing/references/statistical-reporting.md` 双向核对目的、estimand、变量定义、缺失、模型、完整结果、表图、讨论和结论，不只抽查显著项
 
 ### 红线
 
@@ -245,6 +247,9 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 - [ ] 分享包的 `00_写作说明.md` / `01_方法与结果.docx` 与包内代码和表一致
 - [ ] 分享包如果面向客户 → 过 `consulting-delivery` 的 FINAL 终检清单（§八）
 - [ ] 旧版、废弃版本全部在 `09_backup/`
+- [ ] 正式投稿修订的 `revision-state.json` 已锁定唯一输入、用户纠正和范围；所有审稿意见状态为 `closed`，每项可追溯到证据、正文位置、change id 和真实回复
+- [ ] clean 与标注稿由同一修改记录派生，移除标注后可见文字、表格、图片、题注和顺序一致，且只标记本轮实际变化
+- [ ] 实际 Word 文件已运行 `docx/scripts/audit_docx.py`、范围外差异比较、结构验证、渲染、逐页视觉检查和重新打开；匿名投稿无作者属性、批注、修订或隐藏文字残留
 
 ### 红线
 
@@ -297,10 +302,10 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 ## Problems found（按严重度排序）
 
 ### Critical（必须修复）
-- [证据链断裂、数字不一致等 fail 级问题]
+- [规则、证据位置、影响和建议动作]
 
 ### Warning（建议修复）
-- [命名不规范、注释不足等 concerns]
+- [规则、证据位置、影响和建议动作]
 
 ### Fixed in this audit
 - [本次审查直接客观修复的小问题]
