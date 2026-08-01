@@ -456,6 +456,24 @@ def main() -> int:
             "test_single_source_title_must_match_the_query",
             "test_title_conflict_remains_unverified",
         ),
+        "skills/manuscript-peer-review/SKILL.md": (
+            "期刊保密投稿",
+            "reporting gap",
+            "没有原始数据时不得写",
+            "ethics/editor-only",
+            "references/report-template.md",
+        ),
+        "skills/manuscript-peer-review/references/review-criteria.md": (
+            "样本和分母",
+            "研究设计与偏倚",
+            "统计方法",
+            "语言、结构与参考文献",
+        ),
+        "skills/manuscript-peer-review/references/report-template.md": (
+            "Major comments",
+            "Coverage matrix",
+            "Reviewer limitations and disclosures",
+        ),
         "skills/project-init/scripts/init_project.R": (
             '"PROTOCOL.md"',
             '"SAP.md"',
@@ -565,6 +583,7 @@ def main() -> int:
             'layout == "both"',
             "Installation-time bundle closure only",
             '"evidence-research"',
+            '"manuscript-peer-review"',
             '"research-visuals"',
             '"project-init": {',
             '"epi-study-design"',
@@ -581,6 +600,8 @@ def main() -> int:
             "template_adaptive_presentation",
             "maintain_epiagentkit_contracts",
             "r_dependency_missing_no_language_switch",
+            "journal_manuscript_peer_review",
+            "manuscript_only_data_boundary",
         ),
         "skills/project-init/SKILL.md": (
             "已有项目分析不触发",

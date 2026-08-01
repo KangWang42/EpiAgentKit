@@ -75,6 +75,14 @@ CONFLICT_DOMAINS = {
         "verify sources",
     ),
     "git-commit-helper": ("commit message", "提交信息", "reviewing staged changes"),
+    "manuscript-peer-review": (
+        "论文同行评审",
+        "同行评审报告",
+        "期刊审稿",
+        "manuscript peer review",
+        "reviewer report",
+        "major/minor comments",
+    ),
     "pdf": ("pdf files", "pdf 文件", "pdf处理", "anything with pdf"),
     "pptx": (".pptx", "powerpoint 文件", "presentation file", "幻灯片文件处理"),
     "project-init": (

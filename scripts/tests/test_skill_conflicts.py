@@ -26,6 +26,27 @@ def write_skill(root: Path, name: str, description: str, body: str = "Instructio
 
 
 class SkillConflictTests(unittest.TestCase):
+    def test_manuscript_peer_review_overlap_is_detected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            local = root / "home/.agents/skills"
+            write_skill(
+                repo / "skills", "manuscript-peer-review", "authoritative review"
+            )
+            write_skill(local, "legacy-reviewer", "生成完整论文同行评审报告")
+
+            conflicts = scan_skill_conflicts(
+                platform="codex",
+                source_root=repo,
+                incoming={"manuscript-peer-review"},
+                discovery_roots=[local],
+                target_roots=[local],
+            )
+
+            self.assertEqual(len(conflicts), 1)
+            self.assertEqual(conflicts[0].authority, "manuscript-peer-review")
+
     def test_research_visual_overlap_is_detected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

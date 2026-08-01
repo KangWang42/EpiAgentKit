@@ -41,7 +41,23 @@
       "prompt": "根据结果数字唯一来源起草整篇论文并生成 Word 文件",
       "primary": "academic-publishing",
       "companions": ["academic-humanizer", "docx"],
-      "excluded": []
+      "excluded": ["manuscript-peer-review"]
+    },
+    {
+      "id": "journal_manuscript_peer_review",
+      "prompt": "请以期刊同行评审人身份审查这篇 PDF 投稿，先核对保密和 AI 使用政策，再从数据、方法、统计、论断、报告规范和语言生成完整 reviewer report",
+      "primary": "manuscript-peer-review",
+      "companions": ["biostat-principles", "pdf", "academic-humanizer"],
+      "excluded": ["academic-publishing", "epi-project-audit", "report-writing"],
+      "expected_action": "gate_confidentiality_map_evidence_and_write_traceable_report"
+    },
+    {
+      "id": "manuscript_only_data_boundary",
+      "prompt": "目前只有论文正文，没有原始数据或代码；请审查数据一致性、研究设计、统计和语言并出完整报告，但不要声称已经验证数据真实性或复现结果",
+      "primary": "manuscript-peer-review",
+      "companions": ["biostat-principles", "academic-humanizer"],
+      "excluded": ["epi-project-audit", "r-biostats", "python-biostats"],
+      "expected_action": "limit_data_claims_to_manuscript_internal_checks"
     },
     {
       "id": "existing_paragraph_polish",
@@ -71,7 +87,7 @@
       "prompt": "根据已验证结果和现有稿件，重新组织整篇论文的章节结构并输出新的 Word 投稿稿",
       "primary": "academic-publishing",
       "companions": ["academic-humanizer", "docx"],
-      "excluded": [],
+      "excluded": ["manuscript-peer-review"],
       "expected_action": "run_structural_rewrite_workflow"
     },
     {
@@ -79,7 +95,7 @@
       "prompt": "逐条处理并核验审稿意见，同步生成 response、clean Word 和带修订 Word，并核验每条意见的修改证据",
       "primary": "academic-publishing",
       "companions": ["academic-humanizer", "docx"],
-      "excluded": [],
+      "excluded": ["manuscript-peer-review"],
       "expected_action": "close_each_comment_across_same_source_deliverables"
     },
     {
@@ -224,7 +240,7 @@
       "prompt": "全面检查这个流行病学项目的数据链、代码、结果、表图和论文是否一致，只审查不修复",
       "primary": "epi-project-audit",
       "companions": ["biostat-principles"],
-      "excluded": ["project-init", "consulting-delivery"]
+      "excluded": ["project-init", "consulting-delivery", "manuscript-peer-review"]
     },
     {
       "id": "extract_scanned_pdf_tables",

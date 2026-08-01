@@ -5,10 +5,10 @@
 ## 1. 任务模式与最短分流
 
 - 开工先读取当前工作区适用的规则；正式项目再读 `BACKLOG.md`。保留来源不明的既有改动，只修改本请求范围；多个候选当前版无法判定时先问用户。
-- 用户明确说简单作业、单次处理、快速核验或只要一个小结果，且当前工作区不是既有标准研究项目时，按轻量任务执行：只调用必要 skill、读写必要文件并做与风险相称的验证；不得自动初始化项目或补建七层目录、registry、`results.yaml`、`BACKLOG.md`、`DECISIONS.md`、`SESSION_LOG.md`。
-- 用户明确要求新建或初始化研究项目、投稿或咨询交付，或工作区已有项目级 `CLAUDE.md`、`01_data/`、`02_code/` 等标准骨架时，按正式项目执行。触发领域 skill 不等于自动升级为正式项目；边界不清且会显著改变文件布局时先问用户。
-- 流行病学与生物统计分析以 R 为主要语言。优先沿用现有项目主流程；用户未指定且项目没有既定分析语言时直接使用 R，不追问是否改用 Python。
-- Python 不是标准研究工作流的前置条件。只有用户明确选择 Python 或既有项目以 Python 为主流程时才调用 `python-biostats`；R 运行时缺失时报告影响，普通 R 包缺失时先按依赖规则补齐，不自动改用 Python，也不要求迁移可工作的 R 主流程。
+- 用户明确为简单作业、单次处理、快速核验或小结果，且当前不是标准研究项目时走轻量通道：只用必要 skill 和文件，按风险验证；不得自动初始化项目或补建七层目录、registry、`results.yaml` 及项目账本。
+- 用户明确要求初始化研究项目、投稿或咨询交付，或工作区已有项目级 `CLAUDE.md`、`01_data/`、`02_code/` 等标准骨架时走正式项目。触发领域 skill 不自动升级；若会显著改变布局且边界不清，先问用户。
+- 流行病学与生物统计分析以 R 为主要语言。沿用现有主流程；用户未指定且项目没有既定分析语言时直接使用 R。
+- Python 不是标准研究工作流的前置条件。仅在用户明确选择或既有项目以 Python 为主流程时调用 `python-biostats`；R 运行时缺失时报告影响，普通 R 包缺失时先按依赖规则补齐，不自动切换语言，也不要求迁移可工作的 R 主流程。
 
 | 日常任务 | 主流程 | 伴随或边界 |
 | --- | --- | --- |
@@ -19,6 +19,7 @@
 | 统计图或其他数据结果图 | `biostat-principles` → `publication-figures` | 流程、机制和框架图不走此路径 |
 | 非统计视觉、流程、框架、机制或图形摘要 | `research-visuals` → `imagegen` | 只按该 skill 的条件转 `svg-diagrams` |
 | 从零论文、论文部件、投稿材料或结构性重写 | `biostat-principles` → `academic-publishing` | `academic-humanizer` 终审；Word 操作加 `docx` |
+| 论文同行评审 | `biostat-principles` → `manuscript-peer-review` | 核验加 `evidence-research`；Word/PDF 加载体 skill |
 | 已有学术文本的编辑、润色或压缩 | `academic-humanizer` | Word 操作加 `docx` |
 | 报告正文或报告文件 | `report-writing` → `academic-humanizer` | Word 操作加 `docx` |
 | PPT 或演示文件 | 先判模板来源，再用 `pptx` | 仅明确中山大学时用 `sysu-ppt`；已有文件不重复问模板来源 |

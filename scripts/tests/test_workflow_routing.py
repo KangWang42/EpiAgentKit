@@ -18,6 +18,7 @@ from config_core import (
     SKILL_MANIFEST,
     SYNC_EXCLUDES,
     available_skills,
+    expand_dependencies,
     local_skill_excludes,
 )
 from sync_user_configs import source_skills, sync_skills
@@ -145,6 +146,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "publication-figures",
             "research-visuals",
             "academic-publishing",
+            "manuscript-peer-review",
             "academic-humanizer",
             "report-writing",
             "pptx",
@@ -363,6 +365,61 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertEqual(
             cases["ambiguous_current_manuscript"]["expected_action"],
             "stop_and_request_unique_input_selection",
+        )
+        self.assertIn(
+            "manuscript-peer-review",
+            cases["reviewer_response_closure"]["excluded"],
+        )
+
+    def test_peer_review_is_evidence_traced_and_separate_from_author_revision(self) -> None:
+        skill = (ROOT / "skills/manuscript-peer-review/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        criteria = (
+            ROOT / "skills/manuscript-peer-review/references/review-criteria.md"
+        ).read_text(encoding="utf-8")
+        report = (
+            ROOT / "skills/manuscript-peer-review/references/report-template.md"
+        ).read_text(encoding="utf-8")
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+
+        for fragment in (
+            "期刊保密投稿",
+            "reporting gap",
+            "没有原始数据时不得写",
+            "ethics/editor-only",
+            "不用于替编辑作最终录用决定",
+        ):
+            self.assertIn(fragment, skill)
+        for fragment in ("样本和分母", "研究设计与偏倚", "统计方法", "语言、结构与参考文献"):
+            self.assertIn(fragment, criteria)
+        for fragment in ("Major comments", "Coverage matrix", "Reviewer limitations and disclosures"):
+            self.assertIn(fragment, report)
+        self.assertEqual(
+            cases["journal_manuscript_peer_review"]["primary"],
+            "manuscript-peer-review",
+        )
+        self.assertEqual(
+            cases["manuscript_only_data_boundary"]["expected_action"],
+            "limit_data_claims_to_manuscript_internal_checks",
+        )
+        self.assertIn(
+            "manuscript-peer-review", cases["full_project_audit"]["excluded"]
+        )
+        self.assertTrue(
+            {
+                "manuscript-peer-review",
+                "biostat-principles",
+                "evidence-research",
+                "academic-humanizer",
+            }.issubset(expand_dependencies({"manuscript-peer-review"}))
         )
 
     def test_analysis_agent_reports_anomalies_as_monitor(self) -> None:
