@@ -75,6 +75,22 @@
       "expected_action": "lock_exact_scope_and_derive_clean_marked_from_one_record"
     },
     {
+      "id": "single_revision_question_answer_only",
+      "prompt": "这条审稿意见应该怎么回复？先只回答这一条，不创建文档",
+      "primary": "academic-humanizer",
+      "companions": [],
+      "excluded": ["academic-publishing", "docx", "epi-project-audit"],
+      "expected_action": "answer_current_issue_without_creating_files"
+    },
+    {
+      "id": "formal_project_local_word_revision",
+      "prompt": "在这个正式项目里只改当前 Word 稿的两个引用序号，保留原件，其他地方不要改也不要做整项目审计",
+      "primary": "academic-humanizer",
+      "companions": ["docx"],
+      "excluded": ["academic-publishing", "epi-project-audit"],
+      "expected_action": "validate_single_artifact_without_project_audit_or_new_state"
+    },
+    {
       "id": "existing_word_format_only_repair",
       "prompt": "只修复现有 Word 稿件的页边距和表格边框，不得改动任何可见文字或数据",
       "primary": "docx",

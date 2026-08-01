@@ -2,6 +2,7 @@
 name: epi-project-audit
 description: |
   六层审查流行病学与生物统计项目的数据链、代码、结果、表图、正文和交付一致性，并以证据判定是否可正式交付。用于项目质控、结果复核、审稿前自查或全面一致性检查；只审查时不修改文件。上游为 biostat-principles，含咨询包时同时核对 consulting-delivery。
+  单个 Word、表格、图片、PDF 或一段文字的局部修改与载体验证使用对应内容和文件 skill，不触发本技能。
 ---
 
 # Epi Project Audit（6 层审查）
@@ -27,9 +28,9 @@ description: |
 
 **缺失关键文件就已经是扣分项**，要写入"Problems found"。
 
-### 1.1bis 确定性预检（强制）
+### 1.1bis 正式项目预检
 
-在进入六层人工审查前运行：
+在全项目审查或正式发布判定前运行：
 
 ```bash
 python <本技能目录>/scripts/run_check_project.py <项目根> --json
@@ -41,7 +42,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 ### 1.2 确定范围
 
-用户未限制范围时直接执行六层全量审查，不为默认选择暂停。用户明确指定代码、结果、论文、交付物或某个路径时只审该范围，并在 verdict 中写明未覆盖层。
+用户未限制范围时直接执行六层全量审查，不为默认选择暂停。用户明确要求审查项目证据链中的某一层时只审该层，并在 verdict 中写明未覆盖层。若请求只是验证一个 Word、表格、图片、PDF 或局部文本修改，转对应内容与载体 skill，只报告与该产物有关的问题，不运行 `run_check_project.py`，也不输出历史目录、旧代码或其他无关警告；这种局部验证不能作为正式项目 sign-off。
 
 ---
 
@@ -78,7 +79,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 ### TODO 清单
 
 - [ ] 目录结构符合七层规范（01_data / 02_code / 03_tables / 04_figures / 05_reports / 06_results / 07_paper / 09_backup）
-- [ ] `.epiagentkit-layout.json` 使用 declare-before-create 要求，全部活动目录和文件均有精确位置、owner、purpose、producer、consumer 与 lifecycle；无未声明路径
+- [ ] `.epiagentkit-layout.json` 使用 declare-before-create 要求，全部活动目录和正式产物均有精确位置、owner、purpose、producer、consumer 与 lifecycle；workbench 只登记基础目录，批次内部不逐文件登记
 - [ ] `01_data/rawdata/` 及额外声明的 raw roots 存在，`check-project` 未发现 Git 工作区修改；非 Git 数据另核来源与只读证据
 - [ ] `02_code/` 内阶段脚本按 `NN_描述.R|py` 编号且连续无断号；无来源不明的 `test.*`、`final.*`、`temp.*`
 - [ ] `02_code/` 编号脚本数 ≤ 10（config / conventions / lib / run_pipeline 与 vendored/ 不计）；探索 / 一次性脚本不在 `02_code/`（应在 `09_backup/`）
@@ -247,7 +248,7 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 - [ ] 分享包的 `00_写作说明.md` / `01_方法与结果.docx` 与包内代码和表一致
 - [ ] 分享包如果面向客户 → 过 `consulting-delivery` 的 FINAL 终检清单（§八）
 - [ ] 旧版、废弃版本全部在 `09_backup/`
-- [ ] 正式投稿修订的 `revision-state.json` 已锁定唯一输入、用户纠正和范围；所有审稿意见状态为 `closed`，每项可追溯到证据、正文位置、change id 和真实回复
+- [ ] 需要跨轮次、多交付物或正式 sign-off 的投稿修订已有唯一 `revision-state.json`，并锁定输入、用户纠正和范围；所有审稿意见状态为 `closed`，每项可追溯到证据、正文位置、change id 和真实回复
 - [ ] clean 与标注稿由同一修改记录派生，移除标注后可见文字、表格、图片、题注和顺序一致，且只标记本轮实际变化
 - [ ] 实际 Word 文件已运行 `docx/scripts/audit_docx.py`、范围外差异比较、结构验证、渲染、逐页视觉检查和重新打开；匿名投稿无作者属性、批注、修订或隐藏文字残留
 
@@ -360,6 +361,7 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 | 时机 | 建议审查范围 |
 |------|------------|
 | 每次完成一个主分析 | Layer 3 + Layer 4 |
+| 单个文件或局部文字修改 | 不使用本技能；按内容与载体 skill 做范围内验证 |
 | 提交给导师 / 合作方 | 全量 6 层 |
 | 投稿前 | 全量 + 特别关注 Layer 5（结论标定） |
 | 咨询交付前 | 全量 + 过 `consulting-delivery` 终检 |

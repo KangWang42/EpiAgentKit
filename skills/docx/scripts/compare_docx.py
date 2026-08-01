@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import json
 import re
@@ -15,9 +16,11 @@ from lxml import etree
 
 
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-NS = {"w": W_NS, "r": R_NS}
+NS = {"w": W_NS, "w14": W14_NS, "r": R_NS}
 W = f"{{{W_NS}}}"
+W14 = f"{{{W14_NS}}}"
 VOLATILE_ATTR = re.compile(r"(?:^|\})rsid|(?:^|\})paraId|(?:^|\})textId", re.IGNORECASE)
 STABLE_PARTS = (
     "word/styles.xml",
@@ -114,10 +117,13 @@ def media_hashes(parts: dict[str, bytes]) -> dict[str, str]:
     }
 
 
-def allow_set(values: list[str]) -> set[str]:
+def allow_set(values: list[str], *, insertion: bool = False) -> set[str]:
     allowed: set[str] = set()
-    patterns = (
+    paragraph_patterns = (
         re.compile(r"paragraph:\d+$"),
+        re.compile(r"paragraph-id:[0-9A-Fa-f]{8}$"),
+    )
+    patterns = paragraph_patterns if insertion else (*paragraph_patterns,
         re.compile(r"table:\d+$"),
         re.compile(r"table-cell:\d+:\d+:\d+$"),
     )
@@ -128,39 +134,171 @@ def allow_set(values: list[str]) -> set[str]:
     return allowed
 
 
+def paragraph_id(paragraph: etree._Element) -> str | None:
+    value = paragraph.get(f"{W14}paraId")
+    return value.upper() if value and re.fullmatch(r"[0-9A-Fa-f]{8}", value) else None
+
+
+def paragraph_locators(index: int, paragraph: etree._Element) -> set[str]:
+    locators = {f"paragraph:{index}"}
+    if value := paragraph_id(paragraph):
+        locators.add(f"paragraph-id:{value}")
+    return locators
+
+
+def paragraph_token(paragraph: etree._Element) -> str:
+    if value := paragraph_id(paragraph):
+        return f"id:{value}"
+    return f"xml:{hashlib.sha256(normalize_xml(paragraph)).hexdigest()}"
+
+
+def paragraph_authorized(index: int, paragraph: etree._Element, allowed: set[str]) -> bool:
+    return bool(paragraph_locators(index, paragraph) & allowed)
+
+
+def compare_paragraph_pair(
+    before: etree._Element,
+    after: etree._Element,
+    original_index: int,
+    allowed: set[str],
+    findings: list[dict[str, str]],
+) -> None:
+    if paragraph_authorized(original_index, before, allowed):
+        return
+    if normalize_xml(before) != normalize_xml(after):
+        findings.append(
+            finding(
+                "ERROR",
+                "scope.paragraph_changed",
+                f"paragraph:{original_index}",
+                "Text or formatting changed outside the authorized revision scope.",
+                "Restore this paragraph or add its exact locator to the approved scope.",
+            )
+        )
+
+
+def compare_body_paragraphs(
+    original: list[etree._Element],
+    revised: list[etree._Element],
+    allowed: set[str],
+    insert_after: set[str],
+) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    valid_anchors = {
+        locator
+        for index, paragraph in enumerate(original)
+        for locator in paragraph_locators(index, paragraph)
+    }
+    for locator in sorted(insert_after - valid_anchors):
+        findings.append(
+            finding(
+                "ERROR",
+                "scope.insertion_anchor_missing",
+                locator,
+                "The authorized insertion anchor does not exist in the original document.",
+                "Correct the anchor locator before accepting any inserted paragraph.",
+            )
+        )
+
+    matcher = difflib.SequenceMatcher(
+        a=[paragraph_token(item) for item in original],
+        b=[paragraph_token(item) for item in revised],
+        autojunk=False,
+    )
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for offset in range(i2 - i1):
+                compare_paragraph_pair(
+                    original[i1 + offset],
+                    revised[j1 + offset],
+                    i1 + offset,
+                    allowed,
+                    findings,
+                )
+            continue
+        if tag == "insert":
+            anchor_index = i1 - 1
+            anchor_allowed = anchor_index >= 0 and bool(
+                paragraph_locators(anchor_index, original[anchor_index]) & insert_after
+            )
+            if not anchor_allowed:
+                findings.append(
+                    finding(
+                        "ERROR",
+                        "scope.paragraph_inserted",
+                        f"after paragraph:{anchor_index}" if anchor_index >= 0 else "before paragraph:0",
+                        f"{j2 - j1} paragraph(s) were inserted outside the authorized revision scope.",
+                        "Restore the original structure or authorize the exact insertion anchor.",
+                    )
+                )
+            continue
+        if tag == "replace" and (i2 - i1) == (j2 - j1):
+            for offset in range(i2 - i1):
+                compare_paragraph_pair(
+                    original[i1 + offset],
+                    revised[j1 + offset],
+                    i1 + offset,
+                    allowed,
+                    findings,
+                )
+            continue
+        if tag == "replace" and 0 < (i2 - i1) < (j2 - j1):
+            original_count = i2 - i1
+            leading_anchor = i1 - 1
+            leading_allowed = leading_anchor >= 0 and bool(
+                paragraph_locators(leading_anchor, original[leading_anchor]) & insert_after
+            )
+            trailing_anchor = i2 - 1
+            trailing_allowed = bool(
+                paragraph_locators(trailing_anchor, original[trailing_anchor]) & insert_after
+            )
+            if leading_allowed:
+                revised_start = j2 - original_count
+            elif trailing_allowed:
+                revised_start = j1
+            else:
+                revised_start = -1
+            if revised_start >= 0:
+                for offset in range(original_count):
+                    compare_paragraph_pair(
+                        original[i1 + offset],
+                        revised[revised_start + offset],
+                        i1 + offset,
+                        allowed,
+                        findings,
+                    )
+                continue
+        findings.append(
+            finding(
+                "ERROR",
+                "scope.paragraph_structure",
+                f"original[{i1}:{i2}]->revised[{j1}:{j2}]",
+                "Paragraph deletion or a mixed replacement-and-insertion changed the document structure.",
+                "Use stable paraId locators, narrow the change, or restore the original paragraph structure.",
+            )
+        )
+    return findings
+
+
 def compare_scope(
     original_parts: dict[str, bytes],
     revised_parts: dict[str, bytes],
     allowed: set[str],
+    insert_after: set[str] | None = None,
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     original_root = parse_document(original_parts)
     revised_root = parse_document(revised_parts)
     original_paragraphs = body_paragraphs(original_root)
     revised_paragraphs = body_paragraphs(revised_root)
-    if len(original_paragraphs) != len(revised_paragraphs):
-        findings.append(
-            finding(
-                "ERROR",
-                "scope.paragraph_count",
-                f"{len(original_paragraphs)}->{len(revised_paragraphs)}",
-                "Paragraph insertion or deletion changed the document structure.",
-                "Authorize the structural change explicitly or restore the original paragraph structure.",
-            )
+    findings.extend(
+        compare_body_paragraphs(
+            original_paragraphs,
+            revised_paragraphs,
+            allowed,
+            insert_after or set(),
         )
-    for index, (before, after) in enumerate(zip(original_paragraphs, revised_paragraphs)):
-        if f"paragraph:{index}" in allowed:
-            continue
-        if normalize_xml(before) != normalize_xml(after):
-            findings.append(
-                finding(
-                    "ERROR",
-                    "scope.paragraph_changed",
-                    f"paragraph:{index}",
-                    "Text or formatting changed outside the authorized revision scope.",
-                    "Restore this paragraph or add its exact locator to the approved scope.",
-                )
-            )
+    )
 
     original_tables = body_tables(original_root)
     revised_tables = body_tables(revised_root)
@@ -314,6 +452,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("revised", type=Path)
     parser.add_argument("--mode", choices=("scope", "equivalence"), default="scope")
     parser.add_argument("--allow", action="append", default=[])
+    parser.add_argument("--allow-insert-after", action="append", default=[])
     parser.add_argument("--json", action="store_true", dest="as_json")
     return parser.parse_args()
 
@@ -324,10 +463,15 @@ def main() -> int:
         original_parts = read_zip(args.original)
         revised_parts = read_zip(args.revised)
         if args.mode == "scope":
-            findings = compare_scope(original_parts, revised_parts, allow_set(args.allow))
+            findings = compare_scope(
+                original_parts,
+                revised_parts,
+                allow_set(args.allow),
+                allow_set(args.allow_insert_after, insertion=True),
+            )
         else:
-            if args.allow:
-                raise ValueError("--allow is only valid in scope mode")
+            if args.allow or args.allow_insert_after:
+                raise ValueError("--allow and --allow-insert-after are only valid in scope mode")
             findings = compare_equivalence(original_parts, revised_parts)
     except (OSError, ValueError, etree.XMLSyntaxError) as error:
         findings = [

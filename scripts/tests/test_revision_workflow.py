@@ -11,6 +11,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 from xml.sax.saxutils import escape
 
 
@@ -53,6 +54,10 @@ FINAL_CHECK = load_module(
     "final_project_check",
     ROOT / "hooks/final_project_check.py",
 )
+SOFFICE = load_module(
+    "soffice_helper",
+    ROOT / "skills/docx/scripts/office/soffice.py",
+)
 
 
 CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -65,8 +70,9 @@ CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 """
 
 
-def paragraph(text: str) -> str:
-    return f"<w:p><w:r><w:t>{escape(text)}</w:t></w:r></w:p>"
+def paragraph(text: str, para_id: str | None = None) -> str:
+    identifier = f' w14:paraId="{para_id}"' if para_id else ""
+    return f"<w:p{identifier}><w:r><w:t>{escape(text)}</w:t></w:r></w:p>"
 
 
 def make_docx(
@@ -83,7 +89,8 @@ def make_docx(
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
- xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+ xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+ xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml">
   <w:body>{body}<w:sectPr/></w:body>
 </w:document>
 """
@@ -170,6 +177,20 @@ def layout_entry(path: str, kind: str) -> dict[str, str]:
 
 
 class RevisionWorkflowTests(unittest.TestCase):
+    def test_soffice_shim_is_never_probed_on_windows(self) -> None:
+        with mock.patch.object(SOFFICE.sys, "platform", "win32"), mock.patch.object(
+            SOFFICE.socket,
+            "socket",
+            side_effect=AssertionError("AF_UNIX must not be probed on Windows"),
+        ):
+            self.assertFalse(SOFFICE._needs_shim())
+        copies = [
+            ROOT / "skills/docx/scripts/office/soffice.py",
+            ROOT / "skills/pptx/scripts/office/soffice.py",
+            ROOT / "skills/xlsx/scripts/office/soffice.py",
+        ]
+        self.assertEqual(len({path.read_bytes() for path in copies}), 1)
+
     def test_clean_and_marked_docx_are_derived_from_one_exact_record(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
@@ -262,6 +283,56 @@ class RevisionWorkflowTests(unittest.TestCase):
             self.assertIn("scope.paragraph_changed", rules)
             self.assertIn("scope.package_part_changed", rules)
 
+    def test_scope_comparison_allows_only_explicit_paragraph_insertions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            original = base / "original.docx"
+            inserted = base / "inserted.docx"
+            changed = base / "changed.docx"
+            make_docx(original, ["Anchor.", "Protected."])
+            make_docx(inserted, ["Anchor.", "Reference A.", "Reference B.", "Protected."])
+            make_docx(changed, ["Anchor.", "Reference A.", "Protected changed."])
+
+            unauthorized = COMPARE_DOCX.compare_scope(
+                COMPARE_DOCX.read_zip(original),
+                COMPARE_DOCX.read_zip(inserted),
+                set(),
+            )
+            self.assertIn("scope.paragraph_inserted", {item["rule"] for item in unauthorized})
+
+            authorized = COMPARE_DOCX.compare_scope(
+                COMPARE_DOCX.read_zip(original),
+                COMPARE_DOCX.read_zip(inserted),
+                set(),
+                {"paragraph:0"},
+            )
+            self.assertEqual(authorized, [])
+
+            protected = COMPARE_DOCX.compare_scope(
+                COMPARE_DOCX.read_zip(original),
+                COMPARE_DOCX.read_zip(changed),
+                set(),
+                {"paragraph:0"},
+            )
+            self.assertIn("scope.paragraph_changed", {item["rule"] for item in protected})
+
+    def test_revision_locator_prefers_stable_paragraph_id(self) -> None:
+        document = f'''<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+ xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"><w:body>
+ {paragraph("First.", "00A1B2C3")}{paragraph("Second.", "00D4E5F6")}<w:sectPr/>
+ </w:body></w:document>'''
+        root = REVISE_DOCX.etree.fromstring(document.encode("utf-8"))
+        selected = REVISE_DOCX.locate_paragraph(
+            root,
+            {"kind": "paragraph", "para_id": "00d4e5f6", "index": 1},
+        )
+        self.assertEqual(REVISE_DOCX.visible_text(selected), "Second.")
+        with self.assertRaisesRegex(REVISE_DOCX.RevisionError, "different targets"):
+            REVISE_DOCX.locate_paragraph(
+                root,
+                {"kind": "paragraph", "para_id": "00D4E5F6", "index": 0},
+            )
+
     def test_revision_records_reject_silent_locked_decision_changes(self) -> None:
         previous = {
             "locked_decisions": {
@@ -289,6 +360,22 @@ class RevisionWorkflowTests(unittest.TestCase):
         ]
         findings = REVISION_STATE.validate_state(open_review, signoff=True)
         self.assertIn("review.unclosed", {item["rule"] for item in findings})
+
+    def test_revision_state_persists_interaction_contract_without_extra_files(self) -> None:
+        previous = valid_state()
+        previous["interaction_contract"] = {
+            "answer_only": True,
+            "create_document": False,
+            "one_issue_at_a_time": True,
+            "response_style": "direct",
+            "highlight_policy": "specified_items_only",
+        }
+        current = valid_state()
+        current["interaction_contract"] = dict(previous["interaction_contract"])
+        current["interaction_contract"]["create_document"] = True
+        findings = REVISION_STATE.validate_state(current, previous)
+        self.assertIn("interaction.silent_change", {item["rule"] for item in findings})
+        self.assertIn("interaction.conflict", {item["rule"] for item in findings})
 
     def test_docx_audit_checks_bookmarks_anonymity_and_raster_dpi(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -482,6 +569,21 @@ class RevisionWorkflowTests(unittest.TestCase):
             )
             self.assertIn(
                 "layout.path_undeclared", {item["check"] for item in findings}
+            )
+
+            manifest["entries"].append(
+                layout_entry("09_backup/workbench/old_batch/missing.log", "file")
+            )
+            (project / ".epiagentkit-layout.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            findings = []
+            FINAL_CHECK.layout_check(
+                project, [], FINAL_CHECK.DEFAULT_CONTRACT, findings
+            )
+            self.assertNotIn(
+                "09_backup/workbench/old_batch/missing.log",
+                {item.get("path") for item in findings},
             )
 
             manifest["entries"].append(layout_entry("../outside", "file"))

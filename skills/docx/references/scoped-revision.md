@@ -4,7 +4,7 @@ Use this reference when an existing DOCX is edited, repaired, reviewed, or used 
 
 ## Revision record
 
-For exact text changes in ordinary body paragraphs or table-cell paragraphs, create one UTF-8 JSON revision record. Each change needs a stable `id`, an exact locator, `old`, and `new`:
+For exact text changes in ordinary body paragraphs or table-cell paragraphs, use one UTF-8 JSON revision record only as deterministic tool input. Keep it in the task workbench unless it belongs to an already-required formal revision state; it is not a separate project ledger or deliverable. Each change needs a stable `id`, an exact locator, `old`, and `new`:
 
 ```json
 {
@@ -13,7 +13,7 @@ For exact text changes in ordinary body paragraphs or table-cell paragraphs, cre
   "changes": [
     {
       "id": "change-1",
-      "locator": {"kind": "paragraph", "index": 0},
+      "locator": {"kind": "paragraph", "para_id": "00A1B2C3", "index": 0},
       "old": "<exact existing text>",
       "new": "<verified replacement>"
     }
@@ -21,7 +21,7 @@ For exact text changes in ordinary body paragraphs or table-cell paragraphs, cre
 }
 ```
 
-Use `table-cell-paragraph` with zero-based `table`, `row`, `cell`, and `paragraph` indices for a table target. Carry `locked_decisions` forward and pass `--previous-record` on later rounds; changing a locked value requires a traceable `supersedes` entry.
+Use stable `w14:paraId` when present; an accompanying zero-based body `index` verifies that the intended paragraph has not drifted. If no paraId exists, use the index. Use `table-cell-paragraph` with zero-based `table`, `row`, `cell`, and `paragraph` indices for a table target. Carry `locked_decisions` forward only across formal rounds and pass `--previous-record`; changing a locked value requires a traceable `supersedes` entry.
 
 ## Same-source derivation
 
@@ -33,11 +33,13 @@ python scripts/revise_docx.py input.docx revision-record.json \
   --author Reviewer --highlight yellow --json
 python scripts/compare_docx.py input.docx manuscript.docx \
   --mode scope --allow paragraph:0 --json
+python scripts/compare_docx.py input.docx manuscript.docx \
+  --mode scope --allow-insert-after paragraph:12 --json
 python scripts/compare_docx.py manuscript.docx manuscript_marked.docx \
   --mode equivalence --json
 ```
 
-The revision script refuses to overwrite outputs, requires a unique target in a simple Word run, preserves source run formatting, and derives clean and tracked files from the same change list. The scope comparison treats all unlisted paragraphs, table cells, embedded media, global styles, numbering, settings, theme, and section layout as protected. Use `--allow table:N` only when the complete table is authorized, or `--allow table-cell:T:R:C` for a cell. A successful equivalence comparison proves final visible content and structure match; it does not replace rendering.
+The revision script refuses to overwrite outputs, requires a unique target in a simple Word run, preserves source run formatting, copies unchanged package parts from the source, and derives clean and tracked files from the same change list. The scope comparison treats all unlisted paragraphs, table cells, embedded media, global styles, numbering, settings, theme, and section layout as protected. Use `--allow table:N` only when the complete table is authorized, `--allow table-cell:T:R:C` for a cell, and `--allow-insert-after paragraph:N` only for a contiguous block inserted after that original body paragraph. A successful equivalence comparison proves final visible content and structure match; it does not replace rendering.
 
 ## Advanced OOXML boundary
 
@@ -63,7 +65,7 @@ Run every applicable layer; a file opening successfully is not sufficient.
 
    Anonymous submission mode treats tracked changes, comments, hidden text, and populated creator properties as blocking errors. The audit reports rule, evidence location, impact, and action. Static table, symbol, caption, and field findings remain inputs to visual review, not substitutes for it.
 4. Extract body and table text and reconcile it with the revision record, facts, references, captions, and expected table/figure order.
-5. Render the final file to PDF and page images using the existing LibreOffice and Poppler tools. Inspect every page at actual delivery size for pagination, table borders and continuation, alignment, fonts, statistical italics and super/subscripts, captions, cross-references, images, axes, legends, and clipping. Reopen the DOCX after rendering.
+5. Render the final file to PDF and page images using the existing LibreOffice and Poppler tools when available. Inspect every page at actual delivery size for pagination, table borders and continuation, alignment, fonts, statistical italics and super/subscripts, captions, cross-references, images, axes, legends, and clipping. If rendering is unavailable or times out, finish structural and reopen checks, disclose that pagination was not visually verified, and do not terminate any pre-existing user Word process.
 6. Keep unpacked XML, PDFs, page images, and test copies in the isolated directory. Remove it only after securing final files and validation evidence.
 
 For tables, inspect structure, header hierarchy, borders, alignment, widths, pagination, notes, and content consistency together. For images, preserve verified statistical and source imagery, prefer vector input where supported, and judge label readability at actual displayed size. Never replace scientific result images with generated approximations.

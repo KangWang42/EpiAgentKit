@@ -116,8 +116,8 @@ init_project(
 
 `git = TRUE` 必须对应用户本轮的明确选择。脚本先用 `Sys.which("git")` 检测；未找到 Git 时继续创建项目并明确报告跳过，不执行安装。
 
-初始化器会把实际骨架逐项写入 `.epiagentkit-layout.json`。之后任何新目录或文件都要在创建前追加精确相对路径、类型、owner、purpose、producer、consumer 和 lifecycle；
-表图同时先登记 registry。`check-project` 把活动区内未声明路径判为 ERROR，旧项目缺清单时先给 WARN，不自动整理或补建。
+初始化器会把实际骨架逐项写入 `.epiagentkit-layout.json`。之后新的活动目录和正式产物在创建前追加精确相对路径、类型、owner、purpose、producer、consumer 和 lifecycle；
+`09_backup/workbench/` 只登记基础目录，批次内部文件不逐项登记。表图同时先登记 registry。`check-project` 把活动区内未声明路径判为 ERROR，旧项目缺清单时先给 WARN，不自动整理或补建。
 
 ---
 

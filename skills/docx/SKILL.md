@@ -293,12 +293,11 @@ sections: [{
 
 ## Editing Existing Documents
 
-Use the active content skill to decide whether the request is a local content revision, structural rewrite, format-only repair, final review, or reviewer-response closure. For academic texts, load
-`../academic-humanizer/references/revision-workflow.md` and lock the unique input, allowed and forbidden scope, facts, user corrections, and target deliverables before touching the package.
+Use the active content skill to decide whether the request is a local content revision, structural rewrite, format-only repair, final review, or reviewer-response closure. For academic texts, load `../academic-humanizer/references/revision-workflow.md` and lock the unique input, allowed and forbidden scope, facts, user corrections, and target output before touching the package. An answer-only request creates no file. A single local DOCX change does not require a project `revision-state.json`, clean/marked/response set, archive sweep, or full-project audit; use those only when the revision workflow actually requires them.
 
 Read `references/scoped-revision.md` completely for the revision-record schema, deterministic clean/marked derivation, scope comparison, anonymity audit, rendering, and final validation. Separate content changes from format changes and validate them independently. Do not use fuzzy full-document replacement. If an exact target is absent, repeated, inside a field or drawing, or spans incompatible run structure, stop and report candidate locations.
 
-Use `scripts/revise_docx.py` first for exact text changes in ordinary body or table-cell paragraphs, then use `scripts/compare_docx.py` for authorized-scope and clean/marked visible-equivalence checks. Use `scripts/audit_docx.py` before delivery. Carry locked decisions across rounds; changing one requires an explicit superseding record.
+Use `scripts/revise_docx.py` first for exact text changes in ordinary body or table-cell paragraphs. It copies every unchanged ZIP part from the source package and replaces only `word/document.xml`, so do not add a second unpack-and-repack helper for ordinary scoped edits. Prefer a stable `w14:paraId` locator when available and retain an index only as a cross-check. Then use `scripts/compare_docx.py` for authorized-scope and clean/marked visible-equivalence checks; explicitly authorize limited paragraph insertion with `--allow-insert-after`. Use `scripts/audit_docx.py` before delivery. Carry locked decisions across formal rounds; changing one requires an explicit superseding record.
 
 ### Advanced OOXML editing
 
@@ -360,7 +359,7 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
 
 Follow every applicable layer in `references/scoped-revision.md`: package validation, authorized-scope comparison, clean/marked equivalence, structural and anonymity audit, content reconciliation, render and page inspection, then reopen the final DOCX. A file opening successfully is not sufficient. Keep intermediate XML, renderings, and test copies outside the active delivery directory.
 
----
+Use LibreOffice rendering when the executable is available. If rendering is unavailable or times out, complete package, scope, content, structure and reopen checks, state explicitly that visual pagination was not verified, and do not launch or terminate an existing user Word process. Do not claim a structural-only check is equivalent to page inspection.
 
 ## XML Reference
 

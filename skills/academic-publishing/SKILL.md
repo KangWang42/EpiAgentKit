@@ -89,9 +89,7 @@ description: |
 对应方法、结果、表图、讨论问题与证据边界。相关结果可以共享解释或文献对照，不为每条结果强配机制和意义。
 如有作者既往论文或已认可段落，同时建立声纹卡：术语、主语、hedging、连接方式、句式节奏和段落密度。
 
-已有稿件或审稿轮次同时建立 `revision-state.json`：列出全部合理输入候选并锁定唯一当前稿、轮次、格式要求、用户纠正、
-允许与禁止范围、待补材料和稳定语义名交付集。运行 `academic-humanizer/scripts/validate_revision_state.py`；多个候选未选定或
-上一轮锁定决策静默变化时停止，不按修改时间、文件名或“最终版”后缀自动选择。
+已有稿件先按 `revision-workflow.md` 选择记录强度。单部件局部修订由 `academic-humanizer` 在当前任务中锁定范围，不创建状态卡；多轮审稿回复、多人或跨会话协作、多个交付物同源派生或正式 sign-off 才建立并验证 `revision-state.json`。多个合理当前稿未锁定时停止，不按修改时间、文件名或“最终版”后缀自动选择。
 
 ### 2.2 写作顺序（两种语言一致）
 
@@ -112,7 +110,7 @@ description: |
           [拼装 Word] → 验证 → END
 ```
 
-每个部件：**WRITE 写入独立 md → SELF-CHECK 跑事实、内容、结构和语体检查 → 对齐期刊或学校字数 → APPROVE 标记完成 → NEXT**。
+每个部件：**WRITE → SELF-CHECK 跑事实、内容、结构和语体检查 → 对齐期刊或学校字数 → APPROVE → NEXT**。只有用户要求文件、正式项目要持续拼装或跨会话协作时才写入独立 md；问答和单个局部文本默认直接返回，不创建过程文件。
 - 中文期刊与学位论文分别见 `chinese-paper.md` 和 `chinese-thesis.md`，但段数、节数和列表数量均由官方规范与内容关系决定。
 - 英文各部件的功能与自检见 `english-writing.md`；`english-phrasebank.md` 只提供写作问题和证据强度提示，不得复制套句。
 
@@ -126,13 +124,12 @@ description: |
   sections/           中文稿各部件 .md（01_metadata … 07_references）
   sections_en/        英文稿各部件 .md（01_title_page … 09_abstract）
   submission/         cover_letter.md / response_to_reviewers.md / highlights.md / graphical_abstract.md
-                      revision-state.json（正式修订状态唯一来源）
+                      revision-state.json（仅正式多轮或多交付物修订）
   0_result_summaries.md   数据源（只读）
   manuscript.docx / manuscript_marked.docx   稳定语义名当前 clean / 标注稿
 ```
 
-每个部件写入独立文件，不改其他部件文件。修订已认可章节时按 `revision-state.json` 的定位清单执行最小修改，范围外正文、
-数字、引文、表图与格式默认不动。旧轮次和过程文件按 `project-hygiene.md` 可恢复归档，活动目录只留一组当前交付物。
+需要持续拼装时每个部件写入独立文件，不改其他部件文件。修订已认可章节时按当前任务的定位清单执行最小修改；若正式状态卡存在则以其为准。范围外正文、数字、引文、表图与格式默认不动。旧轮次和过程文件按 `project-hygiene.md` 可恢复归档，活动目录只留一组当前交付物。
 
 ---
 
@@ -176,7 +173,7 @@ description: |
 
 输出时附：仍需用户确认的信息清单 + `[NEED CONFIRMATION]`/`[待补充引用]` 计数 + 投稿 checklist。
 
-写作中发现但当轮补不了的缺口（某段需补一篇文献、缺某项数据无法下结论、某分析能强化论证但还没做、讨论里冒出的下一步设想），**立即追加一行到项目根 `BACKLOG.md` 主表**（格式见 project-init `references/project-hygiene.md` §6）；占位符 `[待补充引用]` 只标"此处缺引用"，BACKLOG 才记"要去补什么、谁去补"——两者并用，不互相替代。
+项目工作或正式发布中发现会影响主流程且当轮无法解决的真实缺口，再追加到项目根 `BACKLOG.md`。问答和局部产物不为范围外建议补写 BACKLOG，也不主动增加分析；只报告阻碍当前请求的事项。占位符仅标正文位置，BACKLOG 只保存需要跨任务继续处理的主流程事项。
 
 ---
 
@@ -189,8 +186,7 @@ description: |
 - `0_result_summaries.md` 不存在或与表图对不上。
 - 用户已写好部分章节要修订 → 确认是"最小修改"还是"可重写"。
 - 多个合理当前稿并存、目标位置不唯一或允许/禁止修改范围冲突 → 列出候选并请用户锁定，不自行选最新文件或模糊替换。
-- **数据有缺陷（缺失 / 需反推分母 / 口径不全 / 需近似）→ 先问能否补真实数据（年鉴 / 普查 / 标准人口库）、用户能提供什么；
-  同时写进 BACKLOG。补全前论文按现有口径照常推进，补不全再问期望表述。NEVER 把缺陷自行写成"局限"或把清洗痕迹写进正文**（见全局 `CLAUDE.md` §3）。
+- **数据有缺陷（缺失 / 需反推分母 / 口径不全 / 需近似）→ 先问能否补真实数据、用户能提供什么；正式项目主流程再写进 BACKLOG，局部产物只报告对当前范围的影响。补全前不自行近似、续算或把缺陷改写成“局限”**（见全局 `CLAUDE.md` §3）。
 
 一次问最关键的 2–3 项，不要一口气抛十个问题。
 
@@ -220,7 +216,7 @@ description: |
 - 开工前对齐 `biostat-principles`（口径与可复现）。
 - 结果由 `r-biostats` 或 `python-biostats` 按项目主语言产出；统计图由 `publication-figures` 生成，流程/结构/机制、科学插图和图形摘要等非统计视觉由 `research-visuals` 按载体建立视觉简报、调用 imagegen，并仅在全部适用生成路径耗尽后最终回退 `svg-diagrams`，`xlsx` 出表；本技能只消费，不改分析。
 - 所有学术文本润色统一走 `academic-humanizer` 的不可变事实清单、中文或英文语体与论断强度审查；Word 细排可叫 `docx`。
-- 结果变 → 回写 `07_paper/results.yaml` 并重新派生 `0_result_summaries.md`；方法变 → 回写 `DECISIONS.md`；操作完 → `SESSION_LOG.md`。
+- 结果变 → 回写 `07_paper/results.yaml` 并重新派生 `0_result_summaries.md`；方法变 → 回写 `DECISIONS.md`。只有项目工作或正式发布需要跨任务追溯时才更新 `SESSION_LOG.md`；问答和不改变结果、方法或正式当前稿的局部产物不补日志。
 
 ---
 

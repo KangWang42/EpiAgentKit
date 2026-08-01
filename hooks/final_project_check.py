@@ -298,6 +298,9 @@ def layout_check(
         except ValueError:
             finding(findings, "ERROR", "layout.path_escape", Path(LAYOUT_MANIFEST), f"entry@{index}")
             continue
+        workbench_rel = Path("09_backup/workbench")
+        if workbench_rel in rel.parents and rel != workbench_rel / ".gitkeep":
+            continue
         if entry["kind"] not in {"file", "dir"} or entry["lifecycle"] not in {"planned", "active", "current_deliverable"}:
             finding(findings, "ERROR", "layout.entry_invalid", rel, "kind_or_lifecycle")
             continue

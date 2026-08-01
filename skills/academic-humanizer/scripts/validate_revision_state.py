@@ -18,6 +18,11 @@ ALLOWED_REVIEW_STATUSES = {
 }
 REQUIRED_LISTS = ("input_candidates", "allowed_scope", "forbidden_scope", "pending_materials")
 REQUIRED_DELIVERABLES = ("clean", "marked", "response")
+INTERACTION_BOOLEAN_FIELDS = ("answer_only", "create_document", "one_issue_at_a_time")
+INTERACTION_ENUMS = {
+    "response_style": {"direct", "default"},
+    "highlight_policy": {"specified_items_only", "all_changes", "none"},
+}
 
 
 def make_finding(
@@ -42,6 +47,19 @@ def _nonempty(value: Any) -> bool:
 
 def _locked_value(entry: Any) -> Any:
     return entry.get("value") if isinstance(entry, dict) else None
+
+
+def _approved_supersedes(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    supersedes = state.get("supersedes")
+    supersedes = supersedes if isinstance(supersedes, list) else []
+    return {
+        item.get("key"): item
+        for item in supersedes
+        if isinstance(item, dict)
+        and _nonempty(item.get("key"))
+        and _nonempty(item.get("source"))
+        and _nonempty(item.get("reason"))
+    }
 
 
 def validate_state(
@@ -85,6 +103,52 @@ def validate_state(
                     key,
                     "The revision scope or input set is not machine-checkable.",
                     f"Record {key} as a list of non-empty strings.",
+                )
+            )
+
+    interaction = state.get("interaction_contract")
+    if interaction is not None:
+        if not isinstance(interaction, dict):
+            findings.append(
+                make_finding(
+                    "ERROR",
+                    "interaction.invalid",
+                    "interaction_contract",
+                    "Persistent user instructions are not machine-checkable.",
+                    "Record interaction_contract as an object or omit it for a single-turn task.",
+                )
+            )
+            interaction = {}
+        for key in INTERACTION_BOOLEAN_FIELDS:
+            if not isinstance(interaction.get(key), bool):
+                findings.append(
+                    make_finding(
+                        "ERROR",
+                        "interaction.required_boolean",
+                        f"interaction_contract.{key}",
+                        "A persistent interaction instruction is missing or ambiguous.",
+                        f"Record {key} as true or false.",
+                    )
+                )
+        for key, allowed_values in INTERACTION_ENUMS.items():
+            if interaction.get(key) not in allowed_values:
+                findings.append(
+                    make_finding(
+                        "ERROR",
+                        "interaction.invalid_value",
+                        f"interaction_contract.{key}",
+                        "A persistent interaction instruction uses an unsupported value.",
+                        f"Use one of: {', '.join(sorted(allowed_values))}.",
+                    )
+                )
+        if interaction.get("answer_only") is True and interaction.get("create_document") is True:
+            findings.append(
+                make_finding(
+                    "ERROR",
+                    "interaction.conflict",
+                    "answer_only/create_document",
+                    "The state simultaneously forbids and requires document creation.",
+                    "Resolve the user instruction before continuing.",
                 )
             )
 
@@ -187,18 +251,9 @@ def validate_state(
                 )
 
     if previous is not None:
+        approved = _approved_supersedes(state)
         previous_locked = previous.get("locked_decisions")
         previous_locked = previous_locked if isinstance(previous_locked, dict) else {}
-        supersedes = state.get("supersedes")
-        supersedes = supersedes if isinstance(supersedes, list) else []
-        approved = {
-            item.get("key"): item
-            for item in supersedes
-            if isinstance(item, dict)
-            and _nonempty(item.get("key"))
-            and _nonempty(item.get("source"))
-            and _nonempty(item.get("reason"))
-        }
         for key, old_entry in previous_locked.items():
             new_entry = locked.get(key)
             if new_entry is None:
@@ -224,6 +279,35 @@ def validate_state(
                             "Restore the previous value or record the explicit superseding decision.",
                         )
                     )
+
+        previous_interaction = previous.get("interaction_contract")
+        if isinstance(previous_interaction, dict):
+            if not isinstance(interaction, dict) or not interaction:
+                findings.append(
+                    make_finding(
+                        "ERROR",
+                        "interaction.dropped",
+                        "interaction_contract",
+                        "User instructions locked in an earlier round disappeared.",
+                        "Restore the interaction contract or record explicit superseding instructions.",
+                    )
+                )
+            else:
+                for key, old_value in previous_interaction.items():
+                    new_value = interaction.get(key)
+                    if new_value == old_value:
+                        continue
+                    override = approved.get(f"interaction_contract.{key}")
+                    if not override or override.get("previous_value") != old_value or override.get("new_value") != new_value:
+                        findings.append(
+                            make_finding(
+                                "ERROR",
+                                "interaction.silent_change",
+                                f"interaction_contract.{key}",
+                                "A persistent user instruction changed without an explicit replacement.",
+                                "Restore it or record a traceable supersedes entry from the user.",
+                            )
+                        )
 
     comments = state.get("review_comments", [])
     if not isinstance(comments, list):

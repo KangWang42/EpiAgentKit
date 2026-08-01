@@ -370,6 +370,52 @@ class WorkflowRoutingTests(unittest.TestCase):
             "manuscript-peer-review",
             cases["reviewer_response_closure"]["excluded"],
         )
+        self.assertEqual(
+            cases["single_revision_question_answer_only"]["expected_action"],
+            "answer_current_issue_without_creating_files",
+        )
+        self.assertEqual(
+            cases["formal_project_local_word_revision"]["expected_action"],
+            "validate_single_artifact_without_project_audit_or_new_state",
+        )
+        self.assertIn(
+            "epi-project-audit",
+            cases["formal_project_local_word_revision"]["excluded"],
+        )
+
+    def test_scoped_workflow_uses_proportionate_records_and_validation(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        revision = (
+            ROOT / "skills/academic-humanizer/references/revision-workflow.md"
+        ).read_text(encoding="utf-8")
+        hygiene = (
+            ROOT / "skills/project-init/references/project-hygiene.md"
+        ).read_text(encoding="utf-8")
+        audit = (ROOT / "skills/epi-project-audit/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        editorial = (
+            ROOT / "skills/academic-humanizer/references/patterns-and-preservation.md"
+        ).read_text(encoding="utf-8")
+
+        for fragment in (
+            "问答只回复且不创建文件",
+            "局部产物",
+            "不补建 `results.yaml`、修订状态卡或项目账本",
+            "范围外差异为零",
+        ):
+            self.assertIn(fragment, global_rules)
+        for fragment in (
+            "单个引用序号",
+            "不创建状态卡或项目账本",
+            "不要为保存这些约束单独创建 JSON",
+        ):
+            self.assertIn(fragment, revision)
+        self.assertIn("项目内局部产物", hygiene)
+        self.assertIn("批次内部文件不逐项登记", hygiene)
+        self.assertIn("不运行 `run_check_project.py`", audit)
+        for section in ("方法", "结果", "讨论", "局限", "结论"):
+            self.assertIn(f"| {section} |", editorial)
 
     def test_peer_review_is_evidence_traced_and_separate_from_author_revision(self) -> None:
         skill = (ROOT / "skills/manuscript-peer-review/SKILL.md").read_text(

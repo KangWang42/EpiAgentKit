@@ -17,6 +17,7 @@ Usage:
 import os
 import socket
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -42,6 +43,8 @@ _SHIM_SO = Path(tempfile.gettempdir()) / "lo_socket_shim.so"
 
 
 def _needs_shim() -> bool:
+    if not sys.platform.startswith("linux") or not hasattr(socket, "AF_UNIX"):
+        return False
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.close()

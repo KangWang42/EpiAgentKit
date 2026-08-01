@@ -9,6 +9,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import tempfile
 import zipfile
 from pathlib import Path
@@ -18,9 +19,11 @@ from lxml import etree
 
 
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+W14_NS = "http://schemas.microsoft.com/office/word/2010/wordml"
 XML_NS = "http://www.w3.org/XML/1998/namespace"
-NS = {"w": W_NS}
+NS = {"w": W_NS, "w14": W14_NS}
 W = f"{{{W_NS}}}"
+W14 = f"{{{W14_NS}}}"
 ALLOWED_HIGHLIGHTS = {
     "black",
     "blue",
@@ -110,6 +113,20 @@ def body_paragraph(root: etree._Element, index: int) -> etree._Element:
     return items[index]
 
 
+def paragraph_by_id(root: etree._Element, value: Any) -> etree._Element:
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9A-Fa-f]{8}", value):
+        raise RevisionError("paragraph para_id must be exactly eight hexadecimal characters")
+    expected = value.upper()
+    items = [
+        item
+        for item in root.xpath(".//w:p[@w14:paraId]", namespaces=NS)
+        if item.get(f"{W14}paraId", "").upper() == expected
+    ]
+    if len(items) != 1:
+        raise RevisionError(f"paragraph para_id must identify exactly one paragraph; found {len(items)}")
+    return items[0]
+
+
 def table_cell_paragraph(root: etree._Element, locator: dict[str, Any]) -> etree._Element:
     coordinates = {}
     for key in ("table", "row", "cell", "paragraph"):
@@ -134,9 +151,20 @@ def locate_paragraph(root: etree._Element, locator: Any) -> etree._Element:
     kind = locator.get("kind")
     if kind == "paragraph":
         index = locator.get("index")
-        if not isinstance(index, int):
-            raise RevisionError("paragraph locator requires an integer index")
-        return body_paragraph(root, index)
+        para_id = locator.get("para_id")
+        if para_id is None and not isinstance(index, int):
+            raise RevisionError("paragraph locator requires para_id or an integer index")
+        selected = paragraph_by_id(root, para_id) if para_id is not None else None
+        if index is not None:
+            if not isinstance(index, int):
+                raise RevisionError("paragraph index must be an integer")
+            indexed = body_paragraph(root, index)
+            if selected is not None and selected is not indexed:
+                raise RevisionError("paragraph para_id and index resolve to different targets")
+            selected = indexed
+        if selected is None:
+            raise RevisionError("paragraph locator did not resolve a target")
+        return selected
     if kind == "table-cell-paragraph":
         return table_cell_paragraph(root, locator)
     raise RevisionError(f"unsupported locator kind: {kind!r}")

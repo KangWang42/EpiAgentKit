@@ -15,9 +15,11 @@
 
 用户请求同时含多种类型时先拆成内容层和格式层，分别执行和验证。只有用户明确授权或正式格式规范明确规定时，才进行全局规范化。
 
-## 2. 投稿修订状态卡
+## 2. 选择本轮记录强度
 
-每轮正式修订前建立稳定语义名 `revision-state.json`。轻量的纯文本润色无需为此创建项目文件，但仍在当前任务中记录同样的输入、范围与事实锁。状态卡至少包含：
+按全局任务模式控制记录量：问答只回复；单段、单表格单元格、单个引用序号或单项格式修复只在当前任务中锁定输入、范围和事实，不创建状态卡或项目账本。只有出现以下任一情形才建立稳定语义名 `revision-state.json`：多轮或多条审稿意见需持续关闭；clean、标注稿和回复需同源派生；多人或跨会话协作；多个合理输入需长期锁定；用户或期刊要求正式 sign-off。已有状态卡时只更新原文件，不创建平行状态文件。
+
+状态卡用于正式修订时至少包含：
 
 ```json
 {
@@ -26,6 +28,13 @@
   "input_candidates": ["<candidate path>"],
   "selected_input": "<one selected path>",
   "format_contract": "<verified journal, institution, or neutral contract>",
+  "interaction_contract": {
+    "answer_only": false,
+    "create_document": true,
+    "one_issue_at_a_time": true,
+    "response_style": "direct",
+    "highlight_policy": "specified_items_only"
+  },
   "locked_decisions": {
     "<decision key>": {"value": "<locked value>", "source": "<user or project record>"}
   },
@@ -41,6 +50,8 @@
 }
 ```
 
+- `interaction_contract` 只在状态卡本来就需要且用户约束要跨轮次保留时写入；用户说“直接回复”“不要做文档”“一条一条”“只改点名处”或“仅标记指定项”后持续生效，除非用户明确替代。不要为保存这些约束单独创建 JSON。
+- 权威数字或口径继续写入 `locked_decisions` 的 `value` 与 `source`，当前稿继续由 `selected_input` 锁定，禁止动作继续由 `allowed_scope`、`forbidden_scope` 和交互要求表达；不再另建重复的来源表或禁止动作清单。
 - `input_candidates` 有多个合理当前稿而 `selected_input` 未锁定时停止，不按修改时间、文件名或后缀自动选择。
 - 用户最新明确纠正写入 `locked_decisions`。后续轮次必须携带；改变时用 `supersedes` 记录旧值、新值、来源和原因，不得静默覆盖。
 - `allowed_scope` 使用可核验位置，如章节标题、段落索引、表格—行—列或审稿意见编号。`forbidden_scope` 明确数字、引文、图表、格式或已认可表述等保护项。
@@ -57,7 +68,7 @@ python scripts/validate_revision_state.py revision-state.json --signoff --json
 
 ## 3. 可定位修改清单
 
-执行前逐项记录：
+执行前在当前任务中逐项记录；只有正式状态卡或确定性脚本需要时才落盘，不另建交付型清单：
 
 `change id | 来源要求 | 精确位置 | 修改前摘要 | 计划动作 | 内容或格式层 | 证据来源 | 范围外保护 | 验证状态`
 
@@ -80,8 +91,6 @@ python scripts/validate_revision_state.py revision-state.json --signoff --json
 
 ## 5. 完成条件
 
-- 唯一输入、轮次、格式要求、允许与禁止范围、待补材料和目标交付物均已锁定。
-- 不可变事实、数字、引文、公式、表图和锁定决策无回退。
-- 内容修改与格式修改分别验证，范围外差异为零或均有明确授权。
-- clean 与标注稿同源且最终可见内容一致；回复中每项完成声明可追溯。
-- 实际 Word 文件已通过结构、匿名信息、范围差异、渲染和逐页检查；临时文件位于隔离目录。
+- 问答：当前问题已直接回答，没有创建用户未要求的文件或扩展任务。
+- 局部产物：唯一输入和允许范围已锁定，原文件可恢复，目标修改完成，输出可打开，范围外正文、数据、引文、表图和格式无变化；不要求 clean、标注稿和回复三件套。
+- 正式修订：轮次、格式要求、待补材料和交付集已锁定；不可变事实与锁定决策无回退；clean、标注稿和回复按实际要求同源且可追溯；Word 完成结构、匿名、范围差异与可用的渲染检查。
