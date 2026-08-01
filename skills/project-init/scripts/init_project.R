@@ -80,18 +80,18 @@ init_project <- function(name,
   today <- format(Sys.Date(), "%Y-%m-%d")
   type_name <- type_names[type]
 
-  # 项目规则：CLAUDE.md 为单源，AGENTS.md 指示 Codex 读取它 ----
+  # 项目规则：CLAUDE.md 为唯一来源，AGENTS.md 指示 Codex 读取它 ----
   claude_md <- c(
     sprintf("# %s · 项目级规则", name),
     "",
     "本项目继承 EpiAgentKit 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。",
-    "`CLAUDE.md` 是项目规则单源；`AGENTS.md` 只负责指示 Codex 读取本文件，避免双份口径漂移。",
+    "`CLAUDE.md` 是项目规则唯一来源；`AGENTS.md` 只负责指示 Codex 读取本文件，避免双份口径漂移。",
     "",
     "## 新会话必读（按序）",
     "",
     "1. 本文件的口径锁定与当前状态",
     "2. `PROTOCOL.md` 与 `SAP.md`（研究问题、预设分析及偏离）",
-    "3. `07_paper/results.yaml`（结果机器单源）",
+    "3. `07_paper/results.yaml`（机器可读的结果唯一来源）",
     "4. `DECISIONS.md` 末尾 2–3 条",
     "5. `BACKLOG.md` 主表未完成项",
     sprintf("6. `02_code/conventions.%s` 与 `02_code/config.%s`",
@@ -139,7 +139,7 @@ init_project <- function(name,
     c("# Codex 项目指引",
       "",
       "开始任何项目工作前，完整读取同目录 `CLAUDE.md`。",
-      "`CLAUDE.md` 是项目口径、当前状态与工作流约束的单一真源；本文件不复制其内容，避免双份规则漂移。"),
+      "`CLAUDE.md` 是项目口径、当前状态与工作流约束的唯一来源；本文件不复制其内容，避免双份规则漂移。"),
     file.path(proj, "AGENTS.md"), useBytes = TRUE
   )
 
@@ -346,15 +346,15 @@ init_project <- function(name,
       "",
       "1. 填写并确认 `PROTOCOL.md` 与 `SAP.md`，冻结主要口径和预设分析",
       "2. 把原始数据放入 `01_data/rawdata/`，填写 `01_data/README.md` 数据字典",
-      "3. 同步 `CLAUDE.md` 的口径锁定节（Codex 由 `AGENTS.md` 指向该单源）",
+      "3. 同步 `CLAUDE.md` 的口径锁定节（Codex 由 `AGENTS.md` 指向该唯一来源）",
       sprintf("4. 开始清洗：打开 `02_code/01_data_cleaning.%s`",
               if (language == "r") "R" else "py")),
     file.path(proj, "README.md"), useBytes = TRUE
   )
 
-  # 07_paper/results.yaml（机器可读单源）------------------
+  # 07_paper/results.yaml（机器可读的唯一来源）------------------
   writeLines(
-    c("# 结果单一真源（machine-readable）。数字只在此处改；",
+    c("# 结果数字唯一来源（machine-readable）。数字只在此处改；",
       "# 下游论文/报告/PPT 一律 val(\"07_paper/results.yaml\", \"key\") 取数，禁手敲。",
       "# 改下游须先回写此处再向其余下游传播（双向一致性）。",
       sprintf("# 写入与渲染用 02_code/vendored/emit_summary.%s 的 add_result()；",
@@ -412,10 +412,10 @@ init_project <- function(name,
     file.path(proj, "01_data/README.md"), useBytes = TRUE
   )
 
-  # 02_code 口径与 registry 单一真源 --------------------
+  # 02_code 口径与 registry 唯一来源 --------------------
   if (language == "r") {
     writeLines(
-      c("# 全项目口径常量单一真源 ----------------------------------",
+      c("# 全项目口径常量唯一维护位置 ----------------------------------",
         "ORDERED_LEVELS <- list()",
         "",
         "lv <- function(name) {",
@@ -460,7 +460,7 @@ init_project <- function(name,
     )
   } else {
     writeLines(
-      c("# 全项目口径常量单一真源",
+      c("# 全项目口径常量唯一维护位置",
         "ORDERED_LEVELS: dict[str, list[object]] = {}",
         "PALETTE = [\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\",",
         "           \"#E69F00\", \"#56B4E9\", \"#F0E442\", \"#000000\"]",

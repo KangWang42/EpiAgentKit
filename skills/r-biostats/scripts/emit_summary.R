@@ -1,8 +1,8 @@
 # ============================================================
-# 结果单一真源助手（r-biostats / P0-A1）
+# 结果数字唯一来源助手（r-biostats / P0-A1）
 # 定位：数字在此**渲染一次**写入 results.yaml（raw 原始分量 + rendered 成品串）；
 #       下游论文/报告/PPT 一律 val() 读 rendered，禁止再次格式化或手敲。
-# 真源 = results.yaml；0_result_summaries.md 由 render_summary_md() 从它派生。
+# 唯一来源 = results.yaml；0_result_summaries.md 由 render_summary_md() 从它派生。
 # 双向规则：数字只在此改；若需在下游改，先回到产出脚本/此处回写，再向其余下游传播。
 #
 # 用法：
@@ -16,7 +16,7 @@
 #   val("07_paper/results.yaml", "S2_vs_S1_diff")          # 取 full 成品串
 #   val("07_paper/results.yaml", "S2_vs_S1_diff", "p")     # 取 P 部分
 #
-# 数字口径（唯一真源，改这里全项目同步）：见下 fmt_* —— 优先读 conventions.R 的同名常量（若已 source）。
+# 数字口径（唯一唯一来源，改这里全项目同步）：见下 fmt_* —— 优先读 conventions.R 的同名常量（若已 source）。
 # ============================================================
 suppressWarnings(suppressMessages(library(yaml)))
 
@@ -26,7 +26,7 @@ suppressWarnings(suppressMessages(library(yaml)))
 .DIGITS_P   <- function() .cfg("DIGITS_P", 3L)     # P 值小数位
 .P_FLOOR    <- function() .cfg("P_FLOOR", 0.001)   # P 下限阈值
 
-# ---- 格式化（单一真源）----
+# ---- 格式化（唯一维护位置）----
 .minus <- function(s) gsub("-", "−", s, fixed = TRUE)   # 正经减号 U+2212
 fmt_num <- function(x, d = .DIGITS_EST()) {
   if (is.null(x) || is.na(x)) return(NA_character_)

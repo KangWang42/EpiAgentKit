@@ -1,7 +1,7 @@
 ---
 name: r-biostats
 description: |
-  R 流行病学与生物统计的主要执行层，用于 R 数据清洗、描述统计、回归、生存、中介、Meta 分析、统计表图和代码调试；用户未指定语言且无既有语言合同时也使用。开工先遵循 biostat-principles；统计图配合 publication-figures，客户外发再用 consulting-delivery。不用于已明确采用 Python 的分析、研究设计定稿或论文写作。
+  R 流行病学与生物统计的主要执行层，用于 R 数据清洗、描述统计、回归、生存、中介、Meta 分析、统计表图和代码调试；用户未指定且项目没有既定分析语言时也使用。开工先遵循 biostat-principles；统计图配合 publication-figures，客户外发再用 consulting-delivery。不用于已明确采用 Python 的分析、研究设计定稿或论文写作。
 ---
 
 # R 流行病学与生物统计执行 skill
@@ -54,7 +54,7 @@ description: |
 
 ## 二、PLAN 阶段模板
 
-复杂分析或需要用户确认时展示此合同；简单且口径明确的任务可在工作计划中内部维护，不强制固定回复样板。
+复杂分析或需要用户确认时展示此计划模板；简单且口径明确的任务可在工作计划中内部维护，不强制固定回复样板。
 
 正式项目开工前先读项目 `PROTOCOL.md`、`SAP.md`、`CLAUDE.md` 与 `DECISIONS.md`。方案或 SAP 仍为草案、主要终点/分析人群/主模型未确认，或实际做法偏离 SAP 时，先向用户确认并记录偏离；不得先看结果再把主要分析写成“预设”。轻量任务只读取实际存在且与请求有关的说明文件，不补建缺失的项目文档。
 
@@ -75,7 +75,7 @@ description: |
   - 脚本：02_code/NN_本次任务.R
   - 表：03_tables/TableN_xxx.xlsx（sheet: ...；路径经 config.R 的 table_path() 取）
   - 图：04_figures/FigN_xxx.pdf + .png（路径经 fig_path() 取）
-  - 中间：06_results/xxx.<既有合同格式>（按消费者选择 csv/tsv/parquet/xlsx；模型等对象可用 .rds）
+  - 中间：06_results/xxx.<既有约定格式>（按消费者选择 csv/tsv/parquet/xlsx；模型等对象可用 .rds）
 
 【验证】
   - 样本量 = 基线表 N
@@ -100,7 +100,7 @@ description: |
 | 修改 `01_data/rawdata/` | 只读，派生写到 `06_results/` |
 | `library(plyr)` + `dplyr` 混用 | 只用 `dplyr` |
 | 同一段代码无理由混用多套索引语义 | 跟随项目既有风格并保持对象类型清楚 |
-| 随意改变既有交换格式 | 跟随项目合同；面向人工阅读的正式表优先 xlsx，机器交换可使用 csv/tsv/parquet，模型等对象用 rds |
+| 随意改变既有交换格式 | 跟随项目要求；面向人工阅读的正式表优先 xlsx，机器交换可使用 csv/tsv/parquet，模型等对象用 rds |
 | 脚本里写死 `Table6` / `Fig3` 路径 | 经 `config.R` 的 `table_path()` / `fig_path()` 取（registry，见 project-init `references/registry.md`） |
 | 未核验可读性和含义的装饰性配色 | 按 `publication-figures`、目标期刊、色觉可达性和项目语义选择调色板 |
 | 代码写完不跑就交 | **必须 `Rscript` 实际执行** |
@@ -109,14 +109,14 @@ description: |
 
 ### 必须
 
-- **语言边界**：用户、现有主流程或项目规则指定 R 时使用 `.R`；未指定且无既有语言合同时直接使用 R；只有明确指定 Python 或既有 Python 主流程时才转 `python-biostats`。R 运行时缺失时报告影响；普通 R 包缺失时按 `../biostat-principles/references/runtime-dependencies.md` 优先补齐，不自动改用 Python，也不为统一风格跨语言重写。
+- **语言边界**：用户、现有主流程或项目规则指定 R 时使用 `.R`；用户未指定且项目没有既定分析语言时直接使用 R；只有明确指定 Python 或既有 Python 主流程时才转 `python-biostats`。R 运行时缺失时报告影响；普通 R 包缺失时按 `../biostat-principles/references/runtime-dependencies.md` 优先补齐，不自动改用 Python，也不为统一风格跨语言重写。
 - **代码风格遵 [references/code-style.md](references/code-style.md)**（软约束，服从工作流/红线）：依赖直接逐行 `library()`；顺序式 R 分析不按 Python 习惯把每一步封成函数；管道尽量连续，中间对象少且语义清楚；批处理先定义控制向量，再按返回值或副作用选择 `map*()` / `walk*()`；RUN / VERIFY 必做，但不把硬编码核验块和调试展示默认塞进交付脚本。
 - R 脚本顶部：声明实际依赖并说明目的、输入和输出；仅在随机抽样、模拟、重采样、拆分或随机算法中设置并记录 seed
 - 命名：文件 `NN_描述.R`、变量 `snake_case`；函数只在复用、参数化批处理、稳定工具或复杂算法边界确有必要时抽取，并使用 `snake_case`
 - 中文注释关键步骤（为什么这样切分、为什么选这个模型）
 - 双格式导出：`ggsave()` 同时存 PDF (`cairo_pdf`) + PNG (`ragg::agg_png`, 300dpi)
 - 编码 UTF-8，不要 GBK
-- **结果数字写入单源**：算完每个指标即 `add_result()` 写入 `07_paper/results.yaml`（`scripts/emit_summary.R`，口径单源、自动渲染），再 `render_summary_md()` 生成 `0_result_summaries.md`。**NEVER** 手敲 rendered、**NEVER** 手改派生的 md。详见 [结果单源 schema](../biostat-principles/references/result-summary-schema.md)。
+- **结果数字写入 `results.yaml`**：算完每个指标即 `add_result()` 写入 `07_paper/results.yaml`（`scripts/emit_summary.R` 统一口径并自动渲染），再 `render_summary_md()` 生成 `0_result_summaries.md`。**NEVER** 手敲 rendered、**NEVER** 手改派生的 md。详见 [结果数字来源 schema](../biostat-principles/references/result-summary-schema.md)。
 
 ---
 
@@ -135,7 +135,7 @@ library(writexl)
 library(gtsummary)
 library(broom)
 library(survival)
-# 按图形合同选择调色板包
+# 按图形要求选择调色板包
 ```
 
 **导入顺序**：先 `tidyverse`，再领域包。避免混用 `plyr` / `reshape` 与 `dplyr`。
@@ -156,7 +156,7 @@ library(survival)
 | 中介/调节效应 | [references/mediation.md](references/mediation.md) | mediation, lavaan |
 | Meta 分析 / 森林图 | [references/meta.md](references/meta.md) | meta, metafor |
 | 可视化规范 | [references/visualization.md](references/visualization.md) | ggplot2, ggsci, patchwork |
-| 结果汇总单源（results.yaml + 派生 md） | [结果单源 schema](../biostat-principles/references/result-summary-schema.md) | yaml（`scripts/emit_summary.R`） |
+| 结果汇总（results.yaml + 派生 md） | [结果数字来源 schema](../biostat-principles/references/result-summary-schema.md) | yaml（`scripts/emit_summary.R`） |
 
 > references/ 目录下文件按需补充；如果某类文件暂缺，使用本文件下方通用模板。
 
@@ -173,7 +173,7 @@ project/
 ├── 04_figures/FigN.pdf/png
 ├── 05_reports/结果-M-D-主题/ # 咨询/汇报结果包
 ├── 06_results/           # 中间对象：表格 xlsx；非表格对象 rds；按内容命名不编号
-├── 07_paper/             # 论文 + results.yaml(数字单源) + 0_result_summaries.md(由其派生)
+├── 07_paper/             # 论文 + results.yaml(数字唯一来源) + 0_result_summaries.md(由其派生)
 └── 09_backup/            # 旧版 / 探索实验；EXPERIMENTS.md 索引全部尝试
 ```
 
@@ -233,7 +233,7 @@ cohort <- dat |>
                   labels = c("Underweight", "Normal", "Overweight", "Obese"))
   )
 
-writexl::write_xlsx(cohort, "06_results/cohort_clean.xlsx")  # 人工复核示例；机器交换格式按项目合同选择
+writexl::write_xlsx(cohort, "06_results/cohort_clean.xlsx")  # 人工复核示例；机器交换格式按项目要求选择
 ```
 
 ### 3. 基线表（CODE）
@@ -277,7 +277,7 @@ ggsave(fig_path("xxx", "png"), p, width = 180, height = 120, units = "mm",
 
 ### 6. DOC 阶段（必做）
 
-**A. 写入结果单源 `07_paper/results.yaml`**（结果变了就写；**NEVER 手写 0_result_summaries.md**）：
+**A. 写入结果数字唯一来源 `07_paper/results.yaml`**（结果变了就写；**NEVER 手写 0_result_summaries.md**）：
 
 ```r
 source("02_code/vendored/emit_summary.R", encoding = "UTF-8")
@@ -290,7 +290,7 @@ add_result(yp, "exposure_HR", label = "暴露 X 对 OS 的 HR",
 render_summary_md(yp, "07_paper/0_result_summaries.md")  # 派生人读版
 ```
 
-数字渲染、`val()` 取数、解读待复核机制详见 [结果单源 schema](../biostat-principles/references/result-summary-schema.md)。下游论文/报告/PPT 一律 `val()` 取，禁手敲。
+数字渲染、`val()` 取数、解读待复核机制详见 [结果数字来源 schema](../biostat-principles/references/result-summary-schema.md)。下游论文/报告/PPT 一律 `val()` 取，禁手敲。
 
 **B. 追加 `SESSION_LOG.md`**：
 
@@ -386,7 +386,7 @@ save_fig(p_forest, "forest", type = "forest")   # type 自带各图型推荐尺�
 - [ ] R 脚本编号命名且放在 `02_code/`（或结果包 `code/`）
 - [ ] 脚本实际跑过（`Rscript 文件.R` 输出无 error，warning 已理解；**未用 `Rscript -e` 传多行**）
 - [ ] 输出表格在 `03_tables/`，图在 `04_figures/`，中间在 `06_results/`
-- [ ] 中间格式符合项目合同和消费者需求；正式人工表可打开，机器交换格式保留类型与精度，模型对象有明确来源
+- [ ] 中间格式符合项目要求和消费者需求；正式人工表可打开，机器交换格式保留类型与精度，模型对象有明确来源
 - [ ] 表格同主题合并到一个 xlsx 的多 sheet
 - [ ] 图件格式、字体、尺寸和配色通过 `publication-figures` 验收
 - [ ] `SESSION_LOG.md` 已追加本次操作

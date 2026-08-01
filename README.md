@@ -20,7 +20,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 > EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性检查，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
-| 按任务加载 | 证据与结果单源 | 双平台一致 |
+| 按任务加载 | 证据与结果数字唯一来源 | 双平台一致 |
 | --- | --- | --- |
 | 只调用当前任务需要的 skill，不把整套规范塞进每次对话 | 来源、统计口径和结果数字都有明确锚点，不靠模型记忆补齐 | Claude Code 与 Codex 从同一仓库安装、同步并接受相同检查 |
 
@@ -32,11 +32,11 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 | 研究任务 | 它会做什么 | 典型产物 |
 | --- | --- | --- |
-| 新建研究项目 | 默认建立 R 标准目录，也可按明确选择建立 Python 目录，并生成研究方案、统计分析计划、结果单源、表图 registry 与归档约定 | 可直接开工的研究或咨询项目骨架 |
+| 新建研究项目 | 默认建立 R 标准目录，也可按明确选择建立 Python 目录，并生成研究方案、统计分析计划、结果数字唯一来源、表图 registry 与归档约定 | 可直接开工的研究或咨询项目骨架 |
 | 核验文献与方法依据 | 核对题名、作者、DOI/PMID、来源身份和撤稿状态，必要时组织正式证据检索 | 核验记录、证据矩阵、方法选择依据 |
 | 完善研究设计与 SAP | 把研究想法转成 PICO/PECO、estimand、终点、时间零点、偏倚控制、样本量或精度依据及预设分析 | 可审查的 PROTOCOL、SAP、未决事项与设计备忘录 |
-| 完成 R 统计分析 | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析，并按 `PLAN-CODE-RUN-VERIFY-DOC` 闭环 | 可复现 R 脚本、结果对象、Excel 表格与方法记录 |
-| 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果单源 | 可复现 Python 脚本、结果对象、表图与方法记录 |
+| 完成 R 统计分析 | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析，并完成 `PLAN-CODE-RUN-VERIFY-DOC` 全流程 | 可复现 R 脚本、结果对象、Excel 表格与方法记录 |
+| 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录 |
 | 制作发表级统计图 | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图 | PDF、PNG 或 SVG 图件及对应出图代码 |
 | 生成科研非统计视觉 | 为论文、PPT、标书、报告、README 和技术文档生成流程、路线、框架、机制与图形摘要，并区分内容图、真实截图和氛围图 | 经来源、结构、文字和最终载体复核的完整图件 |
 | 写论文与投稿材料 | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校 | Markdown 或 Word 稿件、投稿材料与自检记录 |
@@ -89,9 +89,9 @@ Claude Code 与 Codex 共用一个控制层：全局规则约束行为，领域�
 | 证据核验 | 核验来源身份，区分已核验事实、合理推断和待补证据 |
 | 统计分析 | 代码必须实跑，输出必须存在，异常必须全量扫描并逐项归因 |
 | 图表制作 | 统计数据图、非统计视觉和原始科研证据按属性分流，图件在最终载体中复核 |
-| 论文与汇报 | 统计数字来自机器单源，论文、报告、PPT 和图表不手敲关键结果 |
+| 论文与汇报 | 统计数字来自机器可读的唯一来源，论文、报告、PPT 和图表不手敲关键结果 |
 | 结果交付 | 交付包保持自包含、可独立阅读、可复现，并与主流程结果一致 |
-| 项目审查 | ERROR 阻止签发，WARN 逐项解释，工作区保留可复现与可追溯证据 |
+| 项目审查 | ERROR 阻止正式交付，WARN 逐项解释，工作区保留可复现与可追溯证据 |
 
 ## 它如何工作
 
@@ -101,7 +101,7 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 | 层 | 组件 | 作用 |
 | --- | --- | --- |
-| 全局规则 | [`CLAUDE.md`](CLAUDE.md) | 常驻每个会话的硬红线、任务路由、单源指针与完成条件 |
+| 全局规则 | [`CLAUDE.md`](CLAUDE.md) | 常驻每个会话的硬红线、任务分流、唯一来源指针与完成条件 |
 | 领域技能 | [`skills/`](skills/) | 按需加载分析、证据、写作、视觉、交付与审查流程，避免把所有规范塞进上下文 |
 | 确定性 hooks | [`hooks/`](hooks/) | 保护原始数据，检查 R 语法、文本痕迹、图件与结果文件 |
 | 配置管理器 | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、双端一致性验收与项目终检 |
@@ -111,9 +111,9 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 | 模式 | 什么时候使用 | 系统行为 |
 | --- | --- | --- |
 | 轻量任务 | 简单作业、单次处理、快速核验或只要一个小结果 | 只调用必要 skill，读写必要文件，执行与风险相称的最小验证，不创建完整项目账本 |
-| 正式项目 | 明确初始化、投稿、咨询交付，或已处于标准研究项目 | 启用方案、分析、结果单源、日志、归档、registry 与最终审查契约 |
+| 正式项目 | 明确初始化、投稿、咨询交付，或已处于标准研究项目 | 启用方案、分析、结果数字唯一来源、日志、归档、registry 与最终审查规范 |
 
-触发某个领域 skill 不会自动把轻量任务升级为正式项目。只有文件布局和研究治理确实需要时，才进入完整契约。
+触发某个领域 skill 不会自动把轻量任务升级为正式项目。只有文件布局和研究治理确实需要时，才进入完整项目规范。
 
 ## 30 秒安装
 
@@ -163,7 +163,7 @@ python scripts/epiagentkit.py list
 python scripts/epiagentkit.py install --target all --preset custom \
   --skills sysu-ppt,report-writing --with-rules --yes
 
-# 对正式研究项目运行确定性签发预检
+# 对正式研究项目运行项目最终检查
 python scripts/epiagentkit.py check-project <项目根>
 ```
 
@@ -189,10 +189,10 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 
 - **原始数据只读**：`01_data/rawdata/` 与项目声明的其它原始根不得被 Agent 修改。
 - **口径先于模型**：分组、终点、纳排和主分析存在多个合理定义时，必须先澄清。
-- **数字机器单源**：正式项目以 `07_paper/results.yaml` 保存结果数字，再派生人读摘要并供下游取数。
+- **机器可读的数字唯一来源**：正式项目以 `07_paper/results.yaml` 保存结果数字，再派生人读摘要并供下游取数。
 - **代码必须实跑**：不以退出码或日志尾部代替核验，必须全量扫描 `error|warning|traceback|failed|nan`。
 - **探索与主线隔离**：新方法、诊断和一次性脚本从创建起就在 `09_backup/workbench/` 运行，满足预设的主流程纳入条件后才能进入正式流程。
-- **布局先于产物**：正式项目用 `.epiagentkit-layout.json` 预声明每个活动目录和文件的位置、责任、生产者、消费者与生命周期，未声明路径阻止签发。
+- **布局先于产物**：正式项目用 `.epiagentkit-layout.json` 预声明每个活动目录和文件的位置、责任、生产者、消费者与生命周期，未声明路径阻止正式交付。
 - **当前版保持唯一**：稳定语义名只保留一组当前交付物，旧版按批次归档并可检索。
 - **修订范围可核验**：已有论文和 Word 稿先锁定唯一输入、用户纠正及允许/禁止范围，再从同一修改记录派生 clean、标注稿和审稿回复。
 - **双平台共用正文**：Claude Code 和 Codex 读取同一份规则与技能，不维护两套容易漂移的内容。
@@ -202,9 +202,9 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | EpiAgentKit 会做 | EpiAgentKit 不会做 |
 | --- | --- |
 | 依据项目文件、真实分析结果和可核验来源推进任务 | 编造研究发现、文献、DOI/PMID、伦理号、基金号或期刊要求 |
-| 在授权范围内整理非原始文件、运行代码、生成成果并审查 | 修改原始数据，或在数据异常未闭环时擅自填补、排除和继续计算 |
+| 在授权范围内整理非原始文件、运行代码、生成成果并审查 | 修改原始数据，或在数据异常未解决时擅自填补、排除和继续计算 |
 | 把观察性结果校准为合适的论断强度 | 把关联写成已证实因果，或把探索性峰值包装成最终结论 |
-| 用 hooks 和项目审查减少可预防错误 | 替代研究者对设计、临床意义、统计口径和最终签发的责任 |
+| 用 hooks 和项目审查减少可预防错误 | 替代研究者对设计、临床意义、统计口径和最终确认的责任 |
 
 正式归档只处理已解析并核对的精确非原始目标：先 dry-run，再移动到不覆盖旧批次的备份目录，同时写文件哈希、MANIFEST 与 INDEX；来源、当前版本或引用关系不清时停止并请用户决定。Git 可用时可额外保留回退历史；没有 Git 时工作流会跳过 Git，不会代为安装。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
 
@@ -225,9 +225,9 @@ python scripts/epiagentkit.py doctor --target all
 <details>
 <summary><strong>参考来源与许可证说明</strong></summary>
 
-Skill 路由与维护合同参考了 GitHub [awesome-copilot skills 固定提交 `dae77f2`](https://github.com/github/awesome-copilot/tree/dae77f24132c1d686c30fd5b29aee0d63668d1d2/skills) 中的最小兼容 skill 栈、输入—操作—输出匹配、可观察成功条件、基线验证和渐进披露模式。EpiAgentKit 只吸收这些通用设计原则，不复制其长篇通用 playbook、破坏性 Git 操作或与流行病学证据链冲突的固定流程。
+Skill 分流与维护规范参考了 GitHub [awesome-copilot skills 固定提交 `dae77f2`](https://github.com/github/awesome-copilot/tree/dae77f24132c1d686c30fd5b29aee0d63668d1d2/skills) 中的最小兼容 skill 栈、输入—操作—输出匹配、可观察成功条件、基线验证和渐进披露模式。EpiAgentKit 只吸收这些通用设计原则，不复制其长篇通用 playbook、破坏性 Git 操作或与流行病学证据链冲突的固定流程。
 
-`research-visuals` 借鉴并重新实现了 [TingxiYu/academic-figure-skill](https://github.com/TingxiYu/academic-figure-skill) 与 [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) 中的问题驱动图前合同、来源映射和多轮质量检查。仓库只归档选定的开源参考文档与提示词，没有引入其生产脚本、示例图片或第三方 API 配置。完整来源、固定快照、许可证与 SHA-256 见 [`external/SOURCE.md`](skills/research-visuals/references/external/SOURCE.md)。
+`research-visuals` 借鉴并重新实现了 [TingxiYu/academic-figure-skill](https://github.com/TingxiYu/academic-figure-skill) 与 [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) 中的问题驱动图前说明、来源映射和多轮质量检查。仓库只归档选定的开源参考文档与提示词，没有引入其生产脚本、示例图片或第三方 API 配置。完整来源、固定快照、许可证与 SHA-256 见 [`external/SOURCE.md`](skills/research-visuals/references/external/SOURCE.md)。
 
 `docx`、`pdf`、`pptx`、`xlsx` 与 `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录保留原始 LICENSE。`sysu-ppt` 内置模板版权归中山大学所有，仅供学习参考，可删除模板后替换为自有资产。
 

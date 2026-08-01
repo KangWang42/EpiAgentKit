@@ -15,7 +15,7 @@
 
 1. 对照不可变事实清单，锁定数字、统计方向、引文、公式、表图、研究对象、时间范围和结论方向。
 2. 按 `section-content-playbook.md` 检查目的、方法、结果、讨论和结论是否逐项对应。
-3. 按 `../academic-humanizer/references/patterns-and-preservation.md` 做可迁移性、闭环、段落功能和作者声纹检查。
+3. 按 `../academic-humanizer/references/patterns-and-preservation.md` 做可迁移性、结构完整性、段落功能和作者声纹检查。
 4. 最后处理空话、抽象名词链、连接词、句法和标点。
 
 不得以提高检测分数或表面“像人”为目标。禁止用固定句长、随机换词、故意口语化或制造语法瑕疵。

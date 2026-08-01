@@ -18,6 +18,7 @@ from config_core import (
     LEGACY_HOOK_MANIFEST,
     LEGACY_INSTALL_MANIFEST,
     LEGACY_SKILL_MANIFEST,
+    local_skill_excludes,
 )
 from sync_user_configs import (
     HOOK_DEFINITIONS,
@@ -33,6 +34,18 @@ from sync_user_configs import (
 
 ROOT = Path(__file__).resolve().parents[1]
 LINE_BUDGET = 200
+RESEARCH_TERMINOLOGY = ("合同", "契约", "真源", "单源", "闭环", "路由", "签发")
+RESEARCH_TEXT_SUFFIXES = {".md", ".py", ".R", ".json", ".txt"}
+RESEARCH_TEXT_EXCLUDED_PREFIXES = (
+    "skills/research-visuals/references/external/academic-figure-skill/",
+    "skills/research-visuals/references/external/academic-figure-generator/",
+)
+RESEARCH_TERM_ALLOWLIST = {
+    ("skills/consulting-delivery/SKILL.md", "合同"): (
+        "合同要求披露",
+        "合同允许",
+    ),
+}
 
 
 def configure_utf8_output() -> None:
@@ -47,6 +60,55 @@ def configure_utf8_output() -> None:
 
 def read(relative: str) -> str:
     return (ROOT / relative).read_text(encoding="utf-8")
+
+
+def research_term_violations(relative: str, line: str) -> tuple[str, ...]:
+    """Find overgeneralized internal terms while preserving valid legal uses."""
+    checked = line
+    for term in RESEARCH_TERMINOLOGY:
+        for allowed in RESEARCH_TERM_ALLOWLIST.get((relative, term), ()):
+            checked = checked.replace(allowed, "")
+    return tuple(term for term in RESEARCH_TERMINOLOGY if term in checked)
+
+
+def research_text_files() -> list[Path]:
+    candidates = [ROOT / name for name in ("CLAUDE.md", "AGENTS.md", "README.md")]
+    docs = ROOT / "docs"
+    if docs.exists():
+        candidates.extend(
+            path
+            for path in docs.rglob("*")
+            if path.is_file() and path.suffix in RESEARCH_TEXT_SUFFIXES
+        )
+    local_excludes = local_skill_excludes(ROOT)
+    for skill_dir in (ROOT / "skills").iterdir():
+        if not skill_dir.is_dir() or skill_dir.name in local_excludes:
+            continue
+        candidates.extend(
+            path
+            for path in skill_dir.rglob("*")
+            if path.is_file() and path.suffix in RESEARCH_TEXT_SUFFIXES
+        )
+    return sorted(set(candidates))
+
+
+def audit_research_terminology() -> list[str]:
+    """Audit researcher-facing rules, skills, templates and helper messages."""
+    findings: list[str] = []
+    for path in research_text_files():
+        relative = path.relative_to(ROOT).as_posix()
+        if relative.startswith(RESEARCH_TEXT_EXCLUDED_PREFIXES):
+            continue
+        for line_number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
+            terms = research_term_violations(relative, line)
+            if terms:
+                findings.append(
+                    f"{relative}:{line_number}: researcher-facing terminology uses "
+                    + ", ".join(terms)
+                )
+    return findings
 
 
 def load_module(name: str, path: Path):
@@ -119,6 +181,8 @@ def main() -> int:
         count = len(read(relative).splitlines())
         if count > LINE_BUDGET:
             problems.append(f"{relative}: {count} lines exceeds {LINE_BUDGET}")
+
+    problems.extend(audit_research_terminology())
 
     validator = ROOT / "skills/skill-creator/scripts/quick_validate.py"
     skill_names = {
@@ -259,7 +323,7 @@ def main() -> int:
             "凭证的完整内容",
             "轻量任务",
             "不得自动初始化项目",
-            "正式项目审查或交付签发前",
+            "正式项目审查或正式交付前",
             "日常中间步骤只做与风险相称的验证",
             ".epiagentkit-layout.json",
             "不安装或升级 R、Python",
@@ -276,11 +340,15 @@ def main() -> int:
             "平台术语没有稳定中文译名时保留原词并说明功能",
             "不作字面翻译",
             "流行病学与生物统计分析以 R 为主要语言",
-            "未指定且无既有语言合同时直接使用 R",
+            "用户未指定且项目没有既定分析语言时直接使用 R",
             "Python 不是标准研究工作流的前置条件",
             "R 运行时缺失时报告影响",
             "普通 R 包缺失时先按依赖规则补齐",
             "09_backup/workbench/",
+            "点名处仅为同类问题样例",
+            "扫描工作流",
+            "不只修点名处",
+            "保留合法用法",
         ),
         "AGENTS.md": (
             "Treat skill improvement as regression-safe optimization",
@@ -292,13 +360,15 @@ def main() -> int:
             "09_backup/workbench/YYYY-MM-DD_HHMM_<topic>_<purpose>/",
             "Get-Content -Encoding utf8",
             "Treat mojibake as a failed read",
+            "representative case",
+            "Do not stop at a literal replacement or the named file",
         ),
         "skills/epiagentkit-maintenance/SKILL.md": (
             "观察到的缺口",
             "必须保留的行为",
             "最小变更集",
             "代表性验证",
-            "每个概念保持一个单源",
+            "每项规则只在一处维护",
             "CLAUDE.md",
             "AGENTS.md",
             "hooks",
@@ -310,6 +380,8 @@ def main() -> int:
             "用户无需重复声明",
             "09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_maintenance/",
             "Get-Content -Encoding utf8",
+            "同类问题边界",
+            "科研术语检查",
         ),
         "skills/skill-creator/SKILL.md": (
             "Optimize, Don't Accumulate",
@@ -410,7 +482,7 @@ def main() -> int:
             "普通 R 包缺失时",
             "优先补齐",
             "安装失败不得静默换包或换方法",
-            "用户未指定语言且无既有语言合同时也使用",
+            "用户未指定且项目没有既定分析语言时也使用",
             "R 运行时缺失时报告影响",
             "不自动改用 Python",
         ),
@@ -522,7 +594,7 @@ def main() -> int:
             "一次只写一个部分 → 跑自检清单 → 全过 → 标记完成 → 才进下一部分",
         ),
         "skills/academic-publishing/references/chinese-thesis.md": (
-            "数字机器单源 = `07_paper/results.yaml`",
+            "机器可读的数字唯一来源 = `07_paper/results.yaml`",
             "重新派生 `0_result_summaries.md`",
         ),
         "skills/docx/SKILL.md": (
@@ -564,7 +636,7 @@ def main() -> int:
         "skills/publication-figures/SKILL.md": (
             "发表级统计图、数据图",
             "其它非统计视觉默认调用 `research-visuals`",
-            "先锁定图前合同",
+            "先锁定图前说明",
             "只更新数值、术语、标签、精度或注释时",
             "除非存在明确不合规问题",
             "保持原图的视觉语法",
@@ -640,7 +712,7 @@ def main() -> int:
             "scripts/run_check_project.py",
             ".epiagentkit-install.json",
             "不得只在当前研究项目或 `PATH` 中查找",
-            "任何 ERROR 都阻止最终签发",
+            "任何 ERROR 都阻止最终确认",
             "不得把无 provenance 时的 mtime 提示升级成确定性不一致",
             "继续完成其余层审查",
             "results.yaml | 0_result_summaries.md",
@@ -690,7 +762,7 @@ def main() -> int:
             "双尺度检查",
             "携图定向编辑",
             "最多连续两轮候选图质量修正",
-            "不降质合同",
+            "不降质要求",
             "事实与语义忠实度",
             "LOCKED",
             "FLEXIBLE",
@@ -726,12 +798,12 @@ def main() -> int:
         ),
         "skills/research-visuals/references/figure-planning.md": (
             "来源到图件矩阵",
-            "图前合同",
+            "图前说明",
             "参考图解构与编辑目标",
-            "携图编辑合同",
+            "携图编辑要求",
             "Baseline / Image 1",
             "第一次 HTTP 524",
-            "四轮签发",
+            "四轮终检",
             "TingxiYu/academic-figure-skill",
             "LigphiDonk/academic-figure-generator",
             "不按章节机械配图",
@@ -741,7 +813,7 @@ def main() -> int:
             "不可替代的用户原图不得静默重造",
             "载体定位与实例隔离",
             "载体语义身份",
-            "项目专属事实只进入本次运行时合同",
+            "项目专属事实只进入本次任务记录",
             "信息与文字角色",
             "模板适配",
             "真实 UI、终端、代码、文档和成果示例",
@@ -847,8 +919,8 @@ def main() -> int:
             "正文内容图",
             "真实截图",
             "氛围插图",
-            "场景路由矩阵",
-            "模板适配合同",
+            "场景选择矩阵",
+            "模板适配要求",
             "内容拓扑与美学实现",
             "Skill 功能示例",
             "实际生成并渲染后截图",

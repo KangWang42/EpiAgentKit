@@ -1,4 +1,4 @@
-# PROTOCOL 与 SAP 字段合同
+# PROTOCOL 与 SAP 字段规范
 
 ## PROTOCOL
 

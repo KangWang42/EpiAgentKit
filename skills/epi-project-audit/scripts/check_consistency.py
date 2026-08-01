@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """跨文档数字一致性审计（epi-project-audit / P0-C2）。
 
-把交付文档（论文/报告/PPT）里出现的统计量（CI、P 值）与结果单一真源
+把交付文档（论文/报告/PPT）里出现的统计量（CI、P 值）与结果数字唯一来源
 07_paper/results.yaml 双向比对：
   方向A 文中→源：文中每个 CI/P 统计量必须能在 results.yaml 的 rendered 里找到同值匹配；
                 找不到 = 疑似手敲/陈旧/下游私改未回写（高信号）。
@@ -102,12 +102,12 @@ def main():
     root = a.root
     yaml_path = a.yaml or os.path.join(root, "07_paper", "results.yaml")
     if not os.path.exists(yaml_path):
-        print(f"找不到结果真源：{yaml_path}"); sys.exit(2)
+        print(f"找不到结果唯一来源：{yaml_path}"); sys.exit(2)
     with open(yaml_path, encoding="utf-8") as f:
         doc = yaml.safe_load(f) or {}
     src_ci, src_p, full_norms = source_value_set(doc)
 
-    # 待审计交付文档（排除真源、派生 md、备份）
+    # 待审计交付文档（排除唯一来源、派生 md、备份）
     pats = ["07_paper/**/*.docx", "07_paper/**/*.md",
             "05_reports/**/*.docx", "05_reports/**/*.md", "05_reports/**/*.pptx",
             "04_figures/**/*.pptx", "**/*.pptx"]

@@ -1,7 +1,7 @@
 ---
 name: academic-publishing
 description: |
-  基于已验证的代码、结果单源和表图生成或结构性重写中英文期刊论文、学位论文部件、摘要、题名、cover letter、审稿回复、highlights 和投稿正式往来，并做投稿前一致性自查。开工先用 biostat-principles，终审用 academic-humanizer；实际 Word 操作再配合 docx。已有文本的局部润色或压缩只用 academic-humanizer。
+  基于已验证的代码、结果数字唯一来源和表图生成或结构性重写中英文期刊论文、学位论文部件、摘要、题名、cover letter、审稿回复、highlights 和投稿正式往来，并做投稿前一致性自查。开工先用 biostat-principles，终审用 academic-humanizer；实际 Word 操作再配合 docx。已有文本的局部润色或压缩只用 academic-humanizer。
 ---
 
 # 学术期刊论文与投稿材料生成（中英双语 · Publication-Ready）
@@ -13,7 +13,7 @@ description: |
 
 ## 〇、强制要求（每次生成都适用，违反=未完成）
 
-1. **数据唯一来源 = `07_paper/results.yaml`（机器单源）/ 其派生 `0_result_summaries.md`**。所有数字
+1. **数据唯一来源 = `07_paper/results.yaml`（机器可读的唯一来源）/ 其派生 `0_result_summaries.md`**。所有数字
    （样本量、估计值、CI、P 值、百分比）必须取自该源；脚本化拼装时用 `val("07_paper/results.yaml", "key")`
    取已渲染成品串，**禁止手敲数字、禁止四舍五入到与源不一致**（"禁手敲"指经 `val()` 取数以保持同步，**不是禁止阿拉伯数字**——统计值一律用阿拉伯数字、按各自精度呈现，NEVER 为规避而虚化成中文数字如"零点四四"）。源里没有 → 标 `[NEED CONFIRMATION]`，不瞎填。
    **双向一致性**：若需改某数字，回到 results.yaml（或其产出脚本）改、再传播下游；**NEVER** 只在正文就地改。
@@ -30,13 +30,13 @@ description: |
    研究者第一作者视角（"本研究/we"），结构由研究问题、estimand、表图和目标期刊决定，不套固定段数、固定分条或逐因素段式。
 8. **修订先分型再执行**：读取 `../academic-humanizer/references/revision-workflow.md`。已有文本的局部内容修订或终审以
    `academic-humanizer` 为主，只加载目标部件和修改清单所需资料；纯格式修复走 `docx`，不得借机改写正文。只有从零写作、
-   全文或章节级结构性重写、以及需要逐条闭环的正式审稿修订由本技能主导。无论范围大小，修改后核对相关部件和证据链。
+   全文或章节级结构性重写，以及需要逐条完成意见处理的正式审稿修订由本技能主导。无论范围大小，修改后核对相关部件和证据链。
 9. **编辑前建立不可变事实清单**：提取数字、统计方向、引文、公式、表图指向、终点定义和主要论断；改后逐项比对。
    原文内部冲突先报告，不自行选值、改引文或改变结论方向。
 
 ---
 
-## 一、路由：先定"语言 × 部件"，再加载对应 reference
+## 一、分流：先定"语言 × 部件"，再加载对应 reference
 
 第一步永远是判定两件事，然后只加载需要的 reference（节省上下文）：
 
@@ -79,7 +79,7 @@ description: |
 按顺序读，建立事实底座：
 
 1. `PROTOCOL.md` 与 `SAP.md` — 研究问题、预设终点/分析和注册口径；先区分预设、偏离与探索性。
-2. `07_paper/results.yaml`（结果机器单源）/ 其派生 `0_result_summaries.md` — **数据唯一源**，脚本拼装用 `val()` 取数。没有则先让用户生成或指定来源（由 `r-biostats` 或 `python-biostats` 产出）。
+2. `07_paper/results.yaml`（机器可读的结果唯一来源）/ 其派生 `0_result_summaries.md` — **结果数字均以此为准**，脚本拼装用 `val()` 取数。没有则先让用户生成或指定来源（由 `r-biostats` 或 `python-biostats` 产出）。
 3. `DECISIONS.md` — 设计/方法口径及相对 SAP 的偏离、原因和确认记录。
 4. `03_tables/` 与 `04_figures/`（含 `supplementary/`）— 进正文的表图清单及其编号（来自 registry）。
 5. `02_code/` 关键脚本顶部 — 确认变量定义、模型设定、软件版本，方法节据此写，**不臆测**。
@@ -89,7 +89,7 @@ description: |
 对应方法、结果、表图、讨论问题与证据边界。相关结果可以共享解释或文献对照，不为每条结果强配机制和意义。
 如有作者既往论文或已认可段落，同时建立声纹卡：术语、主语、hedging、连接方式、句式节奏和段落密度。
 
-已有稿件或审稿轮次同时建立 `revision-state.json`：列出全部合理输入候选并锁定唯一当前稿、轮次、格式合同、用户纠正、
+已有稿件或审稿轮次同时建立 `revision-state.json`：列出全部合理输入候选并锁定唯一当前稿、轮次、格式要求、用户纠正、
 允许与禁止范围、待补材料和稳定语义名交付集。运行 `academic-humanizer/scripts/validate_revision_state.py`；多个候选未选定或
 上一轮锁定决策静默变化时停止，不按修改时间、文件名或“最终版”后缀自动选择。
 
@@ -126,7 +126,7 @@ description: |
   sections/           中文稿各部件 .md（01_metadata … 07_references）
   sections_en/        英文稿各部件 .md（01_title_page … 09_abstract）
   submission/         cover_letter.md / response_to_reviewers.md / highlights.md / graphical_abstract.md
-                      revision-state.json（正式修订状态单源）
+                      revision-state.json（正式修订状态唯一来源）
   0_result_summaries.md   数据源（只读）
   manuscript.docx / manuscript_marked.docx   稳定语义名当前 clean / 标注稿
 ```
@@ -157,7 +157,7 @@ description: |
 
 终稿 docx **必须**由 `python-docx` 直接生成，**禁用** `pandoc -o`（中文字体字号、三线表、首行缩进、
 真上下标控制不到位）。一次性拼装脚本从创建起就在 `09_backup/workbench/<日期时间>_<主题>_oneoff/` 中运行，
-不进入 `02_code/` 编号流水线；验证通过的长期生成逻辑才按布局合同晋级主流程。字体字号表、三线表规格、双字体、OMML 公式映射、英文稿排版差异，全部见
+不进入 `02_code/` 编号流水线；验证通过的长期生成逻辑才按布局规范晋级主流程。字体字号表、三线表规格、双字体、OMML 公式映射、英文稿排版差异，全部见
 `references/docx-assembly.md`。英文稿若期刊接受可直接交 `docx` 技能产出干净 Word。
 
 ---
@@ -200,7 +200,7 @@ description: |
 
 | 文件 | 何时读 | 内容 |
 |------|--------|------|
-| `references/chinese-paper.md` | 写中文**期刊论著**/部件 | 期刊规范核验、各部件内容合同、非固定结构与全稿自检 |
+| `references/chinese-paper.md` | 写中文**期刊论著**/部件 | 期刊规范核验、各部件内容要求、非固定结构与全稿自检 |
 | `references/chinese-thesis.md` | 写中文**学位论文**（硕/博）/部件 | 学校规范核验、长文部件、内容深度、前后置部件、分部件工作流与学位论文自检 |
 | `references/thesis-formatting.md` | 学位论文**排版/拼装** | 页面设置、逐部件字体字号表、按章图表公式编号、三级目录自动生成、双页码段、python-docx 拼装差异点、黄色高亮占位实现 |
 | `references/section-content-playbook.md` | **写中文学位论文/论著前必读** | 目的—方法—结果—表图—讨论主轴、各部件内容功能、设计特异重点与非模板化结构终审 |

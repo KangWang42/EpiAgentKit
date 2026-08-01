@@ -35,8 +35,8 @@ BLACK = (0, 0, 0)
 
 
 def val(yaml_path, key, which="full"):
-    """从结果单一真源 results.yaml 取已渲染成品串（C1：下游取数禁手敲）。
-    数字只在 results.yaml 改；改下游须先回写真源再传播。
+    """从结果数字唯一来源 results.yaml 取已渲染成品串（C1：下游取数禁手敲）。
+    数字只在 results.yaml 改；改下游须先回写唯一来源再传播。
     用法：rep.para("S2 vs S1 差异为 " + val("07_paper/results.yaml", "S2_vs_S1_diff") + "。")
     """
     import yaml

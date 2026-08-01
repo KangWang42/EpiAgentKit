@@ -1,4 +1,4 @@
-# 来源路由
+# 来源分流
 
 先用问题类型选择主源，再用身份源交叉核对。搜索结果片段、聚合摘要和二手转述只用于发现候选，不作为正式依据。
 
@@ -12,7 +12,7 @@
 | 撤稿、更正、勘误、关注声明 | 出版商正式通知、PubMed、Crossref | 原文与通知的 DOI/PMID 双向关系 | 通知全文 | Retraction Watch 仅作补充发现，最终回到主源 |
 | 非生物医学或跨领域方法 | 领域权威数据库、出版商、Crossref | Crossref 与领域主库 | 原始方法论文和目标领域验证全文 | 出版商通知、Crossref relation |
 
-## 路由规则
+## 分流规则
 
 1. 指南定义回到发布机构；论文身份回到 PubMed/Crossref/出版商；注册状态回到注册平台。
 2. PubMed 适合生物医学身份、摘要、PMID 和 CommentsCorrections；Crossref 适合 DOI、出版元数据和 relation。两者均不能单独证明正文论断。

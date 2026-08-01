@@ -221,12 +221,12 @@ class SkillOptimizationTests(unittest.TestCase):
             "游戏化隐喻",
             "英文缩写首次出现给出全称",
             "流行病学与生物统计分析以 R 为主要语言",
-            "未指定且无既有语言合同时直接使用 R",
+            "用户未指定且项目没有既定分析语言时直接使用 R",
             "Python 不是标准研究工作流的前置条件",
             "R 运行时缺失时报告影响",
             "普通 R 包缺失时先按依赖规则补齐",
             "不要求迁移可工作的 R 主流程",
-            "回复与交付说明简洁，不堆套话",
+            "交付说明无套话",
             "使用临床研究、流行病学与生物统计的准确术语",
             "调用条件、检查要求、停止条件和隔离执行",
             "平台术语没有稳定中文译名时保留原词并说明功能",
@@ -246,7 +246,7 @@ class SkillOptimizationTests(unittest.TestCase):
         python_skill = (ROOT / "skills/python-biostats/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("用户未指定语言且无既有语言合同时也使用", r_skill)
+        self.assertIn("用户未指定且项目没有既定分析语言时也使用", r_skill)
         self.assertIn("R 运行时缺失时报告影响", r_skill)
         self.assertIn("普通 R 包缺失时", r_skill)
         self.assertIn("优先补齐", r_skill)
@@ -313,7 +313,7 @@ class SkillOptimizationTests(unittest.TestCase):
         )
         self.assertIn("`CLAUDE.md` §3", publishing + review)
         self.assertIn("`CLAUDE.md` §3 与 §7", project_init)
-        self.assertIn("`CLAUDE.md` §5 的术语合同", figures)
+        self.assertIn("`CLAUDE.md` §5 的术语要求", figures)
         self.assertIn("`CLAUDE.md` §1 与 §6", report)
 
     def test_multi_outcome_figures_use_set_level_coverage(self) -> None:

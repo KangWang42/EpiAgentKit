@@ -3,7 +3,7 @@
   "cases": [
     {
       "id": "maintain_epiagentkit_contracts",
-      "prompt": "重构 EpiAgentKit 的 CLAUDE.md，并同步优化相关 skills、hooks 和合同测试",
+      "prompt": "重构 EpiAgentKit 的 CLAUDE.md，并同步优化相关 skills、hooks 和工作流检查",
       "primary": "epiagentkit-maintenance",
       "companions": ["skill-creator"],
       "excluded": ["project-init", "epi-project-audit"]
@@ -38,7 +38,7 @@
     },
     {
       "id": "paper_from_scratch_word",
-      "prompt": "根据结果单源起草整篇论文并生成 Word 文件",
+      "prompt": "根据结果数字唯一来源起草整篇论文并生成 Word 文件",
       "primary": "academic-publishing",
       "companions": ["academic-humanizer", "docx"],
       "excluded": []
@@ -76,7 +76,7 @@
     },
     {
       "id": "reviewer_response_closure",
-      "prompt": "逐条闭环审稿意见，同步生成 response、clean Word 和带修订 Word，并核验每条意见的修改证据",
+      "prompt": "逐条处理并核验审稿意见，同步生成 response、clean Word 和带修订 Word，并核验每条意见的修改证据",
       "primary": "academic-publishing",
       "companions": ["academic-humanizer", "docx"],
       "excluded": [],

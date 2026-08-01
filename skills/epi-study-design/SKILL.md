@@ -14,7 +14,7 @@ description: 流行病学研究设计与统计分析计划工作流。用于把�
 3. 判断本次是新设计、方案补全、SAP 细化或设计审查，不自动扩展到项目初始化、分析或写作。
 4. 涉及结局定义、量表、方法依据、报告规范或最新指南时，先用 `evidence-research` 核验来源身份和适用性。
 
-## 2. 建立设计合同
+## 2. 建立研究设计要点
 
 按以下顺序形成可审查的研究设计：
 
@@ -34,10 +34,10 @@ description: 流行病学研究设计与统计分析计划工作流。用于把�
 ## 3. 输出
 
 - 轻量任务：输出一份设计备忘录，至少包含研究问题、estimand、关键定义、偏倚控制、主分析框架、未决事项和可观察验收条件。
-- 正式项目：更新 `PROTOCOL.md` 与 `SAP.md`；已确认的方法选择或偏离写入 `DECISIONS.md`，缺失信息写入 `BACKLOG.md`。不改动结果单源。
+- 正式项目：更新 `PROTOCOL.md` 与 `SAP.md`；已确认的方法选择或偏离写入 `DECISIONS.md`，缺失信息写入 `BACKLOG.md`。不改动结果数字唯一来源。
 - 用户只要求审查时：按“已明确、证据不足、内部冲突、需用户决定”分类报告，不替用户改文件。
 
-PROTOCOL 与 SAP 的字段合同见 [references/protocol-sap-contract.md](references/protocol-sap-contract.md)。
+PROTOCOL 与 SAP 的字段规范见 [references/protocol-sap-specification.md](references/protocol-sap-specification.md)。
 
 ## 4. 完成条件
 

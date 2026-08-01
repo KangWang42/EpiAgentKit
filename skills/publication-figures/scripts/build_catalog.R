@@ -2,7 +2,7 @@
 # 配方库检索目录生成器（publication-figures）
 # 作用：①把本地全库的教程(.md)+预览(png/jpg/pdf)同步进 skill 各配方文件夹
 #       （work.R 已在；跳过 260MB 体量的原始数据）；②扫全部配方自动生成
-#       references/recipes_catalog.md —— 一次 grep 即按意图定位配方的单一路由面。
+#       references/recipes_catalog.md —— 一次 grep 即可按意图定位配方的统一检索入口。
 # 用法：Rscript build_catalog.R   （库更新后重跑即可重生成）
 # 自由度：低（确定性脚本）。
 # ============================================================

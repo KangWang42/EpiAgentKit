@@ -21,9 +21,35 @@ from config_core import (
     local_skill_excludes,
 )
 from sync_user_configs import source_skills, sync_skills
+from audit_workflow_contracts import (
+    audit_research_terminology,
+    research_term_violations,
+)
 
 
 class WorkflowRoutingTests(unittest.TestCase):
+    def test_research_terminology_audit_is_context_aware(self) -> None:
+        self.assertEqual(
+            research_term_violations(
+                "skills/consulting-delivery/SKILL.md",
+                "必须保留法规、期刊、合同要求披露的事实；合同允许时方可排除。",
+            ),
+            (),
+        )
+        self.assertEqual(
+            research_term_violations(
+                "skills/epi-study-design/SKILL.md", "先建立设计合同。"
+            ),
+            ("合同",),
+        )
+        self.assertEqual(
+            research_term_violations(
+                "AGENTS.md", "Run scripts/audit_workflow_contracts.py."
+            ),
+            (),
+        )
+        self.assertEqual(audit_research_terminology(), [])
+
     def test_workflow_audit_forces_utf8_diagnostics(self) -> None:
         audit = (ROOT / "scripts" / "audit_workflow_contracts.py").read_text(
             encoding="utf-8"
@@ -168,7 +194,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "必须保留的行为",
             "最小变更集",
             "代表性验证",
-            "每个概念保持一个单源",
+            "每项规则只在一处维护",
             "不执行 `git init`",
             "不安装 Git",
             "sync --target all",
@@ -518,7 +544,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         )
         self.assertIn("发表级统计图、数据图", body)
         self.assertIn("其它非统计视觉默认调用 `research-visuals`", body)
-        self.assertIn("先锁定图前合同", body)
+        self.assertIn("先锁定图前说明", body)
         self.assertIn("多面板已完成两两去冗余", body)
         self.assertIn("07_paper/results.yaml", body)
         self.assertNotIn("用户要求出图、画图、做图、生成 Fig", body)
@@ -547,7 +573,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             / "references"
             / "chinese-thesis.md"
         ).read_text(encoding="utf-8")
-        self.assertIn("数字机器单源 = `07_paper/results.yaml`", body)
+        self.assertIn("机器可读的数字唯一来源 = `07_paper/results.yaml`", body)
         self.assertNotIn("结果变 → 回写 `0_result_summaries.md`", body)
 
     def test_audit_continues_all_layers_but_blocks_signoff(self) -> None:
@@ -555,7 +581,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("继续完成其余层审查", body)
-        self.assertIn("任何未闭环的 fail 都阻止签发", body)
+        self.assertIn("任何未解决的问题都阻止正式交付", body)
         self.assertIn("仅在“审查并修复”模式", body)
         self.assertNotIn("不通过不进入下一层", body)
         self.assertNotIn("### 自动修复动作", body)

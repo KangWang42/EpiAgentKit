@@ -5,7 +5,7 @@
 # 设计目标：
 #   1. 字体：中文 宋体 / 英文 Times New Roman（同一段落自动分流）
 #   2. 版式多样：纯文字 / 双栏文字 / 左右图文 / 上下图文 / 整图 / 表格 / 文表 / 代码示例 / 章节页
-#   3. 内容驱动：主信息、证据与解释闭环，按实际密度平衡字号、间距和留白
+#   3. 内容驱动：主信息、证据与解释完整对应，按实际密度平衡字号、间距和留白
 #   4. 强调：重点内容加粗 + 主色
 # ============================================================================
 
@@ -20,7 +20,7 @@ library(flextable)
 )
 .SYSU_SKILL_DIR <- if (!is.na(.SYSU_TOOLKIT_FILE)) dirname(dirname(.SYSU_TOOLKIT_FILE)) else NA_character_
 
-# 结果单一真源取数（C1：下游取数禁手敲）。数字只在 results.yaml 改，PPT 一律 val() 取。
+# 从 results.yaml 统一取数（C1：下游取数禁手敲）。数字只在 results.yaml 改，PPT 一律 val() 取。
 # 用法：tx(paste0("S2 vs S1 差异 ", val("07_paper/results.yaml", "S2_vs_S1_diff")))
 val <- function(path, key, which = "full") {
   doc <- yaml::read_yaml(path)

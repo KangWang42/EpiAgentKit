@@ -1,14 +1,14 @@
 ---
 name: epi-project-audit
 description: |
-  六层审查流行病学与生物统计项目的数据链、代码、结果、表图、正文和交付一致性，并以证据判定是否可签发。用于项目质控、结果复核、审稿前自查或全面一致性检查；只审查时不修改文件。上游为 biostat-principles，含咨询包时同时核对 consulting-delivery。
+  六层审查流行病学与生物统计项目的数据链、代码、结果、表图、正文和交付一致性，并以证据判定是否可正式交付。用于项目质控、结果复核、审稿前自查或全面一致性检查；只审查时不修改文件。上游为 biostat-principles，含咨询包时同时核对 consulting-delivery。
 ---
 
 # Epi Project Audit（6 层审查）
 
 > **审查本质**：证据链核对。不只看代码、不只看结果；看的是"数据 → 代码 → 结果 → 表图 → 正文"这条链是否首尾一致。
-> **工作模式**：六层按顺序逐项过 TODO；某层失败时记录证据、按权限修复或给出建议，并继续完成其余层审查。任何未闭环的 fail 都阻止签发，只有全过才发 **pass**。
-> **结构单源**：目录、命名、registry、归档与 BACKLOG 的规范以 `../project-init/references/project-hygiene.md` 为准。
+> **工作模式**：六层按顺序逐项检查；某层失败时记录证据、按权限修复或给出建议，并继续完成其余层审查。任何未解决的问题都阻止正式交付，全部通过后才返回 **pass**。
+> **结构规范依据**：目录、命名、registry、归档与 BACKLOG 以 `../project-init/references/project-hygiene.md` 为准。
 
 ---
 
@@ -23,7 +23,7 @@ description: |
 3. `PROTOCOL.md` / `SAP.md`（预设研究问题、分析与偏离边界）
 4. `DECISIONS.md`（方法决策与方案偏离历史）
 5. `SESSION_LOG.md`（操作日志）
-6. `07_paper/results.yaml`（结果机器单源）+ 派生 `0_result_summaries.md`
+6. `07_paper/results.yaml`（机器可读的结果唯一来源）+ 派生 `0_result_summaries.md`
 
 **缺失关键文件就已经是扣分项**，要写入"Problems found"。
 
@@ -37,7 +37,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 `run_check_project.py` 从 `~/.codex/.epiagentkit-install.json` 或 `~/.claude/.epiagentkit-install.json` 的 `source` 键解析中央 EpiAgentKit 仓库，再调用其中的 `scripts/epiagentkit.py check-project`。不得只在当前研究项目或 `PATH` 中查找 `epiagentkit.py`，也不得在未检查安装清单前报告“当前机器未找到”。可先用 `--print-cli` 核验解析结果。
 
-把 findings 映射到对应 Layer。任何 ERROR 都阻止最终签发；WARN 必须解释，但不得把无 provenance 时的 mtime 提示升级成确定性不一致。该命令只做预检，不替代代码实跑、数字矩阵或科学判断，不注册为 Stop hook。
+把 findings 映射到对应 Layer。任何 ERROR 都阻止最终确认；WARN 必须解释，但不得把无 provenance 时的 mtime 提示升级成确定性不一致。该命令只做预检，不替代代码实跑、数字矩阵或科学判断，不注册为 Stop hook。
 
 ### 1.2 确定范围
 
@@ -69,7 +69,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 - **绿（pass）**：全部 TODO 通过
 - **黄（concerns）**：有非阻塞问题，已写入报告
-- **红（fail）**：有证据链断裂、数字不一致、结论无支撑 → **必须修复后重审**，不可签发
+- **红（fail）**：有证据链断裂、数字不一致、结论无支撑 → **必须修复后重审**，不可正式交付
 
 ---
 
@@ -78,7 +78,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 ### TODO 清单
 
 - [ ] 目录结构符合七层规范（01_data / 02_code / 03_tables / 04_figures / 05_reports / 06_results / 07_paper / 09_backup）
-- [ ] `.epiagentkit-layout.json` 使用 declare-before-create 合同，全部活动目录和文件均有精确位置、owner、purpose、producer、consumer 与 lifecycle；无未声明路径
+- [ ] `.epiagentkit-layout.json` 使用 declare-before-create 要求，全部活动目录和文件均有精确位置、owner、purpose、producer、consumer 与 lifecycle；无未声明路径
 - [ ] `01_data/rawdata/` 及额外声明的 raw roots 存在，`check-project` 未发现 Git 工作区修改；非 Git 数据另核来源与只读证据
 - [ ] `02_code/` 内阶段脚本按 `NN_描述.R|py` 编号且连续无断号；无来源不明的 `test.*`、`final.*`、`temp.*`
 - [ ] `02_code/` 编号脚本数 ≤ 10（config / conventions / lib / run_pipeline 与 vendored/ 不计）；探索 / 一次性脚本不在 `02_code/`（应在 `09_backup/`）
@@ -98,7 +98,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 ### 修复处理
 
-按 §十一的审查/修复模式与权限边界执行。来源不明的 `test.R`、`temp.R`、根目录文件或多版本产物不得因命名看似不规范就自动移动、重命名或删除；先确认所有权、引用关系与当前版本。只有用户要求修复且目标位置唯一、引用可同步、验证可闭环时才处理。
+按 §十一的审查/修复模式与权限边界执行。来源不明的 `test.R`、`temp.R`、根目录文件或多版本产物不得因命名看似不规范就自动移动、重命名或删除；先确认所有权、引用关系与当前版本。只有用户要求修复且目标位置唯一、引用可同步、能够完成验证时才处理。
 
 ---
 
@@ -131,7 +131,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 - [ ] 依赖声明完整；只有随机流程需要固定并记录 seed
 - [ ] 用相对路径（grep `setwd`、grep `"C:/"`、grep `/Users/`）
 - [ ] 循环、向量化或批处理选择可读且无索引错误；无临时调试输出残留
-- [ ] 中间格式与消费者和项目合同匹配，跨脚本依赖通过声明的落盘文件传递
+- [ ] 中间格式与消费者和项目要求匹配，跨脚本依赖通过声明的落盘文件传递
 - [ ] 正式项目无写死的 `Table\d` / `Fig\d` 输出路径；产出经对应语言的 registry helper 生成
 - [ ] 结果包（`05_reports/*/`）内脚本不回读项目根（grep `\.\./`）
 
@@ -148,7 +148,7 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 - 临时调试输出残留 → 删除；有用的长期进度或审计信息保留为语义日志
 - `setwd()` 绝对路径 → 改 `here::i_am()` 或 `Rproj` 提示
-- 输出格式不符合既有消费者合同 → 回到生产脚本统一生成
+- 输出格式不符合既有消费者要求 → 回到生产脚本统一生成
 
 ---
 
@@ -156,9 +156,9 @@ python <本技能目录>/scripts/run_check_project.py <项目根> --json
 
 **这是一切审查的核心：数字必须从"数据源 → 脚本产物 → 表 → 图 → 摘要 → 正文"一致到底。**
 
-### 先跑自动审计（结果单一真源项目）
+### 先跑自动审计（使用 results.yaml 的项目）
 
-若项目已用结果单一真源（`07_paper/results.yaml`，见 `biostat-principles/references/result-summary-schema.md`），**先跑**：
+若项目已用结果数字唯一来源（`07_paper/results.yaml`，见 `biostat-principles/references/result-summary-schema.md`），**先跑**：
 
 ```bash
 python <此skill>/scripts/check_consistency.py <项目根>
@@ -333,7 +333,7 @@ Layer 4 审查必须输出一张**数字一致性矩阵**：
 
 ### 审查并修复
 
-用户要求“检查并修复、完善、统一”时，只直接处理来源明确、目标唯一、非破坏且能验证闭环的问题：
+用户要求“检查并修复、完善、统一”时，只直接处理来源明确、目标唯一、非破坏且能完整验证的问题：
 
 - 本轮新建或修改文件中的命名、引用、路径和格式错误
 - 可确定为当前工作流生成的调试残留或失效引用

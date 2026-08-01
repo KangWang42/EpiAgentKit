@@ -44,9 +44,9 @@ fig_path <- function(stem, ext = "png") {
 
 纯 Python 项目同理：registry 列表 + `table_path` / `fig_path` 函数放进 `config.py`。
 
-## 实现二：R + Python 混合项目（registry.json 单源）
+## 实现二：R + Python 混合项目（registry.json 唯一来源）
 
-一份 `02_code/registry.json` 作单一真源，两语言各写薄 helper 读它：
+一份 `02_code/registry.json` 作唯一来源，两语言各写薄 helper 读它：
 
 ```json
 {
