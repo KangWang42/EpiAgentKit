@@ -1,11 +1,13 @@
 ---
 name: epiagentkit-maintenance
-description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills、references、hooks、安装同步、doctor、路由、合同测试和 README。用于完善、重构、排查或审查这些仓库组件；普通研究项目的数据分析、写作或项目初始化不触发本 skill。修改 skill 时同时使用 skill-creator；Git 仅在已可用且当前目录为仓库时使用。
+description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills、references、hooks、安装同步、doctor、路由、合同测试和 README。用户以后提出新增、修改、修复、重命名或删除 skill 时自动触发本合同；普通研究项目的数据分析、写作或项目初始化不触发本 skill。修改 skill 时同时使用 skill-creator；Git 仅在已可用且当前目录为仓库时使用。
 ---
 
 # EpiAgentKit 维护
 
 把规则、skills、hooks、脚本、测试和文档视为一个行为系统。基于真实缺口持续优化，不做追加式堆砌，不以缩短文件为由丢失已有能力。
+
+每次 skill 变更都自动执行本流程，用户无需重复声明。先保护完整工作流，再满足本次新增或修复需求。
 
 ## 1. 建立基线
 
@@ -14,6 +16,8 @@ description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills
 3. 只读检查运行环境。先判断命令是否存在，再运行验证；缺少 R、Python、Node、Java、LibreOffice、TeX、Git 或依赖时说明影响和用户可执行的准备方式，不创建环境，也不安装、升级或降级任何工具。
 4. Git 仅作可选增强：命令可用且当前目录为仓库时读取状态和差异；Git 不可用或目录不是仓库时，改用文件清单、内容检索和直接校验建立基线，不执行 `git init`，不安装 Git，也不把缺少 Git 判为任务失败。
 5. 不读取后回显凭证、私密设置或环境变量完整内容；只报告键、类型和设置状态。
+6. 在 `09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_maintenance/` 建立本次隔离工作区，先写 `PLAN.md`，再在其中创建和运行临时脚本、诊断与测试产物。把当前验证进程的 `TEMP`、`TMP` 和 `TMPDIR` 指向该批次的 `runtime/`；结束后只清理可重建缓存，保留 `PLAN.md`、`FINDINGS.md` 与需要追溯的试验依据。不得把 Agent 创建的文件写入系统 Temp 或仓库根。
+7. Windows PowerShell 读取中文前显式设置 UTF-8 输出并使用 `Get-Content -Encoding utf8`；出现乱码时判为读取失败，丢弃该输出并按 UTF-8 重读后再判断。
 
 ## 2. 写变更合同
 

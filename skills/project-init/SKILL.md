@@ -74,6 +74,7 @@ description: |
 │   ├── results.yaml
 │   └── 0_result_summaries.md
 └── 09_backup/
+    ├── workbench/          # 隔离试验、诊断和一次性脚本，从这里创建并运行
     ├── INDEX.md            # 旧交付物 / 旧代码批次索引
     └── EXPERIMENTS.md      # 全部探索尝试索引，含失败/未采用结果
 ```
@@ -235,7 +236,7 @@ init_project(
   - 建议 —— 补了完善论文（敏感性、稳健性、对照、双标化等），不补也能成稿。
   - 可选 —— 探索 / 锦上添花 / 不确定有无用。
 - **状态**：完成填 `✅ YYYY-MM-DD`，未完成留空；做完只打勾不删行（删了查不到"补过没"）。
-- **做了发现不该进主流程**（效果不好 / 实属探索）→ 不留主表，整条挪到 `09_backup/<日期>_<主题>/` 并在 FINDINGS.md 记结论；本表「已移出」区只留一行指针，正文留痕在 backup。
+- **做了发现不该进主流程**（效果不好 / 实属探索）→ 不留主表，整条移到对应 `09_backup/workbench/<日期时间>_<主题>_experiment/` 的 FINDINGS.md；本表「已移出」区只留一行指针。
 
 ## 待办与已完成（同一张表，新发现加到顶部）
 
@@ -253,7 +254,7 @@ init_project(
 - `PROTOCOL.md` 在分析前锁定研究问题、设计、人群、暴露/干预、终点、伦理/注册和适用报告规范。
 - `SAP.md` 在查看主要结果前锁定 estimand、分析人群、缺失处理、主要模型、诊断、多重性、验证切分、敏感性和亚组分析。
 - 任何方案偏离写入 `DECISIONS.md`，并区分预设与探索性。
-- 每次试新方法先登记 `09_backup/EXPERIMENTS.md`，再在独立目录写 `PLAN.md`、运行并以 `FINDINGS.md` 记录全部结果。不满足预设主流程纳入条件的结果不进入主 `results.yaml`；需展示时只进入消融/探索性附录。
+- 每次试新方法先登记 `09_backup/EXPERIMENTS.md`，再在 `09_backup/workbench/<日期时间>_<主题>_experiment/` 写 `PLAN.md`、创建并运行脚本，以 `FINDINGS.md` 记录全部结果。不满足预设主流程纳入条件的结果不进入主 `results.yaml`；需展示时只进入消融/探索性附录。
 
 ### 4.4 结果单源 `07_paper/results.yaml`（+ 派生 `0_result_summaries.md`）
 
@@ -357,6 +358,7 @@ LineEndingConversion: Posix
   - CLAUDE.md / AGENTS.md / PROTOCOL.md / SAP.md / 日志与待补清单就绪
   - config.R|py / conventions.R|py / 对应语言 vendored helper 与空 registry 就绪
   - 探索实验索引 09_backup/EXPERIMENTS.md 就绪
+  - 隔离工作区 09_backup/workbench/ 就绪
   - 版本归档索引 09_backup/INDEX.md 就绪
   - `.epiagentkit-layout.json` 已登记全部初始目录和文件；后续产物先登记再创建
   - 数据字典模板已生成
@@ -392,6 +394,6 @@ LineEndingConversion: Posix
 | 目录已存在 | 停下来问是继续现有项目、改名还是另选目录；不得默认追加 `_v2` 制造并列版本 |
 | 用户要启用 Git 且 Git 已可用 | 执行 `git init`；完成初始化与验证后按全局偏好自动首次 commit；仅在用户当轮明确要求时 push |
 | Git 不可用 | 继续创建项目并报告“Git 已跳过”；不执行 `git init`，不安装 Git，不把缺少 Git 判为失败 |
-| 想试多个模型或参数 | 先登记 `09_backup/EXPERIMENTS.md` 并隔离运行；不得直接改主流程或只保留最好结果 |
+| 想试多个模型或参数 | 先登记 `09_backup/EXPERIMENTS.md`，再在 `09_backup/workbench/` 创建并隔离运行；不得直接改主流程或只保留最好结果 |
 | 咨询模式没指定主题 | 用 `主题占位`，在 `00_客户说明.md` 里提示用户改 |
 | 用户说"要不要用 renv" | 默认 **否**；除非用户明确要求，renv 对小咨询任务反而拖累速度 |

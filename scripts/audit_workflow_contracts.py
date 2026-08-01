@@ -280,6 +280,7 @@ def main() -> int:
             "Python 不是标准研究工作流的前置条件",
             "R 运行时缺失时报告影响",
             "普通 R 包缺失时先按依赖规则补齐",
+            "09_backup/workbench/",
         ),
         "AGENTS.md": (
             "Treat skill improvement as regression-safe optimization",
@@ -288,6 +289,9 @@ def main() -> int:
             "Do not trade away existing behavior",
             "Use `epiagentkit-maintenance`",
             "do not initialize a repository or install Git",
+            "09_backup/workbench/YYYY-MM-DD_HHMM_<topic>_<purpose>/",
+            "Get-Content -Encoding utf8",
+            "Treat mojibake as a failed read",
         ),
         "skills/epiagentkit-maintenance/SKILL.md": (
             "观察到的缺口",
@@ -303,6 +307,9 @@ def main() -> int:
             "sync --target all",
             "doctor --target all",
             "普通研究项目的数据分析、写作或项目初始化不触发本 skill",
+            "用户无需重复声明",
+            "09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_maintenance/",
+            "Get-Content -Encoding utf8",
         ),
         "skills/skill-creator/SKILL.md": (
             "Optimize, Don't Accumulate",
@@ -325,6 +332,10 @@ def main() -> int:
             "BACKLOG.md",
             "新项目未指定时直接使用 R",
             "标准 R 项目不要求 Python 环境",
+            "09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_<用途>/",
+            "PLAN.md",
+            "FINDINGS.md",
+            "TMPDIR",
         ),
         "skills/biostat-principles/references/result-summary-schema.md": (
             "stale_interps(path)",
@@ -378,6 +389,7 @@ def main() -> int:
             '"SAP.md"',
             '"09_backup/EXPERIMENTS.md"',
             '"09_backup/INDEX.md"',
+            '"09_backup/workbench"',
             '"02_code/config.R"',
             '"02_code/conventions.R"',
             '"02_code/vendored"',
@@ -412,6 +424,7 @@ def main() -> int:
         ),
         "skills/biostat-principles/SKILL.md": (
             "09_backup/EXPERIMENTS.md",
+            "09_backup/workbench/<YYYY-MM-DD_HHMM>_<主题>_experiment/",
             "PLAN.md",
             "FINDINGS.md",
             "规则冲突只使用全局",
@@ -435,6 +448,8 @@ def main() -> int:
             "scripts/run_check_project.py",
             "复现检查只使用本机已有的兼容 R/Python 环境",
             "不得创建虚拟环境或执行安装、升级命令",
+            "09_backup/workbench/<日期时间>_<主题>_oneoff/",
+            "09_backup/workbench/<日期时间>_<主题>_reproduce/",
         ),
         "skills/consulting-delivery/scripts/consulting_scaffold.R": (
             'subdirs <- c("data", "code", "results", "tables", "figures")',
@@ -457,7 +472,7 @@ def main() -> int:
             "remove_skill_conflicts(",
             "remove_tree(resolved)",
             'LEGACY_SKILL_ALIASES = {"image-diagrams": "research-visuals"}',
-            "effective_excludes = exclude | SYNC_EXCLUDES",
+            "effective_excludes = exclude | SYNC_EXCLUDES | local_skill_excludes(root)",
             "Local-only skills are not distributable",
         ),
         "scripts/skill_conflicts.py": (
@@ -483,8 +498,10 @@ def main() -> int:
             '"epi-study-design"',
             '"python-biostats"',
             '"epiagentkit-maintenance": {"skill-creator"}',
+            'LOCAL_SKILL_EXCLUDES_FILE = ".epiagentkit-local-skills"',
             'SYNC_EXCLUDES = {"python-ecg-analysis"}',
-            "item.name not in SYNC_EXCLUDES",
+            "def local_skill_excludes(root: Path)",
+            "item.name not in excludes",
         ),
         "scripts/skill_routing_cases.json": (
             "readme_content_diagram",
@@ -617,6 +634,7 @@ def main() -> int:
             "secrets.high_entropy",
             "benign_named_credential",
             "os.walk(project, topdown=True",
+            'workbench = (backup / "workbench").resolve(strict=False)',
         ),
         "skills/epi-project-audit/SKILL.md": (
             "scripts/run_check_project.py",
@@ -991,6 +1009,7 @@ def main() -> int:
             'genre = c("meeting", "formal")',
             "组会 PPT 禁止目录页",
             "组会 PPT 禁止章节分隔/过渡页",
+            "on.exit(unlink(td, recursive = TRUE, force = TRUE), add = TRUE)",
         ),
     }
     for relative, fragments in required.items():
@@ -1067,10 +1086,12 @@ def main() -> int:
             "CLAUDE.md 的 CRITICAL 条款",
             "所有执行 skill 冲突时，本文件优先级更高",
             "提交前征询用户",
+            "09_backup/<YYYY-MM-DD>_<主题>/",
         ),
         "skills/academic-publishing/SKILL.md": (
             "生成或润色任一部件",
             "批准→下一部件",
+            "09_backup/<日期>_scripts_oneoff/",
         ),
         "skills/academic-publishing/references/chinese-thesis.md": (
             "数字唯一来源 = `0_result_summaries.md`",
@@ -1105,6 +1126,7 @@ def main() -> int:
         "skills/consulting-delivery/SKILL.md": (
             "每个新版本用新日期建新包",
             "旧包移 `09_backup/` 或保留原位",
+            "系统创建的隔离临时目录",
         ),
         "skills/docx/SKILL.md": ("Install: `npm install -g docx`",),
         "skills/pptx/SKILL.md": (
@@ -1689,11 +1711,15 @@ def main() -> int:
         bad_trace.write_text("AI" + "辅助\n", encoding="utf-8")
         scan_hook = ROOT / "hooks" / "scan_ai_trace.sh"
         for path in (allowed, backlog):
-            result = run_hook_script(scan_hook, project, raw_payload(path.as_posix()))
+            result = run_hook_script(
+                scan_hook, project, raw_payload(path.relative_to(project).as_posix())
+            )
             if result.returncode or result.stdout.strip() or result.stderr.strip():
                 problems.append(f"text scan self-test rejected allowed symbols: {path.name}")
         for path in (bad_emoji, bad_backlog, bad_trace):
-            result = run_hook_script(scan_hook, project, raw_payload(path.as_posix()))
+            result = run_hook_script(
+                scan_hook, project, raw_payload(path.relative_to(project).as_posix())
+            )
             if result.returncode != 2:
                 problems.append(f"text scan self-test allowed forbidden content: {path.name}")
 
@@ -1767,7 +1793,9 @@ def main() -> int:
         bash_hook = ROOT / "hooks" / "post_bash_checks.sh"
 
         def edit_payload(path: Path) -> str:
-            return json.dumps({"tool_input": {"file_path": path.as_posix()}})
+            return json.dumps(
+                {"tool_input": {"file_path": path.relative_to(project).as_posix()}}
+            )
 
         good = run_hook_script(edit_hook, project, edit_payload(good_r))
         bad_syntax = run_hook_script(edit_hook, project, edit_payload(bad_r))

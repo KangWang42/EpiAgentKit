@@ -72,7 +72,7 @@ init_project <- function(name,
     "05_reports",
     "06_results",
     "07_paper",
-    "09_backup"
+    "09_backup/workbench"
   )
   invisible(lapply(file.path(proj, dirs),
                    dir.create, recursive = TRUE, showWarnings = FALSE))
@@ -241,7 +241,7 @@ init_project <- function(name,
       "- 主评价指标与最小有意义差异：",
       "- 亚组与交互作用（预设）：",
       "- 敏感性分析（预设）：",
-      "- 探索性分析边界：每次先登记于 `09_backup/EXPERIMENTS.md`，再隔离运行",
+      "- 探索性分析边界：每次先登记于 `09_backup/EXPERIMENTS.md`，再在 `09_backup/workbench/<日期时间>_<主题>_experiment/` 创建并运行",
       "",
       "## 可复现性与偏离",
       "",
@@ -265,7 +265,7 @@ init_project <- function(name,
   writeLines(
     c("# 探索实验索引",
       "",
-      "每次尝试在看结果前登记一行，并在对应目录建立 `PLAN.md`；完成后更新状态和 `FINDINGS.md`。",
+      "每次尝试在看结果前登记一行，并在 `09_backup/workbench/<日期时间>_<主题>_experiment/` 建立 `PLAN.md`、创建并运行脚本；完成后更新状态和 `FINDINGS.md`。",
       "失败、持平与未采用的尝试同样保留，避免重复试验和选择性报告。未合并结果不得写入主 `results.yaml`。",
       "",
       "| 实验ID | 日期 | 问题 / 假设 | 主线基线 | 唯一改动 | 数据切分与主指标 | 预设晋级标准 | 状态 | 目录 |",
@@ -304,7 +304,7 @@ init_project <- function(name,
       "  - 建议 —— 补了完善论文（敏感性、稳健性、对照、双标化等），不补也能成稿。",
       "  - 可选 —— 探索 / 锦上添花 / 不确定有无用。",
       "- **状态**：完成填 `✅ YYYY-MM-DD`，未完成留空；做完只打勾不删行（删了查不到\"补过没\"）。",
-      "- **做了发现不该进主流程**（效果不好 / 实属探索）→ 不留主表，整条挪到 `09_backup/<日期>_<主题>/` 并在 FINDINGS.md 记结论；本表「已移出」区只留一行指针。",
+      "- **做了发现不该进主流程**（效果不好 / 实属探索）→ 不留主表，整条移到对应 `09_backup/workbench/<日期时间>_<主题>_experiment/` 的 FINDINGS.md；本表「已移出」区只留一行指针。",
       "",
       "## 待办与已完成（同一张表，新发现加到顶部）",
       "",
@@ -337,10 +337,10 @@ init_project <- function(name,
       "05_reports/    # 结果分享包",
       "06_results/    # 中间产物",
       "07_paper/      # 论文稿 + 结果汇总",
-      "09_backup/     # INDEX.md + 分批归档",
+      "09_backup/     # INDEX.md + EXPERIMENTS.md + workbench/",
       "```",
       "",
-      "研究方案见 `PROTOCOL.md`，预设统计分析见 `SAP.md`；缺口统一记入 `BACKLOG.md`，旧版批次登记于 `09_backup/INDEX.md`，全部探索尝试登记于 `09_backup/EXPERIMENTS.md`。",
+      "研究方案见 `PROTOCOL.md`，预设统计分析见 `SAP.md`；缺口统一记入 `BACKLOG.md`，旧版批次登记于 `09_backup/INDEX.md`，全部探索尝试登记于 `09_backup/EXPERIMENTS.md`，脚本在 `09_backup/workbench/` 隔离运行。",
       "",
       "## 快速开始",
       "",
@@ -588,7 +588,7 @@ init_project <- function(name,
   )
   keep_dirs <- c("01_data/rawdata", "03_tables", "03_tables/supplementary",
                  "04_figures", "04_figures/supplementary", "05_reports",
-                 "06_results", "09_backup")
+                 "06_results", "09_backup", "09_backup/workbench")
   invisible(file.create(file.path(proj, keep_dirs, ".gitkeep")))
 
   # .Rproj 仅用于 R 项目 ---------------------------------
@@ -657,6 +657,9 @@ init_project <- function(name,
     } else if (top == "07_paper") {
       c(owner = "academic-publishing", purpose = "result source and manuscript materials",
         producer = "analysis and publishing workflows", consumer = "submission and audit workflows")
+    } else if (grepl("^09_backup/workbench($|/)", relative_path)) {
+      c(owner = "project-init", purpose = "isolated workbench",
+        producer = "experiment workflow", consumer = "audit workflow")
     } else if (top == "09_backup") {
       c(owner = "project-init", purpose = "recoverable archive indexes",
         producer = "archive workflow", consumer = "audit and recovery workflows")

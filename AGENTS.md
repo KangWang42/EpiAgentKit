@@ -4,6 +4,8 @@
 
 This repository provides shared Claude Code and Codex guidance for epidemiology and biostatistics. `CLAUDE.md` holds cross-task rules; `README.md` covers installation and architecture. Each `skills/` directory is self-contained: keep `SKILL.md` concise, detailed guidance in `references/`, utilities in `scripts/`, and templates or media in `assets/`. Enforcement scripts live in `hooks/`. The allowlist `.gitignore` excludes runtime state, credentials, caches, histories, and local settings.
 
+Repository-maintenance experiments, one-off scripts and diagnostic outputs belong in `09_backup/workbench/YYYY-MM-DD_HHMM_<topic>_<purpose>/`, with `PLAN.md` before execution and `FINDINGS.md` after execution. Run them there; do not place agent-created work in the system temp directory or the repository root. Point the current test process's `TEMP`, `TMP` and `TMPDIR` to that batch's `runtime/` directory, then remove only that runtime cache after the command finishes.
+
 ## Build, Test, and Development Commands
 
 There is no unified build or test runner. Validate the component you changed:
@@ -22,9 +24,11 @@ The validator checks skill metadata and structure; the other commands check synt
 
 Use UTF-8 Markdown, imperative instructions, and descriptive headings. Skill directories use lowercase kebab-case, such as `academic-publishing/`. Every `SKILL.md` starts with YAML fields `name` and `description`. Use four spaces in Python, two in R, and portable Bash with `#!/usr/bin/env bash`. Keep shell files LF-only. Prefer relative paths and reusable scripts over large embedded code blocks.
 
+On Windows PowerShell, set `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8` and read text with `Get-Content -Encoding utf8`. Treat mojibake as a failed read: discard it and reread with explicit UTF-8 before making any decision or edit.
+
 ## Skill Maintenance
 
-Treat skill improvement as regression-safe optimization, not append-only documentation. Before editing, identify the observed failure or new use case, behaviors that must remain unchanged, the smallest coherent change, and representative old and new evaluations. Classify existing material as keep, rewrite, merge, move, script, or delete before adding rules or files. Keep each concept in one source: global constraints in `CLAUDE.md`, core routing and workflow in `SKILL.md`, conditional detail and examples in `references/`, and repeated deterministic operations in `scripts/`. Prefer the smaller change when two designs pass the same evaluations; remove stale, redundant, conflicting, speculative, or overly project-specific content. Do not trade away existing behavior under the label of simplification unless the user explicitly changes the contract.
+Every request to add, revise, repair, rename or remove a skill automatically uses `epiagentkit-maintenance` together with `skill-creator`; the user does not need to restate this requirement. Treat skill improvement as regression-safe optimization, not append-only documentation. Before editing, identify the observed failure or new use case, behaviors that must remain unchanged, the smallest coherent change, and representative old and new evaluations. Classify existing material as keep, rewrite, merge, move, script, or delete before adding rules or files. Keep each concept in one source: global constraints in `CLAUDE.md`, core routing and workflow in `SKILL.md`, conditional detail and examples in `references/`, and repeated deterministic operations in `scripts/`. Prefer the smaller change when two designs pass the same evaluations; remove stale, redundant, conflicting, speculative, or overly project-specific content. Do not trade away existing behavior under the label of simplification unless the user explicitly changes the contract.
 
 ## Testing Guidelines
 

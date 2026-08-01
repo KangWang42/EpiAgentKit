@@ -15,6 +15,7 @@ LEGACY_INSTALL_MANIFEST = ".epiclaude-install.json"
 LEGACY_SKILL_MANIFEST = ".epiclaude-managed-skills.json"
 LEGACY_HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 INSTALL_SCHEMA = 1
+LOCAL_SKILL_EXCLUDES_FILE = ".epiagentkit-local-skills"
 
 # Repository skills that remain available for local development but must not be
 # advertised, installed, or synchronized into user runtime skill directories.
@@ -97,13 +98,26 @@ CODEX_COMPATIBILITY_WARNING = (
 )
 
 
+def local_skill_excludes(root: Path) -> set[str]:
+    """Read untracked, machine-local skill names that must not be distributed."""
+    path = root / LOCAL_SKILL_EXCLUDES_FILE
+    if not path.is_file():
+        return set()
+    return {
+        line
+        for raw in path.read_text(encoding="utf-8-sig").splitlines()
+        if (line := raw.strip()) and not line.startswith("#")
+    }
+
+
 def available_skills(root: Path) -> list[str]:
+    excludes = SYNC_EXCLUDES | local_skill_excludes(root)
     return sorted(
         item.name
         for item in (root / "skills").iterdir()
         if (
             item.is_dir()
-            and item.name not in SYNC_EXCLUDES
+            and item.name not in excludes
             and (item / "SKILL.md").is_file()
         )
     )

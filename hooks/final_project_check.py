@@ -225,6 +225,7 @@ def layout_actual_paths(
 ) -> dict[Path, str]:
     actual: dict[Path, str] = {}
     backup = (project / "09_backup").resolve(strict=False)
+    workbench = (backup / "workbench").resolve(strict=False)
     prune_names = {Path(value).name.casefold() for value in contract["prune_dirs"]}
     prune_names.discard("09_backup")
     for current_raw, directories, files in os.walk(project, topdown=True, followlinks=False):
@@ -233,7 +234,13 @@ def layout_actual_paths(
             directories[:] = []
             continue
         kept: list[str] = []
-        if current != backup:
+        if current == backup:
+            for name in directories:
+                child = (current / name).resolve(strict=False)
+                if child == workbench:
+                    actual[relative(child, project)] = "dir"
+                    kept.append(name)
+        elif current != workbench:
             for name in directories:
                 child = (current / name).resolve(strict=False)
                 if name.casefold() in prune_names or any(root in child.parents for root in roots):
@@ -241,7 +248,7 @@ def layout_actual_paths(
                 rel = relative(child, project)
                 actual[rel] = "dir"
                 kept.append(name)
-        directories[:] = [] if current == backup else kept
+        directories[:] = kept
         for name in files:
             path = (current / name).resolve(strict=False)
             if any(root in path.parents for root in roots):

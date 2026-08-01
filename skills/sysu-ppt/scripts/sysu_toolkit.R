@@ -661,6 +661,7 @@ sysu_save <- function(ppt, path, genre = c("meeting", "formal")) {
   path <- normalizePath(path, winslash = "/", mustWork = FALSE)
   print(ppt, path)
   td <- tempfile(); dir.create(td)
+  on.exit(unlink(td, recursive = TRUE, force = TRUE), add = TRUE)
   utils::unzip(path, exdir = td)
   sld <- list.files(file.path(td, "ppt", "slides"), pattern = "slide[0-9]+\\.xml$", full.names = TRUE)
   for (fp in sld) {

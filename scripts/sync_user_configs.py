@@ -27,6 +27,7 @@ from config_core import (
     active_manifest,
     csv_values,
     load_json,
+    local_skill_excludes,
     resolve_codex_skill_dirs,
 )
 from hook_conflicts import reconcile_hook_conflicts
@@ -133,7 +134,7 @@ def source_skills(
     root: Path, exclude: set[str], include: set[str] | None = None
 ) -> dict[str, Path]:
     result: dict[str, Path] = {}
-    effective_excludes = exclude | SYNC_EXCLUDES
+    effective_excludes = exclude | SYNC_EXCLUDES | local_skill_excludes(root)
     for item in sorted((root / "skills").iterdir()):
         if (
             item.is_dir()
@@ -299,7 +300,7 @@ def sync_skills(
     available = source_skills(root, exclude)
     if include is not None:
         requested = set(include)
-        local_only = requested & SYNC_EXCLUDES
+        local_only = requested & (SYNC_EXCLUDES | local_skill_excludes(root))
         if local_only:
             raise ValueError(
                 "Local-only skills are not distributable: "

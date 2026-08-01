@@ -101,7 +101,7 @@ run._element.rPr.rFonts.set(qn('w:eastAsia'), '宋体')   # 中文走 eastAsia
 4. **三级标题套 Heading 1/2/3 样式**（手动构造样式，字号字体按 §3），供 TOC 域识别。
 5. **TOC 域**：在目录页插入 `TOC \o "1-3"` 域，提示用户在 Word 内按 F9 更新页码。
 6. 三线表、OMML 公式、真上下标、图片+图注同 `docx-assembly.md`。
-7. 拼装脚本是一次性文档脚本 → 跑完归 `09_backup/<日期>_scripts_oneoff/`，不留无编号脚本在 `02_code/`。
+7. 一次性拼装脚本从创建起就在 `09_backup/workbench/<日期时间>_<主题>_oneoff/` 中运行，不留无编号脚本在 `02_code/`；需长期复现时再按布局合同晋级。
 
 ---
 

@@ -5,7 +5,7 @@
 ## 1. 活跃工作区
 
 - 项目根只保留规则、方案、日志、`.gitignore`、`.epiagentkit-raw-roots`、`.epiagentkit-layout.json`、可选 `.epiagentkit-check.json`、R 项目的 `.Rproj` 与标准编号目录；具体骨架以 `project-init` 模板为准。
-- 临时、诊断、迁移和探索产物不得散落在根目录；一次性脚本完成后移入 `09_backup/<日期>_scripts_oneoff/`。
+- 临时、诊断、迁移和探索产物不得散落在根目录；Agent 创建前即进入 `09_backup/workbench/` 的独立批次，不先写到系统 Temp、活动目录或 `02_code/` 再搬移。
 - 同一交付物只保留一组稳定语义名当前版。不得累积 `v2`、`new`、`final`、`最终版`、`完善版` 等并列文件。
 - 移动产物时同步修改生成脚本的输出路径与正文引用；完成后全文搜索旧路径、旧编号与散落残留。
 
@@ -20,9 +20,17 @@
 - `path` 使用项目相对路径并指向唯一位置；禁止绝对路径、`..`、宽泛 glob 和同一语义的多处镜像。
 - `owner` 是负责该产物合同的 skill 或项目角色；`producer` 与 `consumer` 说明谁生成、谁读取；`lifecycle` 区分固定骨架、计划产物和当前交付物。
 - 新增目录前先声明目录及其用途，再声明其中每个计划文件。表图的精确文件名还要进入 registry；结果数字仍进入 `results.yaml`，布局清单不复制结果内容。
-- 临时解包、渲染、测试和诊断目录不进入活动布局；使用系统隔离临时目录，完成后安全清理。`09_backup/` 内历史由 `INDEX.md` 与每批 `MANIFEST.md` 管理，不逐文件重复登记。
+- `09_backup/workbench/` 骨架及 `.gitkeep` 进入初始布局清单；其批次目录、临时解包、渲染、测试和诊断内容不进入活动布局，按 §1.2 隔离执行。`09_backup/` 内正式历史由 `INDEX.md` 与每批 `MANIFEST.md` 管理，不逐文件重复登记。
 - 原始数据根保持只读，其内部来源文件不由布局合同重新命名；原始根本身和数据字典位置仍需声明。
 - `check-project` 对已存在但未声明的活动路径报 ERROR，对已声明但尚未生成的 `planned` 条目不报错。旧项目没有布局清单时先报 WARN 并要求在下次正式变更前建立，不静默搬动现有文件。
+
+### 1.2 Backup workbench
+
+- Agent 创建的试验脚本、一次性脚本、诊断、迁移、临时渲染和阶段性测试统一放入 `09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_<用途>/`。用途使用 `experiment`、`diagnostic`、`oneoff`、`render`、`migration` 或 `maintenance`；主题简短且可检索。
+- 执行前写 `PLAN.md`，记录目标、只读输入或来源、主流程基线、唯一改动、运行命令、预期输出、晋级标准和状态；执行后写 `FINDINGS.md`，记录完整异常、结果、结论和采用、未采用或暂缓状态。
+- 在该批次目录内创建并运行脚本。把当前进程的 `TEMP`、`TMP` 和 `TMPDIR` 指向批次内 `runtime/`；命令结束后只删除可重建的 runtime 缓存，不删除 `PLAN.md`、`FINDINGS.md`、脚本和需复核结果。既有第三方工具强制使用系统临时目录时，仅在它能可靠自动清理且没有 Agent 自建文件的情况下例外。
+- 统计与方法实验还必须登记 `09_backup/EXPERIMENTS.md`。失败、持平和未采用结果同样保留；`EXPERIMENTS.md` 与 `FINDINGS.md` 不是正式结果数字单源。
+- 晋级时先在 `.epiagentkit-layout.json` 和适用 registry 声明正式目标，再把经验证的必要逻辑按主流程命名重写或迁入活动目录并重跑正式验证。保留原 workbench 作为依据，不把整个试验目录直接改名为主流程，也不因试验成功静默改变方法、口径或结论。
 
 ## 2. 替换与归档
 

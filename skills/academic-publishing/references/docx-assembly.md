@@ -1,8 +1,8 @@
 # Word Assembly reference (python-docx)
 
 > 把 `07_paper/sections*/` 的 md 拼成格式规范的 .docx。**禁用 `pandoc -o`**（中文字体字号、三线表、
-> 首行缩进、真上下标控制不到位）。拼装脚本写进项目 `02_code/`，属一次性文档脚本 → 跑完归
-> `09_backup/<日期>_scripts_oneoff/`，不进编号流水线、不留无编号脚本在 02_code。
+> 首行缩进、真上下标控制不到位）。一次性拼装脚本从创建起就在
+> `09_backup/workbench/<日期时间>_<主题>_oneoff/` 中运行，不进 `02_code/` 编号流水线；只有经验证且需长期复现的逻辑才按布局合同晋级主流程。
 
 ## 1 md → Word 标记映射
 

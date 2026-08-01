@@ -13,7 +13,13 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from config_core import SKILL_MANIFEST, SYNC_EXCLUDES, available_skills
+from config_core import (
+    LOCAL_SKILL_EXCLUDES_FILE,
+    SKILL_MANIFEST,
+    SYNC_EXCLUDES,
+    available_skills,
+    local_skill_excludes,
+)
 from sync_user_configs import source_skills, sync_skills
 
 
@@ -44,6 +50,10 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("代表性验证", maintenance)
         self.assertIn("sync --target all", maintenance)
         self.assertIn("doctor --target all", maintenance)
+        self.assertIn("用户无需重复声明", maintenance)
+        self.assertIn("Every request to add, revise, repair, rename or remove a skill", repo_rules)
+        self.assertIn("Get-Content -Encoding utf8", repo_rules)
+        self.assertIn("Treat mojibake as a failed read", repo_rules)
         self.assertIn("Optimize, Don't Accumulate", creator)
         self.assertIn("remove superseded text in the same edit", creator)
         for maintenance_detail in (
@@ -53,6 +63,45 @@ class WorkflowRoutingTests(unittest.TestCase):
             "doctor --target all",
         ):
             self.assertNotIn(maintenance_detail, global_rules)
+
+    def test_backup_workbench_is_the_isolated_experiment_contract(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        repo_rules = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        hygiene = (
+            ROOT / "skills/project-init/references/project-hygiene.md"
+        ).read_text(encoding="utf-8")
+        principles = (ROOT / "skills/biostat-principles/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        initializer = (ROOT / "skills/project-init/scripts/init_project.R").read_text(
+            encoding="utf-8"
+        )
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        assembly = (
+            ROOT / "skills/academic-publishing/references/docx-assembly.md"
+        ).read_text(encoding="utf-8")
+        consulting = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("09_backup/workbench/", global_rules)
+        for body in (repo_rules, hygiene, principles, initializer, publishing, assembly, consulting):
+            self.assertIn("09_backup/workbench/", body)
+        for fragment in (
+            "PLAN.md",
+            "FINDINGS.md",
+            "TEMP",
+            "TMP",
+            "TMPDIR",
+            "晋级",
+        ):
+            self.assertIn(fragment, hygiene)
+        self.assertIn('"09_backup/workbench"', initializer)
+        self.assertNotIn("09_backup/<YYYY-MM-DD>_<主题>/", principles)
+        self.assertNotIn("09_backup/<日期>_scripts_oneoff/", publishing + assembly)
+        self.assertNotIn("系统创建的隔离临时目录", consulting)
 
     def test_global_rules_are_concise_complete_and_single_source(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
@@ -374,43 +423,79 @@ class WorkflowRoutingTests(unittest.TestCase):
                     )
                     self.assertEqual(result.returncode == 0, should_pass)
 
-    def test_python_ecg_is_local_only_and_not_publicly_routed(self) -> None:
+    def test_static_local_only_skill_is_not_publicly_routed(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("python-ecg-analysis", SYNC_EXCLUDES)
-        self.assertNotIn("python-ecg-analysis", available_skills(ROOT))
-        self.assertNotIn("python-ecg-analysis", source_skills(ROOT, set()))
-        self.assertNotIn("python-ecg-analysis", global_rules)
-        self.assertNotIn("python-ecg-analysis", readme)
+        name = "python-ecg-analysis"
+        self.assertIn(name, SYNC_EXCLUDES)
+        self.assertTrue((ROOT / "skills" / name / "SKILL.md").is_file())
+        self.assertNotIn(name, available_skills(ROOT))
+        self.assertNotIn(name, source_skills(ROOT, set()))
+        self.assertNotIn(name, global_rules)
+        self.assertNotIn(name, readme)
 
-    def test_python_ecg_cannot_be_explicitly_synchronized(self) -> None:
+    def test_machine_local_skill_file_hides_private_skills(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaisesRegex(ValueError, "Local-only skills"):
-                sync_skills(
-                    ROOT,
-                    Path(directory) / "skills",
-                    set(),
-                    dry_run=False,
-                    include={"python-ecg-analysis"},
-                )
-
-    def test_full_sync_prunes_previously_managed_python_ecg(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            base = Path(directory)
-            repo = base / "repo"
-            target = base / "target"
-            for name in ("alpha", "python-ecg-analysis"):
+            repo = Path(directory) / "repo"
+            for name in ("alpha", "private-skill"):
                 skill = repo / "skills" / name
                 skill.mkdir(parents=True)
                 (skill / "SKILL.md").write_text(
                     f"---\nname: {name}\ndescription: test\n---\n",
                     encoding="utf-8",
                 )
-            stale = target / "python-ecg-analysis"
+            (repo / LOCAL_SKILL_EXCLUDES_FILE).write_text(
+                "# machine-local only\nprivate-skill\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual(local_skill_excludes(repo), {"private-skill"})
+            self.assertEqual(available_skills(repo), ["alpha"])
+            self.assertEqual(set(source_skills(repo, set())), {"alpha"})
+
+    def test_local_only_skills_cannot_be_explicitly_synchronized(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory) / "repo"
+            private = repo / "skills" / "private-skill"
+            private.mkdir(parents=True)
+            (private / "SKILL.md").write_text(
+                "---\nname: private-skill\ndescription: test\n---\n",
+                encoding="utf-8",
+            )
+            (repo / LOCAL_SKILL_EXCLUDES_FILE).write_text(
+                "private-skill\n", encoding="utf-8"
+            )
+
+            with self.assertRaisesRegex(ValueError, "Local-only skills"):
+                sync_skills(
+                    repo,
+                    Path(directory) / "target",
+                    set(),
+                    dry_run=False,
+                    include={"private-skill"},
+                )
+
+    def test_full_sync_prunes_previously_managed_local_only_skills(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            repo = base / "repo"
+            target = base / "target"
+            for name in ("alpha", "private-skill"):
+                skill = repo / "skills" / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(
+                    f"---\nname: {name}\ndescription: test\n---\n",
+                    encoding="utf-8",
+                )
+            (repo / LOCAL_SKILL_EXCLUDES_FILE).write_text(
+                "private-skill\n", encoding="utf-8"
+            )
+            stale = target / "private-skill"
             stale.mkdir(parents=True)
             (stale / "SKILL.md").write_text("stale\n", encoding="utf-8")
             (target / SKILL_MANIFEST).write_text(
-                '{"managed": ["python-ecg-analysis"]}\n', encoding="utf-8"
+                '{"managed": ["private-skill"]}\n',
+                encoding="utf-8",
             )
 
             sync_skills(repo, target, set(), dry_run=False)
