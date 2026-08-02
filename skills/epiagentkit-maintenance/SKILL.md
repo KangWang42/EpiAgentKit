@@ -78,11 +78,10 @@ description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills
 1. 目标组件的语法、validator 和代表性实跑。
 2. `python -m unittest discover -s scripts/tests -v`。
 3. 工作流规则变化时运行 `python scripts/audit_workflow_contracts.py`。
-4. 运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，确认 Claude Code 与 Codex 文件一致。
-5. 全量扫描验证输出中的 `error|warning|traceback|failed|nan`，逐项归因；不能把预期提示、库噪声或真实失败混为一类。
-6. 检查无占位文件、无失效引用、无重复维护位置、无 emoji、无生成过程痕迹，且未覆盖来源不明的既有改动。中文修改按全局中文终审要求逐句检查目标读者、主体、动作、依据、条件和确认责任；词面扫描只用于发现高确定性线索，不能代替语境审查。区分应清理的工程或管理隐喻与真实法律、技术和领域用语。
+4. 全量扫描验证输出中的 `error|warning|traceback|failed|nan`，逐项归因；不能把预期提示、库噪声或真实失败混为一类。
+5. 检查无占位文件、无失效引用、无重复维护位置、无 emoji、无生成过程痕迹，且未覆盖来源不明的既有改动。中文修改按全局中文终审要求逐句检查目标读者、主体、动作、依据、条件和确认责任；词面扫描只用于发现高确定性线索，不能代替语境审查。区分应清理的工程或管理隐喻与真实法律、技术和领域用语。
 
-Git 可用且当前目录为仓库时，最后审查完整差异并按全局约定提交；否则报告“Git 已跳过”，不初始化仓库、不安装 Git、不因此影响完成确认。Push 仍只在用户当轮明确要求时执行。
+Git 可用且当前目录为仓库时，最后审查完整差异并按全局约定提交。每次提交成功后自动运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，确认本地 Claude Code 与 Codex 安装内容和已提交源文件一致；若检查后又产生修复提交，对新提交重复同步和 doctor。Git 不可用或当前目录不是仓库时，报告“Git 已跳过”，不初始化仓库、不安装 Git；此时仍在完成前运行一次同步和 doctor。Push 仍只在用户当轮明确要求时执行。
 
 ## 6. 交付说明
 

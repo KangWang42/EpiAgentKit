@@ -359,6 +359,21 @@ class BaseSchemaValidator:
                 errors.append(f"  Error parsing {rel_path}: {e}")
 
         unreferenced_files = set(all_files) - all_referenced_files
+        allowed_unreferenced_files = {
+            file_path
+            for file_path in unreferenced_files
+            if self.is_allowed_unreferenced_file(file_path)
+        }
+        unreferenced_files -= allowed_unreferenced_files
+
+        if allowed_unreferenced_files and self.verbose:
+            print(
+                "IGNORED - Optional empty parts without relationships: "
+                + ", ".join(
+                    str(path.relative_to(self.unpacked_dir))
+                    for path in sorted(allowed_unreferenced_files)
+                )
+            )
 
         if unreferenced_files:
             for unref_file in sorted(unreferenced_files):
@@ -370,9 +385,8 @@ class BaseSchemaValidator:
             for error in errors:
                 print(error)
             print(
-                "CRITICAL: These errors will cause the document to appear corrupt. "
-                + "Broken references MUST be fixed, "
-                + "and unreferenced files MUST be referenced or removed."
+                "CRITICAL: Broken references MUST be fixed. Unexpected unreferenced "
+                + "parts MUST be referenced or removed."
             )
             return False
         else:
@@ -381,6 +395,9 @@ class BaseSchemaValidator:
                     "PASSED - All references are valid and all files are properly referenced"
                 )
             return True
+
+    def is_allowed_unreferenced_file(self, file_path):
+        return False
 
     def validate_all_relationship_ids(self):
         import lxml.etree
@@ -760,7 +777,7 @@ class BaseSchemaValidator:
                 )
                 schema = lxml.etree.XMLSchema(xsd_doc)
 
-            with open(xml_file, "r") as f:
+            with open(xml_file, "rb") as f:
                 xml_doc = lxml.etree.parse(f)
 
             xml_doc, _ = self._remove_template_tags_from_text_nodes(xml_doc)

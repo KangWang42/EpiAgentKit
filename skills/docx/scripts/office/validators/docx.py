@@ -21,6 +21,26 @@ class DOCXSchemaValidator(BaseSchemaValidator):
 
     ELEMENT_RELATIONSHIP_TYPES = {}
 
+    def is_allowed_unreferenced_file(self, file_path):
+        try:
+            relative_path = file_path.relative_to(self.unpacked_dir).as_posix()
+            root = lxml.etree.parse(str(file_path)).getroot()
+        except (ValueError, OSError, lxml.etree.XMLSyntaxError):
+            return False
+
+        if relative_path == "word/comments.xml":
+            comments = root.findall(f".//{{{self.WORD_2006_NAMESPACE}}}comment")
+            return not comments
+
+        if relative_path == "word/footnotes.xml":
+            id_attr = f"{{{self.WORD_2006_NAMESPACE}}}id"
+            footnotes = root.findall(f".//{{{self.WORD_2006_NAMESPACE}}}footnote")
+            return bool(footnotes) and {
+                footnote.get(id_attr) for footnote in footnotes
+            } <= {"-1", "0"}
+
+        return False
+
     def validate(self):
         if not self.validate_xml():
             return False

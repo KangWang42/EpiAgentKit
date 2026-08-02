@@ -62,23 +62,39 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 ## 从一句话到真实产物
 
-下面的森林图不是概念插图或生成式界面，而是使用仓库的统计出图规则在固定合成数据上实际运行后导出的产物。示例只用于验证工作流和文件输出，不代表真实医学结论。
+以下四类示例分别展示统计图、论文页面、汇报页面和 AI 工作流程。统计结果来自固定模拟队列的实际 R 分析；论文预览来自可打开的 Word 文档；PPT 页面是中性 16:9 版式模拟图。所有示例只用于核对工作流和成品质量，不代表真实医学结论。
 
-**输入**
+### 统计图
 
 ```text
-使用合成示例数据生成一张亚组森林图，展示比值比及 95% 置信区间；
-本示例明确要求同时导出 PDF 和 300 DPI PNG，并核对字体、参考线、置信区间和异常输出。
+使用固定模拟队列完成多变量 Cox 回归，分别导出带 95% 置信区间和风险集的调整后生存曲线；
+论文图不写副标题、样本摘要或模型指标横幅，标题和图例相对整张导出画布居中，并按最终物理尺寸核对字号。
 ```
 
-**实际输出**
-
 <picture>
-  <source media="(max-width: 600px)" srcset="docs/demo/output/forest-plot-mobile.png">
-  <img src="docs/demo/output/forest-plot.png" alt="固定合成数据生成的亚组森林图，左侧列出亚组和样本量，右侧展示比值比及 95% 置信区间">
+  <source media="(max-width: 600px)" srcset="docs/demo/output/adjusted-survival-mobile.png">
+  <img src="docs/demo/output/adjusted-survival.png" alt="固定模拟队列生成的调整后无事件生存曲线，含百分比坐标、95% 置信区间和各时间点风险集">
 </picture>
 
-`biostat-principles → publication-figures` 负责口径、数值验证、物理尺寸和中文字体；这里的 PDF/PNG 双格式来自本示例请求，不是通用投稿规则。[查看 PDF](docs/demo/output/forest-plot.pdf) · [查看复现脚本](docs/demo/generate_forest_demo.R) · [查看示例数据](docs/demo/forest-demo-data.csv)
+`biostat-principles → publication-figures` 负责分析口径、数值验证、最终尺寸、标题与图例对齐和中文字体。[查看 PDF](docs/demo/output/adjusted-survival.pdf) · [查看分析与出图脚本](docs/demo/generate_survival_demo.R) · [查看模拟数据](docs/demo/survival-demo-data.csv) · [查看机器可读结果](docs/demo/output/survival-demo-results.csv)
+
+### 论文效果
+
+![固定模拟队列论文页面的 Word 实际渲染图，包含题名、摘要、资料与方法、结果、统计图和简短图题](docs/demo/output/manuscript-preview.png)
+
+该页面由实际 `.docx` 渲染，题名居中，正文采用中性中文论文格式；模型口径写在方法，结果解释写在结果，图下只保留简短图题。页面不使用虚构作者、机构、期刊、DOI、伦理号或基金信息。[下载 Word 示例](docs/demo/output/manuscript-preview.docx) · [查看生成脚本](docs/demo/generate_manuscript_preview.py)
+
+### PPT 效果
+
+![固定模拟队列的中性学术汇报页模拟图，左侧列出研究设计和主要结果，右侧展示调整后生存曲线](docs/demo/output/presentation-preview.png)
+
+汇报页使用 16:9 画布，页标题、研究设计和结论由幻灯片版式承担，统计图保持论文式原图，不把 PPT 的信息层级烧录进图件。[查看版式生成脚本](docs/demo/generate_presentation_preview.R)
+
+### AI 工作流程
+
+![EpiAgentKit 从问题定义、证据核验和统计分析进入图表、论文、汇报、交付与项目审查的 AI 工作流程](docs/assets/research-workflow.webp)
+
+同一套全局规则连接问题定义、证据核验、统计分析、图表制作、论文与汇报、结果交付和项目审查；领域 skill 只在任务需要时加载，确定性检查负责保护原始数据、结果来源和发布条件。
 
 ## 工作流怎样随任务变化
 
@@ -148,6 +164,20 @@ python scripts/epiagentkit.py install
 Git 不是运行 EpiAgentKit 的必需条件。没有 Git 时可下载并解压仓库源码后运行同一安装命令；Agent 会跳过版本管理，不会初始化仓库或安装 Git。
 
 交互式安装会询问目标平台和导入范围，结束后自动运行 `doctor`。已有个人配置会保留，只有同名 EpiAgentKit 文件与受管 hook 会被更新。
+
+### release 1.0 本地包
+
+只需要规则和 17 个可分发 skills 时，可从源仓库确定性生成轻量 release：
+
+```bash
+python scripts/build_release.py
+```
+
+默认输出 `releases/1.0/EpiAgentKit-release-1.0.zip` 及外部 SHA-256 文件。构建器只接受固定白名单，遇到未提交修改或已存在目标时停止；经过核对后可分别使用 `--allow-dirty` 或 `--force`。本仓库当前没有覆盖全部自有内容的统一公开许可证，因此 release 1.0 作为本地包制作，不表示已经获得公开再分发授权。
+
+解压时使用普通版本目录，不把 release 目录直接当作源仓库或运行配置目录。Claude Code 使用 `~/.claude/CLAUDE.md` 与 `~/.claude/skills/`；Codex 把包内 `CLAUDE.md` 复制为 `~/.codex/AGENTS.md`，skills 放入 `~/.agents/skills/`。更新前备份将被替换的规则和同名 skill，回退时恢复同一备份批次。完整的哈希核对、PowerShell 安装、更新和回退命令见 [release 1.0 使用说明](docs/release-1.0-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。
+
+轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。文件处理使用平台已提供且使用者有权使用的能力；机构模板由使用者在本地配置。
 
 ### 常用安装方式
 

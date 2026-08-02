@@ -211,6 +211,8 @@ class WorkflowRoutingTests(unittest.TestCase):
             "不安装 Git",
             "sync --target all",
             "doctor --target all",
+            "每次提交成功后自动运行",
+            "已提交源文件一致",
             "普通研究项目的数据分析、写作或项目初始化不触发本 skill",
         ):
             self.assertIn(fragment, maintenance)
@@ -233,6 +235,11 @@ class WorkflowRoutingTests(unittest.TestCase):
             "Neutral Default Formatting",
             "Keep every table cell white by default",
             "preserve its existing styles and layout",
+            "do not install one silently",
+            "`python-docx` or R `officer`",
+            "Do not use hidden Word COM automation as an automatic fallback",
+            "If any Word process is already running",
+            "a new application object does not guarantee process isolation",
         ):
             self.assertIn(fragment, docx)
         for fragment in (
@@ -652,8 +659,62 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("写论文与投稿材料", body)
         self.assertIn("全项目质量审查", body)
         self.assertIn("项目能做到什么", body)
+        self.assertIn("docs/demo/output/adjusted-survival.png", body)
+        self.assertIn("docs/demo/output/manuscript-preview.docx", body)
+        self.assertIn("docs/demo/output/presentation-preview.png", body)
+        self.assertIn("docs/assets/research-workflow.webp", body)
         self.assertNotIn("一次性生成全文", body)
         self.assertNotIn('审查只看代码即可通过', body)
+        self.assertNotIn("forest-plot", body)
+
+    def test_release_bundle_keeps_source_archive_and_runtime_separate(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        usage = (ROOT / "docs" / "release-1.0-usage.md").read_text(
+            encoding="utf-8"
+        )
+        notice = (ROOT / "docs" / "release-notice.md").read_text(
+            encoding="utf-8"
+        )
+        builder = (ROOT / "scripts" / "build_release.py").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "release 1.0 本地包",
+            "python scripts/build_release.py",
+            "~/.claude/CLAUDE.md",
+            "~/.codex/AGENTS.md",
+            "~/.agents/skills/",
+            "更新前备份",
+        ):
+            self.assertIn(fragment, readme)
+        for fragment in (
+            "源仓库、release 和实际安装目录应彼此分开",
+            "EpiAgentKit-release-1.0.zip",
+            "SKILLS_INCLUDED.txt",
+            "安装到 Claude Code",
+            "安装到 Codex",
+            "更新与回退",
+        ):
+            self.assertIn(fragment, usage)
+        for fragment in (
+            "docx",
+            "sysu-ppt",
+            "epiagentkit-maintenance",
+            "recipes_common_50",
+            "imagegen",
+            "不构成公开再分发授权",
+        ):
+            self.assertIn(fragment, notice)
+        for fragment in (
+            "INCLUDED_SKILLS",
+            "PUBLICATION_FIGURE_FILES",
+            "--allow-dirty",
+            "--force",
+            "FIXED_ZIP_TIME",
+            "SHA256SUMS",
+        ):
+            self.assertIn(fragment, builder)
 
     def test_publication_figures_trigger_is_statistical(self) -> None:
         body = (ROOT / "skills" / "publication-figures" / "SKILL.md").read_text(
@@ -662,7 +723,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("发表级统计图、数据图", body)
         self.assertIn("流程、机制、架构、技术路线与图形摘要转 `research-visuals`", body)
         self.assertIn("作图前确认", body)
-        self.assertIn("由多个子图组成时，只保留具有独立信息作用的子图", body)
+        self.assertIn("默认一次只生成一张独立统计图", body)
+        self.assertIn("不得为了展示能力主动拼合不同图型", body)
+        self.assertIn("风险集表、置信区间和该图必需的图例属于单图组成部分", body)
         self.assertIn("`results/results.yaml`", body)
         self.assertNotIn("用户要求出图、画图、做图、生成 Fig", body)
 
@@ -680,6 +743,39 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不得检索近期论文只为模仿风格", body)
         self.assertIn("期刊未指定白色背景时，不把白色背景当作通用投稿要求", body)
         self.assertNotIn("无 3D / 默认灰底 / 彩虹色 / 单独 JPEG", body)
+
+    def test_publication_figures_separates_manuscript_figure_from_caption(self) -> None:
+        skill = (ROOT / "skills" / "publication-figures" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        layout = (
+            ROOT
+            / "skills"
+            / "publication-figures"
+            / "references"
+            / "manuscript-layout.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("读取 [论文统计图版式](references/manuscript-layout.md)", skill)
+        self.assertIn("只保留一个居中短标题", skill)
+        self.assertIn("PPT 的信息层级带进图内", skill)
+        self.assertIn("总样本量、总事件数、分析集和随访概况", layout)
+        self.assertIn("仪表板卡片、顶部指标栏", layout)
+        self.assertIn("风险集表、纳入流程、分母比较", layout)
+        self.assertIn("默认分别生成和审查每张图", layout)
+        self.assertIn("不能为了展示方法数量", layout)
+        self.assertIn("以整张导出画布为参照", layout)
+        self.assertIn("字号按最终物理尺寸设置和核对", layout)
+        self.assertIn("图内标题 10–12 pt、轴标题 8–10 pt", layout)
+        self.assertIn("图题通常只用简短名词短语", layout)
+        self.assertIn("不把方法段或读图说明自动接在图题后", layout)
+        self.assertIn("必要图注只补充正文和图本身无法清楚承担的信息", layout)
+
+        manuscript_demo = (
+            ROOT / "docs" / "demo" / "generate_manuscript_preview.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("图 1　不同治疗方案的调整后无事件生存曲线", manuscript_demo)
+        self.assertNotIn("曲线由多变量 Cox 比例风险模型估计", manuscript_demo)
+        self.assertNotIn("科研工作流", manuscript_demo)
 
     def test_results_machine_source_is_not_the_derived_markdown(self) -> None:
         body = (

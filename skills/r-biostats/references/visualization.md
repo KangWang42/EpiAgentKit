@@ -66,8 +66,3 @@ ggplot(data, aes(x = group, y = value, fill = group)) +
   scale_fill_manual(values = okabe_ito) +
   theme_bw()
 ```
-
-## 标题规范
-
-- 论文主图通常把题名、完整说明和来源留给图注；图内仅保留理解数据所需的标签和短注释。
-- 汇报或独立图确需标题时使用 `labs(title = "...")`，并按载体层级处理；不把长段说明烧录进图内。
