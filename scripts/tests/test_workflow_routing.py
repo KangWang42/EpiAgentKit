@@ -226,7 +226,28 @@ class WorkflowRoutingTests(unittest.TestCase):
 
         self.assertIn("必须先读 [代码风格]", r_skill)
         self.assertIn("在编写过程中按其组织主线", r_skill)
+        self.assertIn("文件与参数预检集中在总运行入口", r_skill)
+        self.assertIn("研究对象式命名", r_skill)
         self.assertIn("同一稳定工具在多个主脚本重复出现时", code_style)
+        self.assertIn(
+            "按 `<对象>_<主题>_<时间>_<阶段>` 组合真正有区分作用的部分",
+            code_style,
+        )
+        self.assertIn("不要在每个脚本重复建立 `required_inputs`", code_style)
+        self.assertIn(
+            "数据列的逐记录判断使用 `if_else()` 或 `case_when()`",
+            code_style,
+        )
+        self.assertIn(
+            "稳定科学不变量被破坏而无法产生有效结果",
+            code_style,
+        )
+        self.assertIn(
+            "不要仅为证明一致而同时读取同一结果的两套重复来源",
+            code_style,
+        )
+        self.assertIn("`run_pipeline.R`、命令行入口或确定性构建器", code_style)
+        self.assertIn("一个成品可以按需要读取不同结果对象", code_style)
         self.assertIn("孤立的 `[1] 0`", code_style)
         self.assertIn("不把整篇论文或长篇报告写成数百行", code_style)
         self.assertIn("不得仅因脚本成功执行而把代码工作项标为完成", code_style)
