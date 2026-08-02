@@ -16,7 +16,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 </div>
 
-![研究任务通过同一套工作规则连接研究方案、数据核对、统计分析、图表、论文和交付检查](docs/assets/epiagentkit-hero.webp)
+![真实 R 分析代码、Word 论文页和学术汇报页共同展示从统计分析到科研成品的工作结果](docs/assets/epiagentkit-hero.webp)
 
 > EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性检查，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
