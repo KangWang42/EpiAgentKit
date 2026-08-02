@@ -680,23 +680,31 @@ class WorkflowRoutingTests(unittest.TestCase):
         )
 
         for fragment in (
-            "release 1.0 本地包",
+            "请把 EpiAgentKit 安装到当前 Claude Code",
+            "请把 EpiAgentKit 安装到当前 Codex",
+            "releases/tag/v1.0",
+            "保留我现有的个人配置",
+            "只在明确需要自己操作时查看命令行方式",
             "python scripts/build_release.py",
-            "~/.claude/CLAUDE.md",
-            "~/.codex/AGENTS.md",
-            "~/.agents/skills/",
-            "更新前备份",
         ):
             self.assertIn(fragment, readme)
         for fragment in (
+            "推荐交给当前 Agent 安装",
+            "请把这个 EpiAgentKit release 安装到当前 Claude Code",
+            "请把这个 EpiAgentKit release 安装到当前 Codex",
+            "Agent 无法代为安装时的人工备用命令",
             "源仓库、release 和实际安装目录应彼此分开",
-            "EpiAgentKit-release-1.0.zip",
             "SKILLS_INCLUDED.txt",
+            "~/.claude/CLAUDE.md",
+            "~/.codex/AGENTS.md",
+            "~/.agents/skills/",
             "安装到 Claude Code",
             "安装到 Codex",
             "更新与回退",
         ):
             self.assertIn(fragment, usage)
+        self.assertNotIn("SHA-256", usage)
+        self.assertNotIn("Get-FileHash", usage)
         for fragment in (
             "docx",
             "sysu-ppt",

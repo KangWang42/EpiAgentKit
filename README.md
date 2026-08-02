@@ -153,33 +153,42 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 ## 30 秒安装
 
-配置管理器需要 Python 3.10 或更高版本；这不表示研究分析必须使用 Python。R 仅在运行 R 分析、R 统计图或 officer PPT 时需要。EpiAgentKit 的安装与同步不会自行改动运行时；分析缺少运行时或系统依赖时先询问，用户不安装时按等价实现规则在现有环境中分流。普通分析包只安装到项目隔离环境。
+最简单的方法是把仓库地址交给当前使用的 Agent，让它完成检查、安装、备份和验收；不需要先手动克隆仓库、复制规则或逐个放置 skills。
+
+### 在 Claude Code 中
+
+```text
+请把 EpiAgentKit 安装到当前 Claude Code：https://github.com/KangWang42/EpiAgentKit。保留我现有的个人配置，安装完成后检查是否可用。
+```
+
+### 在 Codex 中
+
+```text
+请把 EpiAgentKit 安装到当前 Codex：https://github.com/KangWang42/EpiAgentKit。保留我现有的个人配置，安装完成后检查是否可用。
+```
+
+需要同时配置两端时，把“当前 Claude Code / Codex”改为“Claude Code 与 Codex”。获取仓库、选择安装目标、备份、同步和检查由 Agent 按仓库说明完成。用户不需要先处理 Git、Python、目录或复制命令。
+
+### release 1.0
+
+只需要规则和 17 个可分发 skills 时，可以把 [EpiAgentKit 1.0 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.0) 直接交给当前 Agent：
+
+```text
+请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.0。保留我现有的个人配置，安装完成后检查 skills 是否可用。
+```
+
+release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex` 或 `~/.agents`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.0 使用说明](docs/release-1.0-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
+
+<details>
+<summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
+
+配置管理器会保留已有个人配置，只更新同名 EpiAgentKit 文件与受管 hook，并在安装结束后自动运行 `doctor`。
 
 ```bash
 git clone https://github.com/KangWang42/EpiAgentKit.git
 cd EpiAgentKit
 python scripts/epiagentkit.py install
 ```
-
-Git 不是运行 EpiAgentKit 的必需条件。没有 Git 时可下载并解压仓库源码后运行同一安装命令；Agent 会跳过版本管理，不会初始化仓库或安装 Git。
-
-交互式安装会询问目标平台和导入范围，结束后自动运行 `doctor`。已有个人配置会保留，只有同名 EpiAgentKit 文件与受管 hook 会被更新。
-
-### release 1.0 本地包
-
-只需要规则和 17 个可分发 skills 时，可从源仓库确定性生成轻量 release：
-
-```bash
-python scripts/build_release.py
-```
-
-默认输出 `releases/1.0/EpiAgentKit-release-1.0.zip` 及外部 SHA-256 文件。构建器只接受固定白名单，遇到未提交修改或已存在目标时停止；经过核对后可分别使用 `--allow-dirty` 或 `--force`。本仓库当前没有覆盖全部自有内容的统一公开许可证，因此 release 1.0 作为本地包制作，不表示已经获得公开再分发授权。
-
-解压时使用普通版本目录，不把 release 目录直接当作源仓库或运行配置目录。Claude Code 使用 `~/.claude/CLAUDE.md` 与 `~/.claude/skills/`；Codex 把包内 `CLAUDE.md` 复制为 `~/.codex/AGENTS.md`，skills 放入 `~/.agents/skills/`。更新前备份将被替换的规则和同名 skill，回退时恢复同一备份批次。完整的哈希核对、PowerShell 安装、更新和回退命令见 [release 1.0 使用说明](docs/release-1.0-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。
-
-轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。文件处理使用平台已提供且使用者有权使用的能力；机构模板由使用者在本地配置。
-
-### 常用安装方式
 
 ```bash
 # Claude Code 与 Codex 完整安装
@@ -197,9 +206,6 @@ python scripts/epiagentkit.py install --target codex --preset ppt --yes
 # 先演练，不修改用户目录
 python scripts/epiagentkit.py install --target all --preset full --yes --dry-run
 ```
-
-<details>
-<summary><strong>同步、自选技能与验收命令</strong></summary>
 
 ```bash
 # 从仓库同步已安装内容，并复核 Claude Code 与 Codex 一致性
@@ -272,6 +278,8 @@ python -m unittest discover -s scripts/tests -p "test_*.py"
 python scripts/epiagentkit.py sync --target all
 python scripts/epiagentkit.py doctor --target all
 ```
+
+维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.0/EpiAgentKit-release-1.0.zip` 及外部 SHA-256 文件。
 
 行为发生变化时，还需要对受影响的 R、Python 或 Bash 脚本做语法检查和代表性实跑。详细 contributor 约定见 [`AGENTS.md`](AGENTS.md)，全局规则迁移说明见 [`docs/global-rule-migration.md`](docs/global-rule-migration.md)。
 
