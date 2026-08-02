@@ -1,6 +1,6 @@
 """报告 docx 构建助手（report-writing skill 配套）。
 
-定位：把已写好的报告内容渲染成符合 skill §四 规范的 docx——
+用途：在用户没有指定其他模板时，把已经写好的报告内容排成中性 Word 文档，采用
 中文宋体 / 英文 Times New Roman、三线表、表上图下题注、纯黑、统计符号斜体、
 干净的居中加粗标题页（白底黑字，无深色标题条或灰色说明小字）。
 
@@ -13,7 +13,7 @@
     rep.table_caption("表1 24--36周体重反弹分析样本量")
     rep.three_line_table(header=[...], rows=[...])      # 或 rep.table_from_xlsx(path, sheet)
     rep.note("注：随机入组 N 按 ...")
-    rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 路径由 registry/export map 提供
+    rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 使用表图登记表或已经确认的输出路径
     rep.save("报告.docx", also_md=False)                # 仅在用户要求双格式时设 True
 
 正文内容必须由调用方按 skill 强制要求写入（数据有源、完整段落、零编造），
@@ -35,9 +35,9 @@ BLACK = (0, 0, 0)
 
 
 def val(yaml_path, key, which="full"):
-    """从结果数字唯一来源 results.yaml 取已渲染成品串（C1：下游取数禁手敲）。
-    数字只在 results.yaml 改；改下游须先回写唯一来源再传播。
-    用法：rep.para("S2 vs S1 差异为 " + val("07_paper/results.yaml", "S2_vs_S1_diff") + "。")
+    """从 results.yaml 按固定结果名称读取已经格式化的结果文字。
+    数字变化时先重新运行实际生成结果的脚本，再更新使用该结果的文件。
+    用法：rep.para("S2 vs S1 差异为 " + val("results/results.yaml", "S2_vs_S1_diff") + "。")
     """
     import yaml
     with open(yaml_path, "r", encoding="utf-8") as f:
@@ -45,14 +45,24 @@ def val(yaml_path, key, which="full"):
     res = (doc.get("results") or {}).get(key)
     if res is None:
         raise KeyError(f"results.yaml 无键：{key}")
-    s = (res.get("rendered") or {}).get(which)
+    display = res.get("display")
+    if not isinstance(display, dict):
+        rendered = res.get("rendered") or {}
+        legacy_names = {
+            "estimate": "est",
+            "interval": "ci",
+            "p_value": "p",
+            "full": "full",
+        }
+        display = {name: rendered.get(old) for name, old in legacy_names.items()}
+    s = display.get(which)
     if s is None:
-        raise KeyError(f"键 {key} 无 rendered.{which}")
+        raise KeyError(f"结果 {key} 没有 display.{which}")
     return s
 
 
 def setfont(run, cn=CN_BODY, en=EN_FONT, size=10.5, bold=False, italic=False, color=BLACK):
-    """每个 run 都同时设英文字体与中文 eastAsia 字体，否则字体会回退。"""
+    """每个 run 都同时设置英文字体与中文 eastAsia 字体，避免使用非预期字体。"""
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.italic = italic
@@ -239,7 +249,7 @@ class Report:
             embed = source.with_suffix(".png")
             if not embed.is_file():
                 raise FileNotFoundError(
-                    f"SVG 图解缺少同名 PNG 回退：{embed}。先按 research-visuals/svg-diagrams 生成可嵌入预览。"
+                    f"SVG 图解缺少可供当前文档嵌入的同名 PNG：{embed}。先按 research-visuals/svg-diagrams 生成预览图。"
                 )
         p = self.doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -253,7 +263,7 @@ class Report:
         if caption:
             self._md.append(f"**{caption}**\n")
 
-    # ---- 落盘 ----
+    # ---- 保存文件 ----
     def save(self, docx_path, also_md=False):
         self.doc.save(docx_path)
         out = [docx_path]

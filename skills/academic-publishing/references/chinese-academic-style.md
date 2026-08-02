@@ -1,6 +1,6 @@
 # 中文学术写作语体规范
 
-> 用于中文期刊论文和学位论文。内容与结构见 `section-content-playbook.md`，负向审计见 `chinese-style-audit.md`，终审见 `../academic-humanizer/references/patterns-and-preservation.md`。
+> 用于中文期刊论文和学位论文。内容与结构见 `section-content-playbook.md`，常见问题检查见 `chinese-style-audit.md`，终审见 `../academic-humanizer/references/patterns-and-preservation.md`。
 
 ## 目录
 
@@ -77,4 +77,4 @@
 - [ ] 方法保留复现和偏倚判断所需内容，未暴露无关工程过程，也未隐藏关键限制。
 - [ ] 结果、讨论和结论边界清楚，论断强度与研究设计及分析层级相称。
 - [ ] 术语来源可核、全文一致；数字、单位、缩写、引文和表图指向一致。
-- [ ] 全文通过 `chinese-style-audit.md` 的搜索线索和 `academic-humanizer` 的可迁移性、结构完整性及作者声纹检查。
+- [ ] 全文通过 `chinese-style-audit.md` 的搜索线索和 `academic-humanizer` 的可迁移性、结构完整性、术语一致性及学术书面语检查。

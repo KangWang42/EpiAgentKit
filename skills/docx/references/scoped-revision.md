@@ -4,7 +4,7 @@ Use this reference when an existing DOCX is edited, repaired, reviewed, or used 
 
 ## Revision record
 
-For exact text changes in ordinary body paragraphs or table-cell paragraphs, use one UTF-8 JSON revision record only as deterministic tool input. Keep it in the task workbench unless it belongs to an already-required formal revision state; it is not a separate project ledger or deliverable. Each change needs a stable `id`, an exact locator, `old`, and `new`:
+For exact text changes in ordinary body paragraphs or table-cell paragraphs, use one UTF-8 JSON revision record only as deterministic tool input. Keep it in the task workbench unless it belongs to an already-required formal revision state; it is not a separate project record or deliverable. Each change needs a stable `id`, an exact locator, `old`, and `new`:
 
 ```json
 {

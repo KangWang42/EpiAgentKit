@@ -5,6 +5,8 @@ description: Create or execute reviewable Conventional Commits from the complete
 
 # Git Commit Helper
 
+Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
+
 ## Availability preflight
 
 Before any Git command, verify that Git is already available and the current directory is a repository. If either check fails, report that Git was skipped and continue the parent task without version-control actions. Do not install Git, do not create an environment for it, and do not run `git init` unless the user explicitly requested repository initialization and Git is already available.

@@ -70,12 +70,12 @@ def inventory(target: Path, project: Path) -> list[dict[str, Any]]:
     ]
 
 
-def choose_batch(backup: Path, timestamp: str, topic: str, stage: str) -> Path:
-    base = backup / f"{timestamp}_{topic}_{stage}"
+def choose_batch(archive: Path, timestamp: str, topic: str, stage: str) -> Path:
+    base = archive / f"{timestamp}_{topic}_{stage}"
     candidate = base
     counter = 2
     while candidate.exists():
-        candidate = backup / f"{base.name}_{counter:02d}"
+        candidate = archive / f"{base.name}_{counter:02d}"
         counter += 1
     return candidate
 
@@ -261,6 +261,9 @@ def main() -> int:
         backup = (project / "09_backup").resolve(strict=False)
         if not backup.is_dir():
             raise ArchiveError("09_backup must already exist; do not upgrade a lightweight task implicitly")
+        archive = (backup / "archive").resolve(strict=False)
+        if not archive.is_dir():
+            raise ArchiveError("09_backup/archive must already exist; do not rewrite a legacy project implicitly")
         timestamp = args.timestamp or dt.datetime.now().strftime("%Y-%m-%d_%H%M")
         if not TIMESTAMP_PATTERN.fullmatch(timestamp):
             raise ArchiveError("timestamp must use YYYY-MM-DD_HHMM")
@@ -276,7 +279,7 @@ def main() -> int:
         current = [resolve_project_path(project, raw, must_exist=False) for raw in args.current]
         if any(inside(path, backup) or path == project for path in current):
             raise ArchiveError("current deliverable paths must stay in the active project tree")
-        batch = choose_batch(backup, timestamp, topic, stage)
+        batch = choose_batch(archive, timestamp, topic, stage)
         plan = {
             "ok": True,
             "mode": "execute" if args.execute else "plan",

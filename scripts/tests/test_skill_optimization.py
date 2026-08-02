@@ -102,32 +102,57 @@ class SkillOptimizationTests(unittest.TestCase):
             rendered = helper.add_result(
                 yaml_path,
                 "exposure_hr",
+                producer="02_code/03_main.py",
+                source="model_main.params",
+                input="01_data/rawdata/cohort.csv",
+                analysis_set="primary_complete_case",
+                run_id="20260802T121500+0800_ab12cd34",
+                consumers=["03_tables/Table2_main.xlsx"],
                 label="暴露与结局的关联",
                 est=1.45,
                 ci_low=1.12,
                 ci_high=1.87,
                 p=0.004,
-                source="02_code/03_main.py",
-                interp="暴露与较高风险相关。",
             )
-            self.assertEqual(rendered, "1.45（95%CI：1.12，1.87），P = 0.004")
+            self.assertEqual(rendered, "1.45（95% CI：1.12，1.87），P = 0.004")
             self.assertEqual(helper.val(yaml_path, "exposure_hr"), rendered)
             helper.render_summary_md(yaml_path, md_path)
             self.assertIn("暴露与结局的关联", md_path.read_text(encoding="utf-8"))
+            payload = helper.yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["meta"]["schema_version"], 2)
+            provenance = payload["results"]["exposure_hr"]["provenance"]
+            self.assertEqual(provenance["producer"], "02_code/03_main.py")
+            self.assertEqual(provenance["analysis_set"], "primary_complete_case")
+            self.assertNotIn("interp", payload["results"]["exposure_hr"])
 
-            helper.add_result(
-                yaml_path,
-                "exposure_hr",
-                label="暴露与结局的关联",
-                est=1.20,
-                ci_low=1.01,
-                ci_high=1.42,
-                p=0.03,
-                source="02_code/03_main.py",
+            with self.assertRaisesRegex(ValueError, "missing result provenance"):
+                helper.add_result(
+                    base / "invalid.yaml",
+                    "missing_source",
+                    producer="",
+                    source="",
+                    analysis_set="",
+                    run_id="",
+                )
+
+            legacy = base / "legacy.yaml"
+            legacy.write_text(
+                "meta:\n  schema_version: 1\nresults:\n  old:\n    rendered:\n"
+                "      full: legacy result\n",
+                encoding="utf-8",
             )
-            self.assertEqual(helper.stale_interps(yaml_path), ["exposure_hr"])
-            helper.confirm_interp(yaml_path, "exposure_hr", "更新后的解释。")
-            self.assertEqual(helper.stale_interps(yaml_path), [])
+            self.assertEqual(helper.val(legacy, "old"), "legacy result")
+            with self.assertRaisesRegex(ValueError, "read-only"):
+                helper.add_result(
+                    legacy,
+                    "new",
+                    producer="02_code/new.py",
+                    source="fit.params",
+                    input_hash="sha256:test",
+                    analysis_set="primary",
+                    run_id="run-1",
+                    consumers="03_tables/Table1.xlsx",
+                )
 
     def test_project_initializer_supports_r_and_python_without_default_git(self) -> None:
         script = ROOT / "skills/project-init/scripts/init_project.R"
@@ -135,7 +160,8 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn('language = c("r", "python")', body)
         self.assertIn("git = FALSE", body)
         self.assertIn('find_skill_file("python-biostats", "scripts/emit_summary.py")', body)
-        self.assertIn('language = if (language == "r") "R" else "python"', body)
+        self.assertIn('profile = c("analysis", "paper", "consulting", "teaching", "oneoff")', body)
+        self.assertIn('"09_backup/archive", "09_backup/workbench"', body)
 
         rscript = shutil.which("Rscript")
         if rscript is None:
@@ -148,8 +174,11 @@ class SkillOptimizationTests(unittest.TestCase):
                 "\n".join(
                     [
                         f'source("{source}", encoding="UTF-8")',
-                        f'init_project("r_demo", root="{root}", language="r", git=FALSE)',
-                        f'init_project("py_demo", root="{root}", language="python", git=FALSE)',
+                        f'init_project("r_demo", root="{root}", profile="analysis", language="r", git=FALSE)',
+                        f'init_project("py_demo", root="{root}", profile="paper", language="python", git=FALSE)',
+                        f'init_project("consult_demo", root="{root}", profile="consulting", language="r", git=FALSE)',
+                        f'init_project("teaching_demo", root="{root}", profile="teaching", language="r", git=FALSE)',
+                        f'init_project("oneoff_demo", root="{root}", profile="oneoff", language="r", git=FALSE)',
                     ]
                 )
                 + "\n",
@@ -175,6 +204,9 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertTrue((py_project / "02_code/config.py").is_file())
             self.assertTrue((py_project / "02_code/vendored/emit_summary.py").is_file())
             self.assertTrue((py_project / "02_code/01_data_cleaning.py").is_file())
+            self.assertTrue((py_project / "paper").is_dir())
+            self.assertTrue((Path(directory) / "consult_demo/05_reports").is_dir())
+            self.assertFalse((r_project / "paper").exists())
             self.assertFalse((py_project / "py_demo.Rproj").exists())
             self.assertFalse((r_project / ".git").exists())
             self.assertFalse((py_project / ".git").exists())
@@ -182,15 +214,15 @@ class SkillOptimizationTests(unittest.TestCase):
                 manifest = json.loads(
                     (project / ".epiagentkit-layout.json").read_text(encoding="utf-8")
                 )
-                self.assertEqual(manifest["schema_version"], 1)
-                self.assertEqual(manifest["policy"], "declare-before-create")
-                declared = {entry["path"] for entry in manifest["entries"]}
-                actual = {
-                    path.relative_to(project).as_posix()
-                    for path in project.rglob("*")
-                    if ".git" not in path.relative_to(project).parts
-                }
-                self.assertEqual(actual, declared)
+                self.assertEqual(manifest["schema_version"], 2)
+                self.assertEqual(manifest["policy"], "directory-and-artifact-types")
+                declared = {entry["path"] for entry in manifest["categories"]}
+                self.assertTrue({"01_data", "02_code", "results", "09_backup"}.issubset(declared))
+                self.assertTrue((project / "09_backup/archive").is_dir())
+                self.assertTrue((project / "09_backup/workbench").is_dir())
+                self.assertFalse((project / "results/results.yaml").exists())
+                self.assertFalse((project / "SESSION_LOG.md").exists())
+                self.assertFalse((project / "EXPERIMENTS.md").exists())
                 checked = subprocess.run(
                     [
                         sys.executable,
@@ -212,6 +244,8 @@ class SkillOptimizationTests(unittest.TestCase):
                     ),
                     check_payload["findings"],
                 )
+            self.assertFalse((Path(directory) / "teaching_demo/.epiagentkit-layout.json").exists())
+            self.assertFalse((Path(directory) / "oneoff_demo/09_backup").exists())
 
     def test_global_writing_contract_and_r_first_default_are_preserved(self) -> None:
         rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
@@ -223,14 +257,15 @@ class SkillOptimizationTests(unittest.TestCase):
             "流行病学与生物统计分析以 R 为主要语言",
             "用户未指定且项目没有既定分析语言时直接使用 R",
             "Python 不是标准研究工作流的前置条件",
-            "R 运行时缺失时报告影响",
-            "普通 R 包缺失时先按依赖规则补齐",
+            "先说明用途、安装范围和风险并询问是否安装",
+            "经核验等价实现",
             "不要求迁移可工作的 R 主流程",
             "交付说明无套话",
             "使用临床研究、流行病学与生物统计的准确术语",
-            "调用条件、检查要求、停止条件和隔离执行",
-            "平台术语没有稳定中文译名时保留原词并说明功能",
-            "不作字面翻译",
+            "调用条件、检查要求、停止条件和是否需要单独运行",
+            "没有稳定译名时保留原词",
+            "禁止按英文词形逐字硬译",
+            "不把软件设计或行政管理中的隐喻移植成科研术语",
         ):
             self.assertIn(fragment, rules)
         for inappropriate_term in ("\u95e8\u7981", "\u6273\u673a"):
@@ -238,47 +273,63 @@ class SkillOptimizationTests(unittest.TestCase):
         project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("R（默认；未指定时直接采用）", project_init)
-        self.assertIn("Python（仅按用户明确选择）", project_init)
-        self.assertIn("直接按 R 初始化，不单独追问 Python", project_init)
+        self.assertIn("默认使用 R", project_init)
+        self.assertIn("只有用户明确选择或现有主流程为 Python", project_init)
+        self.assertIn("选择能够完成当前任务的最小类型", project_init)
 
         r_skill = (ROOT / "skills/r-biostats/SKILL.md").read_text(encoding="utf-8")
         python_skill = (ROOT / "skills/python-biostats/SKILL.md").read_text(
             encoding="utf-8"
         )
         self.assertIn("用户未指定且项目没有既定分析语言时也使用", r_skill)
-        self.assertIn("R 运行时缺失时报告影响", r_skill)
         self.assertIn("普通 R 包缺失时", r_skill)
-        self.assertIn("优先补齐", r_skill)
+        self.assertIn("项目隔离环境补齐", r_skill)
         self.assertIn("仅用于用户明确要求 Python", python_skill)
         self.assertIn("未指定语言的普通统计分析", python_skill)
-        self.assertIn("不因 R 环境或依赖缺失改用 Python", python_skill)
+        self.assertIn("Python 运行时缺失时先询问是否安装", python_skill)
+        self.assertIn("现有 R 环境中的经核验等价实现", python_skill)
 
-    def test_shared_result_schema_keeps_interpretation_recovery_workflow(self) -> None:
+    def test_shared_result_schema_separates_numbers_from_interpretation(self) -> None:
         schema = (
             ROOT / "skills/biostat-principles/references/result-summary-schema.md"
         ).read_text(encoding="utf-8")
         for fragment in (
-            "stale_interps(path)",
-            "confirm_interp(path, key, interp=...)",
-            "set_conclusion(path, text)",
-            'style="zh"|"en"',
-            'which="est|ci|p|est_ci|full"',
-            "不得仅为清除标记而调用 `confirm_interp()`",
+            "schema_version: 2",
+            "producer",
+            "source",
+            "input_hash",
+            "analysis_set",
+            "run_id",
+            "consumers",
+            'which="full"',
+            "不保存解释、因果判断、显著性结论或跨结果总结",
+            "旧版的 `raw` / `rendered` 字段",
         ):
             self.assertIn(fragment, schema)
+        for removed in ("stale_interps", "confirm_interp", "set_conclusion"):
+            self.assertNotIn(removed, schema)
+        report_helper = (
+            ROOT / "skills/report-writing/references/build_report.py"
+        ).read_text(encoding="utf-8")
+        ppt_helper = (
+            ROOT / "skills/sysu-ppt/scripts/sysu_toolkit.R"
+        ).read_text(encoding="utf-8")
+        self.assertIn('res.get("display")', report_helper)
+        self.assertIn("item$display", ppt_helper)
+        self.assertIn('legacy_names <- c(estimate = "est"', ppt_helper)
 
     def test_language_neutral_workflows_remain_coordinated(self) -> None:
         principles = (ROOT / "skills/biostat-principles/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("R 用 `Rscript 02_code/NN_xxx.R`", principles)
-        self.assertIn("Python 用项目已有兼容解释器", principles)
+        self.assertIn("R 多行代码写入脚本后用 `Rscript`", principles)
+        self.assertIn("Python 使用项目现有且版本兼容的 Python", principles)
 
         publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("`r-biostats` 或 `python-biostats`", publishing)
+        self.assertIn("第 2 版结构的 `results/results.yaml`", publishing)
+        self.assertIn("已验证的正式表格、图件或统计输出", publishing)
         self.assertNotIn("（r-biostats 产出）", publishing)
 
         evidence = (ROOT / "skills/evidence-research/SKILL.md").read_text(
@@ -299,9 +350,6 @@ class SkillOptimizationTests(unittest.TestCase):
         publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
             encoding="utf-8"
         )
-        review = (
-            ROOT / "skills/academic-publishing/references/review-killers.md"
-        ).read_text(encoding="utf-8")
         project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
             encoding="utf-8"
         )
@@ -311,33 +359,112 @@ class SkillOptimizationTests(unittest.TestCase):
         report = (ROOT / "skills/report-writing/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("`CLAUDE.md` §3", publishing + review)
-        self.assertIn("`CLAUDE.md` §3 与 §7", project_init)
-        self.assertIn("`CLAUDE.md` §5 的术语要求", figures)
-        self.assertIn("`CLAUDE.md` §1 与 §6", report)
+        for body in (publishing, project_init, figures, report):
+            self.assertIn("全局 `CLAUDE.md`", body)
+        self.assertIn("references/project-hygiene.md", project_init)
+        self.assertIn("references/chart-gallery.md", figures)
 
-    def test_multi_outcome_figures_use_set_level_coverage(self) -> None:
+    def test_publication_figures_has_correct_calibration_and_neutral_output(self) -> None:
         body = (ROOT / "skills/publication-figures/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("整组表图覆盖完整结局集合", body)
-        self.assertNotIn("多结局图含全部结局", body)
+        self.assertIn("slope < 1：预测通常过于极端", body)
+        self.assertIn("slope > 1：预测分布过窄、不够极端", body)
+        self.assertIn("无目标期刊时生成中性工作稿", body)
+        self.assertIn("期刊当前官方说明", body)
+        self.assertNotIn("slope > 1 表示预测过于极端", body)
 
     def test_delivery_preserves_true_provenance(self) -> None:
         body = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("不篡改真实溯源", body)
-        self.assertIn("工具使用", body)
-        self.assertIn("披露", body)
+        self.assertIn(
+            "从主项目实际生成结果的分析脚本和最近一次成功运行的记录整理交付内容",
+            body,
+        )
+        self.assertIn("不得只改外发包而不回写主项目", body)
+        self.assertIn("法规、合同、伦理或机构明确要求的真实披露必须保留", body)
+        self.assertIn("没有明确数据分享授权时默认 `reference`", body)
         self.assertNotIn("`AI_assisted` → `研究者`", body)
+
+    def test_r_delivery_pack_propagates_run_id_portably(self) -> None:
+        rscript = shutil.which("Rscript")
+        if rscript is None:
+            self.skipTest("Rscript is unavailable")
+        scaffold = ROOT / "skills/consulting-delivery/scripts/consulting_scaffold.R"
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            driver = base / "verify_delivery.R"
+            driver.write_text(
+                "\n".join(
+                    [
+                        f'source("{scaffold.as_posix()}", encoding="UTF-8")',
+                        f'pack <- create_delivery_pack("r_reference", root="{base.as_posix()}", language="R", data_policy="reference")',
+                        'writeLines(c("run_id <- Sys.getenv(\\\"EPI_RUN_ID\\\")", "stopifnot(nzchar(run_id))", "dir.create(\\\"outputs\\\", showWarnings = FALSE)", "writeLines(run_id, \\\"outputs/run_id.txt\\\")"), file.path(pack, "code/verify.R"), useBytes = TRUE)',
+                        'writeLines("RUN_ORDER <- c(\\\"code/verify.R\\\")", file.path(pack, "code/run_order.R"), useBytes = TRUE)',
+                        "verify_reproducibility(pack)",
+                        'stopifnot(file.exists(file.path(pack, "outputs/run_id.txt")))',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                [rscript, "--vanilla", str(driver)],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+
+    def test_r_project_pipeline_propagates_run_id_portably(self) -> None:
+        rscript = shutil.which("Rscript")
+        if rscript is None:
+            self.skipTest("Rscript is unavailable")
+        pipeline = ROOT / "skills/project-init/assets/run_pipeline.R"
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            (project / "02_code").mkdir()
+            (project / "results/derived").mkdir(parents=True)
+            shutil.copy2(pipeline, project / "run_pipeline.R")
+            (project / "02_code/01_verify_run_id.R").write_text(
+                "\n".join(
+                    [
+                        'run_id <- Sys.getenv("EPI_RUN_ID")',
+                        "stopifnot(nzchar(run_id))",
+                        'writeLines(run_id, "results/derived/run_id.txt")',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                [rscript, "--vanilla", "run_pipeline.R"],
+                cwd=project,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            record = json.loads(
+                (project / "results/runs/latest.json").read_text(encoding="utf-8")
+            )
+            recorded = (project / "results/derived/run_id.txt").read_text(
+                encoding="utf-8"
+            ).strip()
+            self.assertEqual(record["status"], "success")
+            self.assertEqual(recorded, record["run_id"])
 
     def test_audit_uses_design_specific_scientific_judgment(self) -> None:
         body = (ROOT / "skills/epi-project-audit/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("不把单一经验阈值作为普遍红线", body)
-        self.assertIn("方向不一致是需要评估的证据，不自动判定失败", body)
+        self.assertIn("| ERROR | 可能改变科学结论", body)
+        self.assertIn("结构偏好一般是 WARN/INFO", body)
+        self.assertIn("自动检查只是证据之一", body)
         self.assertNotIn("事件数 ≥ 10×协变量数", body)
         self.assertNotIn("Reviewer: Agent", body)
 
@@ -346,7 +473,8 @@ class SkillOptimizationTests(unittest.TestCase):
         pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
         xlsx = (ROOT / "skills/xlsx/SKILL.md").read_text(encoding="utf-8")
         docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("明确要求双格式时才同时生成", report)
+        self.assertIn("指定 Markdown 或 Word 时只生成该载体", report)
+        self.assertIn("用户只要正文时直接返回净稿，不创建文件", report)
         self.assertIn("without making a gratuitous edit", pptx)
         self.assertIn("Verified statistical result or archival export", xlsx)
         self.assertIn("neutral value `Reviewer`", docx)

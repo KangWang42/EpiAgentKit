@@ -6,6 +6,8 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # Requirements for Outputs
 
+Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
+
 ## All Excel files
 
 ### Fonts

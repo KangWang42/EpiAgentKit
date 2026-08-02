@@ -1,8 +1,7 @@
 # English IMRaD Writing reference
 
 > SKILL.md §二 的英文执行细节。各部件框架、写作流程与自检清单见本文件；使用 `english-phrasebank.md`
-> 审查时态、衔接、hedging、论断强度和模板痕迹，不从中复制套句。数据一律取自 `07_paper/results.yaml` 及其派生
-> `0_result_summaries.md`。润色或改写同时执行 `academic-humanizer` 的不可变事实清单与论断—证据检查。
+> 审查时态、衔接、hedging、论断强度和模板痕迹，不从中复制套句。数字按固定结果名称从 `results/results.yaml` 读取；旧项目可读取旧版结果文件，没有项目结果数据文件时使用用户明确指定且来源可核验的正式结果。润色或改写同时执行 `academic-humanizer` 的事实保护与论断依据检查。
 
 ## Contents
 1. Manuscript spine and section purposes
@@ -41,7 +40,7 @@ explanation; do not force every result to have a mechanism and significance sent
 Introduction's gap is answered by Methods and Results and that the Discussion returns to that gap.
 
 Before revising existing prose, also build a fact lock containing every number, citation, equation,
-table/figure pointer, technical term, and claim direction. If the author supplies prior work, note their
+table/figure reference, technical term, and claim direction. If the author supplies prior work, note their
 sentence rhythm, preferred subjects, connective habits, and placement of hedging. Preserve these unless
 they impair clarity or accuracy.
 
@@ -222,4 +221,4 @@ Cross-section coherence (whole-draft): sample size consistent everywhere; same n
 tense usage per `english-phrasebank.md`.
 
 After any edit, compare the revised section against the fact lock. A fluent rewrite that changes a number,
-citation, equation, table/figure pointer, claim direction, population, outcome, or time window fails review.
+citation, equation, table/figure reference, claim direction, population, outcome, or time window fails review.

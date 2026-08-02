@@ -50,7 +50,7 @@ DEFAULT_CONTRACT: dict[str, Any] = {
         "venv",
         "09_backup",
     ],
-    "provenance_receipt": "07_paper/results.provenance.json",
+    "provenance_receipt": "results/runs/latest.json",
 }
 SCRIPT_PATTERN = re.compile(r"^(?P<number>\d{2})_(?P<stem>.+)\.(?:R|r|py)$")
 TABLE_PATTERN = re.compile(
@@ -149,8 +149,8 @@ def finding(
             "Repair the contract before sign-off.",
         ),
         "layout": (
-            "A project path is undeclared, invalid, or inconsistent with its planned location.",
-            "Declare the exact path and ownership before creation, or restore the declared layout.",
+            "The project directory description is incomplete, invalid, or missing an active top-level directory.",
+            "Repair the directory description or classify the active directory; do not enumerate every file.",
         ),
         "rawdata": (
             "Raw-data immutability or provenance may be compromised.",
@@ -158,19 +158,19 @@ def finding(
         ),
         "code": (
             "The reproducible analysis sequence is incomplete or ambiguous.",
-            "Restore the declared numbered pipeline and rerun it.",
+            "Confirm the intended script order and rerun the affected analysis.",
         ),
         "tables": (
             "Table numbering or identity is ambiguous.",
-            "Reconcile the table registry, producer, and manuscript references.",
+            "Reconcile the table numbering list, generating script, and manuscript references.",
         ),
         "figures": (
             "Figure numbering or identity is ambiguous.",
-            "Reconcile the figure registry, producer, and manuscript references.",
+            "Reconcile the figure numbering list, generating script, and manuscript references.",
         ),
         "naming": (
             "A version-like active name can cause the wrong deliverable to be selected.",
-            "Archive the replaced artifact and keep one stable semantic current name.",
+            "Archive the replaced artifact and keep one clear, durable name for the current file.",
         ),
         "results": (
             "The result source and its downstream artifacts may be out of sync.",
@@ -178,7 +178,7 @@ def finding(
         ),
         "provenance": (
             "File origin or synchronization cannot be proven deterministically.",
-            "Regenerate or update the provenance receipt and investigate every mismatch.",
+            "Regenerate the automatic run record and investigate every mismatch.",
         ),
         "logs": (
             "The execution log contains a term that requires technical review.",
@@ -225,6 +225,7 @@ def layout_actual_paths(
 ) -> dict[Path, str]:
     actual: dict[Path, str] = {}
     backup = (project / "09_backup").resolve(strict=False)
+    archive = (backup / "archive").resolve(strict=False)
     workbench = (backup / "workbench").resolve(strict=False)
     prune_names = {Path(value).name.casefold() for value in contract["prune_dirs"]}
     prune_names.discard("09_backup")
@@ -237,10 +238,10 @@ def layout_actual_paths(
         if current == backup:
             for name in directories:
                 child = (current / name).resolve(strict=False)
-                if child == workbench:
+                if child in {archive, workbench}:
                     actual[relative(child, project)] = "dir"
                     kept.append(name)
-        elif current != workbench:
+        elif current not in {archive, workbench}:
             for name in directories:
                 child = (current / name).resolve(strict=False)
                 if name.casefold() in prune_names or any(root in child.parents for root in roots):
@@ -270,8 +271,70 @@ def layout_check(
     try:
         payload = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as error:
-        finding(findings, "ERROR", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), type(error).__name__)
+        finding(findings, "WARN", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), type(error).__name__)
         return
+    if isinstance(payload, dict) and payload.get("schema_version") == 2:
+        categories = payload.get("categories")
+        artifacts = payload.get("artifact_classes")
+        if (
+            payload.get("policy") not in {"directory-and-artifact-types", "category-contract"}
+            or not isinstance(categories, list)
+            or not isinstance(artifacts, list)
+        ):
+            finding(findings, "WARN", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), "schema_v2")
+            return
+        declared_roots: set[Path] = set()
+        category_required = ("path", "owner", "purpose", "producer", "consumers", "lifecycle")
+        for index, entry in enumerate(categories):
+            if not isinstance(entry, dict) or any(key not in entry for key in category_required):
+                finding(findings, "WARN", "layout.category_invalid", Path(LAYOUT_MANIFEST), f"category@{index}")
+                continue
+            raw_path = entry.get("path")
+            consumers = entry.get("consumers")
+            strings = [entry.get(key) for key in ("owner", "purpose", "producer", "lifecycle")]
+            if (
+                not isinstance(raw_path, str)
+                or not raw_path.strip()
+                or any(not isinstance(value, str) or not value.strip() for value in strings)
+                or not isinstance(consumers, list)
+                or not all(isinstance(value, str) and value.strip() for value in consumers)
+            ):
+                finding(findings, "WARN", "layout.category_invalid", Path(LAYOUT_MANIFEST), f"category@{index}")
+                continue
+            normalized = raw_path.replace("\\", "/")
+            if Path(normalized).is_absolute() or normalized.startswith("/") or ".." in Path(normalized).parts:
+                finding(findings, "ERROR", "layout.path_escape", Path(LAYOUT_MANIFEST), f"category@{index}")
+                continue
+            rel = relative((project / normalized).resolve(strict=False), project)
+            if rel in declared_roots:
+                finding(findings, "WARN", "layout.category_duplicate", rel)
+                continue
+            declared_roots.add(rel)
+            if entry["lifecycle"] == "active" and not (project / rel).is_dir():
+                finding(findings, "WARN", "layout.category_missing", rel)
+        artifact_required = ("class", "pattern", "producer", "consumers")
+        for index, entry in enumerate(artifacts):
+            if (
+                not isinstance(entry, dict)
+                or any(key not in entry for key in artifact_required)
+                or any(not isinstance(entry.get(key), str) or not entry[key].strip() for key in ("class", "pattern", "producer"))
+                or not isinstance(entry.get("consumers"), list)
+            ):
+                finding(findings, "WARN", "layout.artifact_class_invalid", Path(LAYOUT_MANIFEST), f"artifact@{index}")
+        actual = layout_actual_paths(project, roots, contract)
+        for rel, kind in actual.items():
+            if len(rel.parts) == 1 and kind == "file":
+                continue
+            backup_branch = any(
+                branch == rel or branch in rel.parents
+                for branch in (Path("09_backup/archive"), Path("09_backup/workbench"))
+            )
+            if backup_branch:
+                continue
+            if not any(rel == root or root in rel.parents for root in declared_roots):
+                finding(findings, "WARN", "layout.category_undeclared", rel, kind)
+        return
+
     entries = payload.get("entries") if isinstance(payload, dict) else None
     if (
         not isinstance(payload, dict)
@@ -279,13 +342,13 @@ def layout_check(
         or payload.get("policy") != "declare-before-create"
         or not isinstance(entries, list)
     ):
-        finding(findings, "ERROR", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), "schema")
+        finding(findings, "WARN", "layout.manifest_invalid", Path(LAYOUT_MANIFEST), "schema")
         return
     declared: dict[Path, tuple[str, str]] = {}
     required = ("path", "kind", "owner", "purpose", "producer", "consumer", "lifecycle")
     for index, entry in enumerate(entries):
         if not isinstance(entry, dict) or any(not isinstance(entry.get(key), str) or not entry[key].strip() for key in required):
-            finding(findings, "ERROR", "layout.entry_invalid", Path(LAYOUT_MANIFEST), f"entry@{index}")
+            finding(findings, "WARN", "layout.entry_invalid", Path(LAYOUT_MANIFEST), f"entry@{index}")
             continue
         raw_path = entry["path"].replace("\\", "/")
         raw_parts = Path(raw_path).parts
@@ -298,23 +361,23 @@ def layout_check(
         except ValueError:
             finding(findings, "ERROR", "layout.path_escape", Path(LAYOUT_MANIFEST), f"entry@{index}")
             continue
-        workbench_rel = Path("09_backup/workbench")
-        if workbench_rel in rel.parents and rel != workbench_rel / ".gitkeep":
+        backup_branches = (Path("09_backup/archive"), Path("09_backup/workbench"))
+        if any(branch in rel.parents and rel != branch / ".gitkeep" for branch in backup_branches):
             continue
         if entry["kind"] not in {"file", "dir"} or entry["lifecycle"] not in {"planned", "active", "current_deliverable"}:
-            finding(findings, "ERROR", "layout.entry_invalid", rel, "kind_or_lifecycle")
+            finding(findings, "WARN", "layout.entry_invalid", rel, "kind_or_lifecycle")
             continue
         if rel in declared:
-            finding(findings, "ERROR", "layout.path_duplicate", rel)
+            finding(findings, "WARN", "layout.path_duplicate", rel)
             continue
         declared[rel] = (entry["kind"], entry["lifecycle"])
 
     actual = layout_actual_paths(project, roots, contract)
     for rel, kind in actual.items():
         if rel not in declared:
-            finding(findings, "ERROR", "layout.path_undeclared", rel, kind)
+            finding(findings, "WARN", "layout.path_undeclared", rel, kind)
         elif declared[rel][0] != kind:
-            finding(findings, "ERROR", "layout.kind_mismatch", rel, f"declared={declared[rel][0]};actual={kind}")
+            finding(findings, "WARN", "layout.kind_mismatch", rel, f"declared={declared[rel][0]};actual={kind}")
     for rel, (kind, lifecycle) in declared.items():
         declared_path = (project / rel).resolve(strict=False)
         inside_raw_root = any(root == declared_path or root in declared_path.parents for root in roots)
@@ -489,12 +552,12 @@ def artifact_sequence_check(
         return
     expected = set(range(1, max(groups) + 1))
     if set(groups) != expected:
-        finding(findings, "ERROR", f"{check}.numbering_gap", relative(directory, directory.parent))
+        finding(findings, "WARN", f"{check}.numbering_gap", relative(directory, directory.parent))
     for number, stems in sorted(groups.items()):
         if len(stems) > 1:
             finding(
                 findings,
-                "ERROR",
+                "WARN",
                 f"{check}.duplicate_number",
                 relative(directory, directory.parent),
                 f"{number}:{','.join(sorted(stems))}",
@@ -516,9 +579,9 @@ def code_check(
         if SCRIPT_PATTERN.match(path.name):
             numbered += 1
         elif path.name.casefold() not in helpers:
-            finding(findings, "ERROR", "code.unnumbered_script", relative(path, project))
+            finding(findings, "INFO", "code.unnumbered_script", relative(path, project))
     if numbered > 10:
-        finding(findings, "ERROR", "code.too_many_numbered_scripts", Path("02_code"), str(numbered))
+        finding(findings, "INFO", "code.too_many_numbered_scripts", Path("02_code"), str(numbered))
 
 
 def prune_directories(
@@ -566,7 +629,7 @@ def old_names_check(
 ) -> None:
     for _path, rel in active_files(project, roots, contract):
         if any(OLD_NAME_PATTERN.search(part) for part in rel.parts):
-            finding(findings, "ERROR", "naming.legacy_version", rel)
+            finding(findings, "WARN", "naming.legacy_version", rel)
 
 
 def sha256(path: Path) -> str:
@@ -591,6 +654,15 @@ def provenance_check(
     except (OSError, json.JSONDecodeError, AttributeError) as error:
         finding(findings, "ERROR", "provenance.invalid", relative(receipt_path, project), type(error).__name__)
         return True
+    modern_record = Path("results/runs") in receipt_path.parents or receipt_path.parent.name == "runs"
+    status = receipt.get("status")
+    if status is not None and status != "success":
+        finding(findings, "ERROR", "provenance.run_not_successful", relative(receipt_path, project), str(status))
+    elif modern_record and status != "success":
+        finding(findings, "ERROR", "provenance.run_status_missing", relative(receipt_path, project))
+    exit_code = receipt.get("exit_code")
+    if isinstance(exit_code, int) and exit_code != 0:
+        finding(findings, "ERROR", "provenance.run_not_successful", relative(receipt_path, project), f"exit_code={exit_code}")
     if not isinstance(files, dict) or not files:
         finding(findings, "ERROR", "provenance.invalid", relative(receipt_path, project), "files")
         return True
@@ -605,7 +677,10 @@ def provenance_check(
             finding(findings, "ERROR", "provenance.file_missing", rel)
             continue
         listed.add(rel.as_posix())
-        if not re.fullmatch(r"[a-fA-F0-9]{64}", expected) or sha256(target) != expected.casefold():
+        algorithm = str(receipt.get("hash_algorithm") or "sha256").casefold()
+        actual_hash = hashlib.md5(target.read_bytes()).hexdigest() if algorithm == "md5" else sha256(target)
+        expected_length = 32 if algorithm == "md5" else 64
+        if algorithm not in {"md5", "sha256"} or not re.fullmatch(rf"[a-fA-F0-9]{{{expected_length}}}", expected) or actual_hash != expected.casefold():
             finding(findings, "ERROR", "provenance.hash_mismatch", rel)
     for output in outputs:
         rel = relative(output, project)
@@ -617,16 +692,26 @@ def provenance_check(
 def result_sync_check(
     project: Path, contract: dict[str, Any], findings: list[dict[str, str]]
 ) -> None:
-    paper = project / "07_paper"
-    if not paper.is_dir():
-        return
-    source = paper / "results.yaml"
-    summary = paper / "0_result_summaries.md"
+    source = project / "results" / "results.yaml"
+    summary = project / "results" / "result_summaries.md"
+    legacy = False
+    if not source.is_file() and (project / "07_paper" / "results.yaml").is_file():
+        source = project / "07_paper" / "results.yaml"
+        summary = project / "07_paper" / "0_result_summaries.md"
+        legacy = True
     if not source.is_file():
-        finding(findings, "ERROR", "results.source_missing", Path("07_paper/results.yaml"))
+        layout = project / LAYOUT_MANIFEST
+        profile = None
+        if layout.is_file():
+            try:
+                profile = json.loads(layout.read_text(encoding="utf-8-sig")).get("profile")
+            except (OSError, json.JSONDecodeError, AttributeError):
+                profile = None
+        if profile in {"analysis", "paper", "consulting"}:
+            finding(findings, "ERROR", "results.source_missing", Path("results/results.yaml"))
         return
     if not summary.is_file():
-        finding(findings, "ERROR", "results.summary_missing", Path("07_paper/0_result_summaries.md"))
+        finding(findings, "WARN", "results.summary_missing", relative(summary, project))
     outputs = [
         path
         for directory in (project / "03_tables", project / "04_figures")
@@ -634,13 +719,18 @@ def result_sync_check(
         for path in directory.rglob("*")
         if path.is_file()
     ]
-    receipt = (project / str(contract["provenance_receipt"])).resolve(strict=False)
+    receipt_value = (
+        "07_paper/results.provenance.json"
+        if legacy and contract["provenance_receipt"] == DEFAULT_CONTRACT["provenance_receipt"]
+        else str(contract["provenance_receipt"])
+    )
+    receipt = (project / receipt_value).resolve(strict=False)
     if provenance_check(project, receipt, [source, summary, *outputs], findings):
         return
     if summary.is_file() and summary.stat().st_mtime_ns < source.stat().st_mtime_ns:
-        finding(findings, "WARN", "results.summary_mtime_stale", Path("07_paper/0_result_summaries.md"))
+        finding(findings, "WARN", "results.summary_mtime_stale", relative(summary, project))
     if outputs and max(path.stat().st_mtime_ns for path in outputs) > source.stat().st_mtime_ns:
-        finding(findings, "WARN", "results.source_mtime_older_than_outputs", Path("07_paper/results.yaml"))
+        finding(findings, "WARN", "results.source_mtime_older_than_outputs", relative(source, project))
     finding(findings, "WARN", "provenance.receipt_missing", relative(receipt, project))
 
 

@@ -20,11 +20,21 @@ library(flextable)
 )
 .SYSU_SKILL_DIR <- if (!is.na(.SYSU_TOOLKIT_FILE)) dirname(dirname(.SYSU_TOOLKIT_FILE)) else NA_character_
 
-# 从 results.yaml 统一取数（C1：下游取数禁手敲）。数字只在 results.yaml 改，PPT 一律 val() 取。
-# 用法：tx(paste0("S2 vs S1 差异 ", val("07_paper/results.yaml", "S2_vs_S1_diff")))
+# 从 results.yaml 按固定结果名称取数。数字变化时先重新运行实际生成结果的脚本，PPT 只用 val() 读取。
+# 用法：tx(paste0("S2 vs S1 差异 ", val("results/results.yaml", "S2_vs_S1_diff")))
 val <- function(path, key, which = "full") {
   doc <- yaml::read_yaml(path)
-  v <- doc$results[[key]]$rendered[[which]]
+  item <- doc$results[[key]]
+  if (is.null(item)) stop(sprintf("results.yaml 中没有名为 %s 的结果", key))
+  display <- item$display
+  if (is.null(display)) {
+    rendered <- item$rendered
+    legacy_names <- c(estimate = "est", interval = "ci", p_value = "p", full = "full")
+    legacy_which <- if (which %in% names(legacy_names)) unname(legacy_names[[which]]) else which
+    v <- rendered[[legacy_which]]
+  } else {
+    v <- display[[which]]
+  }
   if (is.null(v)) stop(sprintf("results.yaml 取数失败：%s / %s", key, which))
   v
 }
@@ -273,7 +283,7 @@ num_item <- function(num, head, body = "", size = SYSU$sz$body,
 .external_media <- function(path, width, height) {
   if (grepl("\\.svg$", path, ignore.case = TRUE) &&
       !requireNamespace("rsvg", quietly = TRUE)) {
-    stop("嵌入 SVG 需要 R 包 rsvg；请安装后重试，或使用同名 PNG 回退。")
+    stop("嵌入 SVG 需要 R 包 rsvg；请安装后重试，或改用同名 PNG。")
   }
   external_img(path, width = width, height = height)
 }

@@ -1,8 +1,6 @@
 # ============================================================
-# 发表级出图默认（publication-figures / T1 简单图零调参达标）
-# source 即得：theme_pub() 主题 + save_fig() 双存 + 中文字体注册 + 配色。
-# 目标：简单图不必每次手调尺寸/字体/图例/比例——默认就「比例合适、图例不压数据、字体嵌入」。
-# 进阶/顶刊图（T2/T3）在此基础上叠配方技法。
+# 中性统计图工作稿默认：主题、字体、配色和按需导出。
+# 正式投稿的尺寸、格式、分辨率、背景和字体仍服从目标期刊当前官方要求。
 # ============================================================
 suppressWarnings(suppressMessages({
   library(ggplot2)
@@ -33,7 +31,7 @@ pub_palette <- function(n = NULL) {
 scale_color_pub <- function(...) ggplot2::scale_color_manual(values = pub_palette(), ...)
 scale_fill_pub  <- function(...) ggplot2::scale_fill_manual(values = pub_palette(), ...)
 
-# ---- 发表级主题（theme_classic 打底，图例默认外置不压数据）----
+# ---- 中性主题（theme_classic 打底）----
 theme_pub <- function(base_size = 8, family = PLOT_FAMILY, legend = "right") {
   theme_classic(base_size = base_size, base_family = family) +
     theme(
@@ -41,7 +39,7 @@ theme_pub <- function(base_size = 8, family = PLOT_FAMILY, legend = "right") {
       axis.line    = element_line(linewidth = 0.4),
       axis.ticks   = element_line(linewidth = 0.4),
       axis.text    = element_text(colour = "black"),
-      legend.position = legend,                       # 默认右侧外置，绝不内嵌压数据
+      legend.position = legend,
       legend.key.size = unit(3.5, "mm"),
       legend.background = element_blank(),
       legend.title = element_text(size = base_size),
@@ -59,15 +57,25 @@ FIG_SIZES <- list(
 fig_dim <- function(type = "default") FIG_SIZES[[type]] %||% FIG_SIZES$default
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
-# ---- 双存：PDF(cairo) + PNG(300dpi)；优先 registry 的 fig_path() ----
-save_fig <- function(p, stem, w_mm = 88, h_mm = 70, type = NULL) {
+# ---- 按实际用途导出；默认只生成 PNG 工作预览 ----
+save_fig <- function(p, stem, w_mm = 88, h_mm = 70, type = NULL,
+                     formats = "png", dpi = 300, bg = "white") {
   if (!is.null(type)) { d <- fig_dim(type); w_mm <- d[1]; h_mm <- d[2] }
+  formats <- unique(tolower(formats))
+  if (!length(formats) || any(!formats %in% c("png", "pdf"))) {
+    stop("formats 仅支持当前已验证的 png 或 pdf；其它投稿格式按期刊要求另行验证")
+  }
   pdf_dev <- if (capabilities("cairo")) grDevices::cairo_pdf else grDevices::pdf
   png_dev <- if (has("ragg")) ragg::agg_png else "png"
-  pdf_path <- if (exists("fig_path", inherits = TRUE)) get("fig_path")(stem, "pdf") else paste0(stem, ".pdf")
-  png_path <- if (exists("fig_path", inherits = TRUE)) get("fig_path")(stem, "png") else paste0(stem, ".png")
-  ggsave(pdf_path, p, width = w_mm, height = h_mm, units = "mm", device = pdf_dev)
-  ggsave(png_path, p, width = w_mm, height = h_mm, units = "mm", dpi = 300,
-         device = png_dev, bg = "white")
-  invisible(c(pdf = pdf_path, png = png_path))
+  paths <- vapply(formats, function(format) {
+    path <- if (exists("fig_path", inherits = TRUE)) get("fig_path")(stem, format) else paste0(stem, ".", format)
+    if (format == "pdf") {
+      ggsave(path, p, width = w_mm, height = h_mm, units = "mm", device = pdf_dev, bg = bg)
+    } else {
+      ggsave(path, p, width = w_mm, height = h_mm, units = "mm", dpi = dpi,
+             device = png_dev, bg = bg)
+    }
+    path
+  }, character(1))
+  invisible(stats::setNames(paths, formats))
 }

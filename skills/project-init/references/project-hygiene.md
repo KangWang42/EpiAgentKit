@@ -1,118 +1,43 @@
-# 项目目录、命名与归档规范
+# 项目目录与归档管理
 
-本 reference 是正式研究项目结构细则的唯一来源。初始化、项目化分析、写作、交付和审查 skill 均引用它，不在全局入口重复维护。简单作业、单次处理、快速核验或少量输出不适用本规范，也不得为满足本规范自动补建项目骨架。
+本规则只适用于 P 项目执行和 R 正式发布。Q/L 不迁移用户目录、不补建记录文件或归档。
 
-## 1. 活跃工作区
+## 当前项目目录说明
 
-- 项目根只保留规则、方案、日志、`.gitignore`、`.epiagentkit-raw-roots`、`.epiagentkit-layout.json`、可选 `.epiagentkit-check.json`、R 项目的 `.Rproj` 与标准编号目录；具体骨架以 `project-init` 模板为准。
-- 临时、诊断、迁移和探索产物不得散落在根目录；Agent 创建前即进入 `09_backup/workbench/` 的独立批次，不先写到系统 Temp、活动目录或 `02_code/` 再搬移。
-- 同一交付物只保留一组稳定语义名当前版。不得累积 `v2`、`new`、`final`、`最终版`、`完善版` 等并列文件。
-- 移动产物时同步修改生成脚本的输出路径与正文引用；完成后全文搜索旧路径、旧编号与散落残留。
+`.epiagentkit-layout.json` 只说明两类内容：
 
-### 1.0 项目内局部产物
+- `categories`：当前使用目录的相对路径、负责人、用途、生成方式、使用者和保留期限；文件中继续使用 `owner`、`purpose`、`producer`、`consumers` 和 `lifecycle` 这些字段名。
+- `artifact_classes`：结果数据文件、统计表、统计图、论文或咨询包等正式产物类型，以及相应的文件匹配规则、生成方式和使用者。
 
-- 用户只问一个问题时直接回复，不创建文件。只改一个 Word、表格、图片、章节或格式项时，锁定唯一输入、精确授权范围、保护项和一个目标输出；保留原件或可恢复归档，不处理范围外既有问题。
-- 局部产物不补建 `revision-state.json`、`SESSION_LOG.md`、`DECISIONS.md`、`BACKLOG.md`、registry 或布局条目。只有修改实际影响某个既有唯一来源或晋级为正式当前产物时才同步该来源与必要登记。
-- 只运行载体 skill 和内容 skill 要求的范围差异、结构、可打开性及必要渲染检查，不运行整项目六层审查。正式投稿、外发或用户明确要求项目审计时再进入正式发布流程。
+同一类文件不逐项登记。表图的固定名称和顺序由表图编号表管理；每项结果的固定名称保存在 `results/results.yaml`；咨询包所含文件写入交付内容说明。只有新增当前使用的顶层目录或正式产物类型时才更新 `.epiagentkit-layout.json`，普通脚本、单次工作目录和已有类别中的新文件不需要更新。
 
-### 1.1 预声明布局规范
+旧项目逐文件登记的第 1 版格式仍可读取和检查，但不得复制到新项目。
 
-正式项目的活动目录和正式产物位置必须先进入 `.epiagentkit-layout.json`，再创建或写入。初始化器登记标准骨架；后续分析、表图、论文、报告、PPT、咨询包和必要子目录在生成前追加精确条目。局部候选和可重建 scratch 不进入活动布局，不得先把正式文件落在方便位置再猜测归属。
+## 当前版与归档
 
-每个条目至少记录：
+- 当前工作目录只保留一组含义明确且名称长期不变的现行文件，不使用 `final`、`latest`、`new` 或多重版本后缀区分当前版。
+- 被替代且需要恢复的正式文件在 R 范围按批次移入 `09_backup/archive/YYYY-MM-DD_HHMM_<主题>_<阶段>/`，保留原相对路径、完整性摘要和 `MANIFEST.md`。
+- 项目 `09_backup/INDEX.md` 只在首个正式归档批次出现时创建，只索引 `archive/`，不登记 workbench。旧项目直接位于 `09_backup/<批次>/` 的历史归档可继续读取，不要求迁移；新脚本不得再写入根级批次。
+- 可以重新生成的缓存、临时文件和运行环境不归档；确认具体范围后安全清理。
+- 未知来源或多个合理当前版无法判断时不移动，先询问用户。
 
-`path | kind(file/dir) | owner | purpose | producer | consumer | lifecycle(planned/active/current_deliverable)`
+## Workbench 与探索
 
-- `path` 使用项目相对路径并指向唯一位置；禁止绝对路径、`..`、宽泛 glob 和同一语义的多处镜像。
-- `owner` 是负责该产物的 skill 或项目角色；`producer` 与 `consumer` 说明谁生成、谁读取；`lifecycle` 区分固定骨架、计划产物和当前交付物。
-- 新增活动目录前先声明目录及其用途，再声明其中每个正式或计划文件。表图的精确文件名还要进入 registry；结果数字仍进入 `results.yaml`，布局清单不复制结果内容。
-- `09_backup/workbench/` 骨架及 `.gitkeep` 进入初始布局清单；批次内部文件不逐项登记，临时解包、渲染、测试和诊断内容不进入活动布局，按 §1.2 隔离执行。`09_backup/` 内正式历史由 `INDEX.md` 与每批 `MANIFEST.md` 管理，不逐文件重复登记。
-- 原始数据根保持只读，其内部来源文件不由布局规范重新命名；原始根本身和数据字典位置仍需声明。
-- `check-project` 对已存在但未声明的活动路径报 ERROR，对已声明但尚未生成的 `planned` 条目不报错。旧项目没有布局清单时先报 WARN 并要求在下次正式变更前建立，不静默搬动现有文件。
+实验、诊断、复现、一次性脚本和维护批次使用 `09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_<用途>/`。批次内文件不进入 layout，也不进入 `09_backup/INDEX.md`。
 
-### 1.2 Backup workbench
+- E0：通常不建批次，当轮命令与核验结果足够。
+- E1：一个批次保存 `PLAN.md` 和 `FINDINGS.md`；只有后续复现或判断需要时，才保存程序自动生成的运行记录。
+- E2：在 E1 基础上使用项目 `EXPERIMENTS.md` 维护全部正式比较的索引；该索引只引用 `workbench/` 批次，不承担正式文件归档。
 
-- Agent 创建的试验脚本、一次性脚本、诊断、迁移和多步骤测试统一放入 `09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_<用途>/`。用途使用 `experiment`、`diagnostic`、`oneoff`、`render`、`migration` 或 `maintenance`；主题简短且可检索。
-- 新脚本、实验、迁移、多步骤诊断和需要保留依据的维护在执行前写 `PLAN.md`，执行后写 `FINDINGS.md`。单个载体工具产生的解包、渲染或转换 scratch 若不含新逻辑，只需在当前任务记录命令与结果，成功后删除，不为每次调用单独建立计划和发现文件；一旦出现需追溯的异常再保留 `FINDINGS.md`。
-- 在该批次目录内创建并运行脚本。把当前进程的 `TEMP`、`TMP` 和 `TMPDIR` 指向批次内 `runtime/`；命令结束后只删除可重建的 runtime 缓存，不删除 `PLAN.md`、`FINDINGS.md`、脚本和需复核结果。既有第三方工具强制使用系统临时目录时，仅在它能可靠自动清理且没有 Agent 自建文件的情况下例外。
-- 统计与方法实验还必须登记 `09_backup/EXPERIMENTS.md`。失败、持平和未采用结果同样保留；`EXPERIMENTS.md` 与 `FINDINGS.md` 不是正式结果数字唯一来源。
-- 晋级时先在 `.epiagentkit-layout.json` 和适用 registry 声明正式目标，再把经验证的必要逻辑按主流程命名重写或迁入活动目录并重跑正式验证。保留原 workbench 作为依据，不把整个试验目录直接改名为主流程，也不因试验成功静默改变方法、口径或结论。
+批次需要临时目录时使用批次内 `runtime/`，并把当前进程的 TEMP、TMP、TMPDIR 指向该处；运行结束只清理该 runtime，不清理整个批次。
 
-## 2. 替换与归档
+## 记录边界
 
-先判断本次输出是否要晋级并替换正式当前产物。未获确认的候选留在 workbench，不触发归档；首次生成稳定目标也无需归档。只有替换唯一且来源明确的当前成品时，才在生成或晋级前把被替代成品及其直接依赖按原相对目录整组移入：
+- `DECISIONS.md` 只记录方法选择、方案偏离、异常处置和影响结论的决定。
+- `BACKLOG.md` 只记录需要后续补充材料、外部资源，或由用户、数据提供方和合作者决定的未决事项；解决后保留简短状态，不复制运行历史。
+- 自动运行记录保存命令、状态、脚本、输入输出文件的哈希值和环境说明；不建立人工 `SESSION_LOG.md`。
+- `results/results.yaml` 不保存解释或待办事项；`BACKLOG.md` 不保存结果数字；`.epiagentkit-layout.json` 不重复表图编号表或咨询包的交付内容说明。
 
-`09_backup/YYYY-MM-DD_HHMM_<主题>_<阶段>/`
+## 发布前文件与复现检查
 
-每批归档必须：
-
-1. 写 `MANIFEST.md`，记录归档时间、原路径、内容、替代版本与原因。
-2. 在 `09_backup/INDEX.md` 顶部登记时间、主题、类型、目录、当前版路径与原因。
-3. 从活跃工作区移走旧版，不以复制替代归档，不删除历史索引。
-4. 多个候选版无法判断主次时先问用户。
-
-归档先运行 dry-run，核对精确目标与目的地，再执行：
-
-```bash
-python <project-init技能目录>/scripts/archive_deliverables.py <项目根> \
-  --target <被替代的精确相对路径> \
-  --current <稳定语义名当前交付路径> \
-  --topic <主题> --stage <阶段> --reason <原因> --json
-python <project-init技能目录>/scripts/archive_deliverables.py <项目根> \
-  --target <被替代的精确相对路径> \
-  --current <稳定语义名当前交付路径> \
-  --topic <主题> --stage <阶段> --reason <原因> --execute --json
-```
-
-脚本拒绝 glob、项目根、原始数据根、备份根、项目外路径、父子重叠目标和覆盖已有批次；保留原相对路径、文件哈希、`MANIFEST.md` 与 `INDEX.md`，执行失败时回滚已移动目标。
-
-## 3. `02_code/` 规范
-
-- 分析语言优先沿用既有主流程或用户明确选择，并在项目 `CLAUDE.md` 记录；新项目未指定时直接使用 R，标准 R 项目不要求 Python 环境。Python 仅作为用户明确选择或既有 Python 主流程的补充；R 环境或依赖缺失时不自动换用 Python，也不为统一风格跨 R/Python 重写。
-- 编号脚本使用 `01..` 到 `0N..` 连续序列，不留 `test.R|py`、`temp.R|py`、`final.R|py` 等无编号文件。
-- `02_code/` 只保留从原始数据复现到最终结果的主流程阶段。编号脚本不超过 10 个；阶段内子分析用参数切分。
-- `config.R|py`、`conventions.R|py`、`lib/`、`vendored/` 与已有的 `run_pipeline` 不计入编号脚本数。
-- 正式研究主流程不另建 `run_all.R|py`、`main.R|py` 或无项目依据的一键入口；`consulting-delivery` 结果包规定的 `run_all.R|py` 除外。
-- 退役、被替代、临时诊断和探索脚本立即归档，不留在主流程目录。
-- R 风格与执行规范见 `r-biostats/references/code-style.md`；Python 执行规范见 `python-biostats`。两者共用 `biostat-principles` 的复现与随机过程要求。
-
-## 4. 表图与 registry
-
-- 主表命名 `Table{N}_{描述}.xlsx`，附表 `TableS{N}_...`；主图命名 `Fig{N}_{描述}.{png,pdf,svg}`，附图 `FigS{N}_...`。
-- N 按论文首次引用顺序连续。附表、附图放 `supplementary/`；敏感性、消融、探索和审计产物进入相应二级目录或归档。
-- registry 有序清单是编号唯一来源。脚本通过 `table_path(stem)` 与 `fig_path(stem, ext)` 取路径，不写死 `Table6`、`Fig3`。实现见 `registry.md`。
-- PPT、论文、标书、报告和网页的非统计视觉资产默认由 `research-visuals` 调用 imagegen 生成 PNG；用户或格式要求矢量、工具不可用，或 Image 1、适用 Image 2 与允许的整图重生成均不能保证内容精度时，才由 `svg-diagrams` 最终回退生成 SVG + PNG。统计图以 PDF 与 PNG 为主，科研原始图像保留未经生成式改写的来源文件。
-- 不长期保留无编号表图，不保留同主题多版本；最终人工阅读表使用 xlsx，内部机器交换可按消费者使用 csv、tsv 或 parquet。
-- 一张论文表对应一个 xlsx 主题；多个 outcome、模型或亚组放同一工作簿的多个 sheet。交付工作簿不放 cover、说明或数据字典 sheet。
-
-## 5. 数据与中间对象
-
-- 中间格式服从项目要求和消费者：人工复核可用 xlsx，机器交换可用 csv、tsv 或 parquet，模型、MCA、ggplot 等对象可用 `.rds` 或等价语言对象格式。
-- `05_reports/` 对外交付物不含 rds/RData；`06_results/` 按内容命名，不编号。
-- 脚本间通过落盘对象传值，不依赖交互环境中的临时变量。
-
-## 6. BACKLOG 唯一来源
-
-`BACKLOG.md` 主表固定四列：
-
-| 待完善内容 | 完善方式 | 重要性 | 状态 |
-| --- | --- | --- | --- |
-
-- 待完善内容以【文献/数据/方法/分析/写作/规划】标签开头。
-- 完善方式为“AI”或“人工”；重要性为“必补”“建议”或“可选”。
-- 只有需要跨任务继续处理且影响主流程的真实缺口才加到主表顶部。问答、局部产物的范围外建议和内部检查提示不写入 BACKLOG。完成后只填 `✅ YYYY-MM-DD`，不删行、不另建已完成表。
-- 不应进入主流程的探索项整条移到对应 `09_backup/` 的 `FINDINGS.md`；BACKLOG 的“已移出”区仅留去向、原因与日期。
-- 新会话先扫未完成项：优先推进 AI 可完成的必补项，提示用户处理需要数据或决策的人工项。
-- BACKLOG 不保存结果数字；结果仍以 `07_paper/results.yaml` 为准。
-
-## 7. 收尾核对
-
-- 正式项目审查或正式发布前运行 `python <epi-project-audit技能目录>/scripts/run_check_project.py <项目根> --json`；局部产物不运行。入口会从平台安装清单解析中央 EpiAgentKit 源，不在项目内复制 `epiagentkit.py`。ERROR 必须修复，基于 mtime 或缺 provenance 的 WARN 需解释但不冒充确定性失败。
-- 所有代码、表、图编号连续，生成脚本与正文引用同步。
-- 有序分类水平来自所选语言的 `conventions.R|py`，脚本不散写 level、配色、P 值格式或 registry。
-- 当前工作区每类交付物只有一组稳定名当前版，旧版批次有 MANIFEST 与 INDEX 记录。
-- `.epiagentkit-layout.json` 覆盖全部活动目录和正式产物；workbench 只登记基础目录，活动区未声明路径为零。
-- 一次性脚本、退役文件和探索结果已归档；根目录无零散产物。
-- 统计图、非统计图解、论文、报告与咨询包分别通过对应 skill 的终检。
-
-项目可在根目录用可选 `.epiagentkit-check.json` 扩展合法 helper、剪枝目录或指定 provenance receipt；默认规范集中在 `hooks/final_project_check.py::DEFAULT_CONTRACT`，阶段脚本不得另写一套允许清单。
+R 正式发布时检查：原始数据未改；总运行脚本可以从项目根重新运行；每项关键结果记录了生成脚本和成功的运行编号；正文、表图和报告使用的结果一致；没有未处理的凭证或敏感数据；当前正式文件只有一组；必要归档可以恢复。根目录文件数量、是否连续编号以及同类文件的命名风格通常只作提示或警告，不单独阻止发布。

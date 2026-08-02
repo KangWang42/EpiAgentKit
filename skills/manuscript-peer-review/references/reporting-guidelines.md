@@ -41,7 +41,7 @@
 
 不要把领域工具总分机械转换成 accept/reject。逐域说明证据、判断和对主结论的影响。
 
-## 4. 权威入口
+## 4. 可核验的规范来源
 
 - EQUATOR peer-review toolkit: https://www.equator-network.org/toolkits/peer-reviewing-research/
 - EQUATOR reporting-guideline search: https://www.equator-network.org/reporting-guidelines/

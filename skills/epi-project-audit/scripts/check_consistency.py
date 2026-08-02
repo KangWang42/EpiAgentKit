@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""跨文档数字一致性审计（epi-project-audit / P0-C2）。
+"""Cross-check downstream statistics against the result manifest.
 
-把交付文档（论文/报告/PPT）里出现的统计量（CI、P 值）与结果数字唯一来源
-07_paper/results.yaml 双向比对：
-  方向A 文中→源：文中每个 CI/P 统计量必须能在 results.yaml 的 rendered 里找到同值匹配；
+把交付文档（论文/报告/PPT）里出现的统计量（CI、P 值）与
+results/results.yaml 双向比对；旧项目可读取 07_paper/results.yaml。
+  方向A 文中→源：文中每个 CI/P 统计量必须能在 results.yaml 的 display 或旧版 rendered 中找到同值匹配；
                 找不到 = 疑似手敲/陈旧/下游私改未回写（高信号）。
   方向B 源→文中：results.yaml 里有、却没在任何交付文档出现的结果（信息，可能是漏用或仅内部）。
-另：列出 results.yaml 里 interp_review=true 的"解读待复核"键（数字变过解读没跟上）。
-
 匹配前对标点做归一（全角→半角、− → -、去空格、P 小写），只比"值"不比格式，
 故同值不同标点不会误报，值不同才报。
 
 用法：
-  python check_consistency.py [项目根=.] [--yaml 07_paper/results.yaml]
-退出码：发现不一致或待复核 → 1（可用作交付前检查）；全过 → 0。
+  python check_consistency.py [项目根=.] [--yaml results/results.yaml]
+退出码：发现数字不一致 → 1；全过 → 0。
 """
 import sys, os, re, glob, argparse
 
@@ -78,10 +76,10 @@ def extract_text(path):
 
 
 def source_value_set(doc):
-    """results.yaml 所有 rendered 分量归一后的可比值集合（CI 与 P 分开）。"""
+    """Return comparable CI and P values from schema v2 or legacy manifests."""
     ci, pv, full_norms = set(), set(), {}
     for key, r in (doc.get("results") or {}).items():
-        rend = r.get("rendered") or {}
+        rend = r.get("display") or r.get("rendered") or {}
         for which, s in rend.items():
             n = norm(s)
             if not n:
@@ -100,7 +98,11 @@ def main():
     ap.add_argument("--yaml", default=None)
     a = ap.parse_args()
     root = a.root
-    yaml_path = a.yaml or os.path.join(root, "07_paper", "results.yaml")
+    yaml_path = a.yaml or os.path.join(root, "results", "results.yaml")
+    if a.yaml is None and not os.path.exists(yaml_path):
+        legacy = os.path.join(root, "07_paper", "results.yaml")
+        if os.path.exists(legacy):
+            yaml_path = legacy
     if not os.path.exists(yaml_path):
         print(f"找不到结果唯一来源：{yaml_path}"); sys.exit(2)
     with open(yaml_path, encoding="utf-8") as f:
@@ -108,7 +110,7 @@ def main():
     src_ci, src_p, full_norms = source_value_set(doc)
 
     # 待审计交付文档（排除唯一来源、派生 md、备份）
-    pats = ["07_paper/**/*.docx", "07_paper/**/*.md",
+    pats = ["paper/**/*.docx", "paper/**/*.md", "07_paper/**/*.docx", "07_paper/**/*.md",
             "05_reports/**/*.docx", "05_reports/**/*.md", "05_reports/**/*.pptx",
             "04_figures/**/*.pptx", "**/*.pptx"]
     files, seen = [], set()
@@ -153,12 +155,6 @@ def main():
     unused = sorted(all_keys - used_keys)
     if unused:
         print(f"\n[方向B 源有文档未用]（信息，非必错）：{'、'.join(unused)}")
-
-    # 解读待复核
-    stale = [k for k, r in (doc.get("results") or {}).items() if r.get("interp_review")]
-    if stale:
-        problems += len(stale)
-        print(f"\n[解读待复核] 数字变过、解读未跟上：{'、'.join(stale)}（confirm_interp 后再定稿）")
 
     print(f"\n== 结果：{'发现 %d 处需处理' % problems if problems else '全部一致，通过'} ==")
     sys.exit(1 if problems else 0)

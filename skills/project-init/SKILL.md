@@ -1,399 +1,90 @@
 ---
 name: project-init
-description: |
-  初始化标准卫生统计研究或咨询项目，默认生成 R 七层目录，也可按用户明确选择生成 Python 目录，并创建 PROTOCOL、SAP、结果数字唯一来源、registry 与可选 Git 配置。仅在用户明确要求创建项目或把空工作区建成正式项目时使用；简单作业、快速核验和已有项目分析不触发。上游为 biostat-principles；咨询项目完成分析后再用 consulting-delivery。
+description: 按分析、论文、咨询、教学或单次任务的实际需要，初始化最小的卫生统计项目结构，并准备相应的 R 或 Python 代码、研究文件和可选 Git 配置。仅在用户明确要求创建项目或把空工作区建成正式项目时使用；简单作业、快速核验和已有项目分析不触发。开工先用 biostat-principles；咨询分析完成后再用 consulting-delivery 整理外发材料。
 ---
 
-# 项目初始化 skill
+# 项目初始化
 
-> **工作模式**：INQUIRE（问清信息）→ SCAFFOLD（建目录）→ POPULATE（填模板）→ VERIFY（自检）→ GUIDE（告诉用户下一步）。
+先按全局 `CLAUDE.md` 判定范围。只有用户明确要求新建项目或把空工作区初始化时执行；Q/L、已有项目分析和一次快速核验不触发。开工先遵循 `biostat-principles`。
 
----
+## 1. 选择项目类型
 
-## 一、开工前确认
+| `profile` 参数 | 适用场景 | 初始化内容 |
+| --- | --- | --- |
+| `analysis` | 正式研究设计与统计分析 | 数据、代码、结果、表图、PROTOCOL、SAP、方法决策、后续待解决事项、总运行脚本和环境说明 |
+| `paper` | 分析与论文在同一项目 | `analysis` 核心加 `paper/`，不预建投稿版本 |
+| `consulting` | 分析完成后需要客户交付 | `analysis` 核心加 `05_reports/`，不预建空交付包或论文目录 |
+| `teaching` | 教学示例或课程材料 | `data/`、`code/`、`output/` 与 README，无正式研究记录文件 |
+| `oneoff` | 用户明确要求建立可保存的单次任务目录 | `input/`、`code/`、`output/` 与 README，不创建正式项目的结果文件、表图编号表或管理文件 |
 
-先从用户请求与工作区读取已有信息，只追问无法发现且会改变骨架的字段：
+选择能够完成当前任务的最小类型。后续确有需要时再增加相应目录或正式产物，不预建空模块。
 
-```
-1. 项目名称（英文 snake_case，例如 cohort_smoking_chd）：
-2. 研究类型：
-   [1] 队列研究（cohort）
-   [2] 病例对照（case-control）
-   [3] 横断面（cross-sectional）
-   [4] 临床试验 / 干预（RCT）
-   [5] Meta 分析 / 系统综述
-   [6] 真实世界研究（RWD）
-   [7] 方法学研究
-3. 模式：
-   [A] 研究模式（自己做研究 / 投稿用）
-   [B] 咨询模式（给客户做交付用，自动装配 consulting-delivery 骨架）
-4. 分析语言：R（默认；未指定时直接采用）或 Python（仅按用户明确选择）
-5. 存放根路径（默认当前工作目录）：
-6. 是否显式启用 Git（默认 no；仅在用户选择 yes 且 Git 已可用时初始化）：
-```
+## 2. 初始化
 
-**项目名违反 snake_case** → 自动建议规范名并请用户确认（不要硬改）。
-**同名目录已存在** → 停下来问用户覆盖、改名、还是追加。
-**用户未指定分析语言** → 直接按 R 初始化，不单独追问 Python；不得因本机存在 Python、某个 Python 库更方便或 R 依赖缺失而改变语言。
-
----
-
-## 二、目录结构
-
-目录、编号、表图、registry、归档与 BACKLOG 的维护规范见 [references/project-hygiene.md](references/project-hygiene.md)。
-
-### 研究模式（A）
-
-```
-{project}/
-├── CLAUDE.md              # 继承 + 项目专属规则
-├── AGENTS.md              # Codex 指向 CLAUDE.md 唯一来源
-├── README.md              # 项目说明
-├── PROTOCOL.md            # 研究问题、设计、伦理与报告规范
-├── SAP.md                 # 冻结的统计分析计划与偏离规则
-├── SESSION_LOG.md         # 操作日志
-├── DECISIONS.md           # 方法决策
-├── BACKLOG.md             # 待补清单（缺文献/数据/方法/规划，全程只增不删）
-├── .gitignore             # 忽略数据和临时
-├── .epiagentkit-raw-roots # 可选额外原始数据根，每行一个项目相对路径
-├── .epiagentkit-layout.json # 全部活动目录、文件、位置、责任和生命周期预声明清单
-├── .Rproj                 # 仅 R 项目生成
-├── 01_data/
-│   ├── rawdata/           # 只读
-│   └── README.md          # 数据字典
-├── 02_code/
-│   ├── config.R|py        # 表图 registry（空清单起步，实现见 references/registry.md）
-│   ├── conventions.R|py   # 有序水平、配色、数字格式唯一来源
-│   ├── vendored/          # 项目自包含的结果/出图 helper
-│   └── 01_data_cleaning.R|py # 清洗脚本模板
-├── 03_tables/supplementary/
-├── 04_figures/supplementary/
-├── 05_reports/
-├── 06_results/
-├── 07_paper/
-│   ├── results.yaml
-│   └── 0_result_summaries.md
-└── 09_backup/
-    ├── workbench/          # 隔离试验、诊断和一次性脚本，从这里创建并运行
-    ├── INDEX.md            # 旧交付物 / 旧代码批次索引
-    └── EXPERIMENTS.md      # 全部探索尝试索引，含失败/未采用结果
-```
-
-### 咨询模式（B）· 额外装配
-
-咨询模式在研究模式基础上，额外：
-
-- `05_reports/分析结果包/` 以稳定语义名按所选语言预建空交付包（`run_all.R` 或 `run_all.py`）；日期与轮次只进入归档记录
-- `CLAUDE.md` 追加"交付前必过 consulting-delivery 终检"
-- `DECISIONS.md` 追加首条"咨询任务，客户口径见 `DECISIONS.md` 顶部"
-
----
-
-## 三、执行脚本
-
-用 `scripts/init_project.R` 一键创建。R 里运行：
+从本 skill 的 `scripts/init_project.R` 加载函数：
 
 ```r
-skill_roots <- path.expand(c(
-  Sys.getenv("EPIAGENTKIT_SKILLS"), Sys.getenv("EPICLAUDE_SKILLS"),
-  "~/.claude/skills",  # Claude Code
-  "~/.agents/skills",  # Codex 官方用户目录
-  "~/.codex/skills"    # 既有 Codex 本地兼容目录
-))
-init_script <- file.path(skill_roots[nzchar(skill_roots)], "project-init/scripts/init_project.R")
-init_script <- init_script[file.exists(init_script)][1]
-if (is.na(init_script)) stop("找不到 project-init；请先安装 skills 或设置 EPIAGENTKIT_SKILLS")
-source(init_script)
+source("<project-init>/scripts/init_project.R", encoding = "UTF-8")
 init_project(
-  name = "cohort_smoking_chd",
-  type = 1,           # 1=队列 2=病例对照 3=横断面 4=RCT 5=Meta 6=RWD 7=方法学
-  mode = "research",  # "research" 或 "consulting"
-  language = "r",     # "r" 或 "python"
+  "cohort_example",
+  profile = "analysis",
+  type = 1,
+  language = "r",
   root = ".",
-  git = FALSE          # 只有用户明确启用时改为 TRUE
+  git = FALSE
 )
 ```
 
-`git = TRUE` 必须对应用户本轮的明确选择。脚本先用 `Sys.which("git")` 检测；未找到 Git 时继续创建项目并明确报告跳过，不执行安装。
+- `type` 支持 cohort、case_control、cross_sectional、rct、meta、rwd、methodology 的序号或名称。
+- 默认使用 R；只有用户明确选择或现有主流程为 Python 时使用 `language="python"`。
+- `git=TRUE` 仅在用户明确启用且 Git 已存在时初始化；不安装 Git，不自动 push。
+- 旧调用的 `mode="research"|"consulting"` 仅用于兼容已有代码；新文档和新模板统一使用 `profile` 参数。
 
-初始化器会把实际骨架逐项写入 `.epiagentkit-layout.json`。之后新的活动目录和正式产物在创建前追加精确相对路径、类型、owner、purpose、producer、consumer 和 lifecycle；
-`09_backup/workbench/` 只登记基础目录，批次内部文件不逐项登记。表图同时先登记 registry。`check-project` 把活动区内未声明路径判为 ERROR，旧项目缺清单时先给 WARN，不自动整理或补建。
+## 3. 正式研究项目结构
 
----
+`analysis`、`paper` 和 `consulting` 共用以下最小核心：
 
-## 四、模板文件内容
-
-### 4.1 `CLAUDE.md` + `AGENTS.md`（项目规则只维护一份）
-
-```markdown
-# {项目名} · 项目级规则
-
-本项目继承 EpiAgentKit 全局规则（Claude Code：`~/.claude/CLAUDE.md`；Codex：`~/.codex/AGENTS.md`）。
-`CLAUDE.md` 是项目规则唯一来源；`AGENTS.md` 指示 Codex 开工前完整读取它，避免双份项目口径漂移。
-
-## 新会话必读（新 agent 开局第一步，按序读完再动手）
-
-> 本文件每 session 必然注入；下面这份清单 = 不依赖记忆、不重读全项目即可进入状态的最短路径。
-
-1. 本文件「口径锁定」节 —— **当前口径以此为准**（下游全部服从）
-2. `PROTOCOL.md` + `SAP.md` —— 研究问题、预设分析及偏离边界
-3. `07_paper/results.yaml` —— 机器可读的结果唯一来源（→ 派生 `0_result_summaries.md`；下游 `val()` 取数）
-4. `DECISIONS.md` 末尾 2~3 条 —— 最近的方法变更与原因
-5. `BACKLOG.md` 主表未完成项 —— 全程累积的待补项（缺文献 / 数据 / 方法 / 下一步规划），挑「完善方式=AI」的必补项作为下一步候选
-6. 所选语言的 `02_code/conventions.R|py` + `config.R|py` —— 口径常量唯一来源（有序水平 / 配色 / registry）
-7. `SESSION_LOG.md` 末 10 行 —— 上次做到哪、卡在哪
-
-**信任但验证**：涉及数字的任务，先快速核 `0_result_summaries` 关键数字 vs 最新输出文件 mtime / registry 是否对得上；对不上立即触发 `epi-project-audit`，不盲信本文件可能已陈旧的内容。
-
-## 当前状态（快照，非历史；每次会话收尾必更新，≤10 行）
-
-> append-only 的 SESSION_LOG 读不出"现在在哪"，本节专门回答这点。改方法/出新结果/定稿版本后立即更新。
-
-- 当前阶段：[如 主分析已定稿，正在写讨论]
-- 最新定稿版本 / 回退点：[如 数据 v3 / commit abc1234 / 手工备份批次]
-- 进行中（半成品，勿当成品）：[如 敏感性分析 02_code/06 待跑]
-- 已知坑 / 待办：[只放当下最紧要 1~2 条；完整累积清单在 `BACKLOG.md`]
-- 下一步：[一句话]
-
-## 项目基本信息
-
-- 研究类型：{type_name}
-- 研究问题：[一句话 PICOS]
-- 数据来源：[数据集名 + 时间段]
-- 主要终点：[具体定义]
-- 分析计划：[主分析 + 敏感性]
-
-## 口径锁定（严禁擅自变动）
-
-- 纳入标准：
-- 排除标准：
-- 暴露变量：
-- 结局变量：
-- 随访时间：
-- 协变量：
-
-口径变动 → 先改本节 → 记录 `DECISIONS.md` → 重跑受影响的分析。
-
-## 项目级覆盖规则
-
-（若无，保留此节为空）
-
-## 咨询模式专属（仅咨询模式保留）
-
-- 交付前必过 `consulting-delivery` 的 FINAL 终检清单（§八）
-- `05_reports/` 内结果包必须自包含，对应语言的 `run_all.R|py` 能在空 session 或用户已准备的兼容 Python 环境中跑通
+```text
+01_data/rawdata/       原始数据，只读
+02_code/               配置、正式分析脚本与随项目保存的辅助代码
+03_tables/             实际生成的正式统计表
+04_figures/            实际生成的正式统计图
+results/derived/       可重建中间结果
+results/runs/          程序自动生成的运行记录、完整日志和环境说明
+09_backup/archive/     被当前版替代且需要恢复的正式文件
+09_backup/workbench/   实验、诊断、复现和一次性工作
+PROTOCOL.md            研究设计
+SAP.md                 预设分析
+DECISIONS.md           方法选择与方案偏离
+BACKLOG.md             需要后续补充材料、外部资源或用户决定的事项
+run_pipeline.R|py      从项目根运行全部已确认分析的总脚本
 ```
 
-### 4.2 `SESSION_LOG.md`
+初始化时不创建空的 `results/results.yaml`。第一次正式分析由实际生成结果的脚本调用随项目保存的 `emit_summary` 函数创建该文件。文件内容和旧项目读取方式见 `biostat-principles/references/result-summary-schema.md`。
 
-```markdown
-# Session Log
+`.epiagentkit-layout.json` 只说明当前使用的目录及正式产物类型，不逐文件登记。分析脚本负责生成结果文件，表图编号表负责表图顺序，咨询包的内容说明负责外发文件。详细规则见 [项目目录与归档](references/project-hygiene.md)，表图编号规则见 [表图编号表](references/registry.md)。
 
-| 时间 | 操作 | 文件 | 结果 |
-|------|------|------|------|
-| {init_time} | 项目初始化 | 全部目录和模板 | 骨架就绪 |
-```
+## 4. 记录职责
 
-### 4.3 `DECISIONS.md`
+- 项目 `CLAUDE.md`：当前阶段和已经确认的分析口径。
+- PROTOCOL/SAP：设计与预设分析。
+- `DECISIONS.md`：会影响方法、结果解释或方案偏离的决定。
+- `BACKLOG.md`：跨任务仍阻塞并需要数据、外部资源或用户决定的事项；当轮可解决问题不登记。
+- `results/runs/<run_id>.json`：由总运行脚本自动记录命令、时间、状态、脚本、文件哈希值和运行环境；不创建 `SESSION_LOG.md`。
+- `09_backup/INDEX.md`：仅在首个正式归档批次出现时创建，只索引 `archive/`。
+- `EXPERIMENTS.md`：仅在第一次 E2 正式比较时创建，只列出 `workbench/` 中的 E2 批次；E0 通常不另建文件，E1 只保留该批次的 `PLAN.md` 和 `FINDINGS.md`，并按实际需要保存运行记录。
 
-```markdown
-# 方法决策记录
+不得为了补齐历史而事后编造运行记录、方法决定或实验记录。
 
-所有会影响最终结果的方法选择都必须写到这里。
-格式：时间 + 选择 + 原因 + 放弃的替代方案。
+## 5. 验证与完成
 
----
+初始化后核对：
 
-## {init_date} · 项目启动
+1. 所选项目类型之外的目录和占位文件未创建；
+2. 原始数据保护文件存在，且未写入原始数据内容；
+3. `.epiagentkit-layout.json` 只说明目录和正式产物类型，不逐文件列举；
+4. 正式研究项目的总运行脚本、配置和所选语言的结果写入函数可以解析；
+5. `results/results.yaml`、`SESSION_LOG.md` 和 `EXPERIMENTS.md` 未被提前创建；
+6. Git 状态与用户选择一致。
 
-**决策**：项目类型 = {type_name}，主分析计划 = [待用户确认]
-**证据ID**：[如适用，填写 evidence-research 的 EVID-…；无则写“不适用”]
-**原因**：[待用户填写]
-**放弃方案**：[待用户填写]
-```
-
-### 4.3b `BACKLOG.md`（待补清单）
-
-全项目周期累积的"待补/想法/下一步"单一入口。**只增不删**——发现即记，做完勾掉留痕。
-关键不在建文件，而在 agent 任何阶段（清洗 / 分析 / 出图 / 写作 / 审查）一发现缺口就立即追加，
-不靠记忆、不留到"以后"（全局 `CLAUDE.md` §3 与 §7 已规定维护位置）。
-
-```markdown
-# BACKLOG · 待补清单
-
-全项目周期随时冒出来的缺口与待办都进这里：缺文献、缺数据、缺方法/分析、
-写作待补、下一步规划。规划研究方案时先扫本文件，决定下一步让 AI 做
-什么、自己去找哪些数据 / 做哪些决策。
-
-维护规则：
-
-- 任何时候（清洗 / 分析 / 出图 / 写作 / 审查）发现缺口或想法 → 立即追加一行到主表顶部，不留到"以后"。
-- 本表只装"主流程要用的事"——做完的、没做的同在一张表，靠「状态」列区分，不另设已完成表。
-- **待完善内容**：开头加【文献/数据/方法/分析/写作/规划】类别标签，便于规划时筛。
-- **完善方式**：AI（agent 可直接做：编程 / 分析 / 检索 / 下载）| 人工（需我提供数据 / 外部资源 / 做决策）。
-- **重要性**三档：
-  - 必补 —— 不补研究做不了 / 结论不成立 / 无法投稿（阻断项，最高优先）。
-  - 建议 —— 补了完善论文（敏感性、稳健性、对照、双标化等），不补也能成稿。
-  - 可选 —— 探索 / 锦上添花 / 不确定有无用。
-- **状态**：完成填 `✅ YYYY-MM-DD`，未完成留空；做完只打勾不删行（删了查不到"补过没"）。
-- **做了发现不该进主流程**（效果不好 / 实属探索）→ 不留主表，整条移到对应 `09_backup/workbench/<日期时间>_<主题>_experiment/` 的 FINDINGS.md；本表「已移出」区只留一行指针。
-
-## 待办与已完成（同一张表，新发现加到顶部）
-
-| 待完善内容 | 完善方式 | 重要性 | 状态 |
-|------------|----------|--------|------|
-
-## 已移出主流程（挪至 09_backup，留指针不留正文）
-
-| 原待完善内容 | 去向（09_backup/…） | 原因 | 日期 |
-|--------------|----------------------|------|------|
-```
-
-### 4.3c `PROTOCOL.md`、`SAP.md` 与探索实验索引
-
-- `PROTOCOL.md` 在分析前锁定研究问题、设计、人群、暴露/干预、终点、伦理/注册和适用报告规范。
-- `SAP.md` 在查看主要结果前锁定 estimand、分析人群、缺失处理、主要模型、诊断、多重性、验证切分、敏感性和亚组分析。
-- 任何方案偏离写入 `DECISIONS.md`，并区分预设与探索性。
-- 每次试新方法先登记 `09_backup/EXPERIMENTS.md`，再在 `09_backup/workbench/<日期时间>_<主题>_experiment/` 写 `PLAN.md`、创建并运行脚本，以 `FINDINGS.md` 记录全部结果。不满足预设主流程纳入条件的结果不进入主 `results.yaml`；需展示时只进入消融/探索性附录。
-
-### 4.4 结果数字唯一来源 `07_paper/results.yaml`（+ 派生 `0_result_summaries.md`）
-
-`init_project.R` 生成**机器可读的唯一来源** `results.yaml` 与其派生 `0_result_summaries.md`（标注勿手改）。
-数字由所选语言的 `emit_summary.R` 或 `emit_summary.py` 渲染一次写入 results.yaml（raw 分量 + rendered 成品串 + interp 解读），
-`render_summary_md()` 派生 md；下游论文/报告/PPT 一律 `val("07_paper/results.yaml","key")` 取数禁手敲。
-schema 与用法详见 `biostat-principles/references/result-summary-schema.md`。改数字只改 results.yaml 再重派生（双向一致性）。
-
-### 4.5 `01_data/README.md`（数据字典模板）
-
-```markdown
-# 数据字典
-
-## 数据来源
-
-- 数据集名称：
-- 提供方：
-- 数据时间范围：
-- 样本量（原始）：
-- 获取日期：
-- 伦理批件号（如适用）：
-
-## 变量清单
-
-| 变量名 | 类型 | 单位 | 编码 | 说明 | 缺失率 |
-|--------|------|------|------|------|--------|
-| id | chr | — | 匿名编码 | 唯一标识 | 0% |
-| age | num | 年 | — | 基线年龄 | — |
-| sex | int | — | 1=男 2=女 | — | — |
-| ... | | | | | |
-
-## 变更记录
-
-（原始数据不修改。衍生变量在派生数据里记。）
-
-| 时间 | 变更 | 原因 |
-|------|------|------|
-```
-
-### 4.6 `02_code/01_data_cleaning.R|py`（清洗模板）
-
-按 `language` 生成 R 或 Python 模板。模板只包含只读输入、项目根定位、配置入口、样本损失核验和派生输出占位；不预填研究专属纳排、变量编码或随机种子。实际逻辑必须来自已确认的 PROTOCOL 与 SAP。
-
-### 4.7 `.gitignore`
-
-```
-# 数据（敏感）
-01_data/rawdata/*
-!01_data/rawdata/.gitkeep
-!01_data/README.md
-
-# 中间产物
-06_results/*
-!06_results/.gitkeep
-
-# 系统
-.Rproj.user/
-.Rhistory
-.RData
-.DS_Store
-Thumbs.db
-~$*
-
-# 编辑器
-.vscode/
-.idea/
-
-# 临时
-*.tmp
-*.bak
-```
-
-### 4.8 `.Rproj`（仅 R 项目）
-
-```
-Version: 1.0
-
-RestoreWorkspace: No
-SaveWorkspace: No
-AlwaysSaveHistory: Default
-
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 2
-Encoding: UTF-8
-
-AutoAppendNewline: Yes
-StripTrailingWhitespace: Yes
-LineEndingConversion: Posix
-```
-
----
-
-## 五、VERIFY 自检
-
-初始化完成后，输出自检报告：
-
-```
-【项目初始化自检】
-  - 7 层目录已建
-  - CLAUDE.md / AGENTS.md / PROTOCOL.md / SAP.md / 日志与待补清单就绪
-  - config.R|py / conventions.R|py / 对应语言 vendored helper 与空 registry 就绪
-  - 探索实验索引 09_backup/EXPERIMENTS.md 就绪
-  - 隔离工作区 09_backup/workbench/ 就绪
-  - 版本归档索引 09_backup/INDEX.md 就绪
-  - `.epiagentkit-layout.json` 已登记全部初始目录和文件；后续产物先登记再创建
-  - 数据字典模板已生成
-  - 清洗脚本模板已生成 (02_code/01_data_cleaning.R|py)
-  - .gitignore 已配置（原始数据不入 git）
-  - Git：已初始化并按全局偏好收尾，或因未启用 / 不可用而跳过；缺少 Git 不影响项目初始化完成
-  - [咨询模式] 稳定语义名交付包骨架已预建并登记布局：05_reports/分析结果包/
-  
-下一步：
-  1. 填写并确认 PROTOCOL.md 与 SAP.md
-  2. 把原始数据放入 01_data/rawdata/，填写数据字典
-  3. 同步 CLAUDE.md 的口径锁定节
-  4. 开始清洗：打开对应语言的 02_code/01_data_cleaning.R|py
-```
-
----
-
-## 六、与其他 skill 的协作
-
-| 上游 | project-init 做什么 | 下游 |
-|------|-------------------|------|
-| `biostat-principles` | 目录规约落地 | `r-biostats` 或 `python-biostats` 接着做分析 |
-| 用户说"新建项目" | 建骨架 + 模板 | 研究设计走 `epi-study-design`；执行走所选语言 skill |
-| 咨询模式 | 额外预建结果包骨架 | `consulting-delivery` 做填充 |
-
----
-
-## 七、常见坑
-
-| 场景 | 处理 |
-|------|------|
-| 用户给了中文项目名 | 建议改 snake_case，但尊重用户决定；中文名要警示 shell 转义问题 |
-| 目录已存在 | 停下来问是继续现有项目、改名还是另选目录；不得默认追加 `_v2` 制造并列版本 |
-| 用户要启用 Git 且 Git 已可用 | 执行 `git init`；完成初始化与验证后按全局偏好自动首次 commit；仅在用户当轮明确要求时 push |
-| Git 不可用 | 继续创建项目并报告“Git 已跳过”；不执行 `git init`，不安装 Git，不把缺少 Git 判为失败 |
-| 想试多个模型或参数 | 先登记 `09_backup/EXPERIMENTS.md`，再在 `09_backup/workbench/` 创建并隔离运行；不得直接改主流程或只保留最好结果 |
-| 咨询模式没指定主题 | 用 `主题占位`，在 `00_客户说明.md` 里提示用户改 |
-| 用户说"要不要用 renv" | 默认 **否**；除非用户明确要求，renv 对小咨询任务反而拖累速度 |
+初始化只建立项目的基本结构，不代表 PROTOCOL、SAP、分析或交付已经完成。咨询结果包在分析完成并验证后由 `consulting-delivery` 创建。

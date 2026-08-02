@@ -89,6 +89,6 @@ Use the migration test: if a sentence or paragraph could move unchanged to an un
 
 ## 6 Fact lock and author voice
 
-Before editing, record every number, unit, citation, equation, table or figure pointer, population, outcome, time window, and claim direction. After editing, compare them one by one. A fluent rewrite that changes any item fails review.
+Before editing, record every number, unit, citation, equation, table or figure reference, population, outcome, time window, and claim direction. After editing, compare them one by one. A fluent rewrite that changes any item fails review.
 
 If the author supplies prior writing, match stable features such as sentence rhythm, preferred subjects, connective habits, terminology, and placement of hedging. Do not copy source sentences or manufacture a casual persona. Without a sample, use precise, restrained, venue-appropriate prose and let the study's actual evidence create variation.

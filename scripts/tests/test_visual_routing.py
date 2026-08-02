@@ -63,27 +63,27 @@ class VisualRoutingTests(unittest.TestCase):
         )
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-        self.assertIn("来源到图件矩阵", body)
-        self.assertIn("必要性与证据、内容与拓扑、视觉与可读性、最终载体", body)
+        self.assertIn("制定图件计划", body)
+        self.assertIn("逐项写明每张候选图的来源、独立作用和采用理由", body)
         self.assertIn("不按章节机械配图", planning)
-        self.assertIn("不强制设置“英雄面板”", planning)
+        self.assertIn("不预先指定一个占据最大面积的主要子图", planning)
         self.assertIn("TingxiYu/academic-figure-skill", planning)
         self.assertIn("LigphiDonk/academic-figure-generator", planning)
-        self.assertIn("未引入上游生产脚本、示例图片或第三方 API 配置", planning)
+        self.assertIn("未引入原项目的执行脚本、示例图片或第三方 API 配置", planning)
         self.assertIn("不得把上游文件当独立 skill 直接执行", body)
-        self.assertIn("携图定向编辑", body)
-        self.assertIn("所有待附图片均有本地路径时使用 `referenced_image_paths`", body)
+        self.assertIn("根据原图定向修改", body)
+        self.assertIn("所有需要附带的图片均有本地路径时使用 `referenced_image_paths`", body)
         self.assertIn("最小 `num_last_images_to_include`", body)
         self.assertIn("两者不得并用", body)
         self.assertIn("参考图解构与编辑目标", planning)
-        self.assertIn("携图编辑要求", planning)
-        self.assertIn("载体定位与实例隔离", planning)
-        self.assertIn("载体语义身份", planning)
+        self.assertIn("根据原图修改的要求", planning)
+        self.assertIn("确定载体中的待修改图件", planning)
+        self.assertIn("图在载体中的位置", planning)
         self.assertIn("项目专属事实只进入本次任务记录", planning)
         self.assertIn("生成科研非统计视觉", readme)
         self.assertIn("research-visuals → imagegen", readme)
         self.assertIn("主 `SKILL.md` 始终优先", source)
-        self.assertIn("携带全部且仅必要的编辑目标", source)
+        self.assertIn("附带全部且仅必要的待修改图片", source)
         self.assertIn("Edit the attached target image", recipes)
         self.assertIn("只归档选定的开源参考文档与提示词", readme)
         self.assertNotIn("最多连续两次纯文本重生成", body)
@@ -131,21 +131,21 @@ class VisualRoutingTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         for fragment in (
-            "Image 1 视为验收基线",
+            "待修改原图为内容核对依据",
             "事实与语义忠实度",
-            "LOCKED",
-            "FLEXIBLE",
-            "FORBIDDEN",
+            "必须保持的文字、数字、公式",
+            "可以调整的版式、间距",
+            "不得添加、删除、纠正、推断或合并的内容",
             "第二次 524",
-            "不计入两轮设计修正",
+            "不计入两轮内容修改",
             "导出文件名和媒体序号仅作存储线索",
             "项目专属的正式图号",
         ):
             self.assertIn(fragment, body)
         for fragment in (
-            "Baseline: Image 1 is the acceptance baseline",
+            "Use the attached target image to verify the edit",
             "A more attractive image is not acceptable",
-            "Image 2: optional auxiliary reference",
+            "Optional reference image: use only when it has already been provided",
             "Use case: high-fidelity scientific-figure edit",
             "Structure inventory",
             "merges or branches",
@@ -163,15 +163,15 @@ class VisualRoutingTests(unittest.TestCase):
             "科学教育插图",
             "封面与章节图",
             "Target identity:",
-            "Resolved Image 1:",
+            "Confirmed edit target:",
             "Instance-only facts:",
             "Carrier-managed text:",
         ):
             self.assertIn(fragment, recipes)
-        self.assertIn("Baseline / Image 1", planning)
-        self.assertIn("单一机制无法覆盖全部图片时", planning)
-        self.assertIn("适用的 Image 2 可从首轮开始使用", planning)
-        self.assertIn("SVG 只能位于这些适用 imagegen 路径之后", planning)
+        self.assertIn("| 待修改原图 |", planning)
+        self.assertIn("优先附带待修改原图", planning)
+        self.assertIn("不为使用参考图单独增加一轮", planning)
+        self.assertIn("完成这些适用操作后图件仍不准确，才可改用 SVG", planning)
         self.assertIn("非统计视觉先走 `research-visuals` → `imagegen`", rules)
         self.assertIn("真实统计图走 `publication-figures`", rules)
         self.assertIn(
@@ -182,17 +182,20 @@ class VisualRoutingTests(unittest.TestCase):
             "HTTP 524",
             "referenced_image_paths",
             "num_last_images_to_include",
-            "Image 1 为验收基线",
+            "待修改原图为内容核对依据",
             "导出文件名或媒体序号只作存储线索",
         ):
             self.assertNotIn(conditional_detail, rules)
         self.assertIn("HTTP 524 按 `research-visuals` 保留原图并停止", svg_fallback)
         self.assertIn("连续两次 HTTP 524", svg_fallback)
-        self.assertIn("适用的 Image 2 优先于 SVG", svg_fallback)
-        self.assertIn("全部适用的 imagegen 路径实际耗尽", svg_fallback)
-        self.assertIn("适用的 Image 2 已存在时，必须先于 SVG", body)
+        self.assertIn("已经提供有用参考图但尚未尝试", svg_fallback)
         self.assertIn(
-            "SVG 仅在明确矢量要求、工具实际不可用或全部适用 imagegen 路径耗尽后使用",
+            "对待修改原图完成必要的定向修改、使用已经提供且确有帮助的可选参考图",
+            svg_fallback,
+        )
+        self.assertIn("不存在有用参考图时直接省略", body)
+        self.assertIn(
+            "SVG 仅在明确要求矢量图、当前没有可用图像生成工具",
             body,
         )
         self.assertNotIn("Preserve exactly:", recipes)
@@ -200,39 +203,46 @@ class VisualRoutingTests(unittest.TestCase):
             "No watermark, logo, pseudo-text, random interface copy, decorative formulas",
             recipes,
         )
-        self.assertNotIn("单一修改 / 必须保持 / 允许变化 / 禁止变化", body)
+        for old_term in (
+            "Image 1",
+            "Image 2",
+            "LOCKED",
+            "FLEXIBLE",
+            "FORBIDDEN",
+            "Baseline / Image 1",
+            "Resolved Image 1",
+        ):
+            self.assertNotIn(old_term, body)
+            self.assertNotIn(old_term, planning)
+            self.assertNotIn(old_term, recipes)
+            self.assertNotIn(old_term, svg_fallback)
         self.assertEqual(recipes.count("Permanent constraints:"), 1)
         self.assertEqual(recipes.count("no watermark or false branding"), 1)
 
-    def test_codex_builtin_imagegen_isolates_inline_payloads(self) -> None:
+    def test_codex_builtin_imagegen_uses_current_tool_without_session_mutation(self) -> None:
         body = (
             ROOT / "skills" / "research-visuals" / "SKILL.md"
         ).read_text(encoding="utf-8")
         rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
 
         for fragment in (
-            "Codex 内置 imagegen 的会话隔离",
-            "image_generation_end.result",
-            "input_image.image_url",
-            "一次性隔离子代理",
-            "主任务不得调用 `image_gen`",
-            "每次原图查看、候选图对照、定向修正和最终载体视觉检查",
-            "只返回纯文本",
-            "不得调用 `generatedImage(...)`",
-            "不得继续使用已经接收过内联图像载荷的子代理",
-            "独立图片任务",
-            "不能把 compact 或直接修改会话 JSONL 当作修复",
+            "Codex 使用当前会话提供的内置 `imagegen` 技能和 `image_gen` 工具",
+            "调用前确认完整提示词、全部输入图片、目标用途和验收条件",
+            "不修改会话历史",
+            "不把 data URL、base64 或内联图像内容写入项目文件",
+            "工具不可用或缺少必要输入图片时",
+            "不另写 API 脚本",
         ):
             self.assertIn(fragment, body)
         self.assertIn("非统计视觉先走 `research-visuals` → `imagegen`", rules)
-        for implementation_detail in (
+        for obsolete_requirement in (
             "一次性隔离子代理",
-            "data URL",
-            "base64",
+            "主任务不得调用 `image_gen`",
             "修改会话 JSONL",
-            "静默切换 CLI/API",
+            "不得调用 `generatedImage(...)`",
         ):
-            self.assertNotIn(implementation_detail, rules)
+            self.assertNotIn(obsolete_requirement, body)
+            self.assertNotIn(obsolete_requirement, rules)
 
     def test_vendored_figure_references_match_reviewed_snapshots(self) -> None:
         external = ROOT / "skills" / "research-visuals" / "references" / "external"

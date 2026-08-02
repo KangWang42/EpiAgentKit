@@ -6,6 +6,8 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # PDF Processing Guide
 
+Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
+
 ## Overview
 
 This guide covers essential PDF processing operations using Python libraries and command-line tools. Before choosing a path, check required commands and imports read-only; reuse the compatible environment already present, and report missing prerequisites without installing them. For advanced features see [reference.md](reference.md). For forms read [forms.md](forms.md).

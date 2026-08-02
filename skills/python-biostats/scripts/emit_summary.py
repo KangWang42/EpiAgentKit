@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Write and render EpiAgentKit's language-neutral results.yaml contract."""
+"""Write and read the EpiAgentKit result data file."""
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from tempfile import NamedTemporaryFile
+from typing import Any, Iterable
 import math
+import os
 
 try:
     import yaml
@@ -20,7 +22,7 @@ except ImportError as exc:  # pragma: no cover - environment-dependent guard
 def _load(path: str | Path) -> dict[str, Any]:
     target = Path(path)
     if not target.is_file():
-        return {"meta": {}, "results": {}}
+        return {"meta": {"schema_version": 2}, "results": {}}
     value = yaml.safe_load(target.read_text(encoding="utf-8")) or {}
     if not isinstance(value, dict):
         raise ValueError(f"results.yaml root must be a mapping: {target}")
@@ -32,18 +34,27 @@ def _load(path: str | Path) -> dict[str, Any]:
 
 
 def _write(path: str | Path, document: dict[str, Any]) -> None:
+    """Replace the result data file through a temporary sibling file."""
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        yaml.safe_dump(document, allow_unicode=True, sort_keys=False),
-        encoding="utf-8",
-    )
+    temporary: Path | None = None
+    try:
+        with NamedTemporaryFile(
+            "w", encoding="utf-8", dir=target.parent, prefix=".results-", suffix=".yaml",
+            delete=False,
+        ) as handle:
+            yaml.safe_dump(document, handle, allow_unicode=True, sort_keys=False)
+            handle.flush()
+            os.fsync(handle.fileno())
+            temporary = Path(handle.name)
+        os.replace(temporary, target)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
 
 
 def _present(value: Any) -> bool:
-    return value is not None and not (
-        isinstance(value, float) and math.isnan(value)
-    )
+    return value is not None and not (isinstance(value, float) and math.isnan(value))
 
 
 def _number(value: float, digits: int) -> str:
@@ -67,43 +78,54 @@ def _render(
     p_floor: float,
     style: str,
 ) -> dict[str, str]:
-    rendered: dict[str, str] = {}
-    est_text = None
+    display: dict[str, str] = {}
+    estimate = None
     if _present(est):
         separator = "" if unit == "%" else " "
-        est_text = _number(float(est), digits) + (separator + unit if unit else "")
-        rendered["est"] = est_text
-    ci_text = None
+        estimate = _number(float(est), digits) + (separator + unit if unit else "")
+        display["estimate"] = estimate
+    interval = None
     if _present(ci_low) and _present(ci_high):
         low = _number(float(ci_low), digits)
         high = _number(float(ci_high), digits)
-        ci_text = (
-            f"（95%CI：{low}，{high}）"
+        interval = (
+            f"（95% CI：{low}，{high}）"
             if style == "zh"
             else f" (95% CI: {low}, {high})"
         )
-        rendered["ci"] = ci_text
-    p_text = None
+        display["interval"] = interval
+    p_value = None
     if _present(p):
-        p_text = _p_value(float(p), p_digits, p_floor)
-        rendered["p"] = p_text
-    if est_text is not None and ci_text is not None:
-        rendered["est_ci"] = est_text + ci_text
-    full = (est_text or "") + (ci_text or "")
-    if p_text is not None:
-        full = f"{full}{'，' if full else ''}{p_text}"
-    rendered["full"] = full
-    return rendered
+        p_value = _p_value(float(p), p_digits, p_floor)
+        display["p_value"] = p_value
+    full = (estimate or "") + (interval or "")
+    if p_value is not None:
+        full = f"{full}{'，' if full and style == 'zh' else '; ' if full else ''}{p_value}"
+    display["full"] = full
+    return display
 
 
-def _raw_signature(values: list[Any]) -> str:
-    return "|".join("" if value is None else str(value) for value in values)
+def _strings(value: str | Path | Iterable[str | Path] | None) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, (str, Path)):
+        values = [value]
+    else:
+        values = list(value)
+    return [str(item).replace("\\", "/") for item in values if str(item).strip()]
 
 
 def add_result(
     path: str | Path,
     key: str,
     *,
+    producer: str,
+    source: str,
+    analysis_set: str,
+    run_id: str,
+    input: str | Path | Iterable[str | Path] | None = None,
+    input_hash: str = "",
+    consumers: str | Path | Iterable[str | Path] | None = None,
     label: str = "",
     est: float | None = None,
     ci_low: float | None = None,
@@ -111,96 +133,101 @@ def add_result(
     p: float | None = None,
     unit: str = "",
     section: str = "结果",
-    source: str = "",
-    table: str = "",
-    interp: str | None = None,
     digits: int = 2,
     p_digits: int = 3,
     p_floor: float = 0.001,
     style: str = "zh",
 ) -> str:
-    """Upsert one result and return rendered.full."""
+    """Upsert one schema-v2 result and return display.full."""
     if style not in {"zh", "en"}:
         raise ValueError("style must be 'zh' or 'en'")
+    required = {
+        "key": key,
+        "producer": producer,
+        "source": source,
+        "analysis_set": analysis_set,
+        "run_id": run_id,
+    }
+    missing = [name for name, value in required.items() if not str(value).strip()]
+    inputs = _strings(input)
+    if not inputs and not input_hash.strip():
+        missing.append("input_or_input_hash")
+    if missing:
+        raise ValueError("missing result provenance: " + ", ".join(missing))
+
     document = _load(path)
-    previous = document["results"].get(key)
-    signature = _raw_signature([est, ci_low, ci_high, p, unit])
-    previous_interp = previous.get("interp", "") if isinstance(previous, dict) else ""
-    changed = bool(previous and previous.get("raw_sig") != signature)
-    interp_value = previous_interp if interp is None else interp
-    needs_review = bool(changed and interp is None and interp_value)
-    if previous and not needs_review and interp is None:
-        needs_review = bool(previous.get("interp_review", False))
-    rendered = _render(
-        est, ci_low, ci_high, p, unit, digits, p_digits, p_floor, style
-    )
+    schema = document["meta"].get("schema_version")
+    if document["results"] and schema not in {None, 2}:
+        raise ValueError("legacy results.yaml is read-only; write schema v2 to results/results.yaml")
+    display = _render(est, ci_low, ci_high, p, unit, digits, p_digits, p_floor, style)
+    provenance: dict[str, Any] = {
+        "producer": producer.replace("\\", "/"),
+        "source": source,
+        "input": inputs,
+        "analysis_set": analysis_set,
+        "run_id": run_id,
+    }
+    if input_hash.strip():
+        provenance["input_hash"] = input_hash.strip()
     document["results"][key] = {
         "label": label,
         "section": section,
-        "source": source,
-        "table": table,
-        "raw": {
-            "est": est,
+        "estimate": {
+            "value": est,
             "ci_low": ci_low,
             "ci_high": ci_high,
-            "p": p,
+            "p_value": p,
             "unit": unit,
         },
-        "rendered": rendered,
-        "interp": interp_value,
-        "interp_review": needs_review,
-        "raw_sig": signature,
+        "display": display,
+        "provenance": provenance,
+        "consumers": _strings(consumers),
     }
-    document["meta"]["updated"] = date.today().isoformat()
+    document["meta"]["schema_version"] = 2
+    document["meta"]["updated_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
     _write(path, document)
-    return rendered["full"]
+    return display["full"]
 
 
-def confirm_interp(path: str | Path, key: str, interp: str | None = None) -> None:
-    document = _load(path)
-    if key not in document["results"]:
-        raise KeyError(f"results.yaml has no key: {key}")
-    if interp is not None:
-        document["results"][key]["interp"] = interp
-    document["results"][key]["interp_review"] = False
-    _write(path, document)
-
-
-def set_conclusion(path: str | Path, text: str) -> None:
-    document = _load(path)
-    document["conclusion"] = text
-    _write(path, document)
-
-
-def stale_interps(path: str | Path) -> list[str]:
-    document = _load(path)
-    return [
-        key
-        for key, item in document["results"].items()
-        if isinstance(item, dict) and item.get("interp_review") is True
-    ]
+def _display(item: dict[str, Any]) -> dict[str, Any]:
+    display = item.get("display")
+    if isinstance(display, dict):
+        return display
+    rendered = item.get("rendered")
+    if not isinstance(rendered, dict):
+        raise ValueError("result has no display/rendered mapping")
+    return {
+        "estimate": rendered.get("est"),
+        "interval": rendered.get("ci"),
+        "p_value": rendered.get("p"),
+        "full": rendered.get("full"),
+    }
 
 
 def val(path: str | Path, key: str, which: str = "full") -> str:
     document = _load(path)
     try:
-        return str(document["results"][key]["rendered"][which])
+        value = _display(document["results"][key])[which]
     except KeyError as exc:
-        raise KeyError(f"results.yaml has no {key}.rendered.{which}") from exc
+        raise KeyError(f"results.yaml has no {key}.display.{which}") from exc
+    if value is None:
+        raise KeyError(f"results.yaml has no {key}.display.{which}")
+    return str(value)
 
 
 def render_summary_md(path: str | Path, output: str | Path) -> Path:
     document = _load(path)
-    results = document["results"]
     target = Path(output)
     target.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# 结果汇总",
+        "",
+        "> 本文件根据 results/results.yaml 自动生成，仅用于核对；如需修改数字，请回到实际生成结果的分析脚本。",
+        "",
+    ]
+    results = document["results"]
     if not results:
-        target.write_text("# 结果汇总（暂无）\n", encoding="utf-8")
-        return target
-    lines = ["# 结果汇总（由 results.yaml 自动生成，勿手改）", ""]
-    stale = stale_interps(path)
-    if stale:
-        lines.extend([f"> [解读待复核] {'、'.join(stale)}", ""])
+        lines.append("暂无结果。")
     sections: list[str] = []
     for item in results.values():
         section = item.get("section") or "结果"
@@ -212,14 +239,15 @@ def render_summary_md(path: str | Path, output: str | Path) -> Path:
             if (item.get("section") or "结果") != section:
                 continue
             label = item.get("label") or key
-            sources = [value for value in (item.get("source"), item.get("table")) if value]
-            suffix = f"（来源：{'；'.join(sources)}）" if sources else ""
-            lines.append(f"- **{label}**（`{key}`）：{item['rendered']['full']}{suffix}")
-            if item.get("interp"):
-                flag = " [解读待复核]" if item.get("interp_review") else ""
-                lines.append(f"  - 解读{flag}：{item['interp']}")
+            provenance = item.get("provenance") or {}
+            producer = provenance.get("producer") or item.get("source") or "未记录"
+            run_id = provenance.get("run_id") or "legacy"
+            lines.append(
+                f"- **{label}**（`{key}`）：{_display(item).get('full', '')}"
+                f"（生成脚本：`{producer}`；运行编号：`{run_id}`）"
+            )
         lines.append("")
-    if document.get("conclusion"):
-        lines.extend(["## 结论", "", str(document["conclusion"]), ""])
-    target.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    temporary = target.with_name(f".{target.name}.tmp")
+    temporary.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    os.replace(temporary, target)
     return target

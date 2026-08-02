@@ -450,8 +450,9 @@ class RevisionWorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             project = Path(directory) / "中文 项目"
             backup = project / "09_backup"
+            archive = backup / "archive"
             reports = project / "05_reports"
-            backup.mkdir(parents=True)
+            archive.mkdir(parents=True)
             reports.mkdir()
             target = reports / "旧 稿.docx"
             current = reports / "当前稿.docx"
@@ -489,6 +490,7 @@ class RevisionWorkflowTests(unittest.TestCase):
             self.assertEqual(plan.returncode, 0, plan.stdout + plan.stderr)
             self.assertTrue(target.exists())
             batch_rel = json.loads(plan.stdout)["batch"]
+            self.assertTrue(batch_rel.startswith("09_backup/archive/"))
 
             executed = subprocess.run(
                 [*command[:-1], "--execute", "--json"],
@@ -510,12 +512,13 @@ class RevisionWorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             project = Path(directory)
             backup = project / "09_backup"
+            archive = backup / "archive"
             target = project / "05_reports/report.docx"
-            backup.mkdir(parents=True)
+            archive.mkdir(parents=True)
             target.parent.mkdir()
             target.write_bytes(b"rollback")
             (backup / "INDEX.md").write_text("invalid index\n", encoding="utf-8")
-            batch = backup / "2026-01-02_0304_topic_stage"
+            batch = archive / "2026-01-02_0304_topic_stage"
             with self.assertRaises(ARCHIVE.ArchiveError):
                 ARCHIVE.execute_archive(
                     project,

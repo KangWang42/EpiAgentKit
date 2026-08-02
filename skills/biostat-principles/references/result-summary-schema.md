@@ -1,87 +1,78 @@
-# 结果数字来源 schema
+# 结果数据文件
 
-`07_paper/results.yaml` 是正式项目中与分析语言无关、机器可读的结果数字唯一来源。R 与 Python helper 必须写入相同字段；`0_result_summaries.md` 只由该文件派生。轻量任务不为满足本规范补建项目结构。
+新正式项目把关键结果、显示格式和来源统一保存在 `results/results.yaml`，R 与 Python 使用同一文件结构。实际生成结果的分析脚本，或导入已确认外部结果的专门脚本，是唯一写入者。写入时先在同一目录生成临时文件，成功后再替换现有文件，避免中断时留下不完整内容。旧项目的 `07_paper/results.yaml` 仍可读取。
 
-## 字段
+## 第 2 版文件结构
 
 ```yaml
 meta:
-  project: "项目名"
-  updated: "2026-07-24"
+  schema_version: 2
+  project: cohort_example
+  updated_at: "2026-08-02T12:15:00+08:00"
 results:
-  stable_key:
-    label: "人读标签"
-    section: "主要结果"
-    source: "02_code/03_main.py"
-    table: "03_tables/Table2_main.xlsx"
-    raw: {est: 1.45, ci_low: 1.12, ci_high: 1.87, p: 0.004, unit: ""}
-    rendered:
-      est: "1.45"
-      ci: "（95%CI：1.12，1.87）"
-      p: "P = 0.004"
-      est_ci: "1.45（95%CI：1.12，1.87）"
-      full: "1.45（95%CI：1.12，1.87），P = 0.004"
-    interp: "与参照组相比，该暴露与较高风险相关。"
-    interp_review: false
-    raw_sig: "1.45|1.12|1.87|0.004|"
-conclusion: "跨结果总结论，由研究者复核。"
+  exposure_hr:
+    label: 暴露与结局的关联
+    section: 主要结果
+    estimate:
+      value: 1.45
+      ci_low: 1.12
+      ci_high: 1.87
+      p_value: 0.004
+      unit: ""
+    display:
+      estimate: "1.45"
+      interval: "（95% CI：1.12，1.87）"
+      p_value: "P = 0.004"
+      full: "1.45（95% CI：1.12，1.87），P = 0.004"
+    provenance:
+      producer: 02_code/03_main.R
+      source: model_main$coefficients
+      input:
+        - 01_data/rawdata/cohort.csv
+      input_hash: "sha256:..."
+      analysis_set: primary_complete_case
+      run_id: 20260802T121500+0800_ab12cd34
+    consumers:
+      - 03_tables/Table2_main.xlsx
+      - paper/manuscript.docx
 ```
 
-- `key` 是稳定英文标识，下游按键读取，不随表图编号改名。
-- `raw` 保留可审计数值；`rendered` 由 helper 统一格式化，下游不得再次格式化或手敲。
-- `source` 和 `table` 指向实际生产者与消费者；没有对应表时 `table` 可空。
-- `interp` 与 `conclusion` 是经研究者复核的解释，不由数值自动推断。
-- 数字变化但没有同步提供新解释时，helper 保留原解释并把 `interp_review` 设为 `true`。正式交付前 `stale_interps()` 必须为空。
+每项结果必须符合以下要求：
 
-## 写入与读取
+- 每项结果使用固定英文名称，不随表图编号变化。
+- `producer` 填写实际生成或导入该结果的脚本；`source` 填写脚本中提取结果的对象、查询，或已确认外部结果的标识。
+- `input` 至少列出一个可以定位的输入文件；无法共享路径时提供不可逆的 `input_hash`。两者可以同时存在。
+- `analysis_set` 使用项目已经确认的分析集名称；`run_id` 对应一次成功的自动运行记录。
+- `consumers` 只列出实际读取这项结果的文件，不预填尚不存在的论文、报告、PPT 或表图。
+- `estimate` 保存用于核对的原始数值；`display` 由共用函数按照项目规定的精度生成，后续文件不应再次自行调整格式。
+
+`results/results.yaml` 不保存解释、因果判断、显著性结论或跨结果总结。数字变化后，应检查所有实际使用该结果的文件，并根据需要更新 `DECISIONS.md` 和正文；不得让程序根据数值变化自动推断研究结论。
+
+## 写入
 
 R 使用 `r-biostats/scripts/emit_summary.R`：
 
 ```r
 source("02_code/vendored/emit_summary.R", encoding = "UTF-8")
-add_result("07_paper/results.yaml", "exposure_hr",
-           label = "暴露与结局的关联", est = 1.45,
-           ci_low = 1.12, ci_high = 1.87, p = 0.004,
-           source = "02_code/03_main.R")
-render_summary_md("07_paper/results.yaml", "07_paper/0_result_summaries.md")
-val("07_paper/results.yaml", "exposure_hr")
-```
-
-Python 使用 `python-biostats/scripts/emit_summary.py`：
-
-```python
-from emit_summary import add_result, render_summary_md, val
-
 add_result(
-    "07_paper/results.yaml",
-    "exposure_hr",
-    label="暴露与结局的关联",
-    est=1.45,
-    ci_low=1.12,
-    ci_high=1.87,
-    p=0.004,
-    source="02_code/03_main.py",
+  "results/results.yaml", "exposure_hr",
+  label = "暴露与结局的关联", est = 1.45,
+  ci_low = 1.12, ci_high = 1.87, p = 0.004,
+  producer = "02_code/03_main.R", source = "model_main$coefficients",
+  input = "01_data/rawdata/cohort.csv",
+  analysis_set = "primary_complete_case", run_id = Sys.getenv("EPI_RUN_ID"),
+  consumers = "03_tables/Table2_main.xlsx"
 )
-render_summary_md("07_paper/results.yaml", "07_paper/0_result_summaries.md")
-val("07_paper/results.yaml", "exposure_hr")
+render_summary_md("results/results.yaml", "results/result_summaries.md")
 ```
 
-`add_result()` 的 `digits`、P 值精度或阈值、`unit` 和 `style="zh"|"en"` 控制统一渲染；百分比单位不加空格。下游可用 `val(path, key, which="est|ci|p|est_ci|full")` 读取所需分量，但不得重新格式化。
+Python 使用 `python-biostats/scripts/emit_summary.py`，参数名和写入内容相同。调用脚本必须提供 `producer`、`source`、`analysis_set`、非空 `run_id`、`consumers`，并提供 `input` 或 `input_hash`。缺少任一必要来源信息时，写入函数停止，不生成内容不完整的文件。
 
-## 数字与解读同步
+`val(path, key, which="full")` 按固定结果名称读取 `display`；`which` 可选 `estimate|interval|p_value|full`。`render_summary_md()` 只生成便于人工核对的数字和来源摘要，并在文件中注明内容由 `results/results.yaml` 自动生成、不可单独修改。
 
-数字变化后若没有同步提供新解释，helper 保留旧解释并设置 `interp_review: true`。按以下顺序完成复核：
+## 兼容与一致性
 
-1. 用 `stale_interps(path)` 列出全部待复核键；
-2. 研究者核对方向、显著性、效应量级和证据强度后，用 `confirm_interp(path, key, interp=...)` 写入或确认解释；
-3. 跨结果总结论变化时用 `set_conclusion(path, text)` 更新；
-4. 重新运行 `render_summary_md()`，确认 `stale_interps(path)` 为空后才能正式交付。
-
-R 与 Python helper 使用相同函数名和行为。不得仅为清除标记而调用 `confirm_interp()`，也不得由数值自动生成结论。
-
-## 一致性要求
-
-1. 结果由分析脚本通过 helper 写入 `results.yaml`，再生成派生 Markdown。
-2. 论文、报告、PPT、表图注释和审计按稳定键取 `rendered`；发现差异时回到生产脚本与 `results.yaml` 修正后重生全部消费者。
-3. 不把探索性峰值、调参结果或未经确认的解释写入主结果数字唯一来源。
-4. 方法变化同步 `DECISIONS.md`，运行记录同步 `SESSION_LOG.md`，待补信息同步 `BACKLOG.md`。
+1. `val()` 和 `render_summary_md()` 可读取旧版的 `raw` / `rendered` 字段；`add_result()` 只写第 2 版结构。
+2. 旧路径若存在可继续读取，但新项目和新的分析脚本统一写入 `results/results.yaml`。
+3. 探索中得到的最佳数值、调参结果和未经确认的解释不得写入正式结果数据文件。
+4. 发现正文、表图或报告与结果数据文件不一致时，回到 `producer` 所指的脚本和相应运行记录，重新运行后再生成受影响文件；不得直接修改 YAML 或成品中的数字。

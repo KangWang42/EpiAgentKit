@@ -6,6 +6,8 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # PPTX Skill
 
+Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
+
 ## Quick Reference
 
 | Task | Guide |
@@ -46,7 +48,7 @@ For every template-derived deck:
 
 ## Output Version Hygiene
 
-- In a formal project, keep one current presentation with a stable semantic filename and archive superseded source, output, renders and version-specific assets together under the project's `09_backup/` contract.
+- In a formal project, keep one current presentation with a stable semantic filename and archive superseded source, output, renders and version-specific assets together under `09_backup/archive/`. Use `09_backup/workbench/` only for disposable render checks or isolated experiments.
 - In a lightweight task, do not create project archives; preserve the user's original and write only to the requested output path.
 - Make the generator write the stable current filename on every run. If two plausible current versions exist, ask the user which one is authoritative before archiving.
 

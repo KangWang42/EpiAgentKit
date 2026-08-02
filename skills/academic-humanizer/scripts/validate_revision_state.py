@@ -380,7 +380,7 @@ def validate_state(
                         "review.closure_incomplete",
                         f"{comment_id}.evidence",
                         "The closed response has no verifiable evidence source.",
-                        "Record one or more evidence pointers.",
+                        "Record one or more evidence sources or locations.",
                     )
                 )
         elif signoff:

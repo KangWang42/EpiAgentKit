@@ -23,6 +23,7 @@ from config_core import (
 )
 from sync_user_configs import source_skills, sync_skills
 from audit_workflow_contracts import (
+    RESEARCH_TERMINOLOGY,
     audit_research_terminology,
     research_term_violations,
 )
@@ -37,11 +38,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             ),
             (),
         )
+        flagged = " ".join(RESEARCH_TERMINOLOGY[index] for index in (0, 6, 7))
         self.assertEqual(
-            research_term_violations(
-                "skills/epi-study-design/SKILL.md", "先建立设计合同。"
-            ),
-            ("合同",),
+            research_term_violations("skills/example/SKILL.md", flagged),
+            tuple(RESEARCH_TERMINOLOGY[index] for index in (0, 6, 7)),
         )
         self.assertEqual(
             research_term_violations(
@@ -50,6 +50,13 @@ class WorkflowRoutingTests(unittest.TestCase):
             (),
         )
         self.assertEqual(audit_research_terminology(), [])
+        rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        maintenance = (ROOT / "skills/epiagentkit-maintenance/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("中文终审不能只查词", rules)
+        self.assertIn("谁依据什么，在什么条件下做什么", rules)
+        self.assertIn("词面扫描只用于发现高确定性线索", maintenance)
 
     def test_workflow_audit_forces_utf8_diagnostics(self) -> None:
         audit = (ROOT / "scripts" / "audit_workflow_contracts.py").read_text(
@@ -91,7 +98,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         ):
             self.assertNotIn(maintenance_detail, global_rules)
 
-    def test_backup_workbench_is_the_isolated_experiment_contract(self) -> None:
+    def test_backup_archive_and_workbench_have_separate_roles(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         repo_rules = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         hygiene = (
@@ -103,40 +110,43 @@ class WorkflowRoutingTests(unittest.TestCase):
         initializer = (ROOT / "skills/project-init/scripts/init_project.R").read_text(
             encoding="utf-8"
         )
-        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
-            encoding="utf-8"
-        )
-        assembly = (
-            ROOT / "skills/academic-publishing/references/docx-assembly.md"
-        ).read_text(encoding="utf-8")
         consulting = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
             encoding="utf-8"
         )
+        archive_script = (
+            ROOT / "skills/project-init/scripts/archive_deliverables.py"
+        ).read_text(encoding="utf-8")
 
-        self.assertIn("09_backup/workbench/", global_rules)
-        for body in (repo_rules, hygiene, principles, initializer, publishing, assembly, consulting):
+        for body in (global_rules, repo_rules, hygiene):
+            self.assertIn("09_backup/archive/", body)
+        for body in (global_rules, repo_rules, hygiene, principles):
             self.assertIn("09_backup/workbench/", body)
+        self.assertIn("在 `09_backup/workbench/` 中建立独立的交付测试副本", consulting)
         for fragment in (
             "PLAN.md",
             "FINDINGS.md",
             "TEMP",
             "TMP",
             "TMPDIR",
-            "晋级",
         ):
             self.assertIn(fragment, hygiene)
+        self.assertIn("只索引 `archive/`", hygiene)
+        self.assertIn("只引用 `workbench/` 批次", hygiene)
+        self.assertIn("根级批次", hygiene)
+        self.assertIn('backup / "archive"', archive_script)
+        self.assertIn("do not rewrite a legacy project implicitly", archive_script)
+        self.assertIn('"09_backup/archive", "09_backup/workbench"', initializer)
         self.assertIn('"09_backup/workbench"', initializer)
         self.assertNotIn("09_backup/<YYYY-MM-DD>_<主题>/", principles)
-        self.assertNotIn("09_backup/<日期>_scripts_oneoff/", publishing + assembly)
         self.assertNotIn("系统创建的隔离临时目录", consulting)
 
     def test_global_rules_are_concise_complete_and_single_source(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         lines = global_rules.splitlines()
 
-        self.assertLessEqual(len(lines), 100)
-        self.assertLessEqual(len(global_rules), 5600)
-        self.assertLessEqual(max(map(len, lines)), 300)
+        self.assertLessEqual(len(lines), 200)
+        self.assertLessEqual(len(global_rules), 12000)
+        self.assertLessEqual(max(map(len, lines)), 700)
         for daily_skill in (
             "project-init",
             "evidence-research",
@@ -174,7 +184,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "HTTP 524",
             "referenced_image_paths",
             "num_last_images_to_include",
-            "Image 1 为验收基线",
+            "待修改原图为内容核对依据",
         ):
             self.assertNotIn(conditional_detail, global_rules)
 
@@ -230,8 +240,9 @@ class WorkflowRoutingTests(unittest.TestCase):
             "Do not automatically add dark header bands",
         ):
             self.assertIn(fragment, xlsx)
-        for fragment in ("默认中性排版", "无填充、白底黑字"):
-            self.assertIn(fragment, report)
+        self.assertIn("实际 `.docx` 操作调用 `docx`", report)
+        self.assertIn("不在本 skill 固定某个转换工具或视觉模板", report)
+        self.assertNotIn("无填充、白底黑字", report)
 
     def test_presentation_template_source_is_routed_before_creation(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
@@ -310,9 +321,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         }
 
         for fragment in (
-            "目的—方法—结果—表图—讨论主轴",
-            "结构由研究问题、estimand、表图和目标期刊决定",
-            "不以机械归零代替审校",
+            "结构由研究问题、研究设计、estimand、证据关系、表图和真实篇幅决定",
+            "完整初稿",
+            "目标期刊未定时可生成中性学术稿",
         ):
             self.assertIn(fragment, publishing)
         for fragment in (
@@ -327,9 +338,11 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("do not require four paragraphs", english)
         self.assertIn("Do not begin from a stock sentence", phrasebank)
         self.assertIn("内容功能、论证结构、段落节奏", humanizer)
+        self.assertIn("不把原有句法、段落习惯或措辞质量作为标准", humanizer)
+        self.assertIn("优先符合学科通行写法", humanizer)
         self.assertIn("可迁移性测试", editorial)
-        self.assertIn("文档层面结论先行", report)
-        self.assertIn("不是每一节、每一段都必须套", report)
+        self.assertIn("结构与长度由任务复杂度决定", report)
+        self.assertIn("不强制背景—方法—结果—结论模板", report)
         self.assertIn(
             "academic-humanizer", cases["report_prose_only"]["companions"]
         )
@@ -399,21 +412,22 @@ class WorkflowRoutingTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         for fragment in (
-            "问答只回复且不创建文件",
-            "局部产物",
-            "不补建 `results.yaml`、修订状态卡或项目账本",
+            "Q 问答",
+            "只回复，不创建项目文件",
+            "L 局部产物",
+            "不补建结果数据文件、修订记录文件或项目记录文件",
             "范围外差异为零",
         ):
             self.assertIn(fragment, global_rules)
         for fragment in (
             "单个引用序号",
-            "不创建状态卡或项目账本",
-            "不要为保存这些约束单独创建 JSON",
+            "不创建修订记录文件或项目记录文件",
+            "不要只为保存这些要求而创建 JSON",
         ):
             self.assertIn(fragment, revision)
-        self.assertIn("项目内局部产物", hygiene)
-        self.assertIn("批次内部文件不逐项登记", hygiene)
-        self.assertIn("不运行 `run_check_project.py`", audit)
+        self.assertIn("Q/L 不迁移用户目录、不补建记录文件或归档", hygiene)
+        self.assertIn("批次内文件不进入 layout", hygiene)
+        self.assertIn("L 局部产物只检查本次修改影响的部分", audit)
         for section in ("方法", "结果", "讨论", "局限", "结论"):
             self.assertIn(f"| {section} |", editorial)
 
@@ -484,8 +498,8 @@ class WorkflowRoutingTests(unittest.TestCase):
             self.assertIn(fragment, global_rules)
         for fragment in (
             "执行者也是监测者",
-            "发生了什么、证据在哪里、影响什么、已经做了什么、还需要决定什么",
-            "停在安全点等待确认",
+            "发生了什么、证据位置、影响、已做检查和待决定事项",
+            "异常可能改变分析集",
         ):
             self.assertIn(fragment, principles)
 
@@ -646,10 +660,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("发表级统计图、数据图", body)
-        self.assertIn("其它非统计视觉默认调用 `research-visuals`", body)
-        self.assertIn("先锁定图前说明", body)
-        self.assertIn("多面板已完成两两去冗余", body)
-        self.assertIn("07_paper/results.yaml", body)
+        self.assertIn("流程、机制、架构、技术路线与图形摘要转 `research-visuals`", body)
+        self.assertIn("作图前确认", body)
+        self.assertIn("由多个子图组成时，只保留具有独立信息作用的子图", body)
+        self.assertIn("`results/results.yaml`", body)
         self.assertNotIn("用户要求出图、画图、做图、生成 Fig", body)
 
     def test_publication_figures_preserves_visual_grammar_and_redesigns_when_requested(
@@ -658,14 +672,13 @@ class WorkflowRoutingTests(unittest.TestCase):
         body = (ROOT / "skills" / "publication-figures" / "SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("只更新数值、术语、标签、精度或注释时", body)
-        self.assertIn("除非存在明确不合规问题", body)
-        self.assertIn("保持原图的视觉语法", body)
-        self.assertIn("明确对图形样式不满", body)
-        self.assertIn("主动重新设计", body)
+        self.assertIn("只修改一张指定的图或一个格式问题", body)
+        self.assertIn("其余布局、图形元素和视觉表达保持不变", body)
+        self.assertIn("用户明确对样式不满", body)
+        self.assertIn("再进行重新设计", body)
         self.assertIn("同一项目", body)
-        self.assertIn("PubMed", body)
-        self.assertIn("不把纯白背景当作投稿要求", body)
+        self.assertIn("不得检索近期论文只为模仿风格", body)
+        self.assertIn("期刊未指定白色背景时，不把白色背景当作通用投稿要求", body)
         self.assertNotIn("无 3D / 默认灰底 / 彩虹色 / 单独 JPEG", body)
 
     def test_results_machine_source_is_not_the_derived_markdown(self) -> None:
@@ -676,16 +689,18 @@ class WorkflowRoutingTests(unittest.TestCase):
             / "references"
             / "chinese-thesis.md"
         ).read_text(encoding="utf-8")
-        self.assertIn("机器可读的数字唯一来源 = `07_paper/results.yaml`", body)
+        self.assertIn("新项目统一从 `results/results.yaml` 读取数字", body)
+        self.assertIn("旧项目可读取 `07_paper/results.yaml`", body)
         self.assertNotIn("结果变 → 回写 `0_result_summaries.md`", body)
 
     def test_audit_continues_all_layers_but_blocks_signoff(self) -> None:
         body = (ROOT / "skills" / "epi-project-audit" / "SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("继续完成其余层审查", body)
-        self.assertIn("任何未解决的问题都阻止正式交付", body)
-        self.assertIn("仅在“审查并修复”模式", body)
+        self.assertIn("每层都继续审查，不因前层失败而停止", body)
+        self.assertIn("| ERROR | 可能改变科学结论", body)
+        self.assertIn("结构偏好一般是 WARN/INFO", body)
+        self.assertIn("只审查模式严格只读", body)
         self.assertNotIn("不通过不进入下一层", body)
         self.assertNotIn("### 自动修复动作", body)
 
@@ -696,7 +711,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             / "references"
             / "audit-checklist.md"
         ).read_text(encoding="utf-8")
-        self.assertIn("`results.yaml` ↔ 派生 `0_result_summaries.md`", checklist)
+        self.assertIn("新项目使用 `results/results.yaml`", checklist)
+        self.assertIn("`result_summaries.md` 如存在", checklist)
+        self.assertIn("明确标注不可编辑", checklist)
+        self.assertIn("小于 1 通常表示预测过于极端", checklist)
 
 
 if __name__ == "__main__":

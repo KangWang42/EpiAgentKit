@@ -4,7 +4,7 @@
 
 This repository provides shared Claude Code and Codex guidance for epidemiology and biostatistics. `CLAUDE.md` holds cross-task rules; `README.md` covers installation and architecture. Each `skills/` directory is self-contained: keep `SKILL.md` concise, detailed guidance in `references/`, utilities in `scripts/`, and templates or media in `assets/`. Enforcement scripts live in `hooks/`. The allowlist `.gitignore` excludes runtime state, credentials, caches, histories, and local settings.
 
-Repository-maintenance experiments, one-off scripts and diagnostic outputs belong in `09_backup/workbench/YYYY-MM-DD_HHMM_<topic>_<purpose>/`, with `PLAN.md` before execution and `FINDINGS.md` after execution. Run them there; do not place agent-created work in the system temp directory or the repository root. Point the current test process's `TEMP`, `TMP` and `TMPDIR` to that batch's `runtime/` directory, then remove only that runtime cache after the command finishes.
+Keep the two backup branches separate. Superseded formal repository deliverables that must remain recoverable belong in `09_backup/archive/YYYY-MM-DD_HHMM_<topic>_<stage>/`; `09_backup/INDEX.md` indexes only those archive batches. Repository-maintenance experiments, one-off scripts and diagnostic outputs belong in `09_backup/workbench/YYYY-MM-DD_HHMM_<topic>_<purpose>/`, with `PLAN.md` before execution and `FINDINGS.md` after execution. Run them there; do not place agent-created work in the system temp directory or the repository root. Point the current test process's `TEMP`, `TMP` and `TMPDIR` to that batch's `runtime/` directory, then remove only that runtime cache after the command finishes.
 
 ## Build, Test, and Development Commands
 

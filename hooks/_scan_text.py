@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Report process traces and emoji while allowing defined scientific symbols."""
+"""Report high-confidence assistant/process traces and disallowed emoji."""
 
 from __future__ import annotations
 
@@ -9,11 +9,13 @@ from pathlib import Path
 
 
 TRACE_PATTERNS = (
-    (re.compile(r"AI辅助", re.IGNORECASE), "AI辅助"),
-    (re.compile(r"AI[_-]?assisted", re.IGNORECASE), "AI-assisted"),
-    (re.compile(r"机辅|机器辅助"), "机辅"),
-    (re.compile(r"待人工复核|机辅待核"), "待复核痕迹"),
-    (re.compile(r"AI\s*生成", re.IGNORECASE), "AI生成"),
+    (re.compile(r"作为(?:一个)?\s*(?:AI|人工智能)(?:助手|助理|模型)?", re.IGNORECASE), "助手自述"),
+    (re.compile(r"以下是我(?:为你|替你)?(?:生成|整理|撰写|改写)的", re.IGNORECASE), "生成过程"),
+    (re.compile(r"(?:希望|盼望)(?:以上|这些|这)(?:内容)?(?:能|可以)(?:够)?帮到你"), "对话式收尾"),
+    (re.compile(r"如有需要[，,]?我(?:还)?可以(?:继续)?(?:帮你|为你)"), "助手式邀约"),
+    (re.compile(r"\bas an AI (?:assistant|model)\b", re.IGNORECASE), "assistant self-reference"),
+    (re.compile(r"\bI hope (?:this|that) helps\b", re.IGNORECASE), "assistant sign-off"),
+    (re.compile(r"\bhere(?:'s| is) (?:the|a) .* I (?:generated|wrote|rewrote) for you\b", re.IGNORECASE), "generation process"),
 )
 SCIENTIFIC_SYMBOLS = set("→↔↑↓±×≥≤℃")
 EMOJI_RANGES = (

@@ -16,16 +16,16 @@
 
 ## 1 开工信息
 
-写作前锁定：
+写作前确认：
 
 - 目标期刊、文章类型、语言、摘要结构、字数、图表与声明要求。
 - 研究问题、主要和次要 estimand、研究设计、分析集及证据层级。
-- `07_paper/results.yaml`、表图、方案、SAP、方法决策和引文来源。
-- 目标期刊同类文章的常见结构，以及作者既往论文或认可段落中的术语和声纹。
+- `results/results.yaml`（旧项目可读取 `07_paper/results.yaml`）、表图、方案、SAP、方法决定和引文来源；没有项目结果数据文件时，使用用户明确指定且来源可核验的正式结果。
+- 目标期刊同类文章的常见结构，以及研究方案、既往论文或认可段落中已经确认的规范术语与对象命名。
 
 期刊未定时，不把任何通用字数或 IMRaD 变体写成正式要求。可以先形成内容草稿，但将期刊依赖项列为待确认。
 
-建立 `目的 | 方法 | 结果 | 表图 | 讨论 | 边界` 映射，并按 `section-content-playbook.md` 决定结构。全文写作与终审读取 `../academic-humanizer/references/patterns-and-preservation.md`。
+逐项列出研究目的、相应方法、结果、表图、讨论要点和解释边界，并按 `section-content-playbook.md` 决定结构。全文写作与终审读取 `../academic-humanizer/references/patterns-and-preservation.md`。
 
 ## 2 题名与元数据
 
@@ -101,4 +101,4 @@
 - [ ] 方法保留复现和偏倚判断所需内容，没有隐藏缺失、质量控制、偏离或验证状态。
 - [ ] 结果未逐表复述，讨论未逐结果机械配置一个文献和机制。
 - [ ] 每个经验性论断可定位到数据、表图或真实引文，观察性证据未因果化。
-- [ ] 全文通过 `chinese-academic-style.md`、`chinese-style-audit.md` 和 `academic-humanizer` 的内容、结构、措辞与作者声纹终审。
+- [ ] 全文通过 `chinese-academic-style.md`、`chinese-style-audit.md` 和 `academic-humanizer` 的内容、结构、措辞、术语一致性及学术语体终审。
