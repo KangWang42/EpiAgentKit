@@ -65,13 +65,19 @@ RESEARCH_TERMINOLOGY = (
     "来源章节映射",
     "主题映射",
     "闭合到",
+    "载体",
 )
 RESEARCH_TEXT_SUFFIXES = {".md", ".py", ".R", ".json", ".txt"}
 RESEARCH_TEXT_EXCLUDED_PREFIXES = (
     "skills/research-visuals/references/external/academic-figure-skill/",
     "skills/research-visuals/references/external/academic-figure-generator/",
 )
-RESEARCH_TERM_ALLOWLIST: dict[tuple[str, str], tuple[str, ...]] = {}
+RESEARCH_TERM_ALLOWLIST: dict[tuple[str, str], tuple[str, ...]] = {
+    (
+        "skills/research-visuals/references/carrier-specs.md",
+        "载体",
+    ): ("加载体积",),
+}
 
 
 def configure_utf8_output() -> None:
@@ -320,10 +326,16 @@ def main() -> int:
         ),
         "CLAUDE.md": (
             "主流程 skill",
-            "只负责载体操作，不取代内容主流程",
+            "只负责文件读写、格式和显示检查，不取代内容主流程",
+            "把请求拆成实际工作项",
+            "该 skill 的核心流程、明确要求读取的适用细则和完成条件必须执行",
+            "规范在制作过程中执行，不等到最后审计才补做",
+            "不能用“项目已完成”概括",
+            "项目 `README.md` 只说明运行方法、输入输出位置和阅读顺序",
+            "项目整体阶段与各项工作完成状态只在项目 `CLAUDE.md` 更新",
             "evidence-research",
             "非统计视觉先走 `research-visuals` → `imagegen`",
-            "按载体、读者、证据属性、信息功能和实际显示尺寸设计",
+            "按最终使用位置（论文、PPT、报告或网页）、读者、证据属性、信息功能和实际显示尺寸设计",
             "真实界面、终端、文档与分析产物用实际渲染截图",
             "真实统计图走 `publication-figures`",
             "科研原始图像不得生成式重绘",
@@ -417,6 +429,10 @@ def main() -> int:
             "Get-Content -Encoding utf8",
             "同类问题边界",
             "中文修改按全局中文终审要求逐句检查",
+            "用户纠正与真实失败的原因查找和修正",
+            "判断最早出现问题的规则或步骤",
+            "修改最早且可复用的规则或步骤",
+            "不以道歉、重新承诺或字面替换代替原因判断",
         ),
         "skills/skill-creator/SKILL.md": (
             "Optimize, Don't Accumulate",
@@ -547,6 +563,20 @@ def main() -> int:
             "run_pipeline.R",
             "Rscript --vanilla",
             "局部任务只交付已经确认的产物",
+            "必须先读 [代码风格]",
+            "仅有语法通过或全链成功不能替代这项检查",
+        ),
+        "skills/r-biostats/references/code-style.md": (
+            "同一稳定工具在多个主脚本重复出现时",
+            "孤立的 `[1] 0`",
+            "不把整篇论文或长篇报告写成数百行",
+            "不得仅因脚本成功执行而把代码工作项标为完成",
+        ),
+        "skills/r-biostats/references/descriptive.md": (
+            "默认只设置一个说明列",
+            "不增加独立“分层”“水平”列",
+            "单元格的真实缩进属性",
+            "不得把统计表工作项标为完成",
         ),
         "skills/python-biostats/SKILL.md": (
             "仅用于用户明确要求 Python",
@@ -651,6 +681,7 @@ def main() -> int:
             "r_dependency_missing_no_language_switch",
             "journal_manuscript_peer_review",
             "manuscript_only_data_boundary",
+            "english_full_manuscript_with_evidence",
         ),
         "skills/project-init/SKILL.md": (
             "已有项目分析不触发",
@@ -663,6 +694,7 @@ def main() -> int:
             "不创建空的 `results/results.yaml`",
             "不创建 `SESSION_LOG.md`",
             "所选项目类型之外的目录和占位文件未创建",
+            "不重复维护项目整体阶段、各项工作完成状态或已经确认的研究口径",
         ),
         "skills/academic-publishing/SKILL.md": (
             "已有文本的局部润色或压缩只用 academic-humanizer",
@@ -670,8 +702,19 @@ def main() -> int:
             "不创建修订记录文件、章节目录或项目记录文件",
             "用户明确要求时可一次生成完整稿",
             "不得因通用流程强制拆成多轮审批",
-            "不因期刊未定阻断写作",
+            "期刊未定只影响这些格式选择",
             "审稿回复逐条直接回答审稿人提出的问题",
+            "不得据此把正文降为短版骨架",
+            "英文稿：[英文写作]",
+            "所有完整稿或论文级结构性重写：写作前用 `evidence-research`",
+            "已有核验记录时先检查来源身份、版本、适用性和时效",
+            "只有上述内容检查和 `academic-humanizer` 终审均已完成",
+        ),
+        "skills/academic-publishing/references/section-content-playbook.md": (
+            "自动摘要和拼装脚本只负责提供可核对数字或装配文件",
+            "章节标题存在不等于章节完成",
+            "判为部分草稿",
+            "目标期刊未定时仍按研究设计和现有证据完成中性全文",
         ),
         "skills/academic-humanizer/references/revision-workflow.md": (
             "单个引用序号",
@@ -942,8 +985,8 @@ def main() -> int:
             "external/SOURCE.md",
             "未引入原项目的执行脚本、示例图片或第三方 API 配置",
             "不可替代的用户原图不得重新生成后冒充原图修改",
-            "确定载体中的待修改图件",
-            "图在载体中的位置",
+            "确定文档或页面中的待修改图件",
+            "图在文档或页面中的位置",
             "项目专属事实只进入本次任务记录",
             "信息与文字作用",
             "模板适配",
@@ -1155,6 +1198,9 @@ def main() -> int:
             "Use `scripts/recalc.py` only when a compatible LibreOffice installation is already available",
             "If `soffice` is unavailable",
             "do not install it",
+            "First identify the skill responsible for the workbook's professional content",
+            "Use the cell alignment's real indent setting",
+            "Report a partial result if either set has not been verified",
         ),
         "skills/epi-project-audit/scripts/check_consistency.py": (
             "请先选择要使用的 Python 环境和安装方式",

@@ -55,7 +55,7 @@ ggplot(data, aes(x = estimate, y = term)) +
 ### KM 曲线
 
 ```r
-ggsurvplot(fit, risk.table = TRUE)  # 是否保留风险表按 publication-figures 与载体判断
+ggsurvplot(fit, risk.table = TRUE)  # 是否保留风险表按 publication-figures 与最终论文、报告或演示页面判断
 ```
 
 ### 箱线图

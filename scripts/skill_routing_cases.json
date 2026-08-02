@@ -40,8 +40,16 @@
       "id": "paper_from_scratch_word",
       "prompt": "根据结果数字唯一来源起草整篇论文并生成 Word 文件",
       "primary": "academic-publishing",
-      "companions": ["academic-humanizer", "docx"],
+      "companions": ["biostat-principles", "evidence-research", "academic-humanizer", "docx"],
       "excluded": ["manuscript-peer-review"]
+    },
+    {
+      "id": "english_full_manuscript_with_evidence",
+      "prompt": "根据已验证结果写一篇完整英文论文，先核验正文证据和适用报告规范，再输出 Markdown 稿件",
+      "primary": "academic-publishing",
+      "companions": ["biostat-principles", "evidence-research", "academic-humanizer"],
+      "excluded": ["manuscript-peer-review", "docx"],
+      "expected_action": "verify_evidence_apply_english_rules_and_write_complete_manuscript"
     },
     {
       "id": "journal_manuscript_peer_review",
@@ -102,7 +110,7 @@
       "id": "existing_manuscript_structural_rewrite",
       "prompt": "根据已验证结果和现有稿件，重新组织整篇论文的章节结构并输出新的 Word 投稿稿",
       "primary": "academic-publishing",
-      "companions": ["academic-humanizer", "docx"],
+      "companions": ["biostat-principles", "evidence-research", "academic-humanizer", "docx"],
       "excluded": ["manuscript-peer-review"],
       "expected_action": "run_structural_rewrite_workflow"
     },

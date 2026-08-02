@@ -473,7 +473,7 @@ class SkillOptimizationTests(unittest.TestCase):
         pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
         xlsx = (ROOT / "skills/xlsx/SKILL.md").read_text(encoding="utf-8")
         docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("指定 Markdown 或 Word 时只生成该载体", report)
+        self.assertIn("只生成用户指定格式的文件，不擅自附加另一种格式", report)
         self.assertIn("用户只要正文时直接返回净稿，不创建文件", report)
         self.assertIn("without making a gratuitous edit", pptx)
         self.assertIn("Verified statistical result or archival export", xlsx)

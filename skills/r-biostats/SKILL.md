@@ -15,7 +15,7 @@ description: |
 3. 从最早输入核对字段、类型、键、重复、缺失、范围和逐步样本量。
 4. 方法必须匹配 estimand、研究设计、结局类型、时间结构和抽样设计，不按包的便利性替代研究问题。
 
-只在需要时读取对应参考：
+按本轮实际方法读取对应参考。只要新增、修改或重构 R 代码，必须先读 [代码风格](references/code-style.md)，在编写过程中按其组织主线，并在运行前检查受影响脚本；这不是可跳过的格式建议。其他方法参考只在相应分析适用时读取：
 
 - 描述统计：[references/descriptive.md](references/descriptive.md)
 - 回归与诊断：[references/regression.md](references/regression.md)
@@ -23,13 +23,13 @@ description: |
 - 中介分析：[references/mediation.md](references/mediation.md)
 - Meta 分析：[references/meta.md](references/meta.md)
 - 预测模型：[references/prognostic-models.md](references/prognostic-models.md)
-- 代码风格：[references/code-style.md](references/code-style.md)
 
 统计图转 `publication-figures`；其通用绘图实现说明见 [references/visualization.md](references/visualization.md)，但正式投稿格式以目标期刊当前官方要求为准。
 
 ## 2. 实现与运行
 
 - 沿用现有包、对象命名和脚本结构；只抽取确有重复或高风险的逻辑，不为短任务过度封装。
+- 编写时保持分析主线、分节、函数边界和输出行为清楚；发现跨脚本重复工具、无意义控制台输出或把长篇论文正文写成 R 字符向量时，在本次受影响范围内按 `code-style.md` 收束后再运行。
 - 原始数据只读，处理后数据写入项目规定的结果目录。
 - 只有随机抽样、模拟、重采样、数据拆分或随机算法固定并记录种子。
 - 普通 R 包缺失时按上游依赖政策在项目隔离环境补齐；失败不得静默换包、换方法或改用 Python。
@@ -51,5 +51,6 @@ description: |
 - 原始数据未改，声明脚本已实跑且状态成功。
 - 输入行数、分析集分母、缺失与排除链可核对。
 - 估计、区间、诊断和不确定性与研究目标匹配；异常已修复或明确解释。
+- 新增或修改的 R 代码已按 `code-style.md` 完成可读性检查；主线、分节、函数边界、重复工具和运行输出均有可核对结论。仅有语法通过或全链成功不能替代这项检查。
 - 项目执行和正式发布时，`results/results.yaml`、自动运行记录、方法决定和实际使用结果的文件保持一致。
 - 局部任务只交付已经确认的产物和必要的复现说明，不补建范围外记录。

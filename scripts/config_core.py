@@ -58,6 +58,7 @@ DEPENDENCIES = {
     "epiagentkit-maintenance": {"skill-creator"},
     "academic-publishing": {
         "biostat-principles",
+        "evidence-research",
         "academic-humanizer",
         "research-visuals",
         "publication-figures",

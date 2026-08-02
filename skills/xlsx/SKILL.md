@@ -10,6 +10,13 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 
 ## All Excel files
 
+### Professional content and file checks
+
+- First identify the skill responsible for the workbook's professional content. Statistical tables use `r-biostats` and its applicable table rules; reports, schedules, or other domain content use their corresponding content skill. This skill implements and verifies the spreadsheet file; it does not redefine the analysis or writing standard.
+- Apply the content structure while building the workbook, not after formatting. A file that opens, recalculates, or looks tidy is not evidence that a statistical table, report, or other professional content is correct.
+- When a validated table model distinguishes parent rows and child levels, preserve that structure in the worksheet. Use the cell alignment's real indent setting for child levels, not leading spaces; do not expose helper fields such as `row_type` or `indent_level` as visible columns.
+- Complete the work item only after both sets of checks pass: domain assertions from the content skill, and workbook checks for values, formulas, structure, formatting, and visible display. Report a partial result if either set has not been verified.
+
 ### Fonts
 - Preserve the existing template. If none exists and the user gives no typography requirement, retain the application's ordinary default font and use sizing, weight and spacing for hierarchy.
 

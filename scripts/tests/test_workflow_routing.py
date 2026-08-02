@@ -50,6 +50,17 @@ class WorkflowRoutingTests(unittest.TestCase):
             (),
         )
         self.assertEqual(audit_research_terminology(), [])
+        self.assertEqual(
+            research_term_violations(
+                "skills/research-visuals/references/carrier-specs.md",
+                "检查网页加载体积和清晰度",
+            ),
+            (),
+        )
+        self.assertEqual(
+            research_term_violations("skills/example/SKILL.md", "调用载体 skill"),
+            ("载体",),
+        )
         rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         maintenance = (ROOT / "skills/epiagentkit-maintenance/SKILL.md").read_text(
             encoding="utf-8"
@@ -82,6 +93,10 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("必须保留的行为", maintenance)
         self.assertIn("最小变更集", maintenance)
         self.assertIn("代表性验证", maintenance)
+        self.assertIn("对照用户要求、实际产物和当时适用的规则", maintenance)
+        self.assertIn("判断最早出现问题的规则或步骤", maintenance)
+        self.assertIn("修改最早且可复用的规则或步骤", maintenance)
+        self.assertIn("完成状态不再夸大", maintenance)
         self.assertIn("sync --target all", maintenance)
         self.assertIn("doctor --target all", maintenance)
         self.assertIn("用户无需重复声明", maintenance)
@@ -167,6 +182,15 @@ class WorkflowRoutingTests(unittest.TestCase):
             "pdf",
         ):
             self.assertIn(daily_skill, global_rules, daily_skill)
+        for fragment in (
+            "把请求拆成实际工作项",
+            "一旦某项工作适用某个 skill",
+            "规范在制作过程中执行",
+            "只有通过本项内容规范和文件检查的工作项才能标为完成",
+            "项目 `README.md` 只说明运行方法、输入输出位置和阅读顺序",
+            "项目整体阶段与各项工作完成状态只在项目 `CLAUDE.md` 更新",
+        ):
+            self.assertIn(fragment, global_rules)
 
         for quality_rule in (
             "功能与读者匹配",
@@ -187,6 +211,31 @@ class WorkflowRoutingTests(unittest.TestCase):
             "待修改原图为内容核对依据",
         ):
             self.assertNotIn(conditional_detail, global_rules)
+
+    def test_code_and_table_standards_apply_during_creation(self) -> None:
+        r_skill = (ROOT / "skills/r-biostats/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        code_style = (
+            ROOT / "skills/r-biostats/references/code-style.md"
+        ).read_text(encoding="utf-8")
+        descriptive = (
+            ROOT / "skills/r-biostats/references/descriptive.md"
+        ).read_text(encoding="utf-8")
+        xlsx = (ROOT / "skills/xlsx/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("必须先读 [代码风格]", r_skill)
+        self.assertIn("在编写过程中按其组织主线", r_skill)
+        self.assertIn("同一稳定工具在多个主脚本重复出现时", code_style)
+        self.assertIn("孤立的 `[1] 0`", code_style)
+        self.assertIn("不把整篇论文或长篇报告写成数百行", code_style)
+        self.assertIn("不得仅因脚本成功执行而把代码工作项标为完成", code_style)
+        self.assertIn("默认只设置一个说明列", descriptive)
+        self.assertIn("不增加独立“分层”“水平”列", descriptive)
+        self.assertIn("单元格的真实缩进属性", descriptive)
+        self.assertIn("暴露组（N=...）", descriptive)
+        self.assertIn("Apply the content structure while building", xlsx)
+        self.assertIn("Use the cell alignment's real indent setting", xlsx)
 
     def test_epiagentkit_maintenance_contract_is_dedicated_and_portable(self) -> None:
         maintenance = (
@@ -330,7 +379,12 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "结构由研究问题、研究设计、estimand、证据关系、表图和真实篇幅决定",
             "完整初稿",
-            "目标期刊未定时可生成中性学术稿",
+            "目标期刊未定时生成内容完整、格式中性的学术稿",
+            "英文稿：[英文写作]",
+            "[英文功能表达与证据约束]",
+            "所有完整稿或论文级结构性重写：写作前用 `evidence-research`",
+            "已有核验记录时先检查来源身份、版本、适用性和时效",
+            "不是跳过适用的内容规范",
         ):
             self.assertIn(fragment, publishing)
         for fragment in (
@@ -352,6 +406,24 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不强制背景—方法—结果—结论模板", report)
         self.assertIn(
             "academic-humanizer", cases["report_prose_only"]["companions"]
+        )
+        self.assertEqual(
+            cases["english_full_manuscript_with_evidence"]["primary"],
+            "academic-publishing",
+        )
+        for case_id in (
+            "paper_from_scratch_word",
+            "english_full_manuscript_with_evidence",
+            "existing_manuscript_structural_rewrite",
+        ):
+            self.assertIn("evidence-research", cases[case_id]["companions"])
+        self.assertTrue(
+            {
+                "academic-publishing",
+                "biostat-principles",
+                "evidence-research",
+                "academic-humanizer",
+            }.issubset(expand_dependencies({"academic-publishing"}))
         )
 
         self.assertNotIn("CRGP 引言 / LOC-KD-COM", publishing)

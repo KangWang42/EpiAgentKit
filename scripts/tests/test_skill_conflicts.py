@@ -53,7 +53,7 @@ class SkillConflictTests(unittest.TestCase):
             repo = root / "repo"
             local = root / "home/.agents/skills"
             write_skill(repo / "skills", "research-visuals", "authoritative visuals")
-            write_skill(local, "legacy-visuals", "生成跨载体科研视觉资产")
+            write_skill(local, "legacy-visuals", "为论文、PPT、报告和网页生成科研视觉资产")
 
             conflicts = scan_skill_conflicts(
                 platform="codex",
