@@ -388,6 +388,8 @@ def main() -> int:
             "只读检查发现所需运行时缺失时",
             "普通 R/Python 分析包缺失时",
             "09_backup/workbench/",
+            "`02_code/` 只保存会形成正式分析数据",
+            "总分析入口只显式执行已经确认的正式分析脚本",
             "点名处仅为同类问题样例",
             "扫描工作流",
             "不只修点名处",
@@ -461,6 +463,8 @@ def main() -> int:
             "E1：一个批次保存 `PLAN.md` 和 `FINDINGS.md`",
             "E2：在 E1 基础上使用项目 `EXPERIMENTS.md`",
             "TEMP、TMP、TMPDIR",
+            "目录由文件对研究结果的实际作用决定",
+            "`run_pipeline.R|py` 只记录正式统计结果链",
             "不建立人工 `SESSION_LOG.md`",
             "不单独阻止发布",
         ),
@@ -539,8 +543,8 @@ def main() -> int:
             '"SAP.md"',
             '"09_backup/archive"',
             '"09_backup/workbench"',
-            '"02_code/config.R"',
-            '"02_code/conventions.R"',
+            '"02_code/00_setup.R"',
+            '"02_code/00_setup.py"',
             '"02_code/vendored"',
             '".epiagentkit-raw-roots"',
             '"results/runs"',
@@ -566,6 +570,8 @@ def main() -> int:
             "必须先读 [代码风格]",
             "文件与参数预检集中在总运行入口",
             "研究对象式命名",
+            "以 tidyverse 作为正式研究代码的整体默认表达方式",
+            "论文装配、长期检查和本次验收按各自职责单独运行",
             "仅有语法通过或全链成功不能替代这项检查",
         ),
         "skills/r-biostats/references/code-style.md": (
@@ -577,12 +583,17 @@ def main() -> int:
             "不要仅为证明一致而同时读取同一结果的两套重复来源",
             "孤立的 `[1] 0`",
             "不把整篇论文或长篇报告写成数百行",
+            "tidyverse 是正式研究代码的整体默认表达方式",
+            "`02_code/` 只保存正式数据处理",
+            "总分析入口没有通过通配符自动发现编号脚本",
             "不得仅因脚本成功执行而把代码工作项标为完成",
         ),
         "skills/r-biostats/references/descriptive.md": (
             "默认只设置一个说明列",
             "不增加独立“分层”“水平”列",
             "单元格的真实缩进属性",
+            "工作表第 1 行直接写列标题",
+            "不为父行、总数行或普通分组添加白色边框",
             "不得把统计表工作项标为完成",
         ),
         "skills/python-biostats/SKILL.md": (
@@ -699,6 +710,8 @@ def main() -> int:
             "Git 已存在时初始化",
             "不安装 Git",
             "不创建空的 `results/results.yaml`",
+            "先按实际职责决定位置",
+            "总运行脚本使用明确的脚本清单",
             "不创建 `SESSION_LOG.md`",
             "所选项目类型之外的目录和占位文件未创建",
             "不重复维护项目整体阶段、各项工作完成状态或已经确认的研究口径",
@@ -707,7 +720,7 @@ def main() -> int:
             "已有文本的局部润色或压缩只用 academic-humanizer",
             "单部件或局部产物",
             "不创建修订记录文件、章节目录或项目记录文件",
-            "用户明确要求时可一次生成完整稿",
+            "用户要求“生成论文”“写论文”“完成稿件”或同等含义时即进入本模式",
             "不得因通用流程强制拆成多轮审批",
             "期刊未定只影响这些格式选择",
             "审稿回复逐条直接回答审稿人提出的问题",
@@ -715,6 +728,11 @@ def main() -> int:
             "英文稿：[英文写作]",
             "所有完整稿或论文级结构性重写：写作前用 `evidence-research`",
             "已有核验记录时先检查来源身份、版本、适用性和时效",
+            "仅在用户明确要求提纲、框架、章节计划或写作路线时交付",
+            "即进入本模式，不另等用户补充“完整”二字",
+            "不得擅自降级为提纲、短版骨架或自动取数模板",
+            "与正文来源放在 `paper/`",
+            "不进入 `run_pipeline.R|py`",
             "只有上述内容检查和 `academic-humanizer` 终审均已完成",
         ),
         "skills/academic-publishing/references/section-content-playbook.md": (
@@ -790,7 +808,8 @@ def main() -> int:
         ),
         "skills/publication-figures/SKILL.md": (
             "发表级统计图、数据图",
-            "流程、机制、架构、技术路线与图形摘要转 `research-visuals`",
+            "流程、病例筛选、机制、架构、技术路线与图形摘要转 `research-visuals`",
+            "节点含有真实样本量、排除人数、日期、阈值或比例也不改变这一分流",
             "只修改一张指定的图或一个格式问题",
             "修改已有图时，先确认允许改变的数值、术语、标签、精度、注释或格式项",
             "其余布局、图形元素和视觉表达保持不变",
@@ -805,7 +824,7 @@ def main() -> int:
             "只保留一个居中短标题",
             "不自动堆到图题后",
             "图题通常只用简短名词短语",
-            "风险集、流程计数、分母或图本身要回答的评价指标",
+            "带计数的病例筛选流程仍由 `research-visuals` 处理",
             "绘图示例代码和说明资料尚未完成来源",
             "不得把它们作为方法或样式依据",
             "普通包缺失按依赖分流",
@@ -864,6 +883,9 @@ def main() -> int:
         ),
         "hooks/final_project_check.py": (
             "DEFAULT_CONTRACT",
+            '"00_setup.R"',
+            '"00_setup.py"',
+            "ignored_names=helpers",
             "project.not_directory",
             "rawdata.worktree_modified",
             "numbering_gap",
@@ -976,6 +998,8 @@ def main() -> int:
             "根据实际来源材料核对对象名称、关系、数字和结论",
             "目标宽高比来自实际图位而非参考图",
             "中文字形、圆形和方形保持自然比例",
+            "不会把结构图变成统计图",
+            "已按视觉编码而非“是否出现数字”判定证据属性",
         ),
         "skills/research-visuals/references/figure-planning.md": (
             "图件计划表",
@@ -1050,6 +1074,7 @@ def main() -> int:
             "实际运行或渲染结果",
             "宽于 16:9 的比例必须有真实横幅或整行图位依据",
             "禁止非等比缩放",
+            "病例筛选和研究流程中的真实人数、日期或阈值是结构标签",
         ),
         "skills/research-visuals/references/prompt-recipes.md": (
             "通用图件要求",
@@ -1207,6 +1232,8 @@ def main() -> int:
             "do not install it",
             "First identify the skill responsible for the workbook's professional content",
             "Use the cell alignment's real indent setting",
+            "start the worksheet at row 1 with column headers",
+            "Do not add white borders",
             "Report a partial result if either set has not been verified",
         ),
         "skills/epi-project-audit/scripts/check_consistency.py": (
@@ -1228,7 +1255,7 @@ def main() -> int:
             "epiagentkit-maintenance",
             "请把 EpiAgentKit 安装到当前 Claude Code",
             "请把 EpiAgentKit 安装到当前 Codex",
-            "releases/tag/v1.0",
+            "releases/tag/v1.1",
             "保留我现有的个人配置",
             "只在明确需要自己操作时查看命令行方式",
             "TingxiYu/academic-figure-skill",
@@ -1250,8 +1277,12 @@ def main() -> int:
             "docs/demo/generate_presentation_preview.R",
             "docs/assets/research-workflow.webp",
             "python scripts/build_release.py",
+            "$skill-creator",
+            "实际问题：",
+            "必须保留：",
+            "再新开 Codex 会话验证",
         ),
-        "docs/release-1.0-usage.md": (
+        "docs/release-1.1-usage.md": (
             "推荐交给当前 Agent 安装",
             "请把这个 EpiAgentKit release 安装到当前 Claude Code",
             "请把这个 EpiAgentKit release 安装到当前 Codex",
@@ -1338,7 +1369,7 @@ def main() -> int:
         "README.md": (
             '审查只看代码即可通过',
         ),
-        "docs/release-1.0-usage.md": (
+        "docs/release-1.1-usage.md": (
             "SHA-256",
             "Get-FileHash",
         ),
@@ -2221,6 +2252,7 @@ def main() -> int:
             "WARNING should be pruned\n", encoding="utf-8"
         )
         (good / "02_code/01_clean.R").write_text("x <- 1\n", encoding="utf-8")
+        (good / "02_code/00_setup.R").write_text("VALUE <- 1\n", encoding="utf-8")
         for helper in (
             "config.py",
             "registry.py",

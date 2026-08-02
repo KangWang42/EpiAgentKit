@@ -115,6 +115,26 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("本地操作性启发式", reference)
         self.assertIn("不使用灯泡、奖杯、火箭、脑、芯片或发光 DNA", reference)
 
+    def test_verified_counts_do_not_turn_structural_diagrams_into_statistical_plots(self) -> None:
+        visual = (ROOT / "skills/research-visuals/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        figures = (ROOT / "skills/publication-figures/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        patterns = (
+            ROOT
+            / "skills/research-visuals/references/research-figure-patterns.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("通过坐标位置、长度、面积、角度、颜色、大小", visual)
+        self.assertIn("不会把结构图变成统计图", visual)
+        self.assertIn("病例筛选", figures)
+        self.assertIn("节点含有真实样本量", figures)
+        self.assertIn("分流依据是数字承担的表达功能", patterns)
+        self.assertIn("逐字逐数逐箭头核对", patterns)
+        self.assertNotIn("任何坐标、比例、效应值、置信区间、样本量或真实数据映射", visual)
+
     def test_image_editing_uses_no_regression_contract_and_524_split(self) -> None:
         skill = ROOT / "skills" / "research-visuals"
         body = (skill / "SKILL.md").read_text(encoding="utf-8")

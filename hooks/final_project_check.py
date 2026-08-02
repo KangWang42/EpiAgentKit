@@ -22,6 +22,8 @@ CHECK_CONTRACT_FILE = ".epiagentkit-check.json"
 LAYOUT_MANIFEST = ".epiagentkit-layout.json"
 DEFAULT_CONTRACT: dict[str, Any] = {
     "code_helper_files": [
+        "00_setup.R",
+        "00_setup.py",
         "config.R",
         "config.py",
         "registry.R",
@@ -535,12 +537,15 @@ def artifact_sequence_check(
     pattern: re.Pattern[str],
     check: str,
     findings: list[dict[str, str]],
+    ignored_names: set[str] | None = None,
 ) -> None:
     if not directory.is_dir():
         return
     groups: dict[int, set[str]] = {}
     for path in directory.iterdir():
         if not path.is_file():
+            continue
+        if ignored_names and path.name.casefold() in ignored_names:
             continue
         match = pattern.match(path.name)
         if not match:
@@ -568,17 +573,25 @@ def code_check(
     project: Path, contract: dict[str, Any], findings: list[dict[str, str]]
 ) -> None:
     directory = project / "02_code"
-    artifact_sequence_check(directory, SCRIPT_PATTERN, "code", findings)
+    helpers = {name.casefold() for name in contract["code_helper_files"]}
+    artifact_sequence_check(
+        directory,
+        SCRIPT_PATTERN,
+        "code",
+        findings,
+        ignored_names=helpers,
+    )
     if not directory.is_dir():
         return
-    helpers = {name.casefold() for name in contract["code_helper_files"]}
     numbered = 0
     for path in directory.iterdir():
         if not path.is_file() or path.suffix.casefold() not in {".r", ".py"}:
             continue
+        if path.name.casefold() in helpers:
+            continue
         if SCRIPT_PATTERN.match(path.name):
             numbered += 1
-        elif path.name.casefold() not in helpers:
+        else:
             finding(findings, "INFO", "code.unnumbered_script", relative(path, project))
     if numbered > 10:
         finding(findings, "INFO", "code.too_many_numbered_scripts", Path("02_code"), str(numbered))

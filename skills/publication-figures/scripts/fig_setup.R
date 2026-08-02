@@ -20,7 +20,7 @@ suppressWarnings(suppressMessages({
 }
 PLOT_FAMILY <- .register_cn_font()   # 含中文用它；纯英文图也安全
 
-# ---- 配色：优先 conventions.R 的 PALETTE，否则 Okabe-Ito ----
+# ---- 配色：优先项目设置中的 PALETTE，否则 Okabe-Ito ----
 pub_palette <- function(n = NULL) {
   if (exists("PALETTE", inherits = TRUE)) return(get("PALETTE", inherits = TRUE))
   cols <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7",

@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 
-VERSION = "1.0"
+VERSION = "1.1"
 PACKAGE_NAME = f"EpiAgentKit-release-{VERSION}"
 INCLUDED_SKILLS = (
     "academic-humanizer",
@@ -164,7 +164,7 @@ def collect_skill_files(repo_root: Path, skill_name: str) -> list[tuple[str, Pat
 def collect_payload(repo_root: Path, source_commit: str) -> dict[str, bytes]:
     mapped_sources = {
         "CLAUDE.md": repo_root / "CLAUDE.md",
-        "README_中文.md": repo_root / "docs" / "release-1.0-usage.md",
+        "README_中文.md": repo_root / "docs" / f"release-{VERSION}-usage.md",
         "NOTICE_许可与外部依赖.md": repo_root / "docs" / "release-notice.md",
     }
     payload: dict[str, bytes] = {}

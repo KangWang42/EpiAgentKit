@@ -223,6 +223,21 @@ class WorkflowRoutingTests(unittest.TestCase):
             ROOT / "skills/r-biostats/references/descriptive.md"
         ).read_text(encoding="utf-8")
         xlsx = (ROOT / "skills/xlsx/SKILL.md").read_text(encoding="utf-8")
+        academic = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        project_hygiene = (
+            ROOT / "skills/project-init/references/project-hygiene.md"
+        ).read_text(encoding="utf-8")
+        pipeline_r = (ROOT / "skills/project-init/assets/run_pipeline.R").read_text(
+            encoding="utf-8"
+        )
+        pipeline_py = (
+            ROOT / "skills/project-init/assets/run_pipeline.py"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("必须先读 [代码风格]", r_skill)
         self.assertIn("在编写过程中按其组织主线", r_skill)
@@ -257,6 +272,24 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("暴露组（N=...）", descriptive)
         self.assertIn("Apply the content structure while building", xlsx)
         self.assertIn("Use the cell alignment's real indent setting", xlsx)
+        self.assertIn("start the worksheet at row 1 with column headers", xlsx)
+        self.assertIn("Do not add white borders", xlsx)
+        self.assertIn("tidyverse 是正式研究代码的整体默认表达方式", code_style)
+        self.assertIn("`02_code/` 只保存正式数据处理", code_style)
+        self.assertIn("与正文来源放在 `paper/`", academic)
+        self.assertIn("不进入 `run_pipeline.R|py`", academic)
+        self.assertIn("仅在用户明确要求提纲", academic)
+        self.assertIn("即进入本模式，不另等用户补充“完整”二字", academic)
+        self.assertIn("不得擅自降级为提纲、短版骨架", academic)
+        self.assertIn("先按实际职责决定位置", project_init)
+        self.assertIn("一个 `02_code/00_setup.R|py`", project_init)
+        self.assertIn("总运行脚本使用明确的脚本清单", project_init)
+        self.assertIn("目录由文件对研究结果的实际作用决定", project_hygiene)
+        self.assertIn("本次产物验收", project_hygiene)
+        self.assertIn('scripts <- c(', pipeline_r)
+        self.assertNotIn("list.files(\"02_code\"", pipeline_r)
+        self.assertIn("scripts = [", pipeline_py)
+        self.assertNotIn('.glob("[0-9][0-9]_*.py")', pipeline_py)
 
     def test_epiagentkit_maintenance_contract_is_dedicated_and_portable(self) -> None:
         maintenance = (
@@ -762,7 +795,7 @@ class WorkflowRoutingTests(unittest.TestCase):
 
     def test_release_bundle_keeps_source_archive_and_runtime_separate(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        usage = (ROOT / "docs" / "release-1.0-usage.md").read_text(
+        usage = (ROOT / "docs" / "release-1.1-usage.md").read_text(
             encoding="utf-8"
         )
         notice = (ROOT / "docs" / "release-notice.md").read_text(
@@ -775,10 +808,14 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "请把 EpiAgentKit 安装到当前 Claude Code",
             "请把 EpiAgentKit 安装到当前 Codex",
-            "releases/tag/v1.0",
+            "releases/tag/v1.1",
             "保留我现有的个人配置",
             "只在明确需要自己操作时查看命令行方式",
             "python scripts/build_release.py",
+            "$skill-creator",
+            "实际问题：",
+            "必须保留：",
+            "audit_workflow_contracts.py",
         ):
             self.assertIn(fragment, readme)
         for fragment in (
@@ -822,7 +859,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("发表级统计图、数据图", body)
-        self.assertIn("流程、机制、架构、技术路线与图形摘要转 `research-visuals`", body)
+        self.assertIn(
+            "流程、病例筛选、机制、架构、技术路线与图形摘要转 `research-visuals`",
+            body,
+        )
         self.assertIn("作图前确认", body)
         self.assertIn("默认一次只生成一张独立统计图", body)
         self.assertIn("不得为了展示能力主动拼合不同图型", body)

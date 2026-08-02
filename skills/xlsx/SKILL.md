@@ -15,6 +15,8 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 - First identify the skill responsible for the workbook's professional content. Statistical tables use `r-biostats` and its applicable table rules; reports, schedules, or other domain content use their corresponding content skill. This skill implements and verifies the spreadsheet file; it does not redefine the analysis or writing standard.
 - Apply the content structure while building the workbook, not after formatting. A file that opens, recalculates, or looks tidy is not evidence that a statistical table, report, or other professional content is correct.
 - When a validated table model distinguishes parent rows and child levels, preserve that structure in the worksheet. Use the cell alignment's real indent setting for child levels, not leading spaces; do not expose helper fields such as `row_type` or `indent_level` as visible columns.
+- When a statistical-table filename already carries its table number and stable title, start the worksheet at row 1 with column headers. Do not repeat the table title inside the sheet, merge a decorative title row, insert a spacer row, or add separator rows unless the user or an established template explicitly requires them.
+- For statistical tables, use bold headers, alignment, widths and real indentation as the neutral hierarchy. Do not add white borders, decorative rules, shaded bands or separators to parent, total or ordinary group rows when they encode no information. Place any necessary note directly after the table body without a decorative blank row.
 - Complete the work item only after both sets of checks pass: domain assertions from the content skill, and workbook checks for values, formulas, structure, formatting, and visible display. Report a partial result if either set has not been verified.
 
 ### Fonts
@@ -22,7 +24,7 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 
 ### Neutral Default Formatting
 - Unless the user or an existing template explicitly requests a visual theme, keep worksheets in the application's default neutral style: white background, black text, regular font sizes, and no decorative fills.
-- Keep titles and headers bold on white. Use alignment, spacing, freeze panes, column widths, and thin black or light-gray borders for structure.
+- Keep necessary titles and headers bold on white. Use alignment, spacing, freeze panes and column widths for structure; add thin black or light-gray borders only when they convey a real table boundary required by the content or template.
 - Do not automatically add dark header bands, reversed white-on-dark text, colored first columns, shaded total rows, zebra striping, gradients, dashboard-style blocks, or background images.
 - Apply cell fills only when the user explicitly requests them or an existing template already uses them. A light highlight for a specific exception is not permission to color the whole table.
 

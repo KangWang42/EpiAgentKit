@@ -133,7 +133,9 @@ init_project <- function(name,
       c(
         "# 统计分析计划", "", "> 状态：草案。查看主要结果前确认主要分析方法。", "",
         "## 分析目标与分析集", "", "- estimand：", "- 主要与次要假设：", "- 分析集：", "- 主要与次要终点：", "",
-        "## 数据处理", "", "- 变量定义与有序水平：见 02_code/conventions", "- 缺失数据：", "- 异常值：", "- 样本量或精度依据：", "",
+        "## 数据处理", "",
+        paste0("- 变量定义、有序水平与表图登记：见 02_code/00_setup.", if (language == "r") "R" else "py"),
+        "- 缺失数据：", "- 异常值：", "- 样本量或精度依据：", "",
         "## 统计方法", "", "- 描述统计：", "- 主要模型与效应量：", "- 调整策略：", "- 模型诊断：",
         "- 多重性：", "- 亚组、敏感性与探索边界：", "- 随机种子或切分标识：", "",
         "## 计划确认与方案偏离", "", "- 主要分析确认日期与责任人：", "- 方案偏离：见 DECISIONS.md"
@@ -184,15 +186,11 @@ init_project <- function(name,
     if (language == "r") {
       write_utf8(
         c(
+          "# 项目设置 --------------",
           "ORDERED_LEVELS <- list()", "", "PALETTE <- c(\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\")",
-          "DIGITS_EST <- 2L", "DIGITS_P <- 3L", "P_FLOOR <- 0.001"
-        ),
-        "02_code/conventions.R"
-      )
-      write_utf8(
-        c(
-          'source("02_code/conventions.R", encoding = "UTF-8")', "",
+          "DIGITS_EST <- 2L", "DIGITS_P <- 3L", "P_FLOOR <- 0.001", "",
           "TABLE_REGISTRY <- character()", "FIG_REGISTRY <- character()", "",
+          "# 表图路径 --------------",
           "table_path <- function(stem, ext = \"xlsx\") {",
           "  i <- match(stem, TABLE_REGISTRY)", "  if (is.na(i)) stop(\"未登记 table stem：\", stem)",
           "  path <- sprintf(\"03_tables/Table%d_%s.%s\", i, stem, ext)", "  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)", "  path", "}", "",
@@ -200,12 +198,12 @@ init_project <- function(name,
           "  i <- match(stem, FIG_REGISTRY)", "  if (is.na(i)) stop(\"未登记 figure stem：\", stem)",
           "  path <- sprintf(\"04_figures/Fig%d_%s.%s\", i, stem, ext)", "  dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)", "  path", "}"
         ),
-        "02_code/config.R"
+        "02_code/00_setup.R"
       )
       write_utf8(
         c(
           "# 从 01_data/rawdata/ 只读导入，核对键、类型、重复、缺失、范围和样本损失。",
-          'source("02_code/config.R", encoding = "UTF-8")',
+          'source("02_code/00_setup.R", encoding = "UTF-8")',
           'message("数据读取与核对脚本已准备；请填入已经确认的项目处理规则")'
         ),
         "02_code/01_data_cleaning.R"
@@ -219,14 +217,10 @@ init_project <- function(name,
     } else {
       write_utf8(
         c(
+          '"""Project settings, conventions, paths, and stable project helpers."""', "",
+          "from pathlib import Path", "", "ROOT = Path(__file__).resolve().parents[1]", "",
           "ORDERED_LEVELS = {}", "PALETTE = [\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\"]",
-          "DIGITS_EST = 2", "DIGITS_P = 3", "P_FLOOR = 0.001"
-        ),
-        "02_code/conventions.py"
-      )
-      write_utf8(
-        c(
-          "from pathlib import Path", "", "ROOT = Path(__file__).resolve().parents[1]",
+          "DIGITS_EST = 2", "DIGITS_P = 3", "P_FLOOR = 0.001", "",
           "TABLE_REGISTRY = []", "FIG_REGISTRY = []", "",
           "def table_path(stem, ext=\"xlsx\"):",
           "    if stem not in TABLE_REGISTRY:", "        raise KeyError(f\"未登记 table stem：{stem}\")",
@@ -237,7 +231,7 @@ init_project <- function(name,
           "    path = ROOT / \"04_figures\" / f\"Fig{FIG_REGISTRY.index(stem) + 1}_{stem}.{ext}\"",
           "    path.parent.mkdir(parents=True, exist_ok=True)", "    return path"
         ),
-        "02_code/config.py"
+        "02_code/00_setup.py"
       )
       write_utf8(
         c(

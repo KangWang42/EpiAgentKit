@@ -198,10 +198,18 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             r_project = Path(directory) / "r_demo"
             py_project = Path(directory) / "py_demo"
-            self.assertTrue((r_project / "02_code/config.R").is_file())
+            self.assertTrue((r_project / "02_code/00_setup.R").is_file())
+            self.assertFalse((r_project / "02_code/00_setup").exists())
+            self.assertFalse((r_project / "02_code/config.R").exists())
+            self.assertFalse((r_project / "02_code/conventions.R").exists())
+            self.assertFalse((r_project / "02_code/utils.R").exists())
             self.assertTrue((r_project / "02_code/vendored/emit_summary.R").is_file())
             self.assertTrue((r_project / "r_demo.Rproj").is_file())
-            self.assertTrue((py_project / "02_code/config.py").is_file())
+            self.assertTrue((py_project / "02_code/00_setup.py").is_file())
+            self.assertFalse((py_project / "02_code/00_setup").exists())
+            self.assertFalse((py_project / "02_code/config.py").exists())
+            self.assertFalse((py_project / "02_code/conventions.py").exists())
+            self.assertFalse((py_project / "02_code/utils.py").exists())
             self.assertTrue((py_project / "02_code/vendored/emit_summary.py").is_file())
             self.assertTrue((py_project / "02_code/01_data_cleaning.py").is_file())
             self.assertTrue((py_project / "paper").is_dir())
@@ -240,6 +248,13 @@ class SkillOptimizationTests(unittest.TestCase):
                 self.assertFalse(
                     any(
                         item["check"].startswith("layout.")
+                        for item in check_payload["findings"]
+                    ),
+                    check_payload["findings"],
+                )
+                self.assertFalse(
+                    any(
+                        item["check"] == "code.numbering_gap"
                         for item in check_payload["findings"]
                     ),
                     check_payload["findings"],
@@ -429,7 +444,7 @@ class SkillOptimizationTests(unittest.TestCase):
             (project / "02_code").mkdir()
             (project / "results/derived").mkdir(parents=True)
             shutil.copy2(pipeline, project / "run_pipeline.R")
-            (project / "02_code/01_verify_run_id.R").write_text(
+            (project / "02_code/01_data_cleaning.R").write_text(
                 "\n".join(
                     [
                         'run_id <- Sys.getenv("EPI_RUN_ID")',

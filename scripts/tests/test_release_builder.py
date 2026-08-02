@@ -21,6 +21,10 @@ SPEC.loader.exec_module(build_release)
 
 
 class ReleaseBuilderTests(unittest.TestCase):
+    def test_release_version_is_current(self):
+        self.assertEqual(build_release.VERSION, "1.1")
+        self.assertEqual(build_release.PACKAGE_NAME, "EpiAgentKit-release-1.1")
+
     def test_dirty_tree_requires_explicit_override(self):
         with tempfile.TemporaryDirectory() as temporary:
             with mock.patch.object(

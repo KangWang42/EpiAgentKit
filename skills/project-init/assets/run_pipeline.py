@@ -17,13 +17,20 @@ ROOT = Path(__file__).resolve().parent
 if not (ROOT / "02_code").is_dir():
     raise SystemExit("run_pipeline.py must be located and run at the project root")
 
+# List only formal analysis steps. Classify a new file by purpose before adding it.
+scripts = [
+    ROOT / "02_code" / "01_data_cleaning.py",
+]
+missing_scripts = [path.relative_to(ROOT).as_posix() for path in scripts if not path.is_file()]
+if missing_scripts:
+    raise SystemExit(f"formal analysis scripts are missing: {', '.join(missing_scripts)}")
+
 started = datetime.now().astimezone()
 run_id = f"{started.strftime('%Y%m%dT%H%M%S%z')}_{os.getpid()}"
 runs = ROOT / "results" / "runs"
 runs.mkdir(parents=True, exist_ok=True)
 log_path = runs / f"{run_id}.log"
 environment_path = runs / f"{run_id}-environment.txt"
-scripts = sorted((ROOT / "02_code").glob("[0-9][0-9]_*.py"))
 environment = dict(os.environ)
 environment["EPI_RUN_ID"] = run_id
 exit_code = 0

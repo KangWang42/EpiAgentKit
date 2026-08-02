@@ -1,6 +1,15 @@
 # Run the project R scripts in order and save an automatic run record.
 if (!dir.exists("02_code")) stop("请从项目根运行 run_pipeline.R")
 
+# 只列出正式统计分析步骤；新增脚本时先判断职责，再按研究顺序加入。
+scripts <- c(
+  "02_code/01_data_cleaning.R"
+)
+missing_scripts <- scripts[!file.exists(scripts)]
+if (length(missing_scripts)) {
+  stop("正式分析脚本缺失：", paste(missing_scripts, collapse = "，"))
+}
+
 json_escape <- function(value) {
   value <- gsub("\\\\", "\\\\\\\\", as.character(value))
   value <- gsub('"', '\\\\"', value, fixed = TRUE)
@@ -15,7 +24,6 @@ run_id <- paste0(format(started, "%Y%m%dT%H%M%S%z"), "_", Sys.getpid())
 dir.create("results/runs", recursive = TRUE, showWarnings = FALSE)
 log_path <- file.path("results/runs", paste0(run_id, ".log"))
 environment_path <- file.path("results/runs", paste0(run_id, "-environment.txt"))
-scripts <- sort(list.files("02_code", pattern = "^[0-9]{2}_.*\\.R$", full.names = TRUE))
 status <- 0L
 
 run_script <- function(script, run_id) {

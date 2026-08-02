@@ -169,15 +169,15 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 需要同时配置两端时，把“当前 Claude Code / Codex”改为“Claude Code 与 Codex”。获取仓库、选择安装目标、备份、同步和检查由 Agent 按仓库说明完成。用户不需要先处理 Git、Python、目录或复制命令。
 
-### release 1.0
+### release 1.1
 
-只需要规则和 17 个可分发 skills 时，可以把 [EpiAgentKit 1.0 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.0) 直接交给当前 Agent：
+只需要规则和 17 个可分发 skills 时，可以把 [EpiAgentKit 1.1 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1) 直接交给当前 Agent：
 
 ```text
-请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.0。保留我现有的个人配置，安装完成后检查 skills 是否可用。
+请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1。保留我现有的个人配置，安装完成后检查 skills 是否可用。
 ```
 
-release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex` 或 `~/.agents`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.0 使用说明](docs/release-1.0-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
+release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex` 或 `~/.agents`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.1 使用说明](docs/release-1.1-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
 
 <details>
 <summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
@@ -269,6 +269,23 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 
 ## 维护与贡献
 
+### 用 Codex 快速完善 skills
+
+从本仓库根目录启动 Codex，把实际失败、正确示例、必须保留的旧行为和希望改变的结果一起给出。Codex 官方支持用 `$skill-creator` 显式选择 skill 创建与更新流程；长期仓库规范放在 `AGENTS.md`，任务流程放在各 skill 的 `SKILL.md`、`references/` 和 `scripts/` 中。可直接发送：
+
+```text
+$skill-creator
+只修改当前 EpiAgentKit 仓库。先完整读取 AGENTS.md、CLAUDE.md，并使用 epiagentkit-maintenance 与 skill-creator。
+
+实际问题：<粘贴失败现象、文件位置或错误输出>
+正确结果：<说明希望得到什么，最好附一个可靠示例>
+必须保留：<列出不能被这次修改破坏的旧行为>
+
+请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。完成后运行目标组件验证、完整单元测试、audit_workflow_contracts.py、sync 和 doctor；审查完整差异后按 Conventional Commits 提交。不要 push，除非我本轮明确要求。
+```
+
+修改后若当前会话仍使用已经加载的旧 skill 内容，先运行 `python scripts/epiagentkit.py sync --target all`，再新开 Codex 会话验证。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
+
 维护本仓库时先使用 `epiagentkit-maintenance`。优化不是只增不减：先确认要保留的旧行为，再决定哪些内容重写、合并、移到专门的 reference 或脚本、删除或新增，并用新旧代表性场景共同验证。修改规则、skills、hooks 或安装器后，至少运行：
 
 ```bash
@@ -279,7 +296,7 @@ python scripts/epiagentkit.py sync --target all
 python scripts/epiagentkit.py doctor --target all
 ```
 
-维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.0/EpiAgentKit-release-1.0.zip` 及外部 SHA-256 文件。
+维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.1/EpiAgentKit-release-1.1.zip` 及外部 SHA-256 文件。
 
 行为发生变化时，还需要对受影响的 R、Python 或 Bash 脚本做语法检查和代表性实跑。详细 contributor 约定见 [`AGENTS.md`](AGENTS.md)，全局规则迁移说明见 [`docs/global-rule-migration.md`](docs/global-rule-migration.md)。
 
