@@ -237,7 +237,7 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 论文与报告 | `academic-publishing` · `academic-humanizer` · `report-writing` |
 | 汇报与交付 | `sysu-ppt` · `consulting-delivery` |
 | 项目审查 | `epi-project-audit` |
-| 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
+| 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `workflow-retrospective` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
 
 先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；非统计视觉统一使用 `research-visuals → imagegen`，只有符合该技能列明的条件时才改用 `svg-diagrams`。
 
@@ -268,6 +268,21 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 正式归档只处理已经确认的非原始文件：先用 dry-run 列出将要移动的文件，再移动到 `09_backup/archive/` 中不会覆盖旧批次的位置，同时生成 `MANIFEST.json`（文件及其哈希值清单）和 `INDEX.md`（正式归档索引）。来源、当前版本或引用关系不清时停止并请用户决定。Git 可用时可额外保留恢复历史；没有 Git 时工作流会跳过 Git，不会代为安装。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
 
 ## 维护与贡献
+
+### 从其它项目交接工作流问题
+
+在普通研究项目中发现 Agent 没有遵循规范时，可以先让 `workflow-retrospective` 根据当前会话、用户纠正和可定位产物生成 `workflow.txt`。该文件会区分事实、推断、候选调整和未知信息，重点说明现有流程为什么没有在制作或验收阶段阻止问题；它不会在信息不完整的项目中直接改写 EpiAgentKit。可直接发送：
+
+```text
+$workflow-retrospective
+根据当前会话中我已经指出的问题和能够定位的项目产物，在当前工作目录生成或更新 workflow.txt。逐项说明正确结果、实际表现、最早失效环节、现有流程没有阻止的原因、影响和证据限制。把事实、推断和候选调整分开，并写清适用工作项、触发条件、执行动作、完成证据、不适用范围和合法例外，保证脱离当前会话仍能理解。不修改正式研究产物，也不要假定你已经看到 EpiAgentKit 的完整工作流。
+```
+
+之后在 EpiAgentKit 根目录引用该文件。维护流程会重新核对完整规则和合法例外，并根据最早失效环节决定是否修改根规则、skill、reference、脚本、hook、同步器、测试或文档，而不是照抄报告建议：
+
+```text
+只修改当前 EpiAgentKit 仓库。读取 <workflow.txt 的路径>，使用 epiagentkit-maintenance 和 skill-creator 核对完整工作流。把报告作为现场证据而不是最终方案，合并同源问题，保留旧行为和合法例外，并完成能够实现要求的最小有效调整。
+```
 
 ### 用 Codex 快速完善 skills
 

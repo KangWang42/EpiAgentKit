@@ -31,6 +31,7 @@
 | PPT 或演示文件 | 先判模板来源，再用 `pptx` | 仅明确中山大学时用 `sysu-ppt`；已有文件不重复问模板来源 |
 | 咨询结果最终外发 | `biostat-principles` → `consulting-delivery` | 仅在分析完成并验证后执行 |
 | 项目质控、复核或一致性检查 | `biostat-principles` → `epi-project-audit` | 含咨询包时同时核对咨询交付规则 |
+| 当前会话中未遵循规范的问题总结 | `workflow-retrospective` | 只生成或更新 `workflow.txt`；回到 EpiAgentKit 源仓库后使用仓库维护流程 |
 | Word、PPT、Excel 或 PDF 实际读写 | `docx` / `pptx` / `xlsx` / `pdf` | 只负责文件读写、格式和显示检查，不取代内容主流程 |
 
 主流程 skill 决定步骤和验收；skill description 决定具体触发与排除边界；references 只在适用条件满足时读取，不把条件细节复制回本文件。

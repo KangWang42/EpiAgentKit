@@ -153,6 +153,12 @@ CONFLICT_DOMAINS = {
         "create or update an agent skill",
         "skill creator",
     ),
+    "workflow-retrospective": (
+        "工作流问题复盘",
+        "总结本次会话的工作流不足",
+        "生成 workflow.txt",
+        "workflow retrospective",
+    ),
     "xlsx": ("spreadsheet file", "电子表格文件", ".xlsx", ".xlsm"),
 }
 

@@ -114,6 +114,33 @@ class SkillConflictTests(unittest.TestCase):
             self.assertEqual(conflicts[0].kind, "semantic_overlap")
             self.assertEqual(conflicts[0].authority, "publication-figures")
 
+    def test_workflow_retrospective_overlap_is_detected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            local = root / "home/.agents/skills"
+            write_skill(
+                repo / "skills",
+                "workflow-retrospective",
+                "authoritative workflow review",
+            )
+            write_skill(
+                local,
+                "legacy-session-review",
+                "总结本次会话的工作流不足并生成 workflow.txt",
+            )
+
+            conflicts = scan_skill_conflicts(
+                platform="codex",
+                source_root=repo,
+                incoming={"workflow-retrospective"},
+                discovery_roots=[local],
+                target_roots=[local],
+            )
+
+            self.assertEqual(len(conflicts), 1)
+            self.assertEqual(conflicts[0].authority, "workflow-retrospective")
+
     def test_modified_same_name_is_conflict_but_identical_target_is_not(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

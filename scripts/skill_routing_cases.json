@@ -9,6 +9,20 @@
       "excluded": ["project-init", "epi-project-audit"]
     },
     {
+      "id": "session_workflow_retrospective",
+      "prompt": "我指出了本次研究工作中几处没有遵循规范的问题，请根据当前会话和可定位的项目证据解释为什么流程没有阻止，并在当前目录生成 workflow.txt，供之后维护 EpiAgentKit 参考",
+      "primary": "workflow-retrospective",
+      "companions": [],
+      "excluded": ["epiagentkit-maintenance", "epi-project-audit", "report-writing"]
+    },
+    {
+      "id": "maintain_from_workflow_report",
+      "prompt": "只修改 EpiAgentKit，读取其它项目生成的 workflow.txt，核对完整规则和合法例外后做最小且普遍有效的工作流修正",
+      "primary": "epiagentkit-maintenance",
+      "companions": ["skill-creator"],
+      "excluded": ["workflow-retrospective", "project-init", "epi-project-audit"]
+    },
+    {
       "id": "new_empty_project",
       "prompt": "在空工作区初始化一个新的队列研究项目",
       "primary": "project-init",
@@ -20,7 +34,7 @@
       "prompt": "在现有项目中开始 Cox 回归分析",
       "primary": "r-biostats",
       "companions": ["biostat-principles"],
-      "excluded": ["project-init", "python-biostats", "publication-figures", "epiagentkit-maintenance"]
+      "excluded": ["project-init", "python-biostats", "publication-figures", "epiagentkit-maintenance", "workflow-retrospective"]
     },
     {
       "id": "analysis_with_plot",

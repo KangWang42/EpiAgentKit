@@ -1,0 +1,4 @@
+interface:
+  display_name: "工作流问题复盘"
+  short_description: "从当前会话和项目证据定位工作流失效原因并生成交接报告"
+  default_prompt: "使用 $workflow-retrospective 根据当前会话中的用户纠正和项目证据生成 workflow.txt。"

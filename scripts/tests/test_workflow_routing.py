@@ -177,6 +177,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "pptx",
             "consulting-delivery",
             "epi-project-audit",
+            "workflow-retrospective",
             "docx",
             "xlsx",
             "pdf",
@@ -324,6 +325,67 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("epiagentkit-maintenance", cases["new_empty_project"]["excluded"])
         self.assertIn(
             "epiagentkit-maintenance",
+            cases["existing_project_analysis"]["excluded"],
+        )
+
+    def test_workflow_retrospective_handoff_contract(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        retrospective = (
+            ROOT / "skills" / "workflow-retrospective" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        maintenance = (
+            ROOT / "skills" / "epiagentkit-maintenance" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts" / "skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+
+        for fragment in (
+            "当前工作目录生成或更新 `workflow.txt`",
+            "为什么现有流程没有阻止",
+            "不得声称知道模型未公开的思维过程",
+            "用户确认",
+            "直接观察",
+            "可复核推断",
+            "待核验",
+            "不直接决定修改文件",
+            "根规则、skill、reference、模板、脚本、hook、同步器、测试和 README",
+            "假设接收者无法查看当前会话",
+            "谁依据什么材料，对什么对象执行什么动作",
+            "不查看原会话也能确定每条记录的对象、条件、动作、证据、完成标准和边界",
+            "除 `workflow.txt` 外没有因本项复盘产生正式项目改动",
+        ):
+            self.assertIn(fragment, retrospective)
+        self.assertIn("workflow-retrospective", global_rules)
+        self.assertIn("接收其它项目的 `workflow.txt`", maintenance)
+        self.assertIn("不预先排除能够可靠实现目标的组件", maintenance)
+        self.assertIn("不替报告作者补全含义", maintenance)
+        self.assertIn("从其它项目交接工作流问题", readme)
+        self.assertIn("保证脱离当前会话仍能理解", readme)
+        self.assertEqual(
+            cases["session_workflow_retrospective"]["primary"],
+            "workflow-retrospective",
+        )
+        self.assertIn(
+            "epiagentkit-maintenance",
+            cases["session_workflow_retrospective"]["excluded"],
+        )
+        self.assertEqual(
+            cases["maintain_from_workflow_report"]["primary"],
+            "epiagentkit-maintenance",
+        )
+        self.assertIn(
+            "workflow-retrospective",
+            cases["maintain_from_workflow_report"]["excluded"],
+        )
+        self.assertIn(
+            "workflow-retrospective",
             cases["existing_project_analysis"]["excluded"],
         )
 
