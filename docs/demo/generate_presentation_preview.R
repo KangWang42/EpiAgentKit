@@ -1,11 +1,6 @@
 #!/usr/bin/env Rscript
 
-suppressPackageStartupMessages({
-  library(grid)
-  library(png)
-  library(showtext)
-  library(sysfonts)
-})
+options(encoding = "UTF-8")
 
 file_arg <- grep("^--file=", commandArgs(), value = TRUE)
 script_path <- normalizePath(
@@ -14,137 +9,78 @@ script_path <- normalizePath(
   mustWork = TRUE
 )
 demo_dir <- dirname(script_path)
-output_dir <- file.path(demo_dir, "output")
-figure_path <- file.path(output_dir, "adjusted-survival-paper.png")
-slide_path <- file.path(output_dir, "presentation-preview.png")
+repo_root <- normalizePath(file.path(demo_dir, "..", ".."), winslash = "/")
+output_dir <- file.path(demo_dir, "output", "pptx")
+publication_dir <- file.path(demo_dir, "output", "publication-figures")
+dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-font_candidates <- Sys.glob(c(
-  "C:/Windows/Fonts/msyh.ttc",
-  "C:/Windows/Fonts/simhei.ttf",
-  "/System/Library/Fonts/PingFang.ttc",
-  "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-  "/usr/share/fonts/opentype/adobe-source-han-sans/SourceHanSansCN-Regular.otf"
-))
-bold_candidates <- Sys.glob(c(
-  "C:/Windows/Fonts/msyhbd.ttc",
-  "C:/Windows/Fonts/simhei.ttf",
-  "/System/Library/Fonts/PingFang.ttc",
-  "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
-  "/usr/share/fonts/opentype/adobe-source-han-sans/SourceHanSansCN-Bold.otf"
-))
-font_path <- font_candidates[[1]]
-bold_path <- if (length(bold_candidates) > 0) bold_candidates[[1]] else font_path
-font_add("presentation_sans", regular = font_path, bold = bold_path)
-showtext_auto()
-showtext_opts(dpi = 144)
+toolkit_path <- file.path(repo_root, "skills", "sysu-ppt", "scripts", "sysu_toolkit.R")
+template_path <- file.path(
+  repo_root,
+  "skills",
+  "sysu-ppt",
+  "assets",
+  "template-公卫学院.pptx"
+)
+survival_figure <- file.path(publication_dir, "adjusted-survival-paper.png")
+model_results_path <- file.path(publication_dir, "cox-forest-results.csv")
+output_path <- file.path(output_dir, "presentation-preview.pptx")
 
-ink <- "#172033"
-muted <- "#64748B"
-accent <- "#0F766E"
-figure <- readPNG(figure_path)
-
-draw_text <- function(
-    label,
-    x,
-    y,
-    size,
-    face = "plain",
-    colour = ink,
-    just = "left") {
-  grid.text(
-    label,
-    x = unit(x, "npc"),
-    y = unit(y, "npc"),
-    just = just,
-    gp = gpar(
-      fontfamily = "presentation_sans",
-      fontface = face,
-      fontsize = size,
-      col = colour,
-      lineheight = 1.25
-    )
-  )
+required <- c(toolkit_path, template_path, survival_figure, model_results_path)
+missing <- required[!file.exists(required)]
+if (length(missing)) {
+  stop("缺少 PPT 生成输入：", paste(missing, collapse = "；"))
 }
 
-ragg::agg_png(
-  slide_path,
-  width = 1600,
-  height = 900,
-  units = "px",
-  res = 144,
-  background = "#F7F8FA"
+source(toolkit_path)
+
+format_p_value <- function(value) {
+  ifelse(value < 0.001, "<0.001", sprintf("%.3f", value))
+}
+
+model_results <- read.csv(
+  model_results_path,
+  stringsAsFactors = FALSE,
+  check.names = FALSE,
+  fileEncoding = "UTF-8"
 )
-grid.newpage()
-grid.rect(gp = gpar(fill = "#F7F8FA", col = NA))
-grid.rect(
-  x = 0.025,
-  y = 0.5,
-  width = 0.012,
-  height = 1,
-  gp = gpar(fill = accent, col = NA)
-)
-draw_text("模拟数据", 0.06, 0.93, 8, face = "bold", colour = accent)
-draw_text(
-  "调整后无事件生存率：强化方案组持续较高",
-  0.06,
-  0.865,
-  24,
-  face = "bold"
-)
-grid.lines(
-  x = unit(c(0.06, 0.94), "npc"),
-  y = unit(c(0.805, 0.805), "npc"),
-  gp = gpar(col = "#D5DCE4", lwd = 1)
+model_table <- data.frame(
+  `模型项` = model_results$label,
+  `风险比（95% 置信区间）` = model_results$estimate_label,
+  `P 值` = format_p_value(model_results$p_value),
+  check.names = FALSE
 )
 
-draw_text("研究设计", 0.06, 0.74, 10, face = "bold", colour = muted)
-draw_text(
-  "固定模拟队列\n36 个月行政随访\n多变量 Cox 回归",
-  0.06,
-  0.695,
-  13,
-  just = c("left", "top")
+ft <- sysu_flextable(
+  model_table,
+  widths = c(4.8, 3.3, 1.2),
+  fsize = 15,
+  align = "center"
 )
-grid.roundrect(
-  x = 0.235,
-  y = 0.39,
-  width = 0.35,
-  height = 0.27,
-  r = unit(5, "mm"),
-  gp = gpar(fill = "#E8F3F1", col = NA)
+ft <- flextable::align(ft, j = 1, align = "left", part = "all")
+
+ppt <- sysu_init(template_path)
+ppt <- sysu_add_cover(
+  ppt,
+  "固定模拟队列的生存分析",
+  "多变量 Cox 回归与调整后生存曲线",
+  "演示材料",
+  "模拟数据，不构成医学证据"
 )
-draw_text("主要结果", 0.085, 0.485, 9, face = "bold", colour = accent)
-draw_text(
-  "强化方案的调整后曲线在\n整个随访期内保持较高；\n风险集与置信区间同步呈现。",
-  0.085,
-  0.445,
-  14,
-  face = "bold",
-  just = c("left", "top")
+ppt <- sysu_add_image(
+  ppt,
+  "强化方案组的调整后无事件生存率持续较高",
+  survival_figure,
+  img_w = 7.9,
+  img_h = 4.9,
+  caption = "图 1　固定模拟队列中两种治疗方案的调整后无事件生存曲线及 95% 置信区间"
 )
-draw_text(
-  "模拟结果不代表真实医学结论。",
-  0.06,
-  0.105,
-  8.5,
-  colour = muted
+ppt <- sysu_add_table(
+  ppt,
+  "强化方案与较低的无事件风险相关",
+  ft,
+  note = "数据来源：固定模拟队列的实际 Cox 回归输出；模拟结果仅用于展示可复核的分析与汇报流程。"
 )
 
-grid.roundrect(
-  x = 0.72,
-  y = 0.44,
-  width = 0.50,
-  height = 0.61,
-  r = unit(4, "mm"),
-  gp = gpar(fill = "white", col = "#D9E0E7", lwd = 0.8)
-)
-grid.raster(
-  figure,
-  x = 0.72,
-  y = 0.44,
-  width = 0.46,
-  height = 0.54,
-  interpolate = TRUE
-)
-draw_text("12", 0.94, 0.055, 7.5, colour = muted, just = "right")
-invisible(dev.off())
+sysu_save(ppt, output_path, genre = "meeting")
+message("已生成 ", normalizePath(output_path, winslash = "/"))

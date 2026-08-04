@@ -18,7 +18,7 @@ from config_core import (
     LEGACY_HOOK_MANIFEST,
     LEGACY_INSTALL_MANIFEST,
     LEGACY_SKILL_MANIFEST,
-    local_skill_excludes,
+    public_skills,
 )
 from sync_user_configs import (
     HOOK_DEFINITIONS,
@@ -77,6 +77,10 @@ RESEARCH_TERM_ALLOWLIST: dict[tuple[str, str], tuple[str, ...]] = {
         "skills/research-visuals/references/carrier-specs.md",
         "载体",
     ): ("加载体积",),
+    (
+        "skills/research-visuals/references/computer-science-visuals.md",
+        "路由",
+    ): ("条件路由", "路由操作"),
 }
 
 
@@ -112,10 +116,8 @@ def research_text_files() -> list[Path]:
             for path in docs.rglob("*")
             if path.is_file() and path.suffix in RESEARCH_TEXT_SUFFIXES
         )
-    local_excludes = local_skill_excludes(ROOT)
-    for skill_dir in (ROOT / "skills").iterdir():
-        if not skill_dir.is_dir() or skill_dir.name in local_excludes:
-            continue
+    for name in public_skills(ROOT):
+        skill_dir = ROOT / "skills" / name
         candidates.extend(
             path
             for path in skill_dir.rglob("*")
@@ -161,6 +163,8 @@ def snapshot_tree(root: Path) -> dict[str, str]:
 
 
 def run_epiagentkit(args: list[str]) -> subprocess.CompletedProcess[str]:
+    environment = os.environ.copy()
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
     return subprocess.run(
         [sys.executable, str(ROOT / "scripts/epiagentkit.py"), *args],
         cwd=ROOT,
@@ -168,6 +172,7 @@ def run_epiagentkit(args: list[str]) -> subprocess.CompletedProcess[str]:
         text=True,
         encoding="utf-8",
         errors="replace",
+        env=environment,
     )
 
 
@@ -326,6 +331,7 @@ def main() -> int:
         ),
         "CLAUDE.md": (
             "主流程 skill",
+            "academic-ppt",
             "只负责文件读写、格式和显示检查，不取代内容主流程",
             "把请求拆成实际工作项",
             "该 skill 的核心流程、明确要求读取的适用细则和完成条件必须执行",
@@ -409,6 +415,8 @@ def main() -> int:
             "Do not stop at a literal replacement or the named file",
             "After every successful commit in this repository",
             "local Claude Code and Codex installations match the committed source",
+            "pre-commit review gate",
+            "explicit approval of the current review artifacts",
         ),
         "skills/epiagentkit-maintenance/SKILL.md": (
             "观察到的缺口",
@@ -438,6 +446,16 @@ def main() -> int:
             "接收其它项目的 `workflow.txt`",
             "不预先排除能够可靠实现目标的组件",
             "不替报告作者补全含义",
+            "Skill 变更的双成果审阅门槛",
+            "至少两份可独立打开、分别验收的真实成果",
+            "review/INDEX.md",
+            "只有用户明确确认当前这组成果无误并同意提交",
+            "未获同意时保持未提交",
+            "此门槛只属于 skill 维护和提交前审阅",
+            "不得只写进当轮说明、临时提示词或审阅文档",
+            "可作为其它 skill 的候选方法",
+            "只迁移确有帮助的原则",
+            "不机械复制五段标题、字段、字数、禁止项或完整模板",
         ),
         "skills/workflow-retrospective/SKILL.md": (
             "当前工作目录生成或更新 `workflow.txt`",
@@ -679,6 +697,8 @@ def main() -> int:
             'LEGACY_SKILL_ALIASES = {"image-diagrams": "research-visuals"}',
             "effective_excludes = exclude | SYNC_EXCLUDES | local_skill_excludes(root)",
             "Local-only skills are not distributable",
+            "keep_local_rules = preserve_global_rules(root)",
+            'unmanaged_components={"rules"}',
         ),
         "scripts/skill_conflicts.py": (
             "CONFLICT_DOMAINS",
@@ -705,9 +725,13 @@ def main() -> int:
             '"python-biostats"',
             '"epiagentkit-maintenance": {"skill-creator"}',
             'LOCAL_SKILL_EXCLUDES_FILE = ".epiagentkit-local-skills"',
+            'LOCAL_RULES_PRESERVE_FILE = ".epiagentkit-preserve-global-rules"',
             'SYNC_EXCLUDES = {"python-ecg-analysis"}',
             "def local_skill_excludes(root: Path)",
-            "item.name not in excludes",
+            "def preserve_global_rules(root: Path)",
+            "def public_skills(root: Path)",
+            "def available_skills(root: Path)",
+            "item.name not in SYNC_EXCLUDES",
         ),
         "scripts/skill_routing_cases.json": (
             "readme_content_diagram",
@@ -751,15 +775,33 @@ def main() -> int:
             "仅在用户明确要求提纲、框架、章节计划或写作路线时交付",
             "即进入本模式，不另等用户补充“完整”二字",
             "不得擅自降级为提纲、短版骨架或自动取数模板",
+            "不得用一两句或几十字的短段代替方法细节",
             "与正文来源放在 `paper/`",
             "不进入 `run_pipeline.R|py`",
+            "默认按章节与段落的逻辑顺序连续单栏写作",
+            "不为模拟期刊出版外观自动使用双栏",
+            "目标期刊明确要求初投使用双栏",
+            "排版终稿或 camera-ready 文件",
+            "仍保持文档正文顺序连续",
+            "所有单元格保持白底",
+            "只保留表顶线、表头下分隔线和表底线",
+            "不得为模拟出版外观添加彩色表头、隔行底色或卡片式表格",
             "只有上述内容检查和 `academic-humanizer` 终审均已完成",
         ),
         "skills/academic-publishing/references/section-content-playbook.md": (
             "自动摘要和拼装脚本只负责提供可核对数字或装配文件",
+            "完整稿的正文段落应构成完整论证单元",
+            "不得把一个完整论证拆成多个只有一两句的小段",
             "章节标题存在不等于章节完成",
             "判为部分草稿",
             "目标期刊未定时仍按研究设计和现有证据完成中性全文",
+        ),
+        "skills/academic-publishing/references/chinese-paper.md": (
+            "约 180–450 个中文字符",
+            "少于约 150 个中文字符或只有一两句的段落必须逐段复核",
+            "不作为凑字数指标",
+            "不为制造层级把一个完整方法或讨论拆成多个短块",
+            "数据表使用白底三线表",
         ),
         "skills/academic-humanizer/references/revision-workflow.md": (
             "单个引用序号",
@@ -796,11 +838,44 @@ def main() -> int:
             "--allow-insert-after",
             "single local DOCX change does not require",
         ),
+        "skills/academic-ppt/SKILL.md": (
+            "用户提供的 `.pptx` / `.potx`",
+            "meeting-and-journal-club.md",
+            "proposal-and-defense.md",
+            "不编造数据、结果、引文",
+            "实质内容页只保留一个标题区",
+            "Windows 优先使用已安装的 Microsoft PowerPoint",
+            "LibreOffice 只在已存在时作为备选",
+            "视觉验收未完成",
+        ),
+        "skills/academic-ppt/references/meeting-and-journal-club.md": (
+            "封面后直接进入第一张实质内容页",
+            "不生成目录、Agenda",
+            "项目进展组会",
+            "文献分享",
+            "方法讲解",
+        ),
+        "skills/academic-ppt/references/proposal-and-defense.md": (
+            "开题稿不生成未存在的前期结果",
+            "中期稿分开预设方案",
+            "正式汇报可在时长、模板或评审要求确有需要时使用目录",
+            "答辩稿的每个结论都指向已显示的结果",
+        ),
         "skills/pptx/SKILL.md": (
             "only when a presentation file is an input or deliverable",
             "Do not trigger for discussion of a talk without file work",
-            "If any item is unavailable, explain the missing prerequisite",
+            "If any item is unavailable, explain the affected operation",
             "do not install or upgrade it",
+            "prefer Microsoft PowerPoint",
+            "LibreOffice (`soffice`) is an optional renderer only",
+            "visual QA remains incomplete",
+        ),
+        "skills/pptx/scripts/render_slides.ps1": (
+            "Get-Process -Name POWERPNT",
+            "OutputDir must be absent or empty",
+            "Presentations.Open",
+            'Export($outputPath, "PNG"',
+            "ReleaseComObject",
         ),
         "skills/pptx/pptxgenjs.md": (
             "Prerequisites:",
@@ -962,18 +1037,19 @@ def main() -> int:
             '_emit_notice.py"',
         ),
         "skills/svg-diagrams/SKILL.md": (
-            "改用 SVG 的条件",
+            "使用 SVG 的条件",
             "当前可见 skills 清单没有 `research-visuals`",
             "HTTP 524 按 `research-visuals` 保留原图并停止",
             "连续两次 HTTP 524",
-            "已经提供有用参考图但尚未尝试",
-            "对待修改原图完成必要的定向修改、使用已经提供且确有帮助的可选参考图",
+            "已有修改结果不准确或不好看",
+            "目标格式强制矢量",
+            "不切换 SVG",
             "序号与标题第一行垂直居中对齐",
             "包含关系图",
             "SVG XML 有效",
             "README 与技术文档",
             "模板必须保留的比例、品牌、字体、色彩、安全区",
-            "改用 SVG 的具体原因",
+            "使用 SVG 的合法原因",
         ),
         "skills/research-visuals/SKILL.md": (
             "Codex 使用当前会话提供的内置 `imagegen` 技能和 `image_gen` 工具",
@@ -989,11 +1065,12 @@ def main() -> int:
             "事实与语义忠实度",
             "必须保持的文字、数字、公式",
             "可以调整的版式、间距",
-            "不得添加、删除、纠正、推断或合并的内容",
+            "不得添加、删除、纠正、推断、合并、替换或简化的内容",
             "可选参考图",
             "不存在有用参考图时直接省略",
-            "SVG 仅在明确要求矢量图、当前没有可用图像生成工具",
+            "只有 imagegen 实际不可用、用户明确要求 SVG/矢量源",
             "不计入两轮内容修改",
+            "第二次成功修改后已保存当前结果",
             "科研感必须来自真实主题和关系",
             "网页、README 和技术文档图片已检查窄屏显示",
             "不得用 Python、PPT 文本框、Word 文本框或 SVG 覆盖层",
@@ -1003,7 +1080,7 @@ def main() -> int:
             "references/external/SOURCE.md",
             "制定图件计划",
             "逐项写明每张候选图的来源、独立作用和采用理由",
-            "所有需要附带的图片均有本地路径时使用 `referenced_image_paths`",
+            "所有目标图片都有本地路径时传入这些路径",
             "最小 `num_last_images_to_include`",
             "diagram-iconography.md",
             "不得从中推断正式图号",
@@ -1011,6 +1088,13 @@ def main() -> int:
             "references/scenario-playbook.md",
             "正文内容图/真实截图/氛围插图",
             "真实界面与成果截图",
+            "构造最小提示词包",
+            "规划表不得整段粘给 imagegen",
+            "USE`、`CONTENT LOCK`、`GRAPH OR LAYOUT`、`VISUAL DIRECTION`、`CONSTRAINTS",
+            "紧凑邻接表",
+            "汇聚拆成多条有向边",
+            "每轮编辑只设一个可观察修改目标",
+            "不承诺提示词能保证 imagegen 完美遵循",
             "模板迫使流程变成卡片墙",
             "不得把“网页图默认无字”泛化到正文内容图",
             "删除后会造成对象、关系、条件、关键状态或核心结论误读",
@@ -1020,12 +1104,39 @@ def main() -> int:
             "中文字形、圆形和方形保持自然比例",
             "不会把结构图变成统计图",
             "已按视觉编码而非“是否出现数字”判定证据属性",
+            "references/computer-science-visuals.md",
+            "成果数量、覆盖范围和使用位置服从用户当前请求",
+            "不擅自增加近似版本",
+            "内容来源图",
+            "不附带内容来源图",
+            "表现身份",
+            "非目标文字、结构、图元、表示类型、裁切或已认可质量",
+        ),
+        "skills/research-visuals/references/computer-science-visuals.md": (
+            "数据表示、算法步骤、模型模块、张量变换",
+            "医学人工智能、数字健康、生物信息学等混合图逐部分判定",
+            "训练与推理",
+            "残差或跳连",
+            "软件、数据或基础设施系统",
+            "成果数量服从用户请求和实际使用位置",
+            "无通用 AI 脑、芯片、机器人、代码雨、全息屏",
+            "架构沟通图保留全部关键模块和连接",
+            "算子审计图保留精确张量",
+            "只保留一个简短标题",
+            "不得再加副标题",
+            "轻量浮层方法图",
+            "不继承固定字体、固定圆角、固定阴影",
+            "不得把整表追加到 imagegen 提示词末尾",
+            "紧凑邻接表",
+            "纯色矩阵与特征图",
+            "无渐变、无白雾、无中心高光",
+            "真实遥感时相图",
         ),
         "skills/research-visuals/references/figure-planning.md": (
             "图件计划表",
             "图前说明",
             "参考图解构与编辑目标",
-            "根据原图修改的要求",
+            "根据原图修改或按内容重构的要求",
             "| 待修改原图 |",
             "第一次 HTTP 524",
             "四轮终检",
@@ -1044,6 +1155,9 @@ def main() -> int:
             "真实 UI、终端、代码、文档和成果示例",
             "删除测试",
             "由多个子图组成的图件",
+            "这是来源与验收工作表，不得原样粘贴给 imagegen",
+            "同一 ID 和同一边只写一次",
+            "不能据此承诺 imagegen 完美遵循",
         ),
         "skills/research-visuals/references/external/SOURCE.md": (
             "只读上游快照",
@@ -1054,6 +1168,14 @@ def main() -> int:
             "6d84103d20c43dbf46c97f0aea99867bd7675599885901390860da35a9033e47",
             "不执行固定配色确认",
             "附带全部且仅必要的待修改图片",
+            "academic-figure-prompt-pastel/SKILL.md",
+            "4d903f9",
+            "不得直接执行上游 pastel skill",
+            "不作为科学内容或精度样例",
+            "GPT Image Generation Models Prompting Guide",
+            "https://learn.chatgpt.com/docs/image-generation",
+            "长提示词可以工作",
+            "五段最小包",
         ),
         "skills/research-visuals/references/external/academic-figure-skill/figure-contract.md": (
             "The Five-Point Contract",
@@ -1078,6 +1200,12 @@ def main() -> int:
             "真实截图",
             "系列一致性",
             "生成式痕迹审查",
+            "表面系统",
+            "区域分隔",
+            "颜色落点",
+            "容器深度",
+            "密度节奏",
+            "轻量浮层、柔和彩色表示或不对称分区只是可选组合",
             "https://platform.openai.com/docs/guides/image-generation",
             "https://www.w3.org/WAI/tutorials/images/",
         ),
@@ -1090,6 +1218,10 @@ def main() -> int:
             "网页",
             "响应式图片资源",
             "README 与技术文档",
+            "像素、最终尺寸与 DPI 合同",
+            "像素 = 毫米 ÷ 25.4 × ppi",
+            "不能把元数据当作像素充分性的替代",
+            "不得通过插值放大后声称原生达到 300 dpi",
             "Skill 示例至少回答",
             "实际运行或渲染结果",
             "宽于 16:9 的比例必须有真实横幅或整行图位依据",
@@ -1109,12 +1241,17 @@ def main() -> int:
             "external/SOURCE.md",
             "Edit the attached target image",
             "每个最终提示词只保留三条永久约束",
-            "相同约束只出现一次",
+            "相同事实、节点、关系和约束只出现一次",
             "图类专属质量指标",
             "Use the attached target image to verify the edit",
             "Optional reference image: use only when it has already been provided",
-            "已经提供且确有帮助的参考图应在改用 SVG 前尝试",
+            "表现身份漂移，包括写实/示意类型",
+            "不得据此改用 SVG",
             "Use case: high-fidelity scientific-figure edit",
+            "内容来源图重构模板",
+            "do not attach or imitate it",
+            "Figure title:",
+            "Raster resolution contract:",
             "Structure inventory",
             "merges or branches",
             "ambiguous source text must be copied, never guessed",
@@ -1131,6 +1268,16 @@ def main() -> int:
             "Confirmed edit target:",
             "Instance-only facts:",
             "Carrier-managed text:",
+            "Aesthetic system:",
+            "图外规划",
+            "实际调用提示词",
+            "USE → CONTENT LOCK → GRAPH OR LAYOUT → VISUAL DIRECTION → CONSTRAINTS",
+            'NODES: input="<label>"',
+            "EDGES: input>M00; M00>M01; M01>output",
+            "M06>M12; M11>M12",
+            "不能保证生成式模型完美复现生产级密集文字与拓扑",
+            "同一轮不得同时要求",
+            "容器是否过深",
             "README 或技术文档正文内容图",
             "真实截图与成果预览",
             "Template requirements:",
@@ -1138,7 +1285,7 @@ def main() -> int:
             "do not give every node a subtitle",
             "textless decorative illustration",
             "Geometry and typography:",
-            "regular-width CJK typography",
+            "regular-width CJK glyphs",
             "canvas aspect ratio",
         ),
         "skills/research-visuals/references/scenario-playbook.md": (
@@ -1284,23 +1431,23 @@ def main() -> int:
             "没有引入其正式运行脚本、示例图片或第三方 API 配置",
             "docs/assets/epiagentkit-hero.webp",
             "docs/assets/platform-architecture.webp",
-            "docs/demo/output/adjusted-survival.png",
-            "docs/demo/output/adjusted-survival-mobile.png",
-            "docs/demo/output/adjusted-survival.pdf",
+            "docs/showcase/composites/publication-figures.png",
+            "docs/demo/output/publication-figures/adjusted-survival.pdf",
+            "docs/demo/output/publication-figures/cox-forest.pdf",
             "docs/demo/generate_survival_demo.R",
             "docs/demo/survival-demo-data.csv",
-            "docs/demo/output/survival-demo-results.csv",
-            "docs/demo/output/manuscript-preview.png",
-            "docs/demo/output/manuscript-preview.docx",
+            "docs/demo/output/publication-figures/survival-demo-results.csv",
+            "docs/showcase/composites/manuscripts.png",
+            "docs/demo/output/academic-publishing/manuscript-preview-zh.docx",
+            "docs/demo/output/academic-publishing/manuscript-preview-en.docx",
             "docs/demo/generate_manuscript_preview.py",
-            "docs/demo/output/presentation-preview.png",
-            "docs/demo/generate_presentation_preview.R",
+            "docs/showcase/composites/research-visuals.png",
             "docs/assets/research-workflow.webp",
             "python scripts/build_release.py",
             "$skill-creator",
             "实际问题：",
             "必须保留：",
-            "再新开 Codex 会话验证",
+            "并新开 Codex 会话验证已安装的新 skill",
         ),
         "docs/release-1.1-usage.md": (
             "推荐交给当前 Agent 安装",
@@ -1374,6 +1521,7 @@ def main() -> int:
         "AGENTS.md": ("commit and normally push",),
         "CLAUDE.md": (
             "提交并正常推送",
+            "sysu-ppt",
             "<EpiAgentKit仓库>/scripts/epiagentkit.py check-project",
             "\u95e8\u7981",
             "\u6273\u673a",
@@ -1673,6 +1821,20 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="epiagentkit_install_audit_") as directory:
         home = Path(directory)
+        test_repo = home / "source-repo"
+        (test_repo / "skills").mkdir(parents=True)
+        for name in ("CLAUDE.md", "AGENTS.md"):
+            shutil.copy2(ROOT / name, test_repo / name)
+        shutil.copytree(
+            ROOT / "scripts",
+            test_repo / "scripts",
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+        )
+        shutil.copytree(ROOT / "hooks", test_repo / "hooks")
+        shutil.copytree(
+            ROOT / "skills" / "academic-humanizer",
+            test_repo / "skills" / "academic-humanizer",
+        )
         (home / ".epiclaude").mkdir()
         (home / ".epiclaude/state").write_text("legacy\n", encoding="utf-8")
         for platform, config_name in ((".claude", "settings.json"), (".codex", "hooks.json")):
@@ -1736,6 +1898,8 @@ def main() -> int:
             "--with-rules",
             "--with-hooks",
             "--yes",
+            "--repo-root",
+            str(test_repo),
             "--home",
             str(home),
         ]
@@ -1759,6 +1923,8 @@ def main() -> int:
                 "codex",
                 "--components",
                 "skills",
+                "--repo-root",
+                str(test_repo),
                 "--home",
                 str(home),
                 "--codex-layout",
@@ -1863,6 +2029,8 @@ def main() -> int:
                     "doctor",
                     "--target",
                     "all",
+                    "--repo-root",
+                    str(test_repo),
                     "--home",
                     str(home),
                     "--json",
@@ -1892,7 +2060,16 @@ def main() -> int:
                 compatibility / "academic-humanizer",
             )
             duplicate_doctor = run_epiagentkit(
-                ["doctor", "--target", "codex", "--home", str(home), "--json"]
+                [
+                    "doctor",
+                    "--target",
+                    "codex",
+                    "--repo-root",
+                    str(test_repo),
+                    "--home",
+                    str(home),
+                    "--json",
+                ]
             )
             try:
                 duplicate_payload = json.loads(duplicate_doctor.stdout)

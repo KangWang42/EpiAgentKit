@@ -5,6 +5,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 
@@ -14,12 +16,15 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from config_core import (
+    LOCAL_RULES_PRESERVE_FILE,
     LOCAL_SKILL_EXCLUDES_FILE,
     SKILL_MANIFEST,
     SYNC_EXCLUDES,
     available_skills,
     expand_dependencies,
     local_skill_excludes,
+    preserve_global_rules,
+    public_skills,
 )
 from sync_user_configs import source_skills, sync_skills
 from audit_workflow_contracts import (
@@ -76,6 +81,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("def configure_utf8_output()", audit)
         self.assertIn('reconfigure(encoding="utf-8", errors="replace")', audit)
         self.assertIn('os.environ["PYTHONIOENCODING"] = "utf-8"', audit)
+        self.assertIn("for name in public_skills(ROOT):", audit)
+        self.assertNotIn("local_skill_excludes(ROOT)", audit)
         self.assertIn("configure_utf8_output()\n    raise SystemExit(main())", audit)
 
     def test_skill_maintenance_contract_is_regression_safe(self) -> None:
@@ -87,6 +94,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         creator = (ROOT / "skills/skill-creator/SKILL.md").read_text(
             encoding="utf-8"
         )
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("regression-safe optimization", repo_rules)
         self.assertIn("观察到的缺口", maintenance)
@@ -100,6 +108,18 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("sync --target all", maintenance)
         self.assertIn("doctor --target all", maintenance)
         self.assertIn("用户无需重复声明", maintenance)
+        self.assertIn("Skill 变更的双成果审阅门槛", maintenance)
+        self.assertIn("至少两份可独立打开、分别验收的真实成果", maintenance)
+        self.assertIn("验证日志、validator 成功和测试通过只能作为证据", maintenance)
+        self.assertIn("只有用户明确确认当前这组成果无误并同意提交", maintenance)
+        self.assertIn("此门槛只属于 skill 维护和提交前审阅", maintenance)
+        self.assertIn("不得只写进当轮说明、临时提示词或审阅文档", maintenance)
+        self.assertIn("可作为其它 skill 的候选方法", maintenance)
+        self.assertIn("只迁移确有帮助的原则", maintenance)
+        self.assertIn("不机械复制五段标题、字段、字数、禁止项或完整模板", maintenance)
+        self.assertIn("pre-commit review gate", repo_rules)
+        self.assertIn("至少两份可独立打开、要求不同且分别合格的验收成果", readme)
+        self.assertIn("明确确认当前成果前不要 commit、sync 或 doctor", readme)
         self.assertIn("Every request to add, revise, repair, rename or remove a skill", repo_rules)
         self.assertIn("Get-Content -Encoding utf8", repo_rules)
         self.assertIn("Treat mojibake as a failed read", repo_rules)
@@ -318,6 +338,8 @@ class WorkflowRoutingTests(unittest.TestCase):
             "每次提交成功后自动运行",
             "已提交源文件一致",
             "普通研究项目的数据分析、写作或项目初始化不触发本 skill",
+            "review/INDEX.md",
+            "未获同意时保持未提交",
         ):
             self.assertIn(fragment, maintenance)
         self.assertIn("maintain_epiagentkit_contracts", routing)
@@ -418,6 +440,9 @@ class WorkflowRoutingTests(unittest.TestCase):
 
     def test_presentation_template_source_is_routed_before_creation(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        academic = (ROOT / "skills/academic-ppt/SKILL.md").read_text(
+            encoding="utf-8"
+        )
         pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
         sysu = (ROOT / "skills/sysu-ppt/SKILL.md").read_text(encoding="utf-8")
         cases = {
@@ -429,16 +454,23 @@ class WorkflowRoutingTests(unittest.TestCase):
             )["cases"]
         }
 
-        self.assertIn("先判模板来源", global_rules)
+        self.assertIn("先判模板来源，再用 `academic-ppt`", global_rules)
+        self.assertNotIn("sysu-ppt", global_rules)
+        self.assertIn("组会、文献分享、方法讲解、开题、中期和答辩", academic)
+        self.assertIn("用户提供的 `.pptx` / `.potx`", academic)
+        self.assertIn("meeting-and-journal-club.md", academic)
+        self.assertIn("proposal-and-defense.md", academic)
         self.assertIn("Template Routing Gate", pptx)
         self.assertIn("中大官方模板、其他学校/机构或特定汇报类型", pptx)
-        self.assertIn("Load any matching presentation-content workflow or reference", pptx)
+        self.assertIn("load `academic-ppt` as the content workflow", pptx)
         self.assertIn("Use the template-editing workflow, not the from-scratch workflow", pptx)
+        self.assertIn("prefer Microsoft PowerPoint", pptx)
+        self.assertIn("LibreOffice (`soffice`) is an optional renderer only", pptx)
         self.assertIn("不得把未说明学校的通用 PPT 自动套成中大模板", sysu)
         self.assertIn("绕过 `sysu_init()`", sysu)
         self.assertEqual(
             cases["generic_presentation_template_unspecified"]["primary"],
-            "pptx",
+            "academic-ppt",
         )
         self.assertEqual(
             cases["generic_presentation_template_unspecified"]["expected_action"],
@@ -452,6 +484,37 @@ class WorkflowRoutingTests(unittest.TestCase):
             cases["sysu_presentation_file"]["primary"],
             "sysu-ppt",
         )
+        self.assertEqual(
+            cases["existing_presentation_bounded_edit"]["primary"],
+            "pptx",
+        )
+        self.assertIn(
+            "academic-ppt",
+            cases["existing_presentation_bounded_edit"]["excluded"],
+        )
+
+    def test_academic_ppt_genres_keep_distinct_structures(self) -> None:
+        meeting = (
+            ROOT / "skills/academic-ppt/references/meeting-and-journal-club.md"
+        ).read_text(encoding="utf-8")
+        defense = (
+            ROOT / "skills/academic-ppt/references/proposal-and-defense.md"
+        ).read_text(encoding="utf-8")
+        for fragment in (
+            "封面后直接进入第一张实质内容页",
+            "不生成目录、Agenda",
+            "已完成",
+            "需要讨论",
+        ):
+            self.assertIn(fragment, meeting)
+        for fragment in (
+            "开题",
+            "中期",
+            "预答辩/答辩",
+            "开题稿不生成未存在的前期结果",
+            "正式汇报可在时长、模板或评审要求确有需要时使用目录",
+        ):
+            self.assertIn(fragment, defense)
 
     def test_papers_and_reports_use_content_driven_editorial_review(self) -> None:
         publishing = (
@@ -501,6 +564,15 @@ class WorkflowRoutingTests(unittest.TestCase):
             "所有完整稿或论文级结构性重写：写作前用 `evidence-research`",
             "已有核验记录时先检查来源身份、版本、适用性和时效",
             "不是跳过适用的内容规范",
+            "不得用一两句或几十字的短段代替方法细节",
+            "连续单栏写作",
+            "不为模拟期刊出版外观自动使用双栏",
+            "目标期刊明确要求初投使用双栏",
+            "排版终稿或 camera-ready 文件",
+            "仍保持文档正文顺序连续",
+            "所有单元格保持白底",
+            "只保留表顶线、表头下分隔线和表底线",
+            "不得为模拟出版外观添加彩色表头、隔行底色或卡片式表格",
         ):
             self.assertIn(fragment, publishing)
         for fragment in (
@@ -508,9 +580,17 @@ class WorkflowRoutingTests(unittest.TestCase):
             "不要以固定“总判断",
             "不得通过措辞隐藏",
             "不要求固定五块、七段",
+            "完整稿的正文段落应构成完整论证单元",
         ):
             self.assertIn(fragment, playbook)
         self.assertIn("不要求恰好四段", chinese_paper)
+        self.assertIn("约 180–450 个中文字符", chinese_paper)
+        self.assertIn("不作为凑字数指标", chinese_paper)
+        self.assertIn(
+            "少于约 150 个中文字符或只有一两句的段落必须逐段复核",
+            chinese_paper,
+        )
+        self.assertIn("数据表使用白底三线表", chinese_paper)
         self.assertIn("不设置通用页数、字数、章节数", chinese_thesis)
         self.assertIn("do not require four paragraphs", english)
         self.assertIn("Do not begin from a stock sentence", phrasebank)
@@ -767,6 +847,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         name = "python-ecg-analysis"
         self.assertIn(name, SYNC_EXCLUDES)
         self.assertTrue((ROOT / "skills" / name / "SKILL.md").is_file())
+        self.assertNotIn(name, public_skills(ROOT))
         self.assertNotIn(name, available_skills(ROOT))
         self.assertNotIn(name, source_skills(ROOT, set()))
         self.assertNotIn(name, global_rules)
@@ -788,8 +869,53 @@ class WorkflowRoutingTests(unittest.TestCase):
             )
 
             self.assertEqual(local_skill_excludes(repo), {"private-skill"})
+            self.assertEqual(public_skills(repo), ["alpha", "private-skill"])
             self.assertEqual(available_skills(repo), ["alpha"])
             self.assertEqual(set(source_skills(repo, set())), {"alpha"})
+
+    def test_machine_local_rule_flag_preserves_global_rules(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            repo = base / "repo"
+            home = base / "home"
+            (repo / "skills").mkdir(parents=True)
+            (repo / "hooks").mkdir()
+            (repo / "CLAUDE.md").write_text("public rules\n", encoding="utf-8")
+            (repo / LOCAL_RULES_PRESERVE_FILE).write_text("\n", encoding="utf-8")
+            global_rules = home / ".claude" / "CLAUDE.md"
+            global_rules.parent.mkdir(parents=True)
+            global_rules.write_text("personal sysu rules\n", encoding="utf-8")
+
+            self.assertTrue(preserve_global_rules(repo))
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts/sync_user_configs.py"),
+                    "--target",
+                    "claude",
+                    "--repo-root",
+                    str(repo),
+                    "--home",
+                    str(home),
+                    "--components",
+                    "rules",
+                ],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+            self.assertEqual(
+                global_rules.read_text(encoding="utf-8"), "personal sysu rules\n"
+            )
+            manifest = json.loads(
+                (home / ".claude" / ".epiagentkit-install.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertNotIn("rules", manifest["components"])
 
     def test_local_only_skills_cannot_be_explicitly_synchronized(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -847,13 +973,83 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("写论文与投稿材料", body)
         self.assertIn("全项目质量审查", body)
         self.assertIn("项目能做到什么", body)
-        self.assertIn("docs/demo/output/adjusted-survival.png", body)
-        self.assertIn("docs/demo/output/manuscript-preview.docx", body)
-        self.assertIn("docs/demo/output/presentation-preview.png", body)
+        self.assertIn("docs/showcase/composites/publication-figures.png", body)
+        self.assertIn(
+            "docs/demo/output/academic-publishing/manuscript-preview-zh.docx",
+            body,
+        )
+        self.assertIn("docs/showcase/composites/manuscripts.png", body)
         self.assertIn("docs/assets/research-workflow.webp", body)
         self.assertNotIn("一次性生成全文", body)
         self.assertNotIn('审查只看代码即可通过', body)
         self.assertNotIn("forest-plot", body)
+
+    def test_manuscript_showcases_use_clean_three_line_tables(self) -> None:
+        generator = (
+            ROOT / "docs" / "demo" / "generate_manuscript_preview.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("set_three_line_table_borders", generator)
+        self.assertNotIn('table.style = "Table Grid"', generator)
+        self.assertNotIn("shade_cell", generator)
+
+        namespace = {
+            "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        }
+        for name in ("manuscript-preview-zh.docx", "manuscript-preview-en.docx"):
+            path = (
+                ROOT
+                / "docs"
+                / "demo"
+                / "output"
+                / "academic-publishing"
+                / name
+            )
+            with zipfile.ZipFile(path) as package:
+                document = ET.fromstring(package.read("word/document.xml"))
+            tables = document.findall(".//w:tbl", namespace)
+            self.assertTrue(tables, name)
+            for table in tables:
+                rows = table.findall("./w:tr", namespace)
+                self.assertGreaterEqual(len(rows), 2, name)
+                for row_index, row in enumerate(rows):
+                    for cell in row.findall("./w:tc", namespace):
+                        shading = cell.find("./w:tcPr/w:shd", namespace)
+                        if shading is not None:
+                            fill = shading.get(
+                                f"{{{namespace['w']}}}fill", "auto"
+                            )
+                            self.assertIn(fill.upper(), {"AUTO", "FFFFFF"}, name)
+                        borders = cell.find(
+                            "./w:tcPr/w:tcBorders", namespace
+                        )
+                        self.assertIsNotNone(borders, name)
+                        values = {
+                            edge: borders.find(
+                                f"./w:{edge}", namespace
+                            ).get(f"{{{namespace['w']}}}val")
+                            for edge in (
+                                "top",
+                                "bottom",
+                                "left",
+                                "right",
+                                "insideH",
+                                "insideV",
+                            )
+                        }
+                        self.assertEqual(values["left"], "nil", name)
+                        self.assertEqual(values["right"], "nil", name)
+                        self.assertEqual(values["insideH"], "nil", name)
+                        self.assertEqual(values["insideV"], "nil", name)
+                        expected_top = "single" if row_index == 0 else "nil"
+                        self.assertEqual(values["top"], expected_top, name)
+                        expected_bottom = (
+                            "single"
+                            if row_index in {0, len(rows) - 1}
+                            else "nil"
+                        )
+                        self.assertEqual(
+                            values["bottom"], expected_bottom, name
+                        )
 
     def test_release_bundle_keeps_source_archive_and_runtime_separate(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -899,6 +1095,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertNotIn("Get-FileHash", usage)
         for fragment in (
             "docx",
+            "academic-ppt",
             "sysu-ppt",
             "epiagentkit-maintenance",
             "recipes_common_50",
@@ -976,7 +1173,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         manuscript_demo = (
             ROOT / "docs" / "demo" / "generate_manuscript_preview.py"
         ).read_text(encoding="utf-8")
-        self.assertIn("图 1　不同治疗方案的调整后无事件生存曲线", manuscript_demo)
+        self.assertIn("图 1　两种治疗方案的调整后无事件生存曲线", manuscript_demo)
         self.assertNotIn("曲线由多变量 Cox 比例风险模型估计", manuscript_demo)
         self.assertNotIn("科研工作流", manuscript_demo)
 

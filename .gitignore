@@ -11,6 +11,9 @@
 !/scripts/
 !/docs/
 
+# 私密学习资料和用户模板不进入公开仓库
+/docs/temple/
+
 # 通用排除
 __pycache__/
 *.pyc

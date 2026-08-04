@@ -28,6 +28,7 @@ from config_core import (
     csv_values,
     load_json,
     local_skill_excludes,
+    preserve_global_rules,
     resolve_codex_skill_dirs,
 )
 from hook_conflicts import reconcile_hook_conflicts
@@ -502,6 +503,7 @@ def update_install_manifest(
     components: set[str],
     skill_dirs: list[Path],
     dry_run: bool,
+    unmanaged_components: set[str] | None = None,
 ) -> None:
     path = platform_home / INSTALL_MANIFEST
     legacy_path = platform_home / LEGACY_INSTALL_MANIFEST
@@ -510,7 +512,9 @@ def update_install_manifest(
         return
 
     current = load_json(path if path.is_file() or not legacy_path.is_file() else legacy_path)
-    installed_components = set(current.get("components", [])) | components
+    installed_components = (
+        set(current.get("components", [])) | components
+    ) - set(unmanaged_components or set())
     installed_skills = set(current.get("skills", []))
     installed_dirs = [Path(value) for value in current.get("skill_dirs", [])]
     if "skills" in components:
@@ -615,6 +619,13 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
         raise ValueError("Unknown components: " + ", ".join(sorted(unknown_components)))
     if args.skip_hooks:
         components.discard("hooks")
+    keep_local_rules = preserve_global_rules(root)
+    if keep_local_rules and "rules" in components:
+        components.discard("rules")
+        print(
+            "SKIP   global rules "
+            "(.epiagentkit-preserve-global-rules keeps this machine's files unmanaged)"
+        )
     selected_skills = csv_values(args.skills) or None
     if selected_skills is not None and "skills" not in components:
         raise ValueError("--skills requires --components skills")
@@ -691,6 +702,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
             components,
             [claude_home / "skills"] if "skills" in components else [],
             dry_run=args.dry_run,
+            unmanaged_components={"rules"} if keep_local_rules else set(),
         )
 
     if args.target in {"all", "codex"}:
@@ -737,6 +749,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
             components,
             codex_skill_dirs if "skills" in components else [],
             dry_run=args.dry_run,
+            unmanaged_components={"rules"} if keep_local_rules else set(),
         )
 
     print("\nSync complete. Restart the client if changed skills are not visible.")

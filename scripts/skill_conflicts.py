@@ -134,6 +134,12 @@ CONFLICT_DOMAINS = {
         "报告类 word",
         "professional report writing",
     ),
+    "academic-ppt": (
+        "通用学术组会",
+        "文献分享 ppt",
+        "开题中期答辩 ppt",
+        "academic presentation workflow",
+    ),
     "svg-diagrams": (
         "svg 原生",
         "svg原生",

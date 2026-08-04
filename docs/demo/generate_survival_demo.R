@@ -16,7 +16,7 @@ script_path <- normalizePath(
 )
 demo_dir <- dirname(script_path)
 data_path <- file.path(demo_dir, "survival-demo-data.csv")
-output_dir <- file.path(demo_dir, "output")
+output_dir <- file.path(demo_dir, "output", "publication-figures")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 set.seed(20260802)
@@ -79,6 +79,7 @@ cox_fit <- coxph(
   data = dat
 )
 cox_summary <- summary(cox_fit)
+ph_test <- cox.zph(cox_fit, transform = "km")
 treatment_row <- match(
   "treatment_label强化方案",
   rownames(cox_summary$coefficients)
@@ -93,6 +94,95 @@ write.csv(
     p_value = cox_summary$coefficients[treatment_row, "Pr(>|z|)"]
   ),
   file.path(output_dir, "survival-demo-results.csv"),
+  row.names = FALSE,
+  fileEncoding = "UTF-8",
+  quote = TRUE
+)
+
+cohort_summary <- do.call(
+  rbind,
+  lapply(levels(dat$treatment_label), function(group_name) {
+    group_data <- dat[dat$treatment_label == group_name, , drop = FALSE]
+    data.frame(
+      group = group_name,
+      n = nrow(group_data),
+      events = sum(group_data$event),
+      age_mean = mean(group_data$age),
+      age_sd = sd(group_data$age),
+      male_n = sum(group_data$sex == "男性"),
+      male_pct = mean(group_data$sex == "男性") * 100,
+      stage_i_n = sum(group_data$stage == "I"),
+      stage_i_pct = mean(group_data$stage == "I") * 100,
+      stage_ii_n = sum(group_data$stage == "II"),
+      stage_ii_pct = mean(group_data$stage == "II") * 100,
+      stage_iii_n = sum(group_data$stage == "III"),
+      stage_iii_pct = mean(group_data$stage == "III") * 100,
+      biomarker_mean = mean(group_data$biomarker),
+      biomarker_sd = sd(group_data$biomarker),
+      stringsAsFactors = FALSE
+    )
+  })
+)
+write.csv(
+  cohort_summary,
+  file.path(output_dir, "manuscript-cohort-summary.csv"),
+  row.names = FALSE,
+  fileEncoding = "UTF-8",
+  quote = TRUE
+)
+
+diagnostic_summary <- data.frame(
+  statistic = c(
+    "global_ph_test_p",
+    "concordance",
+    "concordance_se"
+  ),
+  value = c(
+    ph_test$table["GLOBAL", "p"],
+    unname(cox_summary$concordance[["C"]]),
+    unname(cox_summary$concordance[["se(C)"]])
+  )
+)
+write.csv(
+  diagnostic_summary,
+  file.path(output_dir, "model-diagnostics.csv"),
+  row.names = FALSE,
+  fileEncoding = "UTF-8",
+  quote = TRUE
+)
+
+forest_data <- data.frame(
+  term = rownames(cox_summary$coefficients),
+  estimate = cox_summary$conf.int[, "exp(coef)"],
+  conf_low = cox_summary$conf.int[, "lower .95"],
+  conf_high = cox_summary$conf.int[, "upper .95"],
+  p_value = cox_summary$coefficients[, "Pr(>|z|)"],
+  stringsAsFactors = FALSE
+)
+forest_data$label <- unname(c(
+  "treatment_label强化方案" = "强化方案（与常规方案比较）",
+  "age_10" = "年龄（每增加 10 岁）",
+  "sex男性" = "男性（与女性比较）",
+  "stageII" = "疾病分期 II（与 I 期比较）",
+  "stageIII" = "疾病分期 III（与 I 期比较）",
+  "biomarker_sd" = "生物标志物（每增加 1 SD）"
+)[forest_data$term])
+if (anyNA(forest_data$label)) {
+  stop("森林图存在未映射的模型项")
+}
+forest_data$estimate_label <- sprintf(
+  "%.2f（%.2f～%.2f）",
+  forest_data$estimate,
+  forest_data$conf_low,
+  forest_data$conf_high
+)
+forest_data$label <- factor(
+  forest_data$label,
+  levels = rev(forest_data$label)
+)
+write.csv(
+  forest_data,
+  file.path(output_dir, "cox-forest-results.csv"),
   row.names = FALSE,
   fileEncoding = "UTF-8",
   quote = TRUE
@@ -278,10 +368,80 @@ figure <- figure_body +
     )
   )
 
+forest_plot <- ggplot(
+  forest_data,
+  aes(y = label, x = estimate, xmin = conf_low, xmax = conf_high)
+) +
+  geom_vline(xintercept = 1, colour = "#94A3B8", linewidth = 0.55) +
+  geom_errorbar(
+    orientation = "y",
+    width = 0,
+    linewidth = 0.75,
+    colour = "#0F766E"
+  ) +
+  geom_point(
+    shape = 21,
+    size = 3.1,
+    stroke = 0.8,
+    colour = "#0F766E",
+    fill = "white"
+  ) +
+  geom_text(
+    aes(x = 3.15, label = estimate_label),
+    hjust = 0,
+    size = 2.75,
+    family = plot_family,
+    colour = ink
+  ) +
+  annotate(
+    "text",
+    x = 3.15,
+    y = 6.7,
+    label = "风险比（95% 置信区间）",
+    hjust = 0,
+    size = 2.9,
+    fontface = "bold",
+    family = plot_family,
+    colour = ink
+  ) +
+  scale_x_log10(
+    limits = c(0.45, 5.4),
+    breaks = c(0.5, 0.75, 1, 1.5, 2, 3),
+    labels = c("0.50", "0.75", "1.00", "1.50", "2.00", "3.00")
+  ) +
+  scale_y_discrete(drop = FALSE) +
+  coord_cartesian(clip = "off") +
+  labs(
+    title = "多变量 Cox 回归森林图",
+    x = "风险比（对数刻度）",
+    y = NULL
+  ) +
+  theme_minimal(base_size = 8.5, base_family = plot_family) +
+  theme(
+    panel.grid.major.y = element_line(colour = "#E8EDF2", linewidth = 0.4),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(colour = "#334155", size = 8),
+    axis.text.y = element_text(colour = ink, size = 8.4, hjust = 0),
+    axis.title.x = element_text(colour = ink, size = 9, margin = margin(t = 6)),
+    plot.title = element_text(
+      family = plot_family,
+      face = "bold",
+      size = 11,
+      colour = ink,
+      hjust = 0.5,
+      margin = margin(b = 12)
+    ),
+    plot.margin = margin(10, 20, 8, 10),
+    plot.background = element_rect(fill = "white", colour = NA)
+  )
+
 pdf_path <- file.path(output_dir, "adjusted-survival.pdf")
 png_path <- file.path(output_dir, "adjusted-survival.png")
 mobile_path <- file.path(output_dir, "adjusted-survival-mobile.png")
 paper_path <- file.path(output_dir, "adjusted-survival-paper.png")
+forest_pdf_path <- file.path(output_dir, "cox-forest.pdf")
+forest_png_path <- file.path(output_dir, "cox-forest.png")
 
 cairo_pdf(pdf_path, width = 160 / 25.4, height = 105 / 25.4, onefile = TRUE)
 showtext_begin()
@@ -298,6 +458,23 @@ ragg::agg_png(
   background = "white"
 )
 print(figure)
+invisible(dev.off())
+
+cairo_pdf(forest_pdf_path, width = 170 / 25.4, height = 105 / 25.4, onefile = TRUE)
+showtext_begin()
+print(forest_plot)
+showtext_end()
+invisible(dev.off())
+
+ragg::agg_png(
+  forest_png_path,
+  width = 170,
+  height = 105,
+  units = "mm",
+  res = 300,
+  background = "white"
+)
+print(forest_plot)
 invisible(dev.off())
 
 ragg::agg_png(

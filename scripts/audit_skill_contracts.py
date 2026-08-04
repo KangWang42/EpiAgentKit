@@ -14,7 +14,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from config_core import DEPENDENCIES, available_skills
+from config_core import DEPENDENCIES, public_skills
 from skill_conflicts import CONFLICT_DOMAINS
 
 
@@ -47,7 +47,7 @@ def dependency_cycles(graph: dict[str, set[str]]) -> list[str]:
 
 def main() -> int:
     problems: list[str] = []
-    public = set(available_skills(ROOT))
+    public = set(public_skills(ROOT))
     all_skill_dirs = {
         item.name
         for item in (ROOT / "skills").iterdir()

@@ -42,6 +42,17 @@ class ReleaseBuilderTests(unittest.TestCase):
                         allow_dirty=False,
                     )
 
+    def test_atomic_replace_retries_transient_windows_file_lock(self):
+        with mock.patch.object(
+            build_release.os,
+            "replace",
+            side_effect=[PermissionError("temporary lock"), None],
+        ) as replace, mock.patch.object(build_release.time, "sleep") as sleep:
+            build_release.replace_with_retry(Path("source.tmp"), Path("target.zip"))
+
+        self.assertEqual(replace.call_count, 2)
+        sleep.assert_called_once_with(0.05)
+
     def test_release_is_deterministic_complete_and_self_verifying(self):
         with tempfile.TemporaryDirectory() as temporary:
             temporary_root = Path(temporary)
@@ -62,7 +73,7 @@ class ReleaseBuilderTests(unittest.TestCase):
                 first.sha256,
                 hashlib.sha256(first.archive.read_bytes()).hexdigest(),
             )
-            self.assertEqual(first.skill_count, 17)
+            self.assertEqual(first.skill_count, 18)
 
             with self.assertRaisesRegex(
                 build_release.ReleaseError,

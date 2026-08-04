@@ -1,25 +1,28 @@
 ---
 name: svg-diagrams
-description: 创建、审校或修改可编辑且内容精确的 SVG 非统计图解。仅在用户明确要求 SVG 或矢量源、编辑现有 SVG，或 research-visuals 已经对待修改原图完成必要的定向修改、使用已有且确有帮助的参考图，并对允许重新生成的图件完整生成一次后仍无法保证文字和关系准确时使用；没有适用参考图时省略该步骤。HTTP 524、文字密集或预计生成结果会失败均不能作为改用 SVG 的理由；普通非统计视觉先走 research-visuals，统计图走 publication-figures。
+description: 创建、审校或修改可编辑且内容精确的 SVG 非统计图解。仅在用户明确要求 SVG、矢量源或完全可编辑图形，编辑现有 SVG，目标格式强制矢量，或只读检查确认 imagegen 实际不可用时使用。普通科研非统计视觉先走 research-visuals 与 imagegen；imagegen 已返回但内容或美学不合格、HTTP 524、文字密集或预计生成困难均不能触发本技能；统计图走 publication-figures。
 ---
 
 # SVG 图解
 
 先按全局 `CLAUDE.md` 判定 Q 问答、L 局部产物、P 项目执行或 R 正式发布；加载本 skill 不扩大范围。
 
-以原生 SVG 构建内容精确、可编辑的非统计图形。为论文、PPT、报告或网页制作的一般流程图、框架图、机制图和示意图先由 `research-visuals` 调用 imagegen。除用户明确要求矢量图或当前没有可用图像生成工具外，只有对待修改原图完成必要的定向修改、使用已经提供且确有帮助的可选参考图，并对允许重新生成的图件完整生成一次后，关键文字、数字、节点或关系仍不准确，才进入本技能。没有适用参考图时省略该步骤，不额外寻找。默认不调用 R 绘图包生成流程框，也不把 HTML、Mermaid 或 Graphviz 默认主题截图当成品。
+以原生 SVG 构建内容精确、可编辑的非统计图形。为论文、PPT、报告或网页制作的一般流程图、框架图、机制图和示意图先由 `research-visuals` 调用 imagegen。只有用户明确要求 SVG、矢量源或完全可编辑图形，编辑现有 SVG，目标格式强制矢量，或只读检查确认当前没有可用 imagegen 路径时才进入本技能。imagegen 已成功返回但关键文字、数字、节点、关系、布局或美学仍不合格时，继续按 `research-visuals` 的两轮修改与问题披露流程处理，不切换 SVG。默认不调用 R 绘图包生成流程框，也不把 HTML、Mermaid 或 Graphviz 默认主题截图当成品。
 
 进入本技能后先记录改用 SVG 的原因，并沿用 `research-visuals` 已经确认的图件要求、节点、标签和关系；不得在更换工具时改动信息结构。用户明确调用本技能或直接要求 SVG 时无需先生成位图。
 
-## 改用 SVG 的条件
+用户提供图片时先判定其角色。待修改原图要求保留其中已确认的视觉特征，只修用户允许的部分；内容来源图只提供事实、文字与关系，先转写为节点表和关系表，再从空白画布重构，不沿用原图的区域、比例、卡片、颜色或阅读路径。用户已经否定原图审美、要求“重构布局”或“重新组织内容”时，必须采用内容来源图路线。
 
-除用户显式要求 SVG、直接调用本技能或编辑现有 SVG 外，开始绘制前必须满足并记录以下至少一项：
+## 使用 SVG 的条件
 
-- 已检查当前会话的实际图像生成工具，确认没有可用 `image_gen` 或其它已配置生成路径。
-- 已真实调用 imagegen，发生非 HTTP 524 的失败，且其允许的重试或内置路径均不可用。
-- imagegen 已成功返回并查看完整图像；对待修改原图完成必要的定向修改，使用已经提供且确有帮助的可选参考图，并对允许重新生成的图件完整生成一次后，关键文字、数字、节点或关系仍不准确。没有适用参考图时已说明原因，不为满足流程额外寻找或生成参考图。
+开始绘制前必须满足并记录以下至少一项：
 
-“文字或数字多”“预计 imagegen 可能写错”“已有修改结果不准确”“SVG 更容易做”“当前可见 skills 清单没有 `research-visuals`”“已经提供有用参考图但尚未尝试”和“附图调用连续两次 HTTP 524”均不能作为提前改用 SVG 的理由。HTTP 524 按 `research-visuals` 保留原图并停止，不自动转用 SVG。
+- 用户明确要求 SVG、矢量源、完全可编辑图形或直接调用本技能。
+- 任务是编辑现有 SVG。
+- 期刊、系统、合同或交付格式明确强制矢量源。
+- 已只读检查当前会话的实际图像生成工具，确认没有可用 `image_gen` 或其它已配置生成路径，并记录不可用的证据。
+
+“文字或数字多”“预计 imagegen 可能写错”“已有修改结果不准确或不好看”“SVG 更容易做”“当前可见 skills 清单没有 `research-visuals`”和“附图调用连续两次 HTTP 524”均不能作为改用 SVG 的理由。HTTP 524 按 `research-visuals` 保留原图并停止，不自动转用 SVG。
 
 ## 必读资源
 
@@ -30,14 +33,14 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 
 ## 工作流
 
-1. 确认内容要求：列出最终用于论文、PPT、报告还是网页，以及图片类型、语言、节点 ID、标题、可选副标题、类别、层级和关系。用于说明研究内容的图必须包含理解结构所需的准确短标签；hero、封面和氛围图不属于本技能的默认输出。标题、副标题、数字和方向均不得擅自生成。
+1. 确认内容要求：列出最终用于论文、PPT、报告还是网页，以及图片类型、语言、节点 ID、唯一图内标题、类别、层级和关系。独立科研内容图默认只保留一个标题，不添加副标题、英文眉题、版本状态、来源摘要、实现说明或页脚状态条；页面已有标题时图内不再放标题。用于说明研究内容的图必须包含理解结构所需的准确短标签；hero、封面和氛围图不属于本技能的默认输出。标题、数字和方向均不得擅自生成。
 2. 选择视觉配置：队列筛选、样本纳排、CONSORT 或病例流转使用 `journal-flow`；概念机制、技术路线、层级结构、包含关系、时间轴、矩阵和系统架构使用 `editorial`。不得把多色概念卡片用于研究对象筛选流程，也不得把任何固定配色和框形机械套到其它图类。
 3. 审查模板并确定信息关系：先列出模板必须保留的比例、品牌、字体、色彩、安全区和必要组件，再根据内容选择 A 层级汇聚、B 谱系时间轴、C 嵌套包含、线性流程、矩阵、机制或架构。区域数量、阅读方向、视觉重点、密度和留白按内容重新确定；不得先选好看的模板再硬塞内容。
 4. 分配语义样式：所有图先采用期刊队列图的共同语法，即白底、细边框、低饱和浅填充、常规正文和几何优先。流程图默认使用两类语义主色：常规路径与辅助或对照；只有真实警示、失败、异常、不良结局或必须单独识别的关键状态才增加第三类。主色相总数不超过三种，黑、白、灰等中性色不计入。不得默认采用蓝白配色，也不得把普通排除步骤自动标红。
-5. 计算几何：先确定画布、边距、轨道、节点宽高、连接点、间距和连接线坐标，再写 SVG。禁止凭目测逐个拖位置。
-6. 生成 SVG：使用原生元素和可编辑文字；语义元素写入 `data-role`、`data-category`、`data-layer`，供自动校验。避免 `foreignObject`、外部 CSS、网络字体和滤镜。
-7. 导出预览：SVG 是当前源文件，同时生成同名 PNG。期刊要求 PDF/EMF 时从 SVG 派生，不反向从 PNG 描摹。
-8. 双重验证：按视觉配置运行 `scripts/validate_svg.py --profile journal-flow|editorial`，再按最终嵌入尺寸渲染并目视检查；修复后重新验证受影响图件。
+5. 计算自然几何：先记录各区域适合横向、纵向、近方形、回环还是多输入汇聚，再确定画布、边距、轨道、节点宽高、连线通道和连接点。不同形状不能在一排等宽栏中成立时，改用双行主链、大小不同的编辑分区、分区组合图或总览与详图；不得通过超宽画布、窄字、压扁图元或高窄卡片维持单行。`data-layer` 只表示语义层，只有应当等尺寸的同类节点才共享 `data-size-group`。
+6. 生成 SVG：使用原生元素和可编辑文字。节点写入唯一 `data-node-id`；直接表达事实关系的连线写入 `data-source`、`data-target` 和 `data-relation`；视觉样式元素同时写入 `data-role`、`data-category`、`data-tone` 和 `data-layer`。避免 `foreignObject`、外部 CSS、网络字体和滤镜。
+7. 导出预览：SVG 是当前源文件，同时生成同名 PNG。按最终毫米宽度和目标 ppi 计算最低像素宽度，公式为 `像素 = 毫米 ÷ 25.4 × ppi`；记录实际像素、目标毫米宽度、有效 ppi 和 DPI 元数据。仅改写 DPI 元数据或插值放大不计为达到印刷清晰度。期刊要求 PDF/EMF 时从 SVG 派生，不反向从 PNG 描摹。
+8. 双重验证：按视觉配置运行 `scripts/validate_svg.py --profile journal-flow|editorial`。内容精确图同时传入全部必需节点、必需边和 `--require-semantic-graph`；独立单标题图加入 `--single-title`；论文或报告 PNG 预览加入 `--preview-png`、`--target-width-mm` 与 `--target-ppi`。随后在最终嵌入尺寸目视检查，修复后重新验证受影响图件。
 
 ## 信息关系与版式选择
 
@@ -77,7 +80,7 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 ## 默认视觉规则
 
 - 只保留一个视觉主张。无用户要求时，不添加英文眉题、画布副标题、装饰圆点、无语义图标或背景大色块。
-- 所在页面已有标题时，SVG 内不重复放标题；PPT 页标题、论文图注或报告小节标题与 SVG 内标题二选一。
+- 独立科研内容图使用一个 `data-role="figure-title"` 标题；不设置画布副标题、眉题或页脚状态。所在页面已有标题时，SVG 内不重复放标题；PPT 页标题、论文图注或报告小节标题与 SVG 内标题二选一。
 - 概念图的节点副标题是可选信息层，不是固定装饰。只有来源确有次级说明时才生成；不得为了凑两行虚构解释。
 - 所有图默认白底、1 至 1.5 px 细边框、低饱和浅填充和常规正文。`editorial` 框通常使用 2 至 8 px 小圆角；只有明确的柔和概念图才可到 10 px。`journal-flow` 使用 0 至 2 px 近直角框和更紧凑的内容框。
 - 强调靠字重、位置、边界和留白，不靠高饱和色。全图只启用实际存在的语义类别。
@@ -93,10 +96,12 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 对新生成图使用以下属性：
 
 - 画布：`data-role="canvas"`
-- 卡片或嵌套层：`data-role="card|nested-layer" data-category="..." data-tone="primary|secondary|critical|neutral" data-layer="..."`
+- 图内唯一标题：`data-role="figure-title"`
+- 卡片或嵌套层：`data-role="card|nested-layer" data-node-id="..." data-category="..." data-tone="primary|secondary|critical|neutral" data-layer="..."`；只有确实应等尺寸的同类节点再使用相同 `data-size-group`
 - 期刊研究流程：`data-role="flow-main|flow-exclusion|flow-terminal" data-layer="..."`
 - 标题与副标题：`data-role="node-title|node-subtitle" data-category="..." data-tone="primary|secondary|critical|neutral"`
-- 连线、主轴与刻度：`data-role="connector|axis|axis-tick"`
+- 事实关系连线：`data-role="connector" data-source="..." data-target="..." data-relation="..." data-arrow="true|false"`
+- 主轴与刻度：`data-role="axis|axis-tick"`
 - 可选 PPT 装饰：`data-role="decoration"`；论文图禁止该角色。
 
 语义类别固定为 `biology`、`exposure`、`covariate`、`risk`、`outcome`、`nonlinear`，用于机器识别内容类别；外观颜色由 `data-tone` 的阅读角色决定，不按类别自动分色。具体颜色见设计系统。
@@ -104,7 +109,7 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 ## 与论文、报告和 PPT 的衔接
 
 - 统计图、森林图、生存曲线、热图等仍由 `publication-figures` 生成；本技能不处理数据映射图。
-- 为论文、PPT、报告或网页制作的流程、结构、机制、路线和包含关系图默认由 `research-visuals` 调用 imagegen；本技能只处理明确的矢量图需求，或在对待修改原图完成必要的定向修改、使用已经提供且确有帮助的可选参考图，并对允许重新生成的图件完整生成一次后仍不准确的图件。没有适用参考图时省略该步骤。普通图解默认不使用本技能。
+- 为论文、PPT、报告或网页制作的流程、结构、机制、路线和包含关系图默认由 `research-visuals` 调用 imagegen；本技能只处理明确矢量需求、现有 SVG 编辑、强制矢量格式或 imagegen 实际不可用的任务。普通图解和 imagegen 质量修正不使用本技能。
 - 论文和报告保留 SVG 源文件与同名 PNG；Word 不直接支持时嵌入 PNG，但不得丢失 SVG 源。
 - PPT 优先直接嵌入 SVG；若当前生成库不能嵌入，则使用同名 PNG，并在源目录保留 SVG。
 - 混合图先分别生成统计子图和 SVG 图解子图，再按共同字体、配色和边距组合。
@@ -112,7 +117,10 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 ## 强制自检
 
 - [ ] 文字、数字和关系与来源逐项一致，无擅自新增内容
+- [ ] 内容来源图已先转写事实和拓扑，未保留被否定的原布局与审美
+- [ ] 独立内容图只有一个图内标题，无副标题、眉题、版本状态、实现说明或页脚状态条
 - [ ] 画布比例匹配最终页面或图位，无明显空边或压缩变形
+- [ ] 区域按自然形状排布，没有用高窄卡片、窄字或失真图元强行维持单行
 - [ ] 同行、同列、同层、嵌套框和连接点严格对齐
 - [ ] 序号与标题第一行垂直居中对齐
 - [ ] 字号层级清楚，分支标题不小于正文
@@ -122,9 +130,11 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 - [ ] 默认使用两类语义主色，必要时才增加第三类；主色相总数不超过三种，未默认套用蓝白配色
 - [ ] 警示色只对应真实警示、失败、异常、不良结局或关键状态，普通排除步骤未自动标红
 - [ ] 图内标签来自来源、方案或规范术语，无内部流程词、生硬直译、自造缩略语或临时拼接短语
-- [ ] 非显式矢量任务已记录改用 SVG 的具体原因；已经提供且确有帮助的可选参考图已在改用 SVG 前尝试，没有适用参考图时未额外寻找
+- [ ] 已记录使用 SVG 的合法原因：明确矢量要求、编辑现有 SVG、强制矢量格式或 imagegen 实际不可用；未因 imagegen 内容或美学不合格而切换
 - [ ] 没有无意义的卡片墙、彩色徽章、胶囊标签或每框一个图标
 - [ ] SVG XML 有效，文字未裁切，PNG 预览与 SVG 一致
+- [ ] 必需节点与必需边已由语义图校验逐项确认，连线端点均引用真实节点
+- [ ] PNG 实际像素、目标毫米宽度、有效 ppi 与 DPI 元数据同时达到约定；未以改元数据或插值冒充清晰度
 - [ ] 当前版使用稳定文件名，旧版已整组归档
 
 验证示例：
@@ -132,8 +142,15 @@ description: 创建、审校或修改可编辑且内容精确的 SVG 非统计�
 ```bash
 python skills/svg-diagrams/scripts/validate_svg.py output.svg \
   --profile editorial --purpose ppt --expected-ratio 1.777778 \
-  --require-text "主流程" --forbid-text "RESEARCH WORKFLOW"
+  --require-text "主流程" --forbid-text "RESEARCH WORKFLOW" \
+  --single-title --require-semantic-graph \
+  --require-node input --require-node output \
+  --require-edge "input->output"
 
 python skills/svg-diagrams/scripts/validate_svg.py cohort_flow.svg \
   --profile journal-flow --purpose paper --max-circles 0
+
+python skills/svg-diagrams/scripts/validate_svg.py architecture.svg \
+  --profile editorial --purpose paper --single-title \
+  --preview-png architecture.png --target-width-mm 180 --target-ppi 300
 ```

@@ -14,6 +14,7 @@ from config_core import (
     available_skills,
     csv_values,
     expand_dependencies,
+    preserve_global_rules,
 )
 
 
@@ -146,6 +147,15 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
 
     target, preset, selected, with_rules, with_hooks = interactive_values(args, root)
     components, skills = plan_install(preset, selected, with_rules, with_hooks)
+    keep_local_rules = preserve_global_rules(root)
+    if keep_local_rules:
+        components.discard("rules")
+    if not components:
+        print(
+            "本机已设置 .epiagentkit-preserve-global-rules；"
+            "本次只请求规则组件，因此无需修改。"
+        )
+        return 0
 
     available = set(available_skills(root))
     unknown = (skills or set()) - available
@@ -159,6 +169,8 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
     print(f"- 组件：{', '.join(sorted(components))}")
     print(f"- Skills：{'全部' if skills is None else ', '.join(sorted(skills))}")
     print("- 行为：覆盖同名 EpiAgentKit 文件，保留无关个人配置")
+    if keep_local_rules:
+        print("- 本机规则：保留现有全局 CLAUDE.md/AGENTS.md，不由本仓库覆盖")
     print("- 本机环境：只安装 EpiAgentKit 文件，不安装或升级 R、Python 及其它运行环境或依赖")
     if "skills" in components:
         print(

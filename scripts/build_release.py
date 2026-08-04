@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -19,6 +20,7 @@ VERSION = "1.1"
 PACKAGE_NAME = f"EpiAgentKit-release-{VERSION}"
 INCLUDED_SKILLS = (
     "academic-humanizer",
+    "academic-ppt",
     "academic-publishing",
     "biostat-principles",
     "consulting-delivery",
@@ -251,6 +253,17 @@ def write_staging_manifest(staging_root: Path, payload: dict[str, bytes]) -> Pat
     return manifest_path
 
 
+def replace_with_retry(source: Path, destination: Path, attempts: int = 12) -> None:
+    for attempt in range(attempts):
+        try:
+            os.replace(source, destination)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                raise
+            time.sleep(min(0.05 * (2**attempt), 1.0))
+
+
 def write_deterministic_zip(archive_path: Path, payload: dict[str, bytes]) -> None:
     temporary_archive = archive_path.with_name(f".{archive_path.name}.tmp")
     if temporary_archive.exists():
@@ -273,7 +286,7 @@ def write_deterministic_zip(archive_path: Path, payload: dict[str, bytes]) -> No
         broken_member = archive.testzip()
         if broken_member:
             raise ReleaseError(f"ZIP CRC validation failed: {broken_member}")
-    os.replace(temporary_archive, archive_path)
+    replace_with_retry(temporary_archive, archive_path)
 
 
 def build_release(
@@ -311,7 +324,7 @@ def build_release(
             encoding="utf-8",
             newline="\n",
         )
-        os.replace(temporary_checksum, checksum_path)
+        replace_with_retry(temporary_checksum, checksum_path)
     finally:
         safe_remove_tree(staging_root, output_dir)
 

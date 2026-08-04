@@ -7,21 +7,26 @@
 ```text
 用途：内部 PPT / 论文投稿 / 报告
 最终使用位置：全页 / 半页 / 单栏约 85 mm / 双栏约 170 mm / Word 版心
+输入图片角色：待修改原图 / 内容来源图 / 无图片
 语言：中文 / 英文
 图类：队列筛选 / 概念机制 / 技术路线 / 层级结构 / 包含关系 / 时间轴 / 矩阵 / 系统架构
 视觉配置：journal-flow（队列筛选/纳排/CONSORT）/ editorial（其余非统计图解）
 色彩模式：semantic-role（默认，两类语义主色）/ semantic-role-critical（存在真实警示、失败、异常、不良结局或关键状态时增加第三类）
 版式：A 层级汇聚 / B 谱系时间轴 / C 嵌套包含 / 线性流程 / 树形层级 / 矩阵 / 容器架构
 背景：#FFFFFF 或 #FDFDFB
+图内标题：一个名词短语 / 页面已有标题所以省略
 图注：外置 / 嵌入；编号与标题
 输出：SVG + 同名 PNG；按需派生 PDF/EMF
+PNG 目标：宽度 __ mm；__ ppi；最低宽度 __ px
 ```
+
+待修改原图另列必须保持和允许修改的视觉特征。内容来源图只转写事实与关系，并明确写下“不保留原图布局与审美”；用户已否定原图审美或要求重构时不得选择待修改原图。
 
 ## 节点表
 
-| ID | 标题 | 副标题，可空 | 语义类别 | 阅读角色 | 层级或位置 | 样本量，可空 |
-| --- | --- | --- | --- | --- | --- | --- |
-| node_1 |  |  | biology/exposure/covariate/risk/outcome/nonlinear | primary/secondary/critical/neutral |  |  |
+| ID | 标题 | 副标题，可空 | 语义类别 | 阅读角色 | 层级或位置 | 自然形状 | 等尺寸组，可空 | 样本量，可空 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| node_1 |  |  | biology/exposure/covariate/risk/outcome/nonlinear | primary/secondary/critical/neutral |  | 横向/纵向/近方形/回环/汇聚 |  |  |
 
 标题与副标题规则：只使用来源材料、研究方案或可核验方法文献中的规范术语。只有真实提供次级信息时填写副标题；不得用泛化句、英文翻译、内部流程词、自造缩略语、临时拼接短语或重复标题填空。
 
@@ -56,5 +61,9 @@
 不得根据 biology、exposure、covariate、risk、outcome 元数据自动逐类换色；用 data-tone 表达阅读角色。
 同层卡片等宽等高，节点间净距不小于卡片高度的 60%，连线只走横平竖直。
 在语义元素上写入 data-role、data-category、data-tone 和 data-layer，输出 SVG 与同名 PNG，
-并通过 validate_svg.py --profile <journal-flow|editorial> 的对应配置校验后再交付。
+节点另写唯一 data-node-id；事实关系连线另写 data-source、data-target 和 data-relation；
+只有应当等尺寸的同类节点才共享 data-size-group。独立科研内容图只保留一个 data-role="figure-title" 标题，
+不放画布副标题、眉题、版本状态、实现说明或页脚状态条。按目标毫米宽度和 ppi 计算 PNG 最低像素，
+并通过 validate_svg.py --profile <journal-flow|editorial>、--require-semantic-graph、全部必需节点和必需边、
+以及适用的 --single-title、--preview-png、--target-width-mm 和 --target-ppi 校验后再交付。
 ```

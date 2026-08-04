@@ -20,8 +20,8 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 > EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性检查，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
-| 按任务增加必要步骤 | 结果可追溯 | 双平台一致 |
-| --- | --- | --- |
+| 按任务增加必要步骤                                                   | 结果可追溯                                                                       | 双平台一致                                              |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | 问答、局部修改和快速尝试立即执行，只在进入主分析或发布时增加必要检查 | 关键结果由生成脚本写入结果清单，并关联输入、分析集、运行编号和实际使用结果的文件 | Claude Code 与 Codex 从同一仓库安装、同步并接受相同检查 |
 
 ## 项目能做到什么
@@ -30,21 +30,21 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 统计分析以 R 为主要和默认路径，标准研究工作流不要求用户具备 Python 环境。任务所需运行时缺失时先做只读检查，说明用途、安装范围和风险并询问是否安装；用户不安装时优先使用现有语言中的经核验等价实现，以相同输入、方法口径和验收标准核对。不存在等价实现时明确差异，不把近似替代说成相同效果。
 
-| 研究任务 | 它会做什么 | 典型产物 |
-| --- | --- | --- |
-| 新建研究项目 | 在 `analysis`、`paper`、`consulting`、`teaching` 和 `oneoff` 五种项目类型中选择当前任务所需的最小结构 | 可直接开始工作且没有多余空目录的项目基本结构 |
-| 核验文献与方法依据 | 核对题名、作者、DOI/PMID、来源身份和撤稿状态，必要时组织正式证据检索 | 核验记录、证据核对表、方法选择依据 |
-| 完善研究设计与 SAP | 把研究想法转成 PICO/PECO、estimand、终点、时间零点、偏倚控制、样本量或精度依据及预设分析 | 可审查的 PROTOCOL、SAP、未决事项与设计备忘录 |
-| 完成 R 统计分析 | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析；从项目根运行总脚本，并自动保存命令、状态、日志和环境信息 | 可复现 R 脚本、结果对象、必要表图与自动运行记录 |
-| 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录 |
-| 制作发表级统计图 | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图 | PDF、PNG 或 SVG 图件及对应出图代码 |
-| 生成科研非统计视觉 | 为论文、PPT、标书、报告、README 和技术文档生成流程、路线、框架、机制与图形摘要，并区分内容图、真实截图和氛围图 | 经来源、结构、文字和嵌入后显示复核的完整图件 |
-| 写论文与投稿材料 | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校 | Markdown 或 Word 稿件、投稿材料与自检记录 |
-| 评审论文与生成审稿报告 | 以同行评审人身份核对稿件中的数据与论断是否对应，并审查设计、偏倚、统计、解释、报告规范、语言和伦理，区分报告缺项与方法错误 | 可定位、分 major/minor、说明未核验内容的完整 reviewer report |
-| 写报告与制作学术汇报 | 把分析结果转成面向读者的报告，或基于中山大学模板生成组会、开题、答辩与正式汇报 | 报告正文、DOCX、可直接汇报的 PPTX |
-| 打包统计咨询结果 | 按数据授权、交付目的和收件人可用软件整理最小外发包，中间格式、编号和报告长度由实际用途决定 | 交付内容清单、必要代码与结果、总运行脚本 |
-| 全项目质量审查 | 区分日常受影响部分检查与正式发布检查，核对数据、代码、结果、表图、正文，以及伦理、合规、隐私和结果追溯记录 | 通过、有明确限制地通过或不通过，并列出证据位置和处理建议 |
-| 处理常见科研文件 | 在内容主流程之外读取、编辑、验证和转换 Word、PowerPoint、Excel 与 PDF | `.docx`、`.pptx`、`.xlsx`、`.pdf` 等实际文件 |
+| 研究任务                       | 它会做什么                                                                                                                    | 典型产物                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 新建研究项目                   | 在 `analysis`、`paper`、`consulting`、`teaching` 和 `oneoff` 五种项目类型中选择当前任务所需的最小结构               | 可直接开始工作且没有多余空目录的项目基本结构                 |
+| 核验文献与方法依据             | 核对题名、作者、DOI/PMID、来源身份和撤稿状态，必要时组织正式证据检索                                                          | 核验记录、证据核对表、方法选择依据                           |
+| 完善研究设计与 SAP             | 把研究想法转成 PICO/PECO、estimand、终点、时间零点、偏倚控制、样本量或精度依据及预设分析                                      | 可审查的 PROTOCOL、SAP、未决事项与设计备忘录                 |
+| 完成 R 统计分析                | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析；从项目根运行总脚本，并自动保存命令、状态、日志和环境信息        | 可复现 R 脚本、结果对象、必要表图与自动运行记录              |
+| 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录                 |
+| 制作发表级统计图               | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图                                                     | PDF、PNG 或 SVG 图件及对应出图代码                           |
+| 生成科研非统计视觉             | 为论文、PPT、标书、报告、README 和技术文档生成流程、路线、框架、机制与图形摘要，并区分内容图、真实截图和氛围图                | 经来源、结构、文字和嵌入后显示复核的完整图件                 |
+| 写论文与投稿材料               | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校                         | Markdown 或 Word 稿件、投稿材料与自检记录                    |
+| 评审论文与生成审稿报告         | 以同行评审人身份核对稿件中的数据与论断是否对应，并审查设计、偏倚、统计、解释、报告规范、语言和伦理，区分报告缺项与方法错误    | 可定位、分 major/minor、说明未核验内容的完整 reviewer report |
+| 写报告与制作学术汇报           | 把分析结果转成面向读者的报告，或按用户模板、机构/会议模板或中性设计生成组会、开题、中期与答辩汇报                  | 报告正文、DOCX、可直接汇报的 PPTX                            |
+| 打包统计咨询结果               | 按数据授权、交付目的和收件人可用软件整理最小外发包，中间格式、编号和报告长度由实际用途决定                                    | 交付内容清单、必要代码与结果、总运行脚本                     |
+| 全项目质量审查                 | 区分日常受影响部分检查与正式发布检查，核对数据、代码、结果、表图、正文，以及伦理、合规、隐私和结果追溯记录                    | 通过、有明确限制地通过或不通过，并列出证据位置和处理建议     |
+| 处理常见科研文件               | 在内容主流程之外读取、编辑、验证和转换 Word、PowerPoint、Excel 与 PDF                                                         | `.docx`、`.pptx`、`.xlsx`、`.pdf` 等实际文件         |
 
 ### 你可以直接这样提需求
 
@@ -62,60 +62,90 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 ## 从一句话到真实产物
 
-以下四类示例分别展示统计图、论文页面、汇报页面和 AI 工作流程。统计结果来自固定模拟队列的实际 R 分析；论文预览来自可打开的 Word 文档；PPT 页面是中性 16:9 版式模拟图。所有示例只用于核对工作流和成品质量，不代表真实医学结论。
+以下示例展示从数据分析、科研绘图到论文和项目结构的实际成品。模拟结果只用于演示可复核工作流，不构成真实医学证据。
 
-### 统计图
+### 统计分析与发表级统计图
 
 ```text
-使用固定模拟队列完成多变量 Cox 回归，分别导出带 95% 置信区间和风险集的调整后生存曲线；
-论文图不写副标题、样本摘要或模型指标横幅，标题和图例相对整张导出画布居中，并按最终物理尺寸核对字号。
+使用固定模拟队列完成多变量 Cox 回归。分别制作带 95% 置信区间和风险集的调整后生存曲线，
+以及呈现全部模型项、参照和效应区间的森林图；两张图分别核对时间到事件和多变量效应表达。
 ```
 
-<picture>
-  <source media="(max-width: 600px)" srcset="docs/demo/output/adjusted-survival-mobile.png">
-  <img src="docs/demo/output/adjusted-survival.png" alt="固定模拟队列生成的调整后无事件生存曲线，含百分比坐标、95% 置信区间和各时间点风险集">
-</picture>
+<img src="docs/showcase/composites/publication-figures.png" alt="并排展示调整后无事件生存曲线和多变量 Cox 回归森林图" width="100%">
 
-`biostat-principles → publication-figures` 负责分析口径、数值验证、最终尺寸、标题与图例对齐和中文字体。[查看 PDF](docs/demo/output/adjusted-survival.pdf) · [查看分析与出图脚本](docs/demo/generate_survival_demo.R) · [查看模拟数据](docs/demo/survival-demo-data.csv) · [查看机器可读结果](docs/demo/output/survival-demo-results.csv)
+[生存曲线 PDF](docs/demo/output/publication-figures/adjusted-survival.pdf) · [森林图 PDF](docs/demo/output/publication-figures/cox-forest.pdf)
 
-### 论文效果
+`biostat-principles → r-biostats → publication-figures` 负责模型口径、估计方向、参照水平、最终物理尺寸和数值一致性。[查看分析与出图脚本](docs/demo/generate_survival_demo.R) · [查看固定模拟数据](docs/demo/survival-demo-data.csv) · [查看主要结果](docs/demo/output/publication-figures/survival-demo-results.csv) · [查看森林图结果](docs/demo/output/publication-figures/cox-forest-results.csv)
 
-![固定模拟队列论文页面的 Word 实际渲染图，包含题名、摘要、资料与方法、结果、统计图和简短图题](docs/demo/output/manuscript-preview.png)
+### 科研非统计视觉
 
-该页面由实际 `.docx` 渲染，题名居中，正文采用中性中文论文格式；模型口径写在方法，结果解释写在结果，图下只保留简短图题。页面不使用虚构作者、机构、期刊、DOI、伦理号或基金信息。[下载 Word 示例](docs/demo/output/manuscript-preview.docx) · [查看生成脚本](docs/demo/generate_manuscript_preview.py)
+<img src="docs/showcase/composites/research-visuals.png" alt="并排展示跨尺度空间卷积注意力模块和跨领域科研执行流程" width="100%">
 
-### PPT 效果
+[查看跨尺度注意力模块原图](docs/showcase/research-visuals/multiscale-attention.png) · [查看科研执行流程原图](docs/assets/research-workflow.webp)
 
-![固定模拟队列的中性学术汇报页模拟图，左侧列出研究设计和主要结果，右侧展示调整后生存曲线](docs/demo/output/presentation-preview.png)
+`research-visuals → imagegen` 先按图中实际对象分流。计算机、人工智能和机器学习图读取专门的计算机视觉规范，保留数据表示、模块、分支、汇合与输出；流行病学和公共卫生图继续使用研究对象、时间、变量与证据状态语法。统计数据图仍转 `publication-figures`，真实界面和论文页使用实际渲染，科研原始图像不生成式重绘。
 
-汇报页使用 16:9 画布，页标题、研究设计和结论由幻灯片版式承担，统计图保持论文式原图，不把 PPT 的信息层级烧录进图件。[查看版式生成脚本](docs/demo/generate_presentation_preview.R)
+### 论文与 Word 实际渲染
 
-### AI 工作流程
+<img src="docs/showcase/composites/manuscripts.png" alt="中文观察性分析完整作者稿和英文外部模型评价方法学完整作者稿的第一页" width="100%">
 
-![EpiAgentKit 从问题定义、证据核验和统计分析进入图表、论文、汇报、交付与项目审查的 AI 工作流程](docs/assets/research-workflow.webp)
+| 中文观察性分析完整稿                                                                                                                           | 英文方法学完整稿                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.pdf) | [Word](docs/demo/output/academic-publishing/manuscript-preview-en.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-en.pdf) |
 
-同一套全局规则连接问题定义、证据核验、统计分析、图表制作、论文与汇报、结果交付和项目审查；领域 skill 只在任务需要时加载，确定性检查负责保护原始数据、结果来源和发布条件。
+README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏排列的完整章节。中文稿使用固定模拟队列的实际模型结果、基线汇总、模型诊断和统计图；英文稿讨论外部模型评价中的校准斜率，不虚构实证发现、作者、机构、伦理号或基金信息。[查看 Word 生成与渲染脚本](docs/demo/generate_manuscript_preview.py)
+
+### 学术汇报与实际 PPTX
+
+<img src="docs/showcase/composites/academic-ppt.png" alt="并排展示中性组会汇报的生存曲线结果页和开题答辩的失访机制研究问题页" width="100%">
+
+| 中性组会汇报 | 开题答辩汇报 |
+| --- | --- |
+| [PPTX](docs/showcase/academic-ppt/survival-analysis-meeting.pptx) · [代表页](docs/showcase/academic-ppt/survival-analysis-meeting.png) | [PPTX](docs/showcase/academic-ppt/missing-data-proposal-defense.pptx) · [代表页](docs/showcase/academic-ppt/missing-data-proposal-defense.png) |
+
+组会稿使用固定模拟队列的实际 Cox 模型结果和生存曲线，封面后直接进入研究设计、结果、解释边界和下一步；开题稿使用另一套中性视觉体系，围绕失访机制、方法比较、评价指标、质量控制和研究计划展开，不预设实证结果。两份 PPTX 均由 Microsoft PowerPoint 实际导出全部页面并检查文字、箭头、图表比例、页面边界和投影可读性。[查看生成脚本](docs/demo/generate_academic_ppt_showcase.py)
+
+### 项目初始化
+
+| 分析项目                                                                           | 咨询项目                                                                                  |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 队列研究的 `analysis` 结构，包含设计、SAP、分析代码、表图、结果和自动运行记录位置 | 横断面研究的 `consulting` 结构，在分析核心之外增加 `05_reports/`，但不提前创建空交付包 |
+| [查看实际初始化成果](docs/showcase/project-init/analysis.md)                        | [查看实际初始化成果](docs/showcase/project-init/consulting.md)                             |
+
+两套结构均由 [`init_project.R`](skills/project-init/scripts/init_project.R) 实际运行产生。原始数据目录只含保护占位文件；`results/results.yaml`、`SESSION_LOG.md`、`EXPERIMENTS.md` 和正式咨询包不会在没有实际结果时提前创建。
+
+### 文件命名与当前版
+
+| 文件类型                         | 命名规则                                            | 示例                                                             |
+| -------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------- |
+| 可重复生成的脚本                 | 使用动作与对象，名称长期稳定                        | `generate_survival_demo.R`、`generate_manuscript_preview.py` |
+| 当前成果                         | 使用内容语义，不用 `final`、`latest`、`new`     | `adjusted-survival.png`、`cox-forest.png`                    |
+| 同类语言版本                     | 在语义名称后加语言标识                              | `manuscript-preview-zh.docx`、`manuscript-preview-en.docx`   |
+| 审阅候选                         | 只留在当次 `workbench/review/`，明确候选或修改轮次 | `<topic>-edit1.png`                                           |
+| 被当前版替代且需要恢复的正式文件 | 整批移入 `09_backup/archive/<时间>_<主题>_<阶段>/` | 由归档清单记录原路径与哈希值                                  |
+
+README 和正式交付位置只引用一组当前版。预览 PNG、可编辑 Word、PDF 和机器可读结果可以并存，因为它们承担不同用途；同一内容的模糊版本后缀不会并排留在当前目录。
 
 ## 工作流怎样随任务变化
 
 Claude Code 与 Codex 共用同一套全局规则。系统先根据用户要求和现有工作区确定本轮范围，领域技能只完成这个范围内的工作；自动检查用于保护原始数据、结果来源、敏感信息和正式发布要求。简单问题不会因为调用某个技能而变成完整项目，正式投稿或外发也不会省略必要核验。
 
-| 范围 | 何时使用 | 记录与验证 |
-| --- | --- | --- |
-| Q 问答 | 解释、判断、只读核验 | 直接回答，不创建项目文件 |
-| L 局部产物 | 单文件、单部件、单项格式或快速结果 | 只验证本次修改及其直接影响，不补建记录文件 |
-| P 项目执行 | 改变数据、代码、方法或正式结果 | 同步实际生成结果的分析脚本、`results/results.yaml`、使用这些结果的文件和自动运行记录 |
-| R 正式发布 | 投稿、外发、归档或全面质控 | 运行正式发布检查，ERROR 阻止发布，可接受限制须明确说明 |
+| 范围       | 何时使用                           | 记录与验证                                                                             |
+| ---------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
+| Q 问答     | 解释、判断、只读核验               | 直接回答，不创建项目文件                                                               |
+| L 局部产物 | 单文件、单部件、单项格式或快速结果 | 只验证本次修改及其直接影响，不补建记录文件                                             |
+| P 项目执行 | 改变数据、代码、方法或正式结果     | 同步实际生成结果的分析脚本、`results/results.yaml`、使用这些结果的文件和自动运行记录 |
+| R 正式发布 | 投稿、外发、归档或全面质控         | 运行正式发布检查，ERROR 阻止发布，可接受限制须明确说明                                 |
 
-| 阶段 | EpiAgentKit 的检查要求 |
-| --- | --- |
-| 问题定义 | 先确认 PICO/PECO、estimand、时间零点、分组、终点、纳排标准、分析集与主要分析口径 |
-| 证据核验 | 核验来源身份，区分已核验事实、合理推断和待补证据 |
-| 统计分析 | 代码必须实跑，输出必须存在，异常必须全量扫描并逐项归因 |
-| 图表制作 | 统计数据图、非统计视觉和原始科研证据按属性分流，图件放入实际论文、PPT、报告或网页后复核 |
-| 论文与汇报 | 统计数字来自机器可读的唯一来源，论文、报告、PPT 和图表不手敲关键结果 |
-| 结果交付 | 交付包服从数据授权和接收方环境；包含或引用输入均可，但必须可追溯 |
-| 项目审查 | 科学、合规、隐私、追溯或复现 ERROR 阻止发布；结构偏好通常为 WARN/INFO |
+| 阶段       | EpiAgentKit 的检查要求                                                                  |
+| ---------- | --------------------------------------------------------------------------------------- |
+| 问题定义   | 先确认 PICO/PECO、estimand、时间零点、分组、终点、纳排标准、分析集与主要分析口径        |
+| 证据核验   | 核验来源身份，区分已核验事实、合理推断和待补证据                                        |
+| 统计分析   | 代码必须实跑，输出必须存在，异常必须全量扫描并逐项归因                                  |
+| 图表制作   | 统计数据图、非统计视觉和原始科研证据按属性分流，图件放入实际论文、PPT、报告或网页后复核 |
+| 论文与汇报 | 统计数字来自机器可读的唯一来源，论文、报告、PPT 和图表不手敲关键结果                    |
+| 结果交付   | 交付包服从数据授权和接收方环境；包含或引用输入均可，但必须可追溯                        |
+| 项目审查   | 科学、合规、隐私、追溯或复现 ERROR 阻止发布；结构偏好通常为 WARN/INFO                   |
 
 ## 它如何工作
 
@@ -123,21 +153,21 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 ![EpiAgentKit 仓库中的 CLAUDE.md、skills、hooks 和 scripts 通过 install、sync 与 doctor 同步到 Claude Code 和 Codex 的真实配置目录](docs/assets/platform-architecture.webp)
 
-| 层 | 组件 | 作用 |
-| --- | --- | --- |
-| 全局规则 | [`CLAUDE.md`](CLAUDE.md) | 每个会话必须遵守的安全要求、任务分流、唯一来源说明与完成条件 |
-| 领域技能 | [`skills/`](skills/) | 按需加载分析、证据、写作、视觉、交付与审查流程，避免把所有规范塞进上下文 |
-| 确定性 hooks | [`hooks/`](hooks/) | 保护原始数据，检查 R 语法、文本痕迹、图件与结果文件 |
-| 配置管理器 | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、双端一致性验收与项目终检 |
+| 层           | 组件                                                | 作用                                                                     |
+| ------------ | --------------------------------------------------- | ------------------------------------------------------------------------ |
+| 全局规则     | [`CLAUDE.md`](CLAUDE.md)                           | 每个会话必须遵守的安全要求、任务分流、唯一来源说明与完成条件             |
+| 领域技能     | [`skills/`](skills/)                               | 按需加载分析、证据、写作、视觉、交付与审查流程，避免把所有规范塞进上下文 |
+| 确定性 hooks | [`hooks/`](hooks/)                                 | 保护原始数据，检查 R 语法、文本痕迹、图件与结果文件                      |
+| 配置管理器   | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、双端一致性验收与项目终检                           |
 
 ### 四类任务范围
 
-| 范围 | 什么时候使用 | 系统行为 |
-| --- | --- | --- |
-| Q 问答 | 解释、判断、只读核验 | 只回复，不创建文件 |
-| L 局部产物 | 单个已经确认的产物或快速尝试 | 直接执行，只检查实际受影响的内容 |
-| P 项目执行 | 改变正式分析过程 | 通过总运行脚本执行，更新 `results/results.yaml`、方法决定和自动运行记录 |
-| R 正式发布 | 投稿、外发、归档或全面质控 | 增加期刊要求、授权、隐私、交付和正式发布检查 |
+| 范围       | 什么时候使用                 | 系统行为                                                                 |
+| ---------- | ---------------------------- | ------------------------------------------------------------------------ |
+| Q 问答     | 解释、判断、只读核验         | 只回复，不创建文件                                                       |
+| L 局部产物 | 单个已经确认的产物或快速尝试 | 直接执行，只检查实际受影响的内容                                         |
+| P 项目执行 | 改变正式分析过程             | 通过总运行脚本执行，更新 `results/results.yaml`、方法决定和自动运行记录 |
+| R 正式发布 | 投稿、外发、归档或全面质控   | 增加期刊要求、授权、隐私、交付和正式发布检查                             |
 
 触发某个领域 skill 不会自动扩大范围。E0 快速核验通常不建实验目录；E1 在一个独立工作目录中写清比较前提、实际运行和结论，记录可以合并也可以分开；只有 E2 正式比较才建立全项目的比较记录，并保留所有方案的结果。
 
@@ -171,7 +201,7 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 ### release 1.1
 
-只需要规则和 17 个可分发 skills 时，可以把 [EpiAgentKit 1.1 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1) 直接交给当前 Agent：
+只需要规则和 18 个可分发 skills 时，可以把 [EpiAgentKit 1.1 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1) 直接交给当前 Agent：
 
 ```text
 请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1。保留我现有的个人配置，安装完成后检查 skills 是否可用。
@@ -200,7 +230,7 @@ python scripts/epiagentkit.py install --target all --preset analysis --yes
 # 只安装论文与报告技能包
 python scripts/epiagentkit.py install --target all --preset writing --yes
 
-# 只为 Codex 安装 PPT 与科研视觉技能包
+# 只为 Codex 安装通用学术 PPT 与科研视觉技能包
 python scripts/epiagentkit.py install --target codex --preset ppt --yes
 
 # 先演练，不修改用户目录
@@ -217,7 +247,7 @@ python scripts/epiagentkit.py list
 
 # 自选技能，依赖项自动补齐
 python scripts/epiagentkit.py install --target all --preset custom \
-  --skills sysu-ppt,report-writing --with-rules --yes
+  --skills academic-ppt,report-writing --with-rules --yes
 
 # 对正式研究项目运行项目最终检查
 python scripts/epiagentkit.py check-project <项目根>
@@ -225,21 +255,23 @@ python scripts/epiagentkit.py check-project <项目根>
 
 Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。
 
+源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md` 并将其从 doctor 的受管组件中移除。这两个文件只表达本机策略，不进入 release。
+
 </details>
 
 ## 功能与技能
 
-| 类型 | Skills |
-| --- | --- |
-| 原则、证据与设计 | `biostat-principles` · `evidence-research` · `epi-study-design` |
-| 项目与分析 | `project-init` · `r-biostats` · `python-biostats` · `publication-figures` |
-| 科研视觉 | `research-visuals` · `svg-diagrams` |
-| 论文与报告 | `academic-publishing` · `academic-humanizer` · `report-writing` |
-| 汇报与交付 | `sysu-ppt` · `consulting-delivery` |
-| 项目审查 | `epi-project-audit` |
-| 文件与维护 | `docx` · `pdf` · `pptx` · `xlsx` · `workflow-retrospective` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
+| 类型             | Skills                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 原则、证据与设计 | `biostat-principles` · `evidence-research` · `epi-study-design`                                                                                |
+| 项目与分析       | `project-init` · `r-biostats` · `python-biostats` · `publication-figures`                                                                   |
+| 科研视觉         | `research-visuals` · `svg-diagrams`                                                                                                               |
+| 论文与报告       | `academic-publishing` · `academic-humanizer` · `report-writing`                                                                                |
+| 汇报与交付       | `academic-ppt` · `consulting-delivery`                                                                                                            |
+| 项目审查         | `epi-project-audit`                                                                                                                                  |
+| 文件与维护       | `docx` · `pdf` · `pptx` · `xlsx` · `workflow-retrospective` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
 
-先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；非统计视觉统一使用 `research-visuals → imagegen`，只有符合该技能列明的条件时才改用 `svg-diagrams`。
+先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
 
 ## 为什么不只是一个提示词仓库
 
@@ -258,12 +290,12 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 
 ## 安全边界
 
-| EpiAgentKit 会做 | EpiAgentKit 不会做 |
-| --- | --- |
-| 依据项目文件、真实分析结果和可核验来源推进任务 | 编造研究发现、文献、DOI/PMID、伦理号、基金号或期刊要求 |
-| 在授权范围内整理非原始文件、运行代码、生成成果并审查 | 修改原始数据，或在数据异常未解决时擅自填补、排除和继续计算 |
-| 把观察性结果校准为合适的论断强度 | 把关联写成已证实因果，或把探索性峰值包装成最终结论 |
-| 自动完成可确定的执行、核验、同步和常规判断 | 在证据不足时编造研究问题、终点、分析集、异常处置、署名或必须由责任人确认的科学决定 |
+| EpiAgentKit 会做                                     | EpiAgentKit 不会做                                                                 |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 依据项目文件、真实分析结果和可核验来源推进任务       | 编造研究发现、文献、DOI/PMID、伦理号、基金号或期刊要求                             |
+| 在授权范围内整理非原始文件、运行代码、生成成果并审查 | 修改原始数据，或在数据异常未解决时擅自填补、排除和继续计算                         |
+| 把观察性结果校准为合适的论断强度                     | 把关联写成已证实因果，或把探索性峰值包装成最终结论                                 |
+| 自动完成可确定的执行、核验、同步和常规判断           | 在证据不足时编造研究问题、终点、分析集、异常处置、署名或必须由责任人确认的科学决定 |
 
 正式归档只处理已经确认的非原始文件：先用 dry-run 列出将要移动的文件，再移动到 `09_backup/archive/` 中不会覆盖旧批次的位置，同时生成 `MANIFEST.json`（文件及其哈希值清单）和 `INDEX.md`（正式归档索引）。来源、当前版本或引用关系不清时停止并请用户决定。Git 可用时可额外保留恢复历史；没有 Git 时工作流会跳过 Git，不会代为安装。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
 
@@ -296,10 +328,10 @@ $skill-creator
 正确结果：<说明希望得到什么，最好附一个可靠示例>
 必须保留：<列出不能被这次修改破坏的旧行为>
 
-请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。完成后运行目标组件验证、完整单元测试、audit_workflow_contracts.py、sync 和 doctor；审查完整差异后按 Conventional Commits 提交。不要 push，除非我本轮明确要求。
+请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。完成后为每个发生行为变化的 skill 生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查；运行目标组件验证、完整单元测试和 audit_workflow_contracts.py，但在我明确确认当前成果前不要 commit、sync 或 doctor。不要 push，除非我本轮明确要求。
 ```
 
-修改后若当前会话仍使用已经加载的旧 skill 内容，先运行 `python scripts/epiagentkit.py sync --target all`，再新开 Codex 会话验证。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
+两份成果可以是图片、渲染截图、文档、表格、报告、代码产物或其它能直接检查的真实文件；同一结果的换色、格式转换、修订前后版或日志拆分不能替代两个代表性任务。确认提交后再运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，并新开 Codex 会话验证已安装的新 skill。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
 
 维护本仓库时先使用 `epiagentkit-maintenance`。优化不是只增不减：先确认要保留的旧行为，再决定哪些内容重写、合并、移到专门的 reference 或脚本、删除或新增，并用新旧代表性场景共同验证。修改规则、skills、hooks 或安装器后，至少运行：
 
@@ -325,11 +357,3 @@ Skill 分流与维护规范参考了 GitHub [awesome-copilot skills 固定提交
 `docx`、`pdf`、`pptx`、`xlsx` 与 `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录保留原始 LICENSE。`sysu-ppt` 内置模板版权归中山大学所有，仅供学习参考，可删除模板后替换为自有资产。
 
 </details>
-
----
-
-<div align="center">
-
-如果你希望科研 Agent 不只“给答案”，而是留下可运行、可复核、可交付的完整证据链，EpiAgentKit 就是为此设计的。
-
-</div>

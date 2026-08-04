@@ -1,6 +1,6 @@
 # EpiAgentKit release 1.1 使用说明
 
-本压缩包提供 17 个可安装到 Claude Code 或 Codex 的流行病学与生物统计 skills，以及两端共用的 `CLAUDE.md`。它不包含运行时、统计软件、用户配置、凭据、研究数据或机构模板。
+本压缩包提供 18 个可安装到 Claude Code 或 Codex 的流行病学与生物统计 skills，以及两端共用的 `CLAUDE.md`。它不包含运行时、统计软件、用户配置、凭据、研究数据或机构模板。
 
 本版进一步明确了 R 项目默认 tidyverse 代码风格、`02_code/00_setup.R|py` 单文件设置、正式分析代码与论文或验收代码的职责边界、完整论文生成条件、统计表工作表结构，以及含真实人数的病例筛选和研究流程图分流。
 
@@ -104,12 +104,13 @@ foreach ($skill in $skills) {
 
 更新时把新 release 解压到新的版本目录，再按上面的安装流程备份并替换清单内的 skills。不要覆盖旧的解压目录；旧 release 与安装前备份共同用于回退。
 
-回退时先关闭 Claude Code 和 Codex 会话，确认要恢复的备份批次，再删除该批次所对应的 17 个当前 skill 目录，并把备份目录中的同名文件和 skill 复制回原位置。若备份中不存在某个 skill，表示安装前没有该目录，回退时不应凭空补建。
+回退时先关闭 Claude Code 和 Codex 会话，确认要恢复的备份批次，再删除该批次所对应的 18 个当前 skill 目录，并把备份目录中的同名文件和 skill 复制回原位置。若备份中不存在某个 skill，表示安装前没有该目录，回退时不应凭空补建。
 
 ## 四、本版未提供的能力
 
 - `docx`、`pdf`、`pptx`、`xlsx` 未随包分发。实际操作 Word、PDF、PowerPoint 或 Excel 时，使用平台已经提供且使用者有权使用的文件处理能力。
-- `sysu-ppt` 未随包分发。需要中山大学或其他机构模板时，由使用者在本地配置其有权使用的模板。
+- `academic-ppt` 已随包分发，但不携带机构模板。使用者可提供有权使用的学校、机构或会议模板，也可明确选择无模板中性设计。
+- `sysu-ppt` 未随包分发，中山大学模板亦不在本 release 中。
 - `research-visuals` 可以调用平台提供的 `imagegen`，本包不复制系统 imagegen skill，也不包含图像生成服务。
 - 本包不安装 R、Python、Node、Java、LibreOffice、TeX、Git 或统计分析包。运行环境和项目依赖仍按项目隔离规则处理。
 

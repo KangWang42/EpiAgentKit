@@ -163,31 +163,39 @@
       "prompt": "制作中山大学开题汇报并输出 pptx",
       "primary": "sysu-ppt",
       "companions": ["pptx"],
-      "excluded": []
+      "excluded": ["academic-ppt"]
     },
     {
       "id": "generic_presentation_template_unspecified",
       "prompt": "帮我制作一份开题 PPT，模板来源还没有确定",
-      "primary": "pptx",
-      "companions": [],
+      "primary": "academic-ppt",
+      "companions": ["pptx"],
       "excluded": ["sysu-ppt"],
       "expected_action": "clarify_template_source_before_creation"
     },
     {
       "id": "other_institution_presentation",
       "prompt": "用我提供的其他学校官方模板制作答辩 PPT",
-      "primary": "pptx",
-      "companions": [],
+      "primary": "academic-ppt",
+      "companions": ["pptx"],
       "excluded": ["sysu-ppt"],
       "expected_action": "preserve_supplied_template"
     },
     {
       "id": "neutral_presentation_without_template",
       "prompt": "这份汇报不使用学校模板，请按中性风格从零生成 PPTX",
-      "primary": "pptx",
-      "companions": [],
+      "primary": "academic-ppt",
+      "companions": ["pptx"],
       "excluded": ["sysu-ppt"],
       "expected_action": "create_from_scratch_after_explicit_neutral_choice"
+    },
+    {
+      "id": "existing_presentation_bounded_edit",
+      "prompt": "只把这份现有 PPTX 的第 6 页图片替换为新图，其他内容和模板不变",
+      "primary": "pptx",
+      "companions": [],
+      "excluded": ["academic-ppt", "sysu-ppt"],
+      "expected_action": "edit_only_confirmed_slide"
     },
     {
       "id": "evidence_before_method",

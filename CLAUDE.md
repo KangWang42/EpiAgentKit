@@ -28,7 +28,8 @@
 | 论文同行评审 | `biostat-principles` → `manuscript-peer-review` | 核验加 `evidence-research`；实际读取 Word/PDF 时加 `docx`/`pdf` |
 | 已有学术文本的编辑、润色或压缩 | `academic-humanizer` | Word 操作加 `docx` |
 | 报告正文或报告文件 | `report-writing` → `academic-humanizer` | Word 操作加 `docx` |
-| PPT 或演示文件 | 先判模板来源，再用 `pptx` | 仅明确中山大学时用 `sysu-ppt`；已有文件不重复问模板来源 |
+| 组会、文献分享、方法讲解、开题或答辩 PPT | 先判模板来源，再用 `academic-ppt` | 实际文件读写、渲染和显示检查加 `pptx` |
+| 已有 PPTX 的局部文件修改 | `pptx` | 沿用既有模板，不扩大为整份内容重做 |
 | 咨询结果最终外发 | `biostat-principles` → `consulting-delivery` | 仅在分析完成并验证后执行 |
 | 项目质控、复核或一致性检查 | `biostat-principles` → `epi-project-audit` | 含咨询包时同时核对咨询交付规则 |
 | 当前会话中未遵循规范的问题总结 | `workflow-retrospective` | 只生成或更新 `workflow.txt`；回到 EpiAgentKit 源仓库后使用仓库维护流程 |

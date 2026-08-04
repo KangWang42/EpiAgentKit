@@ -2,6 +2,8 @@
 
 先明确图件要求和内容，再选择适用模板。提示词不是风格词堆砌；每个字段只写会改变结果的信息。提示词不设固定字数，以消除结构歧义且不重复为准。
 
+本文件严格区分**图外规划**与**实际调用提示词**。第 1 节是内部规划工作表，不得整段复制给 imagegen。来源路径、采用理由、300 ppi 像素计算、验收日志和问题记录留在调用外；实际调用只装配第 2–3 节的五段最小包。长提示词本身不是失败原因，但重复约束、多个同义清单、一次并列多个修改目标和让模型从散文中推断精确图谱都会增加漂移。提示词只能提高遵循率，不能保证生成式模型完美复现生产级密集文字与拓扑；所有关键文字、节点和边仍须逐项检查。
+
 ## 目录
 
 1. 通用图件要求
@@ -29,15 +31,24 @@ Evidence class: <解释插图 / 精确结构图 / 装饰视觉；不得填写统
 Information role: <正文内容图 / 真实截图 / 氛围插图>
 Source material: <文件、章节、小节、表图、results.yaml 中的结果名称或已核验文献>
 Primary message: <这张图只需要传达的一件事>
+Figure title: <一个简短标题或 none；独立计算机方法图禁止副标题、覆盖标签、版本摘要、来源/实现说明和页脚句子>
 Rationale: <为什么图比文字、表格或已有图更清楚>
 Subject: <真实对象、场景或关系>
 Archetype: <单向主链 / 并行汇聚 / 总览加局部 / 证据复合 / 对照矩阵 / 时间或层级>
 Visual language: <科学编辑插画 / 自然光纪实 / 纸艺档案 / 克制几何 / 编辑拼贴>
+Aesthetic system: <表面系统 | 主要区域分隔方式 | 颜色使用位置 | 容器深度 | 密度节奏>
+Coverage mode: <完整架构 / 方法总览 / 模块详解 | 必须保留的层次 | 允许省略的内容>
+Typography character: <中性/几何/略柔和/衬线点题；服从模板、语言覆盖与最终尺寸>
 Composition: <比例、焦点、阅读方向、主体位置和层级>
 Geometry and typography: <目标比例来自实际图位；可用宽度与节点/侧栏容量；正常字宽的中文字体；保持宽高比；禁止 condensed/narrow 字体、压缩字距和非等比缩放>
+Raster resolution contract: <最终毫米尺寸 | 目标 ppi/dpi | 最低像素宽高 | 生成后读取实际像素与 DPI 元数据；提示词中的 300 dpi/print-ready/4K 不作为验收证据>
+Natural canvas: <按正常标签、图元、内边距和连接估算的最小宽度 | 无既定图位时的自然比例 | 图位更窄时怎样重排或拆图>
+Region shape map: <各区域适合横向/近方形/纵向的自然形状 | 哪些可以同排 | 出现高窄列或压缩图元时怎样改为双行、编辑分区或分区组合图>
 Template requirements: <必须保留的比例/品牌/字体/色彩/安全区 | 允许按内容调整的结构/密度/图文比例>
 Regions: <区域 ID | 比例位置 | 独立任务 | 内容>
 Micro-visuals: <模块 ID | 与真实操作对应的微型图元；无则 none>
+Representation identity: <必须保持的真实/写实/示意类型、关键微型图元、连续概率或热区含义、裁切、材质和已认可局部质量>
+Flat-fill contract: <需要纯色的区域与有限色板 | 整块纯色底和网格描边 | 无渐变、白雾、中心高光、噪声、随机深浅、纹理或透明叠色；不适用写 none>
 Icon strategy: <none / per-major-stage / selected key objects only>
 Icon map: <stage ID | literal metaphor or micro-visual | why it improves recognition>
 Icon system: <L0/L1/L2/L3, outline/filled, stroke, corner, viewpoint, container, single-color logic>
@@ -56,7 +67,7 @@ Type-specific constraints: <只加载一个或确有需要的图类约束块>
 
 计算模型、网络架构、模块详解、并行分支、跳连、反馈或张量流图需要更多表达词汇时，先读 `external/SOURCE.md`，再按关键词检索归档的上游提示词原文。只抽取与真实方法一致的布局和模块描述，并重新写入本任务的提示词；不继承上游固定确认、字数、配色、平台或 API 要求。
 
-## 2. 约束装配规则
+## 2. 约束装配与最小调用包
 
 每个最终提示词只保留三条永久约束：
 
@@ -76,26 +87,37 @@ Type-specific constraints: <只加载一个或确有需要的图类约束块>
 | 科学教育插图 | 对象结构、层级、标签和证据边界；禁止无来源解剖、机制、分子和数据 |
 | 封面与章节图 | 单一视觉命题、标题留白、印刷或投影适配；禁止多焦点、海报口号和拥挤细节 |
 
-提示词按 `精确内容 → 结构关系 → 视觉方向 → 图类禁止项 → 验收条件` 分块。相同约束只出现一次；精简提示词时先删除重复形容词和不相关禁止项，不删除必须保持的内容、节点与连接关系列表、图片用途或验收条件。
+实际调用固定按 `USE → CONTENT LOCK → GRAPH OR LAYOUT → VISUAL DIRECTION → CONSTRAINTS` 五段装配。空字段直接省略，不再加第六个同义的 `MUST PRESERVE`、`Acceptance` 或 `Avoid` 清单。相同事实、节点、关系和约束只出现一次；精简提示词时先删除来源路径、采用理由、重复形容词、验收日志和不相关禁止项，不删除会改变图意的文字、节点、边、图片用途或单一修改目标。
 
-## 3. 通用主提示词
+图外继续保存完整事实清单、语义分辨率清单、图件计划表和验收表；它们是核验依据，不是模型输入。实际调用只把生成这张图所必需的内容压缩到五段中。精确图谱使用短 ID 和紧凑邻接表；同一 ID 与同一条关系只写一次，汇聚必须拆成多条有向边，不写 `A+B→C` 让模型自行解释。
+
+计算机相关图件在“精确内容”之前先声明覆盖模式，并按来源建立不限层数的语义分辨率清单。完整架构提示词必须逐区列出所有会改变理解的内容和关系；高层阶段只能在真实需要时作为容器，不能成为把多个模块合并成一个大框的理由。空间不足时要求分区、多行主链、边缘辅助带、局部展开或拆图；不得用大片空白、均匀卡片、重阴影或减少节点换取“整洁”。
+
+## 3. 通用五段调用模板
 
 ```text
-Act as a scientific visual editor and academic art director.
-Create one complete image for the carrier and function below. Choose the visual treatment from the research content and surrounding layout; do not apply a generic “scientific” style.
+USE
+Create one <figure type> for <carrier and actual placement>. Purpose: <one message>. Audience: <reader>.
 
-<插入图件要求>
+CONTENT LOCK
+Exact text: <quoted short labels, each once, or none>.
+Must include: <facts, objects, numbers, formulas, states>.
+Do not infer: <unsupported content>.
 
-Build one clear focal point, a stable visual hierarchy, and purposeful negative space. Match detail density to the final display size. Derive scientific credibility from the actual subject, evidence workflow, field setting, instrument, document, or mechanism, not from decorative science symbols.
+GRAPH OR LAYOUT
+<For an exact graph: NODES, EDGES, optional GROUPS, reading direction, merge/branch placement>.
+<For an illustration: SUBJECTS, PLACEMENT, SAFE ZONES, framing>.
 
-Treat any template as an adjustable set of requirements. Preserve the required dimensions, brand, typography, palette, safe zones, and components; reshape regions, reading order, hierarchy, density, whitespace, and text-image balance to fit the actual information relationships.
+VISUAL DIRECTION
+<one surface system; one region-separation method; semantic color carriers; shallow container depth; density rhythm; natural-width type and undistorted geometry>.
 
-Preserve natural geometry: use regular-width CJK typography with normal glyph proportions, keep circles circular and squares square, and never solve layout pressure with condensed fonts, compressed tracking, or non-uniform scaling. Derive the aspect ratio from the final carrier, not from a reference image. If the nodes, arrows, gaps, and side regions do not fit at natural widths, reflow the structure before rendering.
-
-Permanent constraints: no watermark or false branding; no pseudo-text or random interface copy; do not add content, data, conclusions, objects, labels, or relationships absent from the supplied source.
-
-Append only the relevant type-specific constraint block from Section 2, with no duplicate constraints.
+CONSTRAINTS
+<only the relevant type-specific constraints>; no watermark or false branding; no extra or pseudo-text; no unsupported content or relationships.
 ```
+
+五段标题只是稳定分隔符，不要求每段写成长段落。普通插图通常只需数句；精确架构图可以因节点和边较多而变长，但不得重复同一内容。`GRAPH OR LAYOUT` 二选一：精确关系图写图谱，摄影或编辑插图写主体与空间，不把两套字段同时堆入。
+
+调用参数与提示词分开处理。工具允许选择质量时，密集标签、复杂信息图和最终成品优先比较 `medium` 与 `high`，不能用形容词替代质量参数。论文要求 300 ppi 时，先按最终毫米尺寸计算最低像素，再请求满足尺寸的输出并读取实际像素和 DPI 元数据；不要把 `300 dpi`、`4K` 或 `print-ready` 当作能改变真实像素的提示词。工具未暴露尺寸或质量参数时，生成后按实际文件验收，未达到就如实报告。
 
 ## 4. PPT 主视觉或章节配图
 
@@ -125,28 +147,32 @@ Avoid: sci-fi glow, decorative molecular structures, cartoon anatomy, colorful c
 ## 6. 精确流程、技术路线或图形摘要
 
 ```text
-Use case: infographic-diagram
-Carrier: <PPT / paper / grant / report>
-Function: show the exact path from <start> to <end>
-Reading order: <left to right / top to bottom>
-Nodes: <ID | exact label | level | visual object>
-Edges: <source ID -> target ID | direction | relation>
-Regions: <区域 ID | 比例位置 | 独立贡献；删除无贡献区域>
-Micro-visuals: <仅填写与真实输入、操作或输出对应的波形/频谱/矩阵/网格/关系图元>
-Icon strategy: <默认 none；需要时按 diagram-iconography.md 给出 0–4 个用于识别关键对象或阶段的简单图标>
-Icon map: <node ID | literal metaphor | semantic contribution>
-Text (verbatim): use only the supplied labels and numbers, exactly once
-Terminology: every label must come from the source, protocol, or a verified domain term; do not invent abbreviations, compound labels, workflow jargon, colloquial actions, or literal translations
-Composition: <target ratio from the actual carrier>; clear main path; branches close to their source; no crossing arrows; adequate label spacing; if a single row cannot preserve natural label width, use a two-row chain, grouped phases, top-to-bottom layout, or move explanations outside the main path
-Geometry and typography: regular-width Chinese sans-serif with natural glyph proportions; node width follows the longest line plus visible horizontal padding; preserve the output aspect ratio; no condensed/narrow font, compressed tracking, horizontally squeezed text, stretched icons, or non-uniform scaling
-Palette: use two semantic hues by default and a third only for a real warning, failure, abnormal state, adverse outcome, or essential key state; never exceed three chromatic hues; neutrals do not count; do not default to blue-and-white
-Constraints: node and edge counts must match the supplied requirements; no added, merged, inferred, or omitted steps; approved icons use one coherent family and remain secondary to labels and arrows; no title, legend, or decorative icon
-Avoid: card wall, random 3D symbols, gradients, duplicate nodes, ambiguous arrowheads
+USE
+Create one exact infographic diagram for <carrier and actual placement>. Purpose: show <start> to <end>. Reading: <left-to-right / top-to-bottom>.
+
+CONTENT LOCK
+Exact text: <quoted labels and numbers, each once>.
+Must include: <verified objects, states, formulas and outputs>.
+Do not infer: any step, abbreviation, value or relationship not listed below.
+
+GRAPH OR LAYOUT
+NODES: input="<label>"; M00="<label>"; M01="<label>"; output="<label>".
+EDGES: input>M00; M00>M01; M01>output.
+GROUPS: <group ID={member IDs}, only for real containment; otherwise omit>.
+Render labels, not IDs. Draw every listed edge once with one unambiguous arrowhead. Keep branches beside their source and merges beside their target. If one row compresses labels, use two rows or unequal editorial regions.
+
+VISUAL DIRECTION
+<target ratio>; <surface and region separation>; two semantic hues, with a third only for a real exceptional state; regular-width type; natural node width; undistorted shapes; <0–4 verified micro-visuals or icons, otherwise none>; <flat-fill contract when applicable>.
+
+CONSTRAINTS
+Node and edge counts must match the lists; no added, duplicated, merged, inferred or omitted nodes or edges; no crossing arrows; no condensed type, non-uniform scaling, card wall, random scientific symbols, watermark, extra title, legend or pseudo-text.
 ```
+
+邻接表中同一 ID 只定义一次，同一边只列一次。两条路径汇入同一节点时写成 `M06>M12; M11>M12`，不能写成 `M06+M11>M12`。若标签、公式和拓扑在五段包中仍过密，先重排；只有用户要求多个用途、图位确需拆图或单图无法在最终尺寸成立时，才规划职责明确的“架构沟通图”“接口审计图”等多图成果，不得删边、缩窄节点或依靠提示词重复强调来硬塞。
 
 总览加局部结构只放大一个真正需要解释的部分，并用明确的引导线连接总体图中的位置与局部放大图。局部图中的小型图形必须表达真实操作；不得用伪统计图、无数值坐标、随机热图或通用占位图填空。
 
-对样本纳排、CONSORT、病例流转和包含数字的图，逐项比对全部数字、原因和分支。错误时只用 imagegen 修改完整成图；用户已经提供且确有帮助的可选参考图可在任一轮使用，不为使用参考图单独增加一轮。最多定向修改两轮；允许重新生成的图件可再完整生成一次，仍不准确才改用 `svg-diagrams`。
+对样本纳排、CONSORT、病例流转和包含数字的图，逐项比对全部数字、原因和分支。错误时只用 imagegen 修改完整成图；用户已经提供且确有帮助的可选参考图可在任一轮使用，不为使用参考图单独增加一轮。最多定向修改两轮；第二次修改后保存当前结果，分别披露内容硬伤和审美问题，再由用户决定是否继续，不自动重生整图或改用 SVG。
 
 ### 科研技术路线补充
 
@@ -274,9 +300,11 @@ Avoid: campaign poster, saturated marketing palette, dramatic spotlight, fake pa
 
 不要把流程图的逐字标签规则强加给无文字摄影，也不要把摄影的光线、景深和材质要求套到技术路线图。图类指标决定 acceptance checks；通用美学只能排在精确内容与最终显示可读性之后。
 
-## 14. 根据原图定向修改与失败处理
+所有图类再做一次视觉系统检查：表面是否安静，区域分隔是否只使用必要手段，颜色是否落在有语义的元素上，容器是否过深，核心与辅助区域是否形成疏密节奏。检查结果不能推翻本表的内容准确和证据边界要求。
 
-需要修改既有图片、根据既有图重绘或修正上一版时，附带待修改原图。所有需要附带的图片都有本地路径时用 `referenced_image_paths`；只能从近期对话取得图片时，使用能够覆盖全部必要图片的最小 `num_last_images_to_include`；不得同时设置两者。一种附图方式不能同时包含待修改原图和可选参考图时，优先附带待修改原图；参考图对修正确有帮助时再请用户重新附图。已经提供且确有帮助的参考图应在改用 SVG 前尝试；没有适用参考图时不额外寻找。
+## 14. 根据原图定向修改、按内容重构与失败处理
+
+需要保留原图视觉身份并修改、重绘或修正上一版时，附带待修改原图。用户只要求提取图中内容并彻底重构时，把原图作为内容来源图：先转写全部事实与关系，再按全新创作不附图生成，避免继续模仿其布局和审美。待修改路线中，所有需要附带的图片都有本地路径时用 `referenced_image_paths`；只能从近期对话取得图片时，使用能够覆盖全部必要图片的最小 `num_last_images_to_include`；不得同时设置两者。一种附图方式不能同时包含待修改原图和可选参考图时，优先附带待修改原图；参考图对修正确有帮助时再请用户重新附图。没有适用参考图时不额外寻找。
 
 ### 14.1 本次编辑需要确认的信息
 
@@ -287,6 +315,7 @@ Target identity: <用户指向、图题/正文交叉引用、页面或段落位�
 Confirmed edit target: <经文档关系和渲染外观核对后的待修改原图>
 Supporting sources: <支持本轮修改的正文、表图、results.yaml 中的结果名称或其它权威来源>
 Instance-only facts: <本项目的精确标签、方法、阈值、比例、配色和修改范围>
+Representation identity lock: <真实/写实/示意类型 | 必须保持的时相图、概率图、热区图、矩阵或其它关键微型图元 | 裁切、材质和已认可质量>
 Carrier-managed text: <由 Word/PPT/网页/排版系统承担且不烧录进图片的图号、图题、标题或来源说明；无则 none>
 ```
 
@@ -294,6 +323,7 @@ Carrier-managed text: <由 Word/PPT/网页/排版系统承担且不烧录进图�
 
 ```text
 Target image: the only image to edit; use it to verify all factual, scientific, structural, and identity content.
+Content-source image: use it outside the generation call to transcribe and verify facts and relationships; do not attach it to a full redesign, and do not inherit its rejected layout, styling, aspect ratio, or visual grammar.
 Optional reference image: use only when it has already been provided and materially helps the requested edit; borrow only its verified palette, spatial organization, reading direction, and line treatment.
 Do not copy the optional reference image's objects, labels, data, layout errors, branding, scientific claims, canvas aspect ratio, narrow node geometry, condensed typography, or compression artifacts.
 ```
@@ -309,8 +339,9 @@ Priority order:
 1. factual and semantic fidelity
 2. exact text, numbers, formulas, and identity
 3. correct objects, nodes, arrows, and relationships
-4. readability at final display size
-5. visual refinement
+4. representation identity, key micro-visuals, crop, material, and approved local quality
+5. readability at final display size
+6. visual refinement
 
 A more attractive image is not acceptable if any higher-priority item becomes worse.
 Keep the original unchanged unless the candidate passes every acceptance check.
@@ -321,22 +352,51 @@ Keep the original unchanged unless the candidate passes every acceptance check.
 每轮只处理一个主要问题，并填写：
 
 ```text
+USE
 Edit the attached target image.
 Change request: <单一、可观察的修改目标>.
 
+CONTENT LOCK
 MUST PRESERVE:
-<不得改变的文字、数字、公式、对象、人物身份、节点、连线、方向和结论>
+<不得改变的文字、数字、公式、对象、人物身份、节点、连线、方向和结论；真实/写实/示意类型、关键微型图元、裁切、材质和已认可质量>
 
+GRAPH OR LAYOUT
+<只列与本轮目标直接相关的位置、节点或区域；不重新讲述整张图>
+
+VISUAL DIRECTION
 MAY ADJUST:
 <允许优化的版式、间距、字体层级、配色、线宽、背景和视觉重心>
 
+CONSTRAINTS
 MUST NOT CHANGE:
-<不得添加、删除、纠正、推断或合并的内容>
+<不得添加、删除、纠正、推断、合并、替换或简化的内容>
 
 Return one complete edited image, not a patch or explanation.
 ```
 
-### 14.5 密集科研图专用模板
+同一轮不得同时要求“修复全部文字、重排全部节点、改变配色并更换画风”。用户说“重新画图”但只点名纯色、噪声、文字或单条连线时，仍按局部编辑处理，不扩大成全图重构。后续轮次重新写明当前唯一修改目标和仍须保持的不变量，不用“同上”代替；已经在 `CONTENT LOCK` 写过的内容不再复制到 `CONSTRAINTS`。局部纯色修正需逐区写明目标色块，并明确每块为均匀不透明纯色，排除渐变、白雾、中心高光、噪声、随机深浅、纹理和透明叠色；同时锁定其余图元的表示身份和既有质量。
+
+### 14.5 内容来源图重构模板
+
+用户要求保留内容但明确重做布局或否定原图审美时使用：
+
+```text
+Use case: full redesign from a verified content-source image
+Input handling: the source image has been transcribed outside this call; do not attach or imitate it
+Verified fact inventory: <文字、数字、对象、节点、接口和结论>
+Verified topology: <边、方向、分支、汇合、反馈和包含关系>
+Coverage for this deliverable: <架构沟通 / 模块详解 / 算子审计 / 接口与导出约束 / 其它明确任务>
+Information kept here: <完成该任务所需的全部信息>
+Information kept in carrier text or separately requested figures: <不在本图硬塞的审计明细、长说明或来源>
+New composition: <从任务与区域自然形状推导的全新布局>
+Aesthetic direction: <独立于原图建立的表面、分隔、颜色使用位置、线条、文字层级和密度节奏>
+Must not inherit: <被否定的原图栏数、卡片、比例、颜色、阴影、图标或阅读路径>
+Acceptance: facts and topology match the transcribed source; composition independently succeeds; no visual anchoring to the rejected source
+```
+
+### 14.6 密集科研图定向编辑模板
+
+下列清单先在调用外核对完整性；实际编辑提示词只抽取本轮唯一修改目标及其直接相关的不变量，按 14.4 的五段结构装配，不把整份审计表原样粘贴给 imagegen。
 
 ```text
 Use case: high-fidelity scientific-figure edit
@@ -366,9 +426,9 @@ Acceptance:
 - readable at page scale and thumbnail scale
 ```
 
-### 14.6 候选图与 HTTP 524
+### 14.7 候选图与 HTTP 524
 
-成功返回修改结果后，与待修改原图逐项比较并按 Section 13 核对。最多连续修改两轮；第二轮以上一轮结果为本轮待修改图片，但仍重复原图作用、参考图作用和三类编辑要求，并与最初原图核对。用户已经提供且确有帮助的参考图可以在任一轮使用，不为使用参考图单独增加一轮。可替代的生成稿仍失败时，才按完整内容要求不附图重新生成一次；不可替代的用户原图保留原件。
+成功返回修改结果后，与待修改原图逐项比较并按 Section 13 核对。任何非目标文字、结构、图元、表示类型、裁切、材质或已认可质量发生漂移，都判定本轮失败并保留修改前版本。最多连续修改两轮；第二轮以上一轮结果为本轮待修改图片，但仍重复原图作用、参考图作用和四类编辑要求，并与最初原图核对。用户已经提供且确有帮助的参考图可以在任一轮使用，不为使用参考图单独增加一轮。第二次修改后停止自动修改、整图重生和绘制方式切换，把该图保存为当前结果。交付时分开说明：(1) 内容硬伤，包括错误、缺失、重复或关系漂移；(2) 表现身份漂移，包括写实/示意类型、关键微型图元、裁切、材质或既有质量变化；(3) 审美问题，包括比例、密度、对齐、留白、配色或局部失真；(4) 各问题对理解和使用的影响；随后询问用户是否继续修改。不可替代的用户原图始终保留。
 
 HTTP 524 不计入候选图质量修正：
 
@@ -380,4 +440,4 @@ Second HTTP 524:
 stop retrying; preserve the original; do not interpret timeout as a design failure; do not silently downgrade the model or switch to SVG/API.
 ```
 
-只有 imagegen 成功返回的修改结果确实不满足内容精度要求，并且已经对待修改原图完成必要的定向修改、使用用户已经提供且确有帮助的参考图，以及对允许重新生成的图件完整生成一次后，精确结构图才可改用 SVG。没有参考图或参考图无助于当前问题时不要求该步骤。不得用 Python、PPT/Word 文本框或 SVG 覆盖层补字，也不得以重新生成的图片冒充对原图修改成功。
+imagegen 已成功返回但内容或美学仍不合格，不得据此改用 SVG。只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或交付格式强制矢量时才进入 `svg-diagrams`。不得用 Python、PPT/Word 文本框或 SVG 覆盖层补字，也不得以重新生成的图片冒充对原图修改成功。

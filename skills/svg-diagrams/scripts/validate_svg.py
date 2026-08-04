@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import math
 import re
+import struct
 import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -71,6 +73,13 @@ ALLOWED_COLORS = (
 COLOR_RE = re.compile(r"#[0-9A-Fa-f]{3,8}\b")
 NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
 PATH_TOKEN_RE = re.compile(r"[A-Za-z]|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
+SEMANTIC_NODE_ROLES = {
+    "card",
+    "nested-layer",
+    "flow-main",
+    "flow-exclusion",
+    "flow-terminal",
+}
 
 
 def local_name(tag: str) -> str:
@@ -96,6 +105,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ratio-tolerance", type=float, default=0.03)
     parser.add_argument("--require-text", action="append", default=[])
     parser.add_argument("--forbid-text", action="append", default=[])
+    parser.add_argument("--require-node", action="append", default=[])
+    parser.add_argument("--require-edge", action="append", default=[])
+    parser.add_argument("--require-semantic-graph", action="store_true")
+    parser.add_argument("--single-title", action="store_true")
     parser.add_argument("--max-circles", type=int)
     parser.add_argument("--min-font-size", type=float)
     parser.add_argument("--max-semantic-categories", type=int)
@@ -103,7 +116,55 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-filter", action="store_true")
     parser.add_argument("--allow-image", action="store_true")
     parser.add_argument("--allow-diagonal-connectors", action="store_true")
+    parser.add_argument("--preview-png", type=Path)
+    parser.add_argument("--target-width-mm", type=float)
+    parser.add_argument("--target-ppi", type=float)
+    parser.add_argument("--dpi-tolerance", type=float, default=2.0)
     return parser.parse_args()
+
+
+def parse_required_edge(raw: str) -> tuple[str, str]:
+    if raw.count("->") != 1:
+        raise ValueError(f"required edge must use SOURCE->TARGET: {raw!r}")
+    source, target = (value.strip() for value in raw.split("->", 1))
+    if not source or not target:
+        raise ValueError(f"required edge must use non-empty SOURCE->TARGET: {raw!r}")
+    return source, target
+
+
+def parse_png(path: Path) -> tuple[int, int, float | None, float | None]:
+    signature = b"\x89PNG\r\n\x1a\n"
+    with path.open("rb") as handle:
+        if handle.read(8) != signature:
+            raise ValueError(f"preview is not a PNG file: {path}")
+        width = height = None
+        dpi_x = dpi_y = None
+        while True:
+            raw_length = handle.read(4)
+            if not raw_length:
+                break
+            if len(raw_length) != 4:
+                raise ValueError(f"truncated PNG chunk header: {path}")
+            length = struct.unpack(">I", raw_length)[0]
+            chunk_type = handle.read(4)
+            data = handle.read(length)
+            crc = handle.read(4)
+            if len(chunk_type) != 4 or len(data) != length or len(crc) != 4:
+                raise ValueError(f"truncated PNG chunk: {path}")
+            if chunk_type == b"IHDR":
+                if length != 13:
+                    raise ValueError(f"invalid PNG IHDR: {path}")
+                width, height = struct.unpack(">II", data[:8])
+            elif chunk_type == b"pHYs" and length == 9:
+                pixels_x, pixels_y, unit = struct.unpack(">IIB", data)
+                if unit == 1:
+                    dpi_x = pixels_x * 0.0254
+                    dpi_y = pixels_y * 0.0254
+            elif chunk_type == b"IEND":
+                break
+    if width is None or height is None or width <= 0 or height <= 0:
+        raise ValueError(f"PNG lacks a valid IHDR: {path}")
+    return width, height, dpi_x, dpi_y
 
 
 def style_map(element: ET.Element) -> dict[str, str]:
@@ -221,6 +282,157 @@ def connector_is_orthogonal(element: ET.Element) -> bool:
     return False
 
 
+def validate_semantic_graph(
+    root: ET.Element,
+    required_nodes: list[str],
+    required_edges: list[str],
+    require_complete: bool,
+) -> tuple[list[str], int, int]:
+    problems: list[str] = []
+    node_elements: dict[str, str] = {}
+    edges: list[tuple[str, str, str, str]] = []
+
+    for element in root.iter():
+        role = element.get("data-role")
+        label = element_label(element)
+        if role in SEMANTIC_NODE_ROLES:
+            node_id = (element.get("data-node-id") or "").strip()
+            if require_complete and not node_id:
+                problems.append(f"semantic node lacks data-node-id: {label}")
+            if node_id:
+                if node_id in node_elements:
+                    problems.append(
+                        f"duplicate data-node-id {node_id!r}: "
+                        f"{node_elements[node_id]}, {label}"
+                    )
+                else:
+                    node_elements[node_id] = label
+
+        if role == "connector":
+            source = (element.get("data-source") or "").strip()
+            target = (element.get("data-target") or "").strip()
+            relation = (element.get("data-relation") or "").strip()
+            has_any = bool(source or target or relation)
+            if require_complete or has_any:
+                missing = [
+                    name
+                    for name, value in (
+                        ("data-source", source),
+                        ("data-target", target),
+                        ("data-relation", relation),
+                    )
+                    if not value
+                ]
+                if missing:
+                    problems.append(
+                        f"connector has incomplete semantic metadata on {label}: "
+                        + ", ".join(missing)
+                    )
+                else:
+                    edges.append((source, target, relation, label))
+
+    if require_complete and not node_elements:
+        problems.append("semantic graph requires at least one data-node-id")
+    if require_complete and not edges:
+        problems.append("semantic graph requires at least one fully described connector")
+
+    for source, target, _, label in edges:
+        if source not in node_elements:
+            problems.append(f"connector source {source!r} has no matching node: {label}")
+        if target not in node_elements:
+            problems.append(f"connector target {target!r} has no matching node: {label}")
+        if source == target:
+            problems.append(f"connector cannot point from a node to itself: {label}")
+
+    for node_id in required_nodes:
+        if node_id not in node_elements:
+            problems.append(f"required node missing: {node_id!r}")
+
+    edge_pairs = {(source, target) for source, target, _, _ in edges}
+    for raw in required_edges:
+        try:
+            edge = parse_required_edge(raw)
+        except ValueError as error:
+            problems.append(str(error))
+            continue
+        if edge not in edge_pairs:
+            problems.append(f"required edge missing: {edge[0]}->{edge[1]}")
+
+    return problems, len(node_elements), len(edges)
+
+
+def validate_preview(
+    png_path: Path | None,
+    svg_ratio: float,
+    ratio_tolerance: float,
+    target_width_mm: float | None,
+    target_ppi: float | None,
+    dpi_tolerance: float,
+) -> tuple[list[str], str | None]:
+    problems: list[str] = []
+    if png_path is None:
+        if target_width_mm is not None or target_ppi is not None:
+            problems.append("physical-size checks require --preview-png")
+        return problems, None
+    if not png_path.is_file():
+        return [f"preview PNG not found: {png_path}"], None
+    if target_width_mm is not None and target_width_mm <= 0:
+        problems.append("--target-width-mm must be positive")
+    if target_ppi is not None and target_ppi <= 0:
+        problems.append("--target-ppi must be positive")
+    if target_ppi is not None and target_width_mm is None:
+        problems.append("--target-ppi requires --target-width-mm")
+    if dpi_tolerance < 0:
+        problems.append("--dpi-tolerance cannot be negative")
+
+    try:
+        width, height, dpi_x, dpi_y = parse_png(png_path)
+    except (OSError, ValueError) as error:
+        problems.append(str(error))
+        return problems, None
+
+    png_ratio = width / height
+    if math.isfinite(svg_ratio):
+        delta = abs(png_ratio - svg_ratio) / svg_ratio
+        if delta > ratio_tolerance:
+            problems.append(
+                f"preview ratio {png_ratio:.6f} differs from SVG ratio "
+                f"{svg_ratio:.6f} by {delta:.2%}"
+            )
+
+    effective_ppi = None
+    if target_width_mm is not None and target_width_mm > 0:
+        effective_ppi = width / (target_width_mm / 25.4)
+    if (
+        target_width_mm is not None
+        and target_width_mm > 0
+        and target_ppi is not None
+        and target_ppi > 0
+    ):
+        required_width = math.ceil(target_width_mm / 25.4 * target_ppi)
+        if width < required_width:
+            problems.append(
+                f"preview width {width}px is below {required_width}px required for "
+                f"{target_width_mm:g}mm at {target_ppi:g}ppi"
+            )
+        if dpi_x is None or dpi_y is None:
+            problems.append("preview PNG lacks physical-resolution metadata")
+        elif abs(dpi_x - target_ppi) > dpi_tolerance or abs(dpi_y - target_ppi) > dpi_tolerance:
+            problems.append(
+                f"preview DPI metadata {dpi_x:.2f}x{dpi_y:.2f} differs from "
+                f"target {target_ppi:g} by more than {dpi_tolerance:g}"
+            )
+
+    dpi_label = "missing" if dpi_x is None or dpi_y is None else f"{dpi_x:.2f}x{dpi_y:.2f}"
+    effective_label = "n/a" if effective_ppi is None else f"{effective_ppi:.1f}"
+    summary = (
+        f"preview={width}x{height}px | target_width="
+        f"{target_width_mm if target_width_mm is not None else 'n/a'}mm | "
+        f"effective_ppi={effective_label} | dpi_metadata={dpi_label}"
+    )
+    return problems, summary
+
+
 def validate_editorial(
     root: ET.Element,
     purpose: str | None,
@@ -234,7 +446,7 @@ def validate_editorial(
     problems: list[str] = []
     categories: set[str] = set()
     tones: set[str] = set()
-    layer_cards: dict[str, list[tuple[float, float, str]]] = defaultdict(list)
+    size_groups: dict[str, list[tuple[float, float, str]]] = defaultdict(list)
     node_titles: dict[str, float] = {}
     semantic_nodes = 0
     canvases = 0
@@ -318,8 +530,9 @@ def validate_editorial(
                 layer = element.get("data-layer")
                 if not layer:
                     problems.append(f"card lacks data-layer: {label}")
-                elif width is not None and height is not None:
-                    layer_cards[layer].append((width, height, label))
+                size_group = element.get("data-size-group")
+                if size_group and width is not None and height is not None:
+                    size_groups[size_group].append((width, height, label))
 
         if role == "node-title":
             if category not in SEMANTIC_CATEGORIES:
@@ -392,12 +605,14 @@ def validate_editorial(
             f"chromatic tone count {len(chromatic_tones)} exceeds maximum 3"
         )
 
-    for layer, cards in layer_cards.items():
+    for size_group, cards in size_groups.items():
         widths = {round(width, 6) for width, _, _ in cards}
         heights = {round(height, 6) for _, height, _ in cards}
         if len(widths) > 1 or len(heights) > 1:
             labels = ", ".join(label for _, _, label in cards)
-            problems.append(f"cards in data-layer={layer!r} are not equal-sized: {labels}")
+            problems.append(
+                f"cards in data-size-group={size_group!r} are not equal-sized: {labels}"
+            )
 
     return problems
 
@@ -496,7 +711,9 @@ def validate_journal_flow(
 
         if name == "text":
             if color(prop(element, "fill")) != JOURNAL_FLOW["text"]:
-                problems.append(f"journal-flow text must use #444444: {label}")
+                problems.append(
+                    f"journal-flow text must use {JOURNAL_FLOW['text']}: {label}"
+                )
             size = number(prop(element, "font-size"))
             if min_font_size is not None and (size is None or size < min_font_size):
                 problems.append(f"font size below {min_font_size:g} on {label}")
@@ -583,8 +800,11 @@ def main() -> int:
     duplicates: set[str] = set()
     circle_count = 0
     text_chunks: list[str] = []
+    figure_titles = 0
+    figure_subtitles = 0
     for element in root.iter():
         name = local_name(element.tag)
+        role = element.get("data-role")
         identifier = element.get("id")
         if identifier:
             if identifier in ids:
@@ -594,6 +814,10 @@ def main() -> int:
             circle_count += 1
         if name == "text":
             text_chunks.append("".join(element.itertext()).strip())
+            if role == "figure-title":
+                figure_titles += 1
+            elif role == "figure-subtitle":
+                figure_subtitles += 1
         if name == "foreignObject":
             problems.append("foreignObject is not allowed for Office portability")
         for attr, value in element.attrib.items():
@@ -614,6 +838,35 @@ def main() -> int:
     for forbidden in args.forbid_text:
         if forbidden in all_text:
             problems.append(f"forbidden text present: {forbidden!r}")
+    if args.single_title:
+        if figure_titles != 1:
+            problems.append(
+                f"single-title mode requires exactly one data-role='figure-title'; "
+                f"found {figure_titles}"
+            )
+        if figure_subtitles:
+            problems.append(
+                f"single-title mode forbids data-role='figure-subtitle'; "
+                f"found {figure_subtitles}"
+            )
+
+    graph_problems, semantic_node_count, semantic_edge_count = validate_semantic_graph(
+        root,
+        args.require_node,
+        args.require_edge,
+        args.require_semantic_graph,
+    )
+    problems.extend(graph_problems)
+
+    preview_problems, preview_summary = validate_preview(
+        args.preview_png,
+        ratio,
+        args.ratio_tolerance,
+        args.target_width_mm,
+        args.target_ppi,
+        args.dpi_tolerance,
+    )
+    problems.extend(preview_problems)
 
     if args.profile == "editorial":
         problems.extend(
@@ -643,8 +896,11 @@ def main() -> int:
 
     print(
         f"SVG validation passed: {path} | viewBox={width:g}x{height:g} "
-        f"| ratio={ratio:.6f} | text={len(text_chunks)} | circles={circle_count}"
+        f"| ratio={ratio:.6f} | text={len(text_chunks)} | circles={circle_count} "
+        f"| semantic_nodes={semantic_node_count} | semantic_edges={semantic_edge_count}"
     )
+    if preview_summary:
+        print(f"PNG validation passed: {args.preview_png} | {preview_summary}")
     return 0
 
 

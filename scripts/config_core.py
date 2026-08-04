@@ -16,6 +16,7 @@ LEGACY_SKILL_MANIFEST = ".epiclaude-managed-skills.json"
 LEGACY_HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 INSTALL_SCHEMA = 1
 LOCAL_SKILL_EXCLUDES_FILE = ".epiagentkit-local-skills"
+LOCAL_RULES_PRESERVE_FILE = ".epiagentkit-preserve-global-rules"
 
 # Repository skills that remain available for local development but must not be
 # advertised, installed, or synchronized into user runtime skill directories.
@@ -26,6 +27,7 @@ PRESETS = {
         "biostat-principles",
         "research-visuals",
         "publication-figures",
+        "academic-ppt",
         "sysu-ppt",
         "pptx",
     },
@@ -56,6 +58,7 @@ PRESETS = {
 # skills to co-trigger at runtime; runtime routing is defined by descriptions.
 DEPENDENCIES = {
     "epiagentkit-maintenance": {"skill-creator"},
+    "academic-ppt": {"research-visuals", "publication-figures", "pptx"},
     "academic-publishing": {
         "biostat-principles",
         "evidence-research",
@@ -117,17 +120,28 @@ def local_skill_excludes(root: Path) -> set[str]:
     }
 
 
-def available_skills(root: Path) -> list[str]:
-    excludes = SYNC_EXCLUDES | local_skill_excludes(root)
+def preserve_global_rules(root: Path) -> bool:
+    """Return whether this machine keeps its global rule files unmanaged."""
+    return (root / LOCAL_RULES_PRESERVE_FILE).is_file()
+
+
+def public_skills(root: Path) -> list[str]:
+    """List repository skills that are public regardless of machine policy."""
     return sorted(
         item.name
         for item in (root / "skills").iterdir()
         if (
             item.is_dir()
-            and item.name not in excludes
+            and item.name not in SYNC_EXCLUDES
             and (item / "SKILL.md").is_file()
         )
     )
+
+
+def available_skills(root: Path) -> list[str]:
+    """List public skills available for installation on this machine."""
+    local_excludes = local_skill_excludes(root)
+    return [name for name in public_skills(root) if name not in local_excludes]
 
 
 def csv_values(values: list[str] | None) -> set[str]:

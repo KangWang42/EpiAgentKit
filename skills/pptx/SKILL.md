@@ -15,6 +15,7 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 | Read/analyze content | `python -m markitdown presentation.pptx` |
 | Edit or create from template | Read [editing.md](editing.md) |
 | Create from scratch | Read [pptxgenjs.md](pptxgenjs.md) |
+| Render on Windows with PowerPoint | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_slides.ps1 -InputPath output.pptx -OutputDir renders` |
 
 ---
 
@@ -31,9 +32,9 @@ Route the answer as follows:
 | Template source | Route |
 |---|---|
 | SYSU official | Load `sysu-ppt`, create through its official asset and toolkit workflow, then use this skill for file QA |
-| Other school, institution, conference, or presentation type | Load any matching presentation-content workflow or reference, then use its supplied or project-authoritative `.pptx`; inspect it with [editing.md](editing.md) before writing content |
-| User-provided template or reference deck | Treat that file as authoritative unless the user says it is inspiration only; preserve its masters, layouts, theme, branding, and fixed components |
-| No template | Confirm the neutral route, then read [pptxgenjs.md](pptxgenjs.md) and create from scratch |
+| Other school, institution, conference, or presentation type | For an academic presentation load `academic-ppt` as the content workflow, then use the supplied or project-authoritative `.pptx`; inspect it with [editing.md](editing.md) before writing content |
+| User-provided template or reference deck | Treat that file as authoritative unless the user says it is inspiration only; for a new academic presentation load `academic-ppt`, and preserve the file's masters, layouts, theme, branding, and fixed components |
+| No template | For a new academic presentation load `academic-ppt` and confirm the neutral route, then read [pptxgenjs.md](pptxgenjs.md) and create from scratch |
 
 Do not invent an official logo, color system, master, or institutional identity when the named organization has not supplied a template. Ask for the file or offer a neutral design. Reading, extracting, or making a bounded edit to an existing presentation does not require this routing question because the existing file is already the source.
 
@@ -242,7 +243,16 @@ Report ALL issues found, including minor ones.
 
 ## Converting to Images
 
-Convert presentations to individual slide images for visual inspection:
+Use an already installed renderer; do not install LibreOffice or another runtime for this step.
+
+On Windows, prefer Microsoft PowerPoint when it is installed. The bundled script refuses to run while another PowerPoint process is open, opens only the requested file, exports a new empty directory of PNGs, and closes only the application object it created:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_slides.ps1 `
+  -InputPath output.pptx -OutputDir renders -Width 1280 -Height 720
+```
+
+If PowerPoint is unavailable and LibreOffice is already installed, convert through the existing helper and then rasterize the PDF:
 
 ```bash
 python scripts/office/soffice.py --headless --convert-to pdf output.pptx
@@ -250,6 +260,8 @@ pdftoppm -jpeg -r 150 output.pdf slide
 ```
 
 This creates `slide-01.jpg`, `slide-02.jpg`, etc.
+
+If neither renderer is available, validate the PPTX package and extracted text, then state that visual QA remains incomplete. Do not treat package validity or text extraction as proof that the slides are ready to present.
 
 To re-render specific slides after fixes:
 
@@ -264,7 +276,8 @@ pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
 - `markitdown[pptx]` in the user-selected Python environment for text extraction
 - Pillow in the user-selected Python environment for thumbnail grids
 - PptxGenJS in the user-selected Node.js environment for creating from scratch
-- LibreOffice (`soffice`) - PDF conversion (auto-configured for sandboxed environments via `scripts/office/soffice.py`)
-- Poppler (`pdftoppm`) - PDF to images
+- Microsoft PowerPoint on Windows is the preferred optional renderer for final visual QA; `scripts/render_slides.ps1` uses its installed COM interface without extra packages
+- LibreOffice (`soffice`) is an optional renderer only when it is already installed; it is not a prerequisite
+- Poppler (`pdftoppm`) is needed only for the LibreOffice-to-PDF rendering route
 
-If any item is unavailable, explain the missing prerequisite and the user's next setup step; do not install or upgrade it.
+Use only the dependencies needed by the selected route. If any item is unavailable, explain the affected operation and choose another already available route when equivalent; do not install or upgrade it.
