@@ -1,7 +1,7 @@
 """报告 docx 构建助手（report-writing skill 配套）。
 
 用途：在用户没有指定其他模板时，把已经写好的报告内容排成中性 Word 文档，采用
-中文宋体 / 英文 Times New Roman、三线表、表上图下题注、纯黑、统计符号斜体、
+中文宋体 / 英文 Times New Roman、三线表、表上图下题注、纯黑、统计符号 P 粗斜体、
 干净的居中加粗标题页（白底黑字，无深色标题条或灰色说明小字）。
 
 用法（在生成脚本里 import）：
@@ -12,6 +12,8 @@
     rep.para("本补充分析用于评估 ...")                 # 完整段落；statt 符号见 rep.para_runs
     rep.table_caption("表1 24--36周体重反弹分析样本量")
     rep.three_line_table(header=[...], rows=[...])      # 或 rep.table_from_xlsx(path, sheet)
+    # 需要统计符号时，把单元格写成 runs；P 粗斜体，其它拉丁统计符号斜体
+    rep.three_line_table(header=["效应", "P 值"], rows=[["HR 0.74", [("P", {"bold": True, "italic": True}), " < 0.001"]]])
     rep.note("注：随机入组 N 按 ...")
     rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 使用表图登记表或已经确认的输出路径
     rep.save("报告.docx", also_md=False)                # 仅在用户要求双格式时设 True
@@ -84,8 +86,25 @@ def _set_cell_border(cell, **edges):
     borders = tcPr.find(qn("w:tcBorders"))
     if borders is None:
         borders = OxmlElement("w:tcBorders")
-        tcPr.append(borders)
-    for edge in ("top", "bottom", "left", "right"):
+        later_properties = {
+            qn(f"w:{name}")
+            for name in (
+                "shd",
+                "noWrap",
+                "tcMar",
+                "textDirection",
+                "tcFitText",
+                "vAlign",
+                "hideMark",
+            )
+        }
+        insertion_index = len(tcPr)
+        for index, child in enumerate(tcPr):
+            if child.tag in later_properties:
+                insertion_index = index
+                break
+        tcPr.insert(insertion_index, borders)
+    for edge in ("top", "left", "bottom", "right"):
         spec = edges.get(edge)
         tag = qn(f"w:{edge}")
         el = borders.find(tag)
@@ -101,11 +120,45 @@ def _set_cell_border(cell, **edges):
             el.set(qn("w:val"), "none")
 
 
+def _iter_explicit_runs(value, bold_default=False):
+    items = value if isinstance(value, list) else ["" if value is None else str(value)]
+    for item in items:
+        if isinstance(item, tuple):
+            text, opts = item
+            opts = opts or {}
+        else:
+            text, opts = str(item), {}
+        yield text, opts.get("bold", bold_default), opts.get("italic", False)
+
+
+def _write_runs(paragraph, value, size, bold_default=False):
+    """写普通值或显式 run 列表；不自动猜测统计符号。"""
+    for text, bold, italic in _iter_explicit_runs(value, bold_default):
+        setfont(paragraph.add_run(text), size=size, bold=bold, italic=italic)
+
+
+def _markdown_runs(value, bold_default=False):
+    markdown = []
+    for text, bold, italic in _iter_explicit_runs(value, bold_default):
+        if bold and italic:
+            markdown.append(f"***{text}***")
+        elif italic:
+            markdown.append(f"*{text}*")
+        elif bold:
+            markdown.append(f"**{text}**")
+        else:
+            markdown.append(text)
+    return "".join(markdown)
+
+
 class Report:
     def __init__(self, body_size=10.5):
         self.doc = Document()
         self.body_size = body_size
         self._md = []  # 同步累积 markdown
+        zoom = self.doc.settings._element.xpath("./w:zoom")
+        if zoom:
+            zoom[0].set(qn("w:percent"), "100")
         # 默认正文样式字体（兜底；真正生效靠每个 run setfont）
         normal = self.doc.styles["Normal"]
         normal.font.name = EN_FONT
@@ -151,7 +204,7 @@ class Report:
         self._md.append(text + "\n")
 
     def para_runs(self, runs, size=None):
-        """混合排版段落：runs = [(text, {italic:True}), ...]，用于把 P、vs 等设斜体。"""
+        """混合排版段落；P 传入粗斜体，其它拉丁统计符号传入斜体。"""
         sz = size or self.body_size
         p = self.doc.add_paragraph()
         p.paragraph_format.line_spacing = 1.5
@@ -162,7 +215,14 @@ class Report:
             opts = opts or {}
             setfont(p.add_run(text), size=sz,
                     italic=opts.get("italic", False), bold=opts.get("bold", False))
-            md.append(f"*{text}*" if opts.get("italic") else text)
+            if opts.get("bold") and opts.get("italic"):
+                md.append(f"***{text}***")
+            elif opts.get("italic"):
+                md.append(f"*{text}*")
+            elif opts.get("bold"):
+                md.append(f"**{text}**")
+            else:
+                md.append(text)
         self._md.append("".join(md) + "\n")
 
     def summary_item(self, label, text):
@@ -192,6 +252,7 @@ class Report:
     def three_line_table(self, header, rows, num_cols_right=None):
         """白底黑字三线表：顶线/表头下线/底线，无填充、竖线或内部横线。
         num_cols_right: 右对齐的列索引集合（数字列）；默认除第 1 列外全右对齐。
+        单元格可传普通值，或传由字符串和 ``(文字, {bold, italic})`` 组成的 run 列表。
         """
         ncol = len(header)
         if num_cols_right is None:
@@ -205,7 +266,7 @@ class Report:
             cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
             p = cell.paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            setfont(p.add_run(str(htext)), size=self.body_size, bold=True)
+            _write_runs(p, htext, size=self.body_size, bold_default=True)
             _set_cell_border(cell, top=(big,), bottom=(small,))
         # 数据行
         for i, row in enumerate(rows):
@@ -217,13 +278,15 @@ class Report:
                 p = cell.paragraphs[0]
                 p.alignment = (WD_ALIGN_PARAGRAPH.RIGHT if j in num_cols_right
                                else WD_ALIGN_PARAGRAPH.LEFT)
-                setfont(p.add_run("" if val is None else str(val)), size=self.body_size)
+                _write_runs(p, val, size=self.body_size)
                 _set_cell_border(cell, bottom=(big,) if last else None)
         # markdown 镜像
-        self._md.append("| " + " | ".join(map(str, header)) + " |")
+        header_md = [_markdown_runs(value, bold_default=True) for value in header]
+        self._md.append("| " + " | ".join(header_md) + " |")
         self._md.append("| " + " | ".join(["---"] * ncol) + " |")
         for row in rows:
-            self._md.append("| " + " | ".join("" if v is None else str(v) for v in row) + " |")
+            row_md = [_markdown_runs(value) for value in row]
+            self._md.append("| " + " | ".join(row_md) + " |")
         self._md.append("")
         return t
 

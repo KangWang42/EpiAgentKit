@@ -105,6 +105,19 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 </details>
 
 <details>
+<summary><strong>evidence-research / consulting-delivery / epiagentkit-maintenance / academic-humanizer · 具体任务内容图</strong></summary>
+
+<a href="docs/showcase/composites/content-skill-illustrations.png"><img src="docs/showcase/composites/content-skill-illustrations.png" alt="四格展示方法依据核验、咨询交付包、Skill 维护回归和学术文本局部修订的具体工作内容" width="100%"></a>
+
+| 方法依据核验 | 咨询交付包 | Skill 维护回归 | 学术文本局部修订 |
+| --- | --- | --- | --- |
+| [PNG](docs/showcase/illustrations/evidence-research.png) | [PNG](docs/showcase/illustrations/consulting-delivery.png) | [PNG](docs/showcase/illustrations/epiagentkit-maintenance.png) | [PNG](docs/showcase/illustrations/academic-humanizer.png) |
+
+四张图分别呈现：从研究问题、来源核验到证据决策；从已验证分析到外发文件；从代表性问题到双平台检查；从不可变结果到局部净稿。咨询交付和文本修订中的数值来自仓库固定模拟队列；证据核验图只展示工作结构，不把图中的来源卡当作已经完成的真实检索结果。
+
+</details>
+
+<details>
 <summary><strong>academic-publishing · 论文与 Word 实际渲染</strong></summary>
 
 <a href="docs/showcase/composites/manuscripts.png"><img src="docs/showcase/composites/manuscripts.png" alt="中文观察性分析完整作者稿和英文外部模型评价方法学完整作者稿的第一页" width="100%"></a>
@@ -114,6 +127,22 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 | [Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.pdf) | [Word](docs/demo/output/academic-publishing/manuscript-preview-en.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-en.pdf) |
 
 README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏排列的完整章节。中文稿使用固定模拟队列的实际模型结果、基线汇总、模型诊断和统计图；英文稿讨论外部模型评价中的校准斜率，不虚构实证发现、作者、机构、伦理号或基金信息。[查看 Word 生成与渲染脚本](docs/demo/generate_manuscript_preview.py)
+
+</details>
+
+<details>
+<summary><strong>epi-study-design / report-writing / manuscript-peer-review / workflow-retrospective · 实际文档</strong></summary>
+
+<a href="docs/showcase/composites/document-skills.png"><img src="docs/showcase/composites/document-skills.png" alt="四格展示研究方案与 SAP、固定模拟队列分析报告、观察性队列稿件同行评审报告和工作流问题交接报告的真实文档页" width="100%"></a>
+
+| Skill | 可打开文件 |
+| --- | --- |
+| `epi-study-design` | [DOCX](docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.docx) · [PDF](docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.pdf) · [代表页](docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.png) |
+| `report-writing` | [分析报告 DOCX](docs/demo/output/document-skills/report-writing/fixed-cohort-survival-report.docx) · [复现核查备忘录 DOCX](docs/demo/output/document-skills/report-writing/fixed-cohort-reproducibility-memo.docx) · [代表页](docs/demo/output/document-skills/report-writing/fixed-cohort-survival-report.png) |
+| `manuscript-peer-review` | [DOCX](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx) · [PDF](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.pdf) · [代表页](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.png) |
+| `workflow-retrospective` | [workflow.txt](docs/demo/output/document-skills/workflow-retrospective/workflow.txt) · [展示 DOCX](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.docx) · [PDF](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.pdf) · [代表页](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.png) |
+
+研究设计稿把未知的精度假设保留为待确认；分析报告只读取固定模拟结果；同行评审报告区分报告缺项、稿内不一致与解释越界，并明确未取得原始数据；工作流复盘仍以 `workflow.txt` 为正式交接内容，DOCX 是便于 README 展示和下载的排版副本。四份文件的英文和拉丁统计符号使用 Times New Roman，统计符号按规范区分斜体与正体，数据表为白底三线表。[查看生成与渲染脚本](docs/demo/generate_document_skill_showcase.py)
 
 </details>
 
@@ -142,25 +171,25 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 <details>
 <summary><strong>其它内容、审查与文件 skills · 命令—输出索引</strong></summary>
 
-其它 skill 的最终产物受用户项目、数据授权和输入文件决定，不适合用一张生成图代替。下面直接给出可执行入口、当前仓库可查看的真实成果，或在没有固定示例时明确指向格式规范：
+下面把其余可执行入口、当前仓库成果和适用格式规范集中在一个索引中，便于直接打开、下载或继续生成：
 
 [单独打开或下载完整的命令—输出索引](docs/showcase/command-to-output.md)
 
 | Skill | 命令或请求示例 | 当前可查看输出 |
 | --- | --- | --- |
 | `biostat-principles` → `r-biostats` | `Rscript docs/demo/generate_survival_demo.R` | [模拟数据](docs/demo/survival-demo-data.csv)、[结果清单](docs/demo/output/publication-figures/survival-demo-results.csv) |
-| `evidence-research` | 核验一条 DOI、方法依据或最新指南 | [证据矩阵规范](skills/evidence-research/references/evidence-matrix.md)、[检索协议](skills/evidence-research/references/search-protocol.md) |
-| `epi-study-design` | 把研究想法转成 PROTOCOL / SAP | [方案规格](skills/epi-study-design/references/protocol-sap-specification.md) |
+| `evidence-research` | 核验一条 DOI、方法依据或最新指南 | [具体任务图](docs/showcase/illustrations/evidence-research.png) · [证据矩阵规范](skills/evidence-research/references/evidence-matrix.md) |
+| `epi-study-design` | 把研究想法转成 PROTOCOL / SAP | [方案与 SAP DOCX](docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.docx) |
 | `python-biostats` | 明确指定 Python 后执行同一研究口径 | [Python 执行边界](skills/python-biostats/SKILL.md)；仓库不把 R 结果冒充 Python 示例 |
-| `academic-humanizer` | 修订已有论文、报告或投稿文本 | [中文稿 Word/PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [英文稿 Word/PDF](docs/demo/output/academic-publishing/manuscript-preview-en.docx) |
-| `report-writing` | 把已核验结果整理成报告正文 | [报告写作流程](skills/report-writing/SKILL.md) · [报告构建参考](skills/report-writing/references/build_report.py) |
-| `consulting-delivery` | 把已完成分析整理为外发交付包 | [咨询项目结构示例](docs/showcase/project-init/consulting.md) · [交付模板](skills/consulting-delivery/references/templates.md) |
-| `manuscript-peer-review` | 以同行评审人身份生成可定位审稿报告 | [审稿标准](skills/manuscript-peer-review/references/review-criteria.md) · [报告模板](skills/manuscript-peer-review/references/report-template.md) |
+| `academic-humanizer` | 修订已有论文、报告或投稿文本 | [局部修订实例图](docs/showcase/illustrations/academic-humanizer.png) · [中文稿 Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) |
+| `report-writing` | 把已核验结果整理成报告正文 | [分析报告 DOCX](docs/demo/output/document-skills/report-writing/fixed-cohort-survival-report.docx) · [复现核查备忘录 DOCX](docs/demo/output/document-skills/report-writing/fixed-cohort-reproducibility-memo.docx) |
+| `consulting-delivery` | 把已完成分析整理为外发交付包 | [具体交付图](docs/showcase/illustrations/consulting-delivery.png) · [咨询项目结构示例](docs/showcase/project-init/consulting.md) |
+| `manuscript-peer-review` | 以同行评审人身份生成可定位审稿报告 | [同行评审 DOCX](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx) · [审稿标准](skills/manuscript-peer-review/references/review-criteria.md) |
 | `epi-project-audit` | `python <skill>/scripts/run_check_project.py <项目根> --json` | [审查清单](skills/epi-project-audit/references/audit-checklist.md) · [论断校准](skills/epi-project-audit/references/claim-calibration.md) |
 | `docx` / `pdf` | 打开、渲染、验证或转换实际文件 | [Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.pdf) |
 | `xlsx` | 读取、清洗、创建或核验工作簿 | [工作簿操作规范](skills/xlsx/SKILL.md)；需绑定用户数据后生成，不放虚构表格 |
-| `workflow-retrospective` | 根据会话纠正生成 `workflow.txt` | [维护流程说明](README.md#维护与贡献)；现场报告只保留在对应 workbench |
-| `epiagentkit-maintenance` / `skill-creator` | 修改 skill、规则或同步规范 | [维护约定](AGENTS.md#skill-maintenance) · [skill 编写指南](skills/skill-creator/SKILL.md) |
+| `workflow-retrospective` | 根据会话纠正生成 `workflow.txt` | [交接报告 TXT](docs/demo/output/document-skills/workflow-retrospective/workflow.txt) · [展示 DOCX](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.docx) |
+| `epiagentkit-maintenance` / `skill-creator` | 修改 skill、规则或同步规范 | [具体维护图](docs/showcase/illustrations/epiagentkit-maintenance.png) · [维护约定](AGENTS.md#skill-maintenance) |
 | `git-commit-helper` | 审查完整差异并创建 Conventional Commit | [当前提交历史](https://github.com/KangWang42/EpiAgentKit/commits/main) |
 
 </details>
@@ -371,6 +400,8 @@ $workflow-retrospective
 ```
 
 ### 用 Codex 快速完善 skills
+
+如果你有新的研究场景、补充方法或希望加入的 skill，欢迎一起参与共建。请尽量同时提供实际输入、期望结果、需要保留的旧行为和可靠参考；新增或改变行为的 skill 在提交前应附至少两份内容与验收重点不同的真实成果，使其他维护者能够直接比较、复核并继续改进。
 
 从本仓库根目录启动 Codex，把实际失败、正确示例、必须保留的旧行为和希望改变的结果一起给出。Codex 官方支持用 `$skill-creator` 显式选择 skill 创建与更新流程；长期仓库规范放在 `AGENTS.md`，任务流程放在各 skill 的 `SKILL.md`、`references/` 和 `scripts/` 中。可直接发送：
 

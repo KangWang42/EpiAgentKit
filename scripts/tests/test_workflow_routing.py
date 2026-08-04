@@ -597,6 +597,10 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("内容功能、论证结构、段落节奏", humanizer)
         self.assertIn("不把原有句法、段落习惯或措辞质量作为标准", humanizer)
         self.assertIn("优先符合学科通行写法", humanizer)
+        for text in (publishing, humanizer, report):
+            self.assertIn("Times New Roman", text)
+            self.assertIn("拉丁统计符号", text)
+            self.assertIn("`P`", text)
         self.assertIn("可迁移性测试", editorial)
         self.assertIn("结构与长度由任务复杂度决定", report)
         self.assertIn("不强制背景—方法—结果—结论模板", report)
@@ -981,6 +985,29 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("docs/showcase/composites/manuscripts.png", body)
         self.assertIn("docs/assets/research-workflow.webp", body)
         self.assertIn("docs/showcase/composites/academic-ppt.png", body)
+        self.assertIn("docs/showcase/composites/content-skill-illustrations.png", body)
+        self.assertIn("docs/showcase/composites/document-skills.png", body)
+        self.assertIn(
+            "docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.docx",
+            body,
+        )
+        self.assertIn(
+            "docs/demo/output/document-skills/report-writing/fixed-cohort-survival-report.docx",
+            body,
+        )
+        self.assertIn(
+            "docs/demo/output/document-skills/report-writing/fixed-cohort-reproducibility-memo.docx",
+            body,
+        )
+        self.assertIn(
+            "docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx",
+            body,
+        )
+        self.assertIn(
+            "docs/demo/output/document-skills/workflow-retrospective/workflow.txt",
+            body,
+        )
+        self.assertIn("欢迎一起参与共建", body)
         self.assertIn("<summary><strong>academic-ppt · 通用学术汇报", body)
         self.assertIn("## 从命令到输出", body)
         self.assertIn("docs/showcase/command-to-output.md", body)
@@ -1057,6 +1084,101 @@ class WorkflowRoutingTests(unittest.TestCase):
                         self.assertEqual(
                             values["bottom"], expected_bottom, name
                         )
+
+    def test_document_skill_showcases_use_times_and_clean_tables(self) -> None:
+        generator = (
+            ROOT / "docs" / "demo" / "generate_document_skill_showcase.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('EN_FONT = "Times New Roman"', generator)
+        self.assertIn("add_three_line_table", generator)
+        self.assertNotIn('table.style = "Table Grid"', generator)
+
+        paths = (
+            ROOT
+            / "docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.docx",
+            ROOT
+            / "docs/demo/output/document-skills/report-writing/fixed-cohort-survival-report.docx",
+            ROOT
+            / "docs/demo/output/document-skills/report-writing/fixed-cohort-reproducibility-memo.docx",
+            ROOT
+            / "docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx",
+            ROOT
+            / "docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.docx",
+        )
+        namespace = {
+            "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        }
+        p_formatted_documents = 0
+        for path in paths:
+            self.assertTrue(path.is_file(), path)
+            with zipfile.ZipFile(path) as package:
+                document_xml = package.read("word/document.xml")
+                styles_xml = package.read("word/styles.xml")
+            self.assertIn(b"Times New Roman", document_xml)
+            self.assertIn(b"Times New Roman", styles_xml)
+            document = ET.fromstring(document_xml)
+
+            found_formatted_p = False
+            for run in document.findall(".//w:r", namespace):
+                text = "".join(
+                    node.text or "" for node in run.findall("./w:t", namespace)
+                )
+                if text == "P":
+                    properties = run.find("./w:rPr", namespace)
+                    if (
+                        properties is not None
+                        and properties.find("./w:b", namespace) is not None
+                        and properties.find("./w:i", namespace) is not None
+                    ):
+                        found_formatted_p = True
+            if found_formatted_p:
+                p_formatted_documents += 1
+
+            for table in document.findall(".//w:tbl", namespace):
+                rows = table.findall("./w:tr", namespace)
+                self.assertGreaterEqual(len(rows), 2, path.name)
+                for row_index, row in enumerate(rows):
+                    for cell in row.findall("./w:tc", namespace):
+                        shading = cell.find("./w:tcPr/w:shd", namespace)
+                        if shading is not None:
+                            fill = shading.get(
+                                f"{{{namespace['w']}}}fill", "auto"
+                            )
+                            self.assertIn(fill.upper(), {"AUTO", "FFFFFF"}, path.name)
+                        borders = cell.find("./w:tcPr/w:tcBorders", namespace)
+                        self.assertIsNotNone(borders, path.name)
+                        for edge in ("left", "right", "insideH", "insideV"):
+                            node = borders.find(f"./w:{edge}", namespace)
+                            self.assertIsNotNone(node, path.name)
+                            self.assertEqual(
+                                node.get(f"{{{namespace['w']}}}val"),
+                                "nil",
+                                path.name,
+                            )
+                        top = borders.find("./w:top", namespace)
+                        bottom = borders.find("./w:bottom", namespace)
+                        expected_top = "single" if row_index == 0 else "nil"
+                        expected_bottom = (
+                            "single"
+                            if row_index in {0, len(rows) - 1}
+                            else "nil"
+                        )
+                        self.assertEqual(
+                            top.get(f"{{{namespace['w']}}}val"),
+                            expected_top,
+                            path.name,
+                        )
+                        self.assertEqual(
+                            bottom.get(f"{{{namespace['w']}}}val"),
+                            expected_bottom,
+                            path.name,
+                        )
+        self.assertGreaterEqual(p_formatted_documents, 3)
+        workflow = (
+            ROOT
+            / "docs/demo/output/document-skills/workflow-retrospective/workflow.txt"
+        )
+        self.assertIn("问题 WF-001", workflow.read_text(encoding="utf-8"))
 
     def test_release_bundle_keeps_source_archive_and_runtime_separate(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -1172,10 +1294,24 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不能为了展示方法数量", layout)
         self.assertIn("以整张导出画布为参照", layout)
         self.assertIn("字号按最终物理尺寸设置和核对", layout)
+        self.assertIn("Times New Roman", skill)
+        self.assertIn("拉丁统计符号", skill)
+        self.assertIn("粗斜体", skill)
+        self.assertIn("Times New Roman 粗斜体", layout)
+        self.assertIn("其它拉丁统计符号", layout)
         self.assertIn("图内标题 10–12 pt、轴标题 8–10 pt", layout)
         self.assertIn("图题通常只用简短名词短语", layout)
         self.assertIn("不把方法段或读图说明自动接在图题后", layout)
         self.assertIn("必要图注只补充正文和图本身无法清楚承担的信息", layout)
+
+        fig_setup = (
+            ROOT / "skills" / "publication-figures" / "scripts" / "fig_setup.R"
+        ).read_text(encoding="utf-8")
+        self.assertIn('PLOT_FAMILY_EN <- .register_en_font()', fig_setup)
+        self.assertIn('fallback <- "Times New Roman"', fig_setup)
+        self.assertIn('"C:/Windows/Fonts/times.ttf"', fig_setup)
+        self.assertIn('language = c("mixed", "english", "chinese")', fig_setup)
+        self.assertIn('identical(language, "english")', fig_setup)
 
         manuscript_demo = (
             ROOT / "docs" / "demo" / "generate_manuscript_preview.py"

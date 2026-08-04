@@ -7,7 +7,60 @@ suppressWarnings(suppressMessages({
   has <- function(p) requireNamespace(p, quietly = TRUE)
 }))
 
-# ---- 中文字体注册（一次）----
+# ---- 中英文字体注册（一次）----
+.first_font <- function(paths) {
+  hits <- unique(Sys.glob(paths))
+  if (length(hits)) hits[[1]] else NULL
+}
+
+.register_en_font <- function() {
+  fallback <- "Times New Roman"
+  if (!has("sysfonts") || !has("showtext")) return(fallback)
+  regular <- .first_font(c(
+    "C:/Windows/Fonts/times.ttf",
+    "~/Library/Fonts/Times New Roman.ttf",
+    "/Library/Fonts/Times New Roman.ttf",
+    "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman.ttf",
+    "/usr/share/fonts/truetype/msttcorefonts/times.ttf"
+  ))
+  if (is.null(regular)) return(fallback)
+  args <- list(family = "pub_times", regular = regular)
+  variants <- list(
+    bold = c(
+      "C:/Windows/Fonts/timesbd.ttf",
+      "~/Library/Fonts/Times New Roman Bold.ttf",
+      "/Library/Fonts/Times New Roman Bold.ttf",
+      "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman_Bold.ttf"
+    ),
+    italic = c(
+      "C:/Windows/Fonts/timesi.ttf",
+      "~/Library/Fonts/Times New Roman Italic.ttf",
+      "/Library/Fonts/Times New Roman Italic.ttf",
+      "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman_Italic.ttf"
+    ),
+    bolditalic = c(
+      "C:/Windows/Fonts/timesbi.ttf",
+      "~/Library/Fonts/Times New Roman Bold Italic.ttf",
+      "/Library/Fonts/Times New Roman Bold Italic.ttf",
+      "/usr/share/fonts/truetype/msttcorefonts/Times_New_Roman_Bold_Italic.ttf"
+    )
+  )
+  for (style in names(variants)) {
+    path <- .first_font(variants[[style]])
+    if (!is.null(path)) args[[style]] <- path
+  }
+  registered <- tryCatch(
+    {
+      do.call(sysfonts::font_add, args)
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+  if (!registered) return(fallback)
+  showtext::showtext_auto(); showtext::showtext_opts(dpi = 300)
+  "pub_times"
+}
+
 .register_cn_font <- function() {
   if (!has("sysfonts") || !has("showtext")) return("sans")
   paths <- Sys.glob(c("C:/Windows/Fonts/msyh.ttc", "C:/Windows/Fonts/simhei.ttf",
@@ -18,7 +71,13 @@ suppressWarnings(suppressMessages({
   showtext::showtext_auto(); showtext::showtext_opts(dpi = 300)
   "zh_sans"
 }
-PLOT_FAMILY <- .register_cn_font()   # 含中文用它；纯英文图也安全
+PLOT_FAMILY_EN <- .register_en_font()
+PLOT_FAMILY <- .register_cn_font()
+
+pub_family <- function(language = c("mixed", "english", "chinese")) {
+  language <- match.arg(language)
+  if (identical(language, "english")) PLOT_FAMILY_EN else PLOT_FAMILY
+}
 
 # ---- 配色：优先项目设置中的 PALETTE，否则 Okabe-Ito ----
 pub_palette <- function(n = NULL) {
@@ -32,7 +91,9 @@ scale_color_pub <- function(...) ggplot2::scale_color_manual(values = pub_palett
 scale_fill_pub  <- function(...) ggplot2::scale_fill_manual(values = pub_palette(), ...)
 
 # ---- 中性主题（theme_classic 打底）----
-theme_pub <- function(base_size = 8, family = PLOT_FAMILY, legend = "right") {
+theme_pub <- function(base_size = 8, family = NULL, legend = "right",
+                      language = c("mixed", "english", "chinese")) {
+  if (is.null(family)) family <- pub_family(match.arg(language))
   theme_classic(base_size = base_size, base_family = family) +
     theme(
       plot.title   = element_text(face = "bold", hjust = 0.5, size = base_size + 1),
