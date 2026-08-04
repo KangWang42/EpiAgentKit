@@ -12,13 +12,11 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 ![Python workflows](https://img.shields.io/badge/Python-statistical_workflows-3776AB?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-progressive_disclosure-0F766E?style=flat-square)
 
-[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [实际示例](#从一句话到真实产物) · [任务范围](#工作流怎样随任务变化) · [双平台架构](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
+[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [实际示例](#从命令到输出) · [任务范围](#工作流怎样随任务变化) · [双平台架构](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
 
 </div>
 
-[![真实 R 分析代码、Word 论文页和中大官方模板学术汇报页共同展示从统计分析到科研成品的工作结果](docs/assets/epiagentkit-hero.webp)](docs/demo/output/pptx/presentation-preview.pptx)
-
-[中大官方模板汇报 PPTX](docs/demo/output/pptx/presentation-preview.pptx) · [封面](docs/demo/output/pptx/presentation-cover.png) · [汇报结果页](docs/demo/output/pptx/presentation-preview.png)
+[![真实 R 分析代码、Word 论文页和通用学术汇报页共同展示从统计分析到科研成品的工作结果](docs/assets/epiagentkit-hero.webp)](docs/showcase/composites/academic-ppt.png)
 
 > EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性检查，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
@@ -62,18 +60,20 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 全面审查这个项目的命名、代码、结果、论文和交付包是否一致。
 ```
 
-## 从一句话到真实产物
+## 从命令到输出
 
 以下 showcase 均引用仓库中的真实成果，可展开预览，也可下载对应的 PDF、Word、PPTX、图片、脚本和机器可读结果。各 skill 独立折叠，后续增加示例不会持续拉长 README。模拟结果只用于演示可复核工作流，不构成真实医学证据。
 
 <details>
-<summary><strong>sysu-ppt · 中大官方模板学术汇报</strong></summary>
+<summary><strong>academic-ppt · 通用学术汇报与实际 PPTX</strong></summary>
 
-<a href="docs/demo/output/pptx/presentation-preview.pptx"><img src="docs/showcase/composites/sysu-ppt.png" alt="中大公卫学院官方模板封面和调整后生存曲线结果页" width="100%"></a>
+<a href="docs/showcase/composites/academic-ppt.png"><img src="docs/showcase/composites/academic-ppt.png" alt="并排展示中性组会汇报的生存曲线结果页和开题答辩的失访机制研究问题页" width="100%"></a>
 
-[下载 PPTX](docs/demo/output/pptx/presentation-preview.pptx) · [查看封面](docs/demo/output/pptx/presentation-cover.png) · [查看生存曲线页](docs/demo/output/pptx/presentation-preview.png) · [查看模型结果页](docs/demo/output/pptx/presentation-model-results.png) · [查看生成脚本](docs/demo/generate_presentation_preview.R)
+| 中性组会汇报 | 开题答辩汇报 |
+| --- | --- |
+| [PPTX](docs/showcase/academic-ppt/survival-analysis-meeting.pptx) · [代表页](docs/showcase/academic-ppt/survival-analysis-meeting.png) | [PPTX](docs/showcase/academic-ppt/missing-data-proposal-defense.pptx) · [代表页](docs/showcase/academic-ppt/missing-data-proposal-defense.png) |
 
-这份组会稿由 `sysu_toolkit.R` 读取中大公卫学院模板生成，保留模板母版、页眉、品牌元素和页码；图表与表格来自固定模拟队列的实际 Cox 回归结果。
+组会稿使用固定模拟队列的实际 Cox 模型结果和生存曲线，封面后直接进入研究设计、结果、解释边界和下一步；开题稿使用另一套中性视觉体系，围绕失访机制、方法比较、评价指标、质量控制和研究计划展开，不预设实证结果。两份 PPTX 均由 Microsoft PowerPoint 实际导出全部页面并检查文字、箭头、图表比例、页面边界和投影可读性。[查看生成脚本](docs/demo/generate_academic_ppt_showcase.py)
 
 </details>
 
@@ -118,19 +118,6 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 </details>
 
 <details>
-<summary><strong>academic-ppt · 通用学术汇报与实际 PPTX</strong></summary>
-
-<a href="docs/showcase/composites/academic-ppt.png"><img src="docs/showcase/composites/academic-ppt.png" alt="并排展示中性组会汇报的生存曲线结果页和开题答辩的失访机制研究问题页" width="100%"></a>
-
-| 中性组会汇报 | 开题答辩汇报 |
-| --- | --- |
-| [PPTX](docs/showcase/academic-ppt/survival-analysis-meeting.pptx) · [代表页](docs/showcase/academic-ppt/survival-analysis-meeting.png) | [PPTX](docs/showcase/academic-ppt/missing-data-proposal-defense.pptx) · [代表页](docs/showcase/academic-ppt/missing-data-proposal-defense.png) |
-
-组会稿使用固定模拟队列的实际 Cox 模型结果和生存曲线，封面后直接进入研究设计、结果、解释边界和下一步；开题稿使用另一套中性视觉体系，围绕失访机制、方法比较、评价指标、质量控制和研究计划展开，不预设实证结果。两份 PPTX 均由 Microsoft PowerPoint 实际导出全部页面并检查文字、箭头、图表比例、页面边界和投影可读性。[查看生成脚本](docs/demo/generate_academic_ppt_showcase.py)
-
-</details>
-
-<details>
 <summary><strong>project-init · 项目初始化</strong></summary>
 
 | 分析项目                                                                           | 咨询项目                                                                                  |
@@ -139,6 +126,42 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | [查看实际初始化成果](docs/showcase/project-init/analysis.md)                        | [查看实际初始化成果](docs/showcase/project-init/consulting.md)                             |
 
 两套结构均由 [`init_project.R`](skills/project-init/scripts/init_project.R) 实际运行产生。原始数据目录只含保护占位文件；`results/results.yaml`、`SESSION_LOG.md`、`EXPERIMENTS.md` 和正式咨询包不会在没有实际结果时提前创建。
+
+</details>
+
+<details>
+<summary><strong>svg-diagrams · 可编辑 SVG 图解</strong></summary>
+
+<a href="skills/svg-diagrams/assets/journal-flow-screening.svg"><img src="skills/svg-diagrams/assets/journal-flow-screening.svg" alt="可编辑的文献筛选流程 SVG" width="48%"></a>
+<a href="skills/svg-diagrams/assets/journal-flow-branching.svg"><img src="skills/svg-diagrams/assets/journal-flow-branching.svg" alt="可编辑的分支流程 SVG" width="48%"></a>
+
+[筛选流程 SVG](skills/svg-diagrams/assets/journal-flow-screening.svg) · [分支流程 SVG](skills/svg-diagrams/assets/journal-flow-branching.svg) · [SVG 验证脚本](skills/svg-diagrams/scripts/validate_svg.py)
+
+</details>
+
+<details>
+<summary><strong>其它内容、审查与文件 skills · 命令—输出索引</strong></summary>
+
+其它 skill 的最终产物受用户项目、数据授权和输入文件决定，不适合用一张生成图代替。下面直接给出可执行入口、当前仓库可查看的真实成果，或在没有固定示例时明确指向格式规范：
+
+[单独打开或下载完整的命令—输出索引](docs/showcase/command-to-output.md)
+
+| Skill | 命令或请求示例 | 当前可查看输出 |
+| --- | --- | --- |
+| `biostat-principles` → `r-biostats` | `Rscript docs/demo/generate_survival_demo.R` | [模拟数据](docs/demo/survival-demo-data.csv)、[结果清单](docs/demo/output/publication-figures/survival-demo-results.csv) |
+| `evidence-research` | 核验一条 DOI、方法依据或最新指南 | [证据矩阵规范](skills/evidence-research/references/evidence-matrix.md)、[检索协议](skills/evidence-research/references/search-protocol.md) |
+| `epi-study-design` | 把研究想法转成 PROTOCOL / SAP | [方案规格](skills/epi-study-design/references/protocol-sap-specification.md) |
+| `python-biostats` | 明确指定 Python 后执行同一研究口径 | [Python 执行边界](skills/python-biostats/SKILL.md)；仓库不把 R 结果冒充 Python 示例 |
+| `academic-humanizer` | 修订已有论文、报告或投稿文本 | [中文稿 Word/PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [英文稿 Word/PDF](docs/demo/output/academic-publishing/manuscript-preview-en.docx) |
+| `report-writing` | 把已核验结果整理成报告正文 | [报告写作流程](skills/report-writing/SKILL.md) · [报告构建参考](skills/report-writing/references/build_report.py) |
+| `consulting-delivery` | 把已完成分析整理为外发交付包 | [咨询项目结构示例](docs/showcase/project-init/consulting.md) · [交付模板](skills/consulting-delivery/references/templates.md) |
+| `manuscript-peer-review` | 以同行评审人身份生成可定位审稿报告 | [审稿标准](skills/manuscript-peer-review/references/review-criteria.md) · [报告模板](skills/manuscript-peer-review/references/report-template.md) |
+| `epi-project-audit` | `python <skill>/scripts/run_check_project.py <项目根> --json` | [审查清单](skills/epi-project-audit/references/audit-checklist.md) · [论断校准](skills/epi-project-audit/references/claim-calibration.md) |
+| `docx` / `pdf` | 打开、渲染、验证或转换实际文件 | [Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.pdf) |
+| `xlsx` | 读取、清洗、创建或核验工作簿 | [工作簿操作规范](skills/xlsx/SKILL.md)；需绑定用户数据后生成，不放虚构表格 |
+| `workflow-retrospective` | 根据会话纠正生成 `workflow.txt` | [维护流程说明](README.md#维护与贡献)；现场报告只保留在对应 workbench |
+| `epiagentkit-maintenance` / `skill-creator` | 修改 skill、规则或同步规范 | [维护约定](AGENTS.md#skill-maintenance) · [skill 编写指南](skills/skill-creator/SKILL.md) |
+| `git-commit-helper` | 审查完整差异并创建 Conventional Commit | [当前提交历史](https://github.com/KangWang42/EpiAgentKit/commits/main) |
 
 </details>
 
@@ -385,6 +408,6 @@ Skill 分流与维护规范参考了 GitHub [awesome-copilot skills 固定提交
 
 `research-visuals` 借鉴并重新实现了 [TingxiYu/academic-figure-skill](https://github.com/TingxiYu/academic-figure-skill) 与 [LigphiDonk/academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator) 中围绕研究问题进行图前说明、逐项核对资料来源和多轮检查图件质量的方法。仓库只归档选定的开源参考文档与提示词，没有引入其正式运行脚本、示例图片或第三方 API 配置。完整来源、固定快照、许可证与 SHA-256 见 [`external/SOURCE.md`](skills/research-visuals/references/external/SOURCE.md)。
 
-`docx`、`pdf`、`pptx`、`xlsx` 与 `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录保留原始 LICENSE。`sysu-ppt` 内置模板版权归中山大学所有，仅供学习参考，可删除模板后替换为自有资产。
+`docx`、`pdf`、`pptx`、`xlsx` 与 `skill-creator` 来自 [anthropics/skills](https://github.com/anthropics/skills)，各目录保留原始 LICENSE。
 
 </details>
