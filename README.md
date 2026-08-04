@@ -16,7 +16,9 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 </div>
 
-![真实 R 分析代码、Word 论文页和学术汇报页共同展示从统计分析到科研成品的工作结果](docs/assets/epiagentkit-hero.webp)
+[![真实 R 分析代码、Word 论文页和中大官方模板学术汇报页共同展示从统计分析到科研成品的工作结果](docs/assets/epiagentkit-hero.webp)](docs/demo/output/pptx/presentation-preview.pptx)
+
+[中大官方模板汇报 PPTX](docs/demo/output/pptx/presentation-preview.pptx) · [封面](docs/demo/output/pptx/presentation-cover.png) · [汇报结果页](docs/demo/output/pptx/presentation-preview.png)
 
 > EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性检查，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
@@ -62,32 +64,50 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 ## 从一句话到真实产物
 
-以下示例展示从数据分析、科研绘图到论文和项目结构的实际成品。模拟结果只用于演示可复核工作流，不构成真实医学证据。
+以下 showcase 均引用仓库中的真实成果，可展开预览，也可下载对应的 PDF、Word、PPTX、图片、脚本和机器可读结果。各 skill 独立折叠，后续增加示例不会持续拉长 README。模拟结果只用于演示可复核工作流，不构成真实医学证据。
 
-### 统计分析与发表级统计图
+<details>
+<summary><strong>sysu-ppt · 中大官方模板学术汇报</strong></summary>
+
+<a href="docs/demo/output/pptx/presentation-preview.pptx"><img src="docs/showcase/composites/sysu-ppt.png" alt="中大公卫学院官方模板封面和调整后生存曲线结果页" width="100%"></a>
+
+[下载 PPTX](docs/demo/output/pptx/presentation-preview.pptx) · [查看封面](docs/demo/output/pptx/presentation-cover.png) · [查看生存曲线页](docs/demo/output/pptx/presentation-preview.png) · [查看模型结果页](docs/demo/output/pptx/presentation-model-results.png) · [查看生成脚本](docs/demo/generate_presentation_preview.R)
+
+这份组会稿由 `sysu_toolkit.R` 读取中大公卫学院模板生成，保留模板母版、页眉、品牌元素和页码；图表与表格来自固定模拟队列的实际 Cox 回归结果。
+
+</details>
+
+<details>
+<summary><strong>publication-figures · 统计分析与发表级统计图</strong></summary>
 
 ```text
 使用固定模拟队列完成多变量 Cox 回归。分别制作带 95% 置信区间和风险集的调整后生存曲线，
 以及呈现全部模型项、参照和效应区间的森林图；两张图分别核对时间到事件和多变量效应表达。
 ```
 
-<img src="docs/showcase/composites/publication-figures.png" alt="并排展示调整后无事件生存曲线和多变量 Cox 回归森林图" width="100%">
+<a href="docs/showcase/composites/publication-figures.png"><img src="docs/showcase/composites/publication-figures.png" alt="并排展示调整后无事件生存曲线和多变量 Cox 回归森林图" width="100%"></a>
 
 [生存曲线 PDF](docs/demo/output/publication-figures/adjusted-survival.pdf) · [森林图 PDF](docs/demo/output/publication-figures/cox-forest.pdf)
 
 `biostat-principles → r-biostats → publication-figures` 负责模型口径、估计方向、参照水平、最终物理尺寸和数值一致性。[查看分析与出图脚本](docs/demo/generate_survival_demo.R) · [查看固定模拟数据](docs/demo/survival-demo-data.csv) · [查看主要结果](docs/demo/output/publication-figures/survival-demo-results.csv) · [查看森林图结果](docs/demo/output/publication-figures/cox-forest-results.csv)
 
-### 科研非统计视觉
+</details>
 
-<img src="docs/showcase/composites/research-visuals.png" alt="并排展示跨尺度空间卷积注意力模块和跨领域科研执行流程" width="100%">
+<details>
+<summary><strong>research-visuals · 科研非统计视觉</strong></summary>
+
+<a href="docs/showcase/composites/research-visuals.png"><img src="docs/showcase/composites/research-visuals.png" alt="并排展示跨尺度空间卷积注意力模块和跨领域科研执行流程" width="100%"></a>
 
 [查看跨尺度注意力模块原图](docs/showcase/research-visuals/multiscale-attention.png) · [查看科研执行流程原图](docs/assets/research-workflow.webp)
 
 `research-visuals → imagegen` 先按图中实际对象分流。计算机、人工智能和机器学习图读取专门的计算机视觉规范，保留数据表示、模块、分支、汇合与输出；流行病学和公共卫生图继续使用研究对象、时间、变量与证据状态语法。统计数据图仍转 `publication-figures`，真实界面和论文页使用实际渲染，科研原始图像不生成式重绘。
 
-### 论文与 Word 实际渲染
+</details>
 
-<img src="docs/showcase/composites/manuscripts.png" alt="中文观察性分析完整作者稿和英文外部模型评价方法学完整作者稿的第一页" width="100%">
+<details>
+<summary><strong>academic-publishing · 论文与 Word 实际渲染</strong></summary>
+
+<a href="docs/showcase/composites/manuscripts.png"><img src="docs/showcase/composites/manuscripts.png" alt="中文观察性分析完整作者稿和英文外部模型评价方法学完整作者稿的第一页" width="100%"></a>
 
 | 中文观察性分析完整稿                                                                                                                           | 英文方法学完整稿                                                                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -95,9 +115,12 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏排列的完整章节。中文稿使用固定模拟队列的实际模型结果、基线汇总、模型诊断和统计图；英文稿讨论外部模型评价中的校准斜率，不虚构实证发现、作者、机构、伦理号或基金信息。[查看 Word 生成与渲染脚本](docs/demo/generate_manuscript_preview.py)
 
-### 学术汇报与实际 PPTX
+</details>
 
-<img src="docs/showcase/composites/academic-ppt.png" alt="并排展示中性组会汇报的生存曲线结果页和开题答辩的失访机制研究问题页" width="100%">
+<details>
+<summary><strong>academic-ppt · 通用学术汇报与实际 PPTX</strong></summary>
+
+<a href="docs/showcase/composites/academic-ppt.png"><img src="docs/showcase/composites/academic-ppt.png" alt="并排展示中性组会汇报的生存曲线结果页和开题答辩的失访机制研究问题页" width="100%"></a>
 
 | 中性组会汇报 | 开题答辩汇报 |
 | --- | --- |
@@ -105,7 +128,10 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 
 组会稿使用固定模拟队列的实际 Cox 模型结果和生存曲线，封面后直接进入研究设计、结果、解释边界和下一步；开题稿使用另一套中性视觉体系，围绕失访机制、方法比较、评价指标、质量控制和研究计划展开，不预设实证结果。两份 PPTX 均由 Microsoft PowerPoint 实际导出全部页面并检查文字、箭头、图表比例、页面边界和投影可读性。[查看生成脚本](docs/demo/generate_academic_ppt_showcase.py)
 
-### 项目初始化
+</details>
+
+<details>
+<summary><strong>project-init · 项目初始化</strong></summary>
 
 | 分析项目                                                                           | 咨询项目                                                                                  |
 | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -114,7 +140,10 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 
 两套结构均由 [`init_project.R`](skills/project-init/scripts/init_project.R) 实际运行产生。原始数据目录只含保护占位文件；`results/results.yaml`、`SESSION_LOG.md`、`EXPERIMENTS.md` 和正式咨询包不会在没有实际结果时提前创建。
 
-### 文件命名与当前版
+</details>
+
+<details>
+<summary><strong>文件命名与当前版</strong></summary>
 
 | 文件类型                         | 命名规则                                            | 示例                                                             |
 | -------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------- |
@@ -125,6 +154,8 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | 被当前版替代且需要恢复的正式文件 | 整批移入 `09_backup/archive/<时间>_<主题>_<阶段>/` | 由归档清单记录原路径与哈希值                                  |
 
 README 和正式交付位置只引用一组当前版。预览 PNG、可编辑 Word、PDF 和机器可读结果可以并存，因为它们承担不同用途；同一内容的模糊版本后缀不会并排留在当前目录。
+
+</details>
 
 ## 工作流怎样随任务变化
 

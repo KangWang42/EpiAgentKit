@@ -39,6 +39,7 @@ def compose(image_paths, output_path, panel_size, gap=28, outer=28):
 def main():
     publication_dir = DEMO_DIR / "output" / "publication-figures"
     manuscript_dir = DEMO_DIR / "output" / "academic-publishing"
+    sysu_ppt_dir = DEMO_DIR / "output" / "pptx"
     research_dir = DOCS_DIR / "showcase" / "research-visuals"
     academic_ppt_dir = DOCS_DIR / "showcase" / "academic-ppt"
 
@@ -66,6 +67,14 @@ def main():
             ),
             OUTPUT_DIR / "manuscripts.png",
             (760, 1050),
+        ),
+        (
+            (
+                sysu_ppt_dir / "presentation-cover.png",
+                sysu_ppt_dir / "presentation-preview.png",
+            ),
+            OUTPUT_DIR / "sysu-ppt.png",
+            (1180, 664),
         ),
         (
             (
