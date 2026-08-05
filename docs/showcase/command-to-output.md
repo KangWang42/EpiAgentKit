@@ -21,6 +21,7 @@
 | `biostat-principles` → `r-biostats` | `Rscript docs/demo/generate_survival_demo.R` | [模拟数据](../demo/survival-demo-data.csv)、[结果清单](../demo/output/publication-figures/survival-demo-results.csv) |
 | `evidence-research` | 核验一条 DOI、方法依据或最新指南 | [具体任务图](illustrations/evidence-research.png) · [证据矩阵规范](../../skills/evidence-research/references/evidence-matrix.md) |
 | `epi-study-design` | 把研究想法转成 PROTOCOL / SAP | [DOCX](../demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.docx) · [PDF](../demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.pdf) |
+| `graduate-opening-report` | 按完整内容蓝图、研究方案和学院模板生成研究生学位论文开题报告 | [观察性队列结构测试 DOCX](graduate-opening-report/observational-cohort.docx) · [随机对照结构测试 DOCX](graduate-opening-report/randomized-intervention.docx) · [测试边界与验收说明](graduate-opening-report/INDEX.md) |
 | `python-biostats` | 明确指定 Python 后执行同一研究口径 | [Python 执行边界](../../skills/python-biostats/SKILL.md)；本仓库不把 R 结果冒充 Python 示例 |
 | `academic-humanizer` | 修订已有论文、报告或投稿文本 | [局部修订实例图](illustrations/academic-humanizer.png) · [中文稿 Word](../demo/output/academic-publishing/manuscript-preview-zh.docx) |
 | `report-writing` | 把已核验结果整理成报告正文 | [分析报告 DOCX](../demo/output/document-skills/report-writing/fixed-cohort-survival-report.docx) · [复现核查备忘录 DOCX](../demo/output/document-skills/report-writing/fixed-cohort-reproducibility-memo.docx) |

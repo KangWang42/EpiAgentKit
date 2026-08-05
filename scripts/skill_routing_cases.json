@@ -89,6 +89,14 @@
       "excluded": ["academic-publishing", "docx"]
     },
     {
+      "id": "existing_opening_report_paragraph_polish",
+      "prompt": "只润色这份开题报告里已经写好的一个研究背景段落，不调整结构、研究设计或 Word 版式",
+      "primary": "academic-humanizer",
+      "companions": [],
+      "excluded": ["graduate-opening-report", "academic-publishing", "docx"],
+      "expected_action": "polish_only_the_confirmed_paragraph"
+    },
+    {
       "id": "existing_word_paragraph_revision",
       "prompt": "只修改现有 Word 论文中已指定的一个讨论段落，同时输出 clean 稿和带修订稿，其他内容与格式保持不变",
       "primary": "academic-humanizer",
@@ -273,6 +281,14 @@
       "primary": "epi-study-design",
       "companions": ["biostat-principles", "evidence-research"],
       "excluded": ["project-init", "r-biostats", "python-biostats"]
+    },
+    {
+      "id": "graduate_opening_report_from_pdf_templates",
+      "prompt": "根据我提供的研究方案和学院 PDF 范本，脱敏学习结构与版式，生成可供学院存档的硕士学位论文开题报告 Word 文件",
+      "primary": "graduate-opening-report",
+      "companions": ["biostat-principles", "epi-study-design", "evidence-research", "academic-humanizer", "pdf", "docx"],
+      "excluded": ["academic-publishing", "report-writing", "project-init"],
+      "expected_action": "profile_template_without_copying_personal_data_then_write_and_validate_report"
     },
     {
       "id": "existing_project_python_survival",

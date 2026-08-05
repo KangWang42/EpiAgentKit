@@ -36,6 +36,7 @@ PRESETS = {
         "evidence-research",
         "academic-humanizer",
         "academic-publishing",
+        "graduate-opening-report",
         "manuscript-peer-review",
         "report-writing",
         "research-visuals",
@@ -74,6 +75,12 @@ DEPENDENCIES = {
         "epi-project-audit",
     },
     "epi-study-design": {"biostat-principles", "evidence-research"},
+    "graduate-opening-report": {
+        "biostat-principles",
+        "epi-study-design",
+        "evidence-research",
+        "academic-humanizer",
+    },
     "epi-project-audit": {"biostat-principles"},
     "manuscript-peer-review": {
         "biostat-principles",

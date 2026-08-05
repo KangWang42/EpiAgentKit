@@ -35,6 +35,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 | 新建研究项目                   | 在 `analysis`、`paper`、`consulting`、`teaching` 和 `oneoff` 五种项目类型中选择当前任务所需的最小结构               | 可直接开始工作且没有多余空目录的项目基本结构                 |
 | 核验文献与方法依据             | 核对题名、作者、DOI/PMID、来源身份和撤稿状态，必要时组织正式证据检索                                                          | 核验记录、证据核对表、方法选择依据                           |
 | 完善研究设计与 SAP             | 把研究想法转成 PICO/PECO、estimand、终点、时间零点、偏倚控制、样本量或精度依据及预设分析                                      | 可审查的 PROTOCOL、SAP、未决事项与设计备忘录                 |
+| 生成研究生开题报告             | 把研究方案、真实证据和学院模板组织成可评审的学位论文开题报告，并检查表单、方法、引文、版式和归档状态                          | 开题报告正文、DOCX、技术路线与归档前核查结果                 |
 | 完成 R 统计分析                | 执行数据清洗、描述统计、回归、生存分析、中介分析与 Meta 分析；从项目根运行总脚本，并自动保存命令、状态、日志和环境信息        | 可复现 R 脚本、结果对象、必要表图与自动运行记录              |
 | 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录                 |
 | 制作发表级统计图               | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图                                                     | PDF、PNG 或 SVG 图件及对应出图代码                           |
@@ -180,6 +181,7 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | `biostat-principles` → `r-biostats` | `Rscript docs/demo/generate_survival_demo.R` | [模拟数据](docs/demo/survival-demo-data.csv)、[结果清单](docs/demo/output/publication-figures/survival-demo-results.csv) |
 | `evidence-research` | 核验一条 DOI、方法依据或最新指南 | [具体任务图](docs/showcase/illustrations/evidence-research.png) · [证据矩阵规范](skills/evidence-research/references/evidence-matrix.md) |
 | `epi-study-design` | 把研究想法转成 PROTOCOL / SAP | [方案与 SAP DOCX](docs/demo/output/document-skills/epi-study-design/home-bp-monitoring-protocol-sap.docx) |
+| `graduate-opening-report` | 按完整内容蓝图、研究方案和学院模板生成研究生学位论文开题报告 | [观察性队列结构测试 DOCX](docs/showcase/graduate-opening-report/observational-cohort.docx) · [随机对照结构测试 DOCX](docs/showcase/graduate-opening-report/randomized-intervention.docx) · [测试边界说明](docs/showcase/graduate-opening-report/INDEX.md) · [完整内容蓝图](skills/graduate-opening-report/references/full-report-blueprint.md) · [归档前核查清单](skills/graduate-opening-report/references/archive-checklist.md) |
 | `python-biostats` | 明确指定 Python 后执行同一研究口径 | [Python 执行边界](skills/python-biostats/SKILL.md)；仓库不把 R 结果冒充 Python 示例 |
 | `academic-humanizer` | 修订已有论文、报告或投稿文本 | [局部修订实例图](docs/showcase/illustrations/academic-humanizer.png) · [中文稿 Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) |
 | `report-writing` | 把已核验结果整理成报告正文 | [分析报告 DOCX](docs/demo/output/document-skills/report-writing/fixed-cohort-survival-report.docx) · [复现核查备忘录 DOCX](docs/demo/output/document-skills/report-writing/fixed-cohort-reproducibility-memo.docx) |
@@ -349,12 +351,12 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 原则、证据与设计 | `biostat-principles` · `evidence-research` · `epi-study-design`                                                                                |
 | 项目与分析       | `project-init` · `r-biostats` · `python-biostats` · `publication-figures`                                                                   |
 | 科研视觉         | `research-visuals` · `svg-diagrams`                                                                                                               |
-| 论文与报告       | `academic-publishing` · `academic-humanizer` · `report-writing`                                                                                |
+| 论文与报告       | `academic-publishing` · `graduate-opening-report` · `academic-humanizer` · `report-writing`                                                     |
 | 汇报与交付       | `academic-ppt` · `consulting-delivery`                                                                                                            |
 | 项目审查         | `epi-project-audit`                                                                                                                                  |
 | 文件与维护       | `docx` · `pdf` · `pptx` · `xlsx` · `workflow-retrospective` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
 
-先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
+先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；研究生学位论文开题报告使用 `biostat-principles → graduate-opening-report`，研究设计、证据核验、终审和 Word 文件分别加 `epi-study-design`、`evidence-research`、`academic-humanizer` 和 `docx`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
 
 ## 为什么不只是一个提示词仓库
 

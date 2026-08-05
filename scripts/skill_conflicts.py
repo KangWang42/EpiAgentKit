@@ -48,6 +48,13 @@ CONFLICT_DOMAINS = {
         "pico peco estimand sap",
         "epidemiologic study design",
     ),
+    "graduate-opening-report": (
+        "研究生学位论文开题报告",
+        "硕士学位论文开题报告",
+        "博士学位论文开题报告",
+        "graduate thesis proposal report",
+        "graduate opening report",
+    ),
     "epiagentkit-maintenance": (
         "维护 epiagentkit",
         "epiagentkit skills hooks 同步",
