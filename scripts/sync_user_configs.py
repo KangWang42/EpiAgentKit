@@ -43,7 +43,7 @@ from skill_conflicts import remove_skill_conflicts, remove_tree, scan_skill_conf
 CODEX_EXCLUDES = {"skill-creator"}
 LEGACY_SKILL_ALIASES = {"image-diagrams": "research-visuals"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
-VALID_COMPONENTS = {"rules", "skills", "hooks"}
+VALID_COMPONENTS = {"rules", "skills", "hooks", "runtime"}
 CODEX_LOGIN_SHELL_KEY = "allow_login_shell"
 CODEX_LOGIN_SHELL_ASSIGNMENT = re.compile(
     r"(?m)^(?P<prefix>[ \t]*(?:allow_login_shell|\"allow_login_shell\"|"
@@ -714,7 +714,10 @@ def parse_args(
     parser.add_argument(
         "--components",
         action="append",
-        help="Comma-separated subset of rules,skills,hooks; default installs all components.",
+        help=(
+            "Comma-separated subset of rules,skills,hooks,runtime; "
+            "runtime manages safe Codex process settings."
+        ),
     )
     parser.add_argument(
         "--skills",
@@ -764,17 +767,21 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
 
     migrate_legacy_state(home, args.dry_run)
 
-    components = csv_values(args.components) or set(VALID_COMPONENTS)
+    components = csv_values(args.components) or {"rules", "skills", "hooks"}
     unknown_components = components - VALID_COMPONENTS
     if unknown_components:
         raise ValueError("Unknown components: " + ", ".join(sorted(unknown_components)))
+    if args.target == "claude" and "runtime" in components:
+        raise ValueError("The runtime component applies only to Codex")
+    if args.target in {"all", "codex"} and "rules" in components:
+        components.add("runtime")
     if args.skip_hooks:
         components.discard("hooks")
     keep_local_rules = preserve_global_rules(root)
     if keep_local_rules and "rules" in components:
         components.discard("rules")
         print(
-            "SKIP   global rules "
+            "SKIP   global rule files "
             "(.epiagentkit-preserve-global-rules keeps this machine's files unmanaged)"
         )
     selected_skills = csv_values(args.skills) or None
@@ -818,10 +825,11 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
         )
 
     if args.target in {"all", "claude"}:
+        claude_components = components - {"runtime"}
         print("\n[Claude Code]")
-        if "rules" in components:
+        if "rules" in claude_components:
             sync_file(root / "CLAUDE.md", claude_home / "CLAUDE.md", args.dry_run)
-        if "skills" in components:
+        if "skills" in claude_components:
             sync_skills(
                 root,
                 claude_home / "skills",
@@ -830,7 +838,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
                 include=selected_skills,
                 prune_stale=prune_stale,
             )
-        if "hooks" in components:
+        if "hooks" in claude_components:
             reconcile_hook_conflicts(
                 platform="claude",
                 json_config=claude_home / "settings.json",
@@ -850,16 +858,17 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
             "claude",
             claude_home,
             root,
-            components,
-            [claude_home / "skills"] if "skills" in components else [],
+            claude_components,
+            [claude_home / "skills"] if "skills" in claude_components else [],
             dry_run=args.dry_run,
             unmanaged_components={"rules"} if keep_local_rules else set(),
         )
 
     if args.target in {"all", "codex"}:
         print("\n[Codex]")
-        if "rules" in components:
+        if "runtime" in components:
             sync_codex_runtime_settings(codex_home / "config.toml", args.dry_run)
+        if "rules" in components:
             sync_file(root / "CLAUDE.md", codex_home / "AGENTS.md", args.dry_run)
         if "skills" in components:
             for codex_skills in codex_skill_dirs:

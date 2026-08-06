@@ -147,6 +147,8 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
 
     target, preset, selected, with_rules, with_hooks = interactive_values(args, root)
     components, skills = plan_install(preset, selected, with_rules, with_hooks)
+    if target in {"codex", "all"} and "rules" in components:
+        components.add("runtime")
     keep_local_rules = preserve_global_rules(root)
     if keep_local_rules:
         components.discard("rules")
@@ -179,7 +181,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
         )
     if target in {"codex", "all"}:
         print(f"- Codex skills 布局：{args.codex_layout}")
-        if "rules" in components:
+        if "runtime" in components:
             print(
                 "- Codex 运行设置：安全合并 allow_login_shell=false；"
                 "保留其它 config.toml 内容，不安装或指定 PowerShell 版本"

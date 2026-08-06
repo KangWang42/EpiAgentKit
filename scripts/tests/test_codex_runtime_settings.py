@@ -11,7 +11,12 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from config_core import INSTALL_MANIFEST, INSTALL_SCHEMA, PROJECT_NAME
+from config_core import (
+    INSTALL_MANIFEST,
+    INSTALL_SCHEMA,
+    LOCAL_RULES_PRESERVE_FILE,
+    PROJECT_NAME,
+)
 from epiagentkit import check_platform
 from sync_user_configs import (
     main as sync_main,
@@ -210,6 +215,72 @@ class CodexRuntimeSettingTests(unittest.TestCase):
                 (home / ".codex" / "AGENTS.md").read_text(encoding="utf-8"),
                 "rules\n",
             )
+
+    def test_local_rule_file_preservation_keeps_runtime_setting_managed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            root = base / "repo"
+            home = base / "home"
+            (root / "skills").mkdir(parents=True)
+            (root / "hooks").mkdir()
+            (root / "CLAUDE.md").write_text("public rules\n", encoding="utf-8")
+            (root / LOCAL_RULES_PRESERVE_FILE).write_text("\n", encoding="utf-8")
+            codex_home = home / ".codex"
+            codex_home.mkdir(parents=True)
+            (codex_home / "AGENTS.md").write_text(
+                "personal rules\n", encoding="utf-8"
+            )
+            config = codex_home / "config.toml"
+            config.write_text("allow_login_shell = true\n", encoding="utf-8")
+
+            sync_main(
+                [
+                    "--target",
+                    "codex",
+                    "--repo-root",
+                    str(root),
+                    "--home",
+                    str(home),
+                    "--components",
+                    "rules",
+                ]
+            )
+
+            self.assertEqual(
+                (codex_home / "AGENTS.md").read_text(encoding="utf-8"),
+                "personal rules\n",
+            )
+            self.assertIs(read_codex_login_shell_setting(config), False)
+            manifest = json.loads(
+                (codex_home / INSTALL_MANIFEST).read_text(encoding="utf-8")
+            )
+            self.assertIn("runtime", manifest["components"])
+            self.assertNotIn("rules", manifest["components"])
+            setting_check = next(
+                check
+                for check in check_platform("codex", root, codex_home, [])
+                if check["item"] == "codex.runtime.allow_login_shell"
+            )
+            self.assertEqual(setting_check["status"], "PASS")
+
+    def test_runtime_component_rejects_claude_only_target(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "repo"
+            (root / "skills").mkdir(parents=True)
+            (root / "hooks").mkdir()
+            (root / "CLAUDE.md").write_text("rules\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "applies only to Codex"):
+                sync_main(
+                    [
+                        "--target",
+                        "claude",
+                        "--repo-root",
+                        str(root),
+                        "--components",
+                        "runtime",
+                    ]
+                )
 
 
 if __name__ == "__main__":

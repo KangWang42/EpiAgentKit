@@ -299,7 +299,7 @@ release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex
 <details>
 <summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
 
-配置管理器会保留已有个人配置，只更新同名 EpiAgentKit 文件与受管 hook，并在安装结束后自动运行 `doctor`。向 Codex 安装规则时，还会在 `~/.codex/config.toml` 顶层安全合并 [`allow_login_shell = false`](https://learn.chatgpt.com/docs/config-file/config-reference#configtoml)：该设置合并步骤仅修改这一项，保留其它设置、注释、换行和 UTF-8 BOM，先校验 TOML 再原子写入；dry-run 不落盘，重复同步不产生差异，`doctor` 只报告该键是否为 `false`，不回显配置内容。这个设置减少登录 shell 与 profile 带来的不确定性，不负责选择或安装 PowerShell 7；Windows 调用仍会先识别 `powershell.exe` 5.1 与 `pwsh` 7，并避免把只兼容 7 的复杂脚本交给 5.1。
+配置管理器会保留已有个人配置，只更新同名 EpiAgentKit 文件与受管 hook，并在安装结束后自动运行 `doctor`。向 Codex 安装规则时，还会通过独立的 `runtime` 组件在 `~/.codex/config.toml` 顶层安全合并 [`allow_login_shell = false`](https://learn.chatgpt.com/docs/config-file/config-reference#configtoml)：该设置合并步骤仅修改这一项，保留其它设置、注释、换行和 UTF-8 BOM，先校验 TOML 再原子写入；dry-run 不落盘，重复同步不产生差异，`doctor` 只报告该键是否为 `false`，不回显配置内容。这个设置减少登录 shell 与 profile 带来的不确定性，不负责选择或安装 PowerShell 7；Windows 调用仍会先识别 `powershell.exe` 5.1 与 `pwsh` 7，并避免把只兼容 7 的复杂脚本交给 5.1。
 
 ```bash
 git clone https://github.com/KangWang42/EpiAgentKit.git
@@ -341,7 +341,7 @@ python scripts/epiagentkit.py check-project <项目根>
 
 Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。
 
-源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md`，不管理 Codex 的 `allow_login_shell`，并将规则从 doctor 的受管组件中移除。这两个文件只表达本机策略，不进入 release。
+源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md`，并将规则文件从 doctor 的受管组件中移除。Codex 的 `runtime` 组件独立保留：只要本次请求同步规则，仍会管理和检查 `allow_login_shell`；只同步 skills 时不修改该设置。这两个本机策略文件不进入 release。
 
 </details>
 

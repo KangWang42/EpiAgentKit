@@ -716,6 +716,9 @@ def main() -> int:
             "def sync_codex_runtime_settings(",
             "def read_codex_login_shell_setting(",
             'CODEX_LOGIN_SHELL_KEY = "allow_login_shell"',
+            'VALID_COMPONENTS = {"rules", "skills", "hooks", "runtime"}',
+            'components.add("runtime")',
+            'if "runtime" in components:',
             'sync_codex_runtime_settings(codex_home / "config.toml", args.dry_run)',
             "scan_skill_conflicts(",
             "remove_skill_conflicts(",
@@ -985,6 +988,7 @@ def main() -> int:
             "只安装 EpiAgentKit 文件",
             "不安装或升级 R、Python 及其它运行环境或依赖",
             "安全合并 allow_login_shell=false",
+            'components.add("runtime")',
         ),
         "scripts/epiagentkit.py": (
             "def tree_matches(",
@@ -1517,6 +1521,8 @@ def main() -> int:
             "必须保留：",
             "并新开 Codex 会话验证已安装的新 skill",
             "allow_login_shell = false",
+            "独立的 `runtime` 组件",
+            "只同步 skills 时不修改该设置",
             "不负责选择或安装 PowerShell 7",
         ),
         "docs/release-1.1-usage.md": (
