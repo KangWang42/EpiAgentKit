@@ -216,7 +216,9 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertNotIn("minimum 500 words", body)
         self.assertNotIn("User Confirms", body)
 
-    def test_diagram_iconography_is_semantic_and_adaptive(self) -> None:
+    def test_formal_research_flows_block_emoji_and_small_icons(self) -> None:
+        skill = ROOT / "skills" / "research-visuals"
+        body = (skill / "SKILL.md").read_text(encoding="utf-8")
         reference = (
             ROOT
             / "skills"
@@ -224,21 +226,57 @@ class VisualRoutingTests(unittest.TestCase):
             / "references"
             / "diagram-iconography.md"
         ).read_text(encoding="utf-8")
+        patterns = (skill / "references" / "research-figure-patterns.md").read_text(
+            encoding="utf-8"
+        )
+        recipes = (skill / "references" / "prompt-recipes.md").read_text(
+            encoding="utf-8"
+        )
+        carrier = (skill / "references" / "carrier-specs.md").read_text(
+            encoding="utf-8"
+        )
+        planning = (skill / "references" / "figure-planning.md").read_text(
+            encoding="utf-8"
+        )
 
         for fragment in (
             "W3C G207",
             "Microsoft Fluent 2 Iconography",
             "IBM Pictogram Usage",
             "GOV.UK Design System",
-            "全图最多 4 个",
-            "通常 2–4 个，不逐节点配图",
-            "全图 0–3 个",
-            "Icon strategy",
-            "必要图标与相邻背景至少 3:1",
+            "正式流程图的强制边界",
+            "Icon strategy: none (L0)",
+            "no emoji, pictogram, clip-art",
+            "数据库、清单、漏斗、文档等字面隐喻",
+            "图像型例外",
+            "少量大型对象",
+            "方法图元或大型图形对象与相邻背景至少 3:1",
         ):
             self.assertIn(fragment, reference)
-        self.assertIn("本地操作性启发式", reference)
-        self.assertIn("不使用灯泡、奖杯、火箭、脑、芯片或发光 DNA", reference)
+        for fragment in (
+            "正式科研流程默认采用 L0",
+            "禁止 emoji、装饰性小图标和图标化阶段标签",
+            "数据库/清单/漏斗/文档等小图标",
+            "图形摘要/教学例外中的大型图形对象确实承担内容编码",
+        ):
+            self.assertIn(fragment, body)
+        for fragment in (
+            "正式技术路线采用 L0",
+            "数据库/清单/漏斗/文档等小图标",
+            "阶段栏小图标、节点小图标、结果图标",
+        ):
+            self.assertIn(fragment, patterns)
+        for fragment in (
+            "正式研究流程/研究设计/技术路线/病例流转/方法架构固定为 none",
+            "no emoji, pictogram, clip-art, decorative small icon",
+            "no emoji, pictogram, clip-art, stage icon, node icon",
+            "Icon strategy: none; no emoji",
+        ):
+            self.assertIn(fragment, recipes)
+        self.assertIn("正式研究流程、研究设计、技术路线、病例流转与方法架构采用 L0", carrier)
+        self.assertIn("固定为 none，禁止 emoji、pictogram、clip-art 和小图标", planning)
+        self.assertIn("网页内容插图、卡片插图和空状态", reference)
+        self.assertIn("界面控制图标继续复用项目既有图标系统", reference)
 
     def test_verified_counts_do_not_turn_structural_diagrams_into_statistical_plots(self) -> None:
         visual = (ROOT / "skills/research-visuals/SKILL.md").read_text(

@@ -49,9 +49,9 @@ Regions: <区域 ID | 比例位置 | 独立任务 | 内容>
 Micro-visuals: <模块 ID | 与真实操作对应的微型图元；无则 none>
 Representation identity: <必须保持的真实/写实/示意类型、关键微型图元、连续概率或热区含义、裁切、材质和已认可局部质量>
 Flat-fill contract: <需要纯色的区域与有限色板 | 整块纯色底和网格描边 | 无渐变、白雾、中心高光、噪声、随机深浅、纹理或透明叠色；不适用写 none>
-Icon strategy: <none / per-major-stage / selected key objects only>
-Icon map: <stage ID | literal metaphor or micro-visual | why it improves recognition>
-Icon system: <L0/L1/L2/L3, outline/filled, stroke, corner, viewpoint, container, single-color logic>
+Icon strategy: <正式研究流程/研究设计/技术路线/病例流转/方法架构固定为 none；图形摘要、机制示意或科普/教学插图只有在大型图形对象承担真实内容编码时才记录例外>
+Icon exception: <none，或大型对象 | 对应的真实对象/机制 | 删除后造成的内容损失>
+Icon constraints: no emoji, pictogram, clip-art, decorative small icon, stage icon, node icon, result-document icon, or icon used as a bullet
 Palette source: <现有模板或网页颜色；没有时为流程图指定两类语义主色，必要时增加第三类警示或关键状态色；主色相总数不超过三种，黑白灰中性色不计>
 Material and lighting: <有语义的材质与自然光线>
 Text (verbatim): <必须逐字呈现的短标签；无则写 none>
@@ -80,7 +80,7 @@ Type-specific constraints: <只加载一个或确有需要的图类约束块>
 | 图类 | 只加载的专属约束 |
 | --- | --- |
 | 人物、临床或摄影场景 | 身份、姿态、手部、设备连接、真实光线；禁止多余肢体、错误设备和商业摆拍 |
-| 科研流程、架构与密集图 | 精确文字、数字、公式、节点、边、方向、分支与汇合；禁止结构增删、交叉箭头和装饰性科学符号 |
+| 科研流程、架构与密集图 | 精确文字、数字、公式、节点、边、方向、分支与汇合；正式流程固定 L0，禁止结构增删、交叉箭头、emoji、pictogram、clip-art、阶段/节点/结果小图标和装饰性科学符号 |
 | README、技术文档与 skill 正文内容图 | 准确短标签、输入处理产物、结构关系、最终字号和窄屏显示；禁止把内容图做成无字插画 |
 | 真实截图与成果预览 | 不进入 imagegen；实际运行或渲染，检查隐私、裁切、缩放、光标、通知和无关窗口 |
 | 网页视觉 | 安全区、主体轮廓、负空间和响应式裁切；禁止伪 UI、烧录按钮文案和关键主体越出裁切区 |
@@ -162,10 +162,10 @@ GROUPS: <group ID={member IDs}, only for real containment; otherwise omit>.
 Render labels, not IDs. Draw every listed edge once with one unambiguous arrowhead. Keep branches beside their source and merges beside their target. If one row compresses labels, use two rows or unequal editorial regions.
 
 VISUAL DIRECTION
-<target ratio>; <surface and region separation>; two semantic hues, with a third only for a real exceptional state; regular-width type; natural node width; undistorted shapes; <0–4 verified micro-visuals or icons, otherwise none>; <flat-fill contract when applicable>.
+<target ratio>; <surface and region separation>; two semantic hues, with a third only for a real exceptional state; regular-width type; natural node width; undistorted shapes; formal research flow uses text, numbering, boundaries and arrows only; verified method micro-visuals only when they encode actual input, transformation or output; <flat-fill contract when applicable>.
 
 CONSTRAINTS
-Node and edge counts must match the lists; no added, duplicated, merged, inferred or omitted nodes or edges; no crossing arrows; no condensed type, non-uniform scaling, card wall, random scientific symbols, watermark, extra title, legend or pseudo-text.
+Node and edge counts must match the lists; no added, duplicated, merged, inferred or omitted nodes or edges; no crossing arrows; no emoji, pictogram, clip-art, stage icon, node icon, result-document icon or decorative small symbol; no condensed type, non-uniform scaling, card wall, random scientific symbols, watermark, extra title, legend or pseudo-text.
 ```
 
 邻接表中同一 ID 只定义一次，同一边只列一次。两条路径汇入同一节点时写成 `M06>M12; M11>M12`，不能写成 `M06+M11>M12`。若标签、公式和拓扑在五段包中仍过密，先重排；只有用户要求多个用途、图位确需拆图或单图无法在最终尺寸成立时，才规划职责明确的“架构沟通图”“接口审计图”等多图成果，不得删边、缩窄节点或依靠提示词重复强调来硬塞。
@@ -186,7 +186,7 @@ Variable or feature construction: <暴露、结局、中介、协变量、指标
 Question-method pairs: <研究问题或估计对象 -> 对应方法；逐条列出>
 Validation and robustness: <交叉/外部验证、分层、敏感性、替代定义或消融>
 Outputs: <效应估计、风险预测、机制路径、解释或交付成果>
-Key icons: <none，或 2–4 个与真实输入、处理、验证、输出对应的简单图标>
+Icon strategy: none; no emoji, pictogram, clip-art, stage icon, node icon or result-document icon
 ```
 
 主阅读方向只选一种，阶段控制在 4–7 个。多源数据先汇入整合节点，平行研究问题从共同分析集分叉，最终汇入验证或输出。不得只罗列模型名，也不得省略研究对象、质量控制和结果输出。

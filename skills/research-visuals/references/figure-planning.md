@@ -140,7 +140,7 @@ Template requirements: <必须保留 | 允许调整 | 根据内容调整的版�
 Archetype and reading order: <结构原型、主方向>
 Regions: <区域 ID | 比例位置 | 任务 | 内容>
 Micro-visuals: <模块 ID | 与真实操作对应的微型图元；无则 none>
-Icon strategy: <none / per-major-stage / selected key objects only；数量、复杂度与主题对应关系>
+Icon strategy: <正式研究流程/研究设计/技术路线/病例流转/方法架构固定为 none，禁止 emoji、pictogram、clip-art 和小图标；只有图形摘要、机制示意或科普/教学插图可记录大型图像型例外及其内容贡献>
 Image inputs: <待修改原图决定事实、文字、结构、真实/写实/示意类型、关键微型图元、裁切、材质与已认可质量；内容来源图已转写事实与关系且不附给全新生成；可选参考图仅提供经核验的配色、空间安排、阅读顺序和线条表现>
 Target location and project-specific facts: <图在文档或页面中的位置、实际待修改原图、项目专属事实、由文档或网页排版的文字>
 MUST PRESERVE / MAY ADJUST / MUST NOT CHANGE: <必须保持的准确内容、允许调整的视觉形式和禁止变化的内容>
