@@ -75,6 +75,88 @@ class WebUiWorkflowTests(unittest.TestCase):
         )
         self.assertIn('"skills/build-web-ui/"', workflow_audit)
 
+    def test_web_ui_routes_types_palette_components_and_visual_gate(self) -> None:
+        skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
+        archetypes = (ROOT / "skills/build-web-ui/references/site-archetypes.md").read_text(
+            encoding="utf-8"
+        )
+        colors = (ROOT / "skills/build-web-ui/references/color-systems.md").read_text(
+            encoding="utf-8"
+        )
+        components = (ROOT / "skills/build-web-ui/references/interaction-components.md").read_text(
+            encoding="utf-8"
+        )
+        external = (ROOT / "skills/build-web-ui/references/external-design-research.md").read_text(
+            encoding="utf-8"
+        )
+        quality = (ROOT / "skills/build-web-ui/references/quality-gates.md").read_text(
+            encoding="utf-8"
+        )
+        for fragment in (
+            "site-archetypes.md",
+            "color-systems.md",
+            "interaction-components.md",
+            "必须特征",
+            "不得出现的特征",
+            "待审阅",
+            "第二次连续出现整体否定",
+        ):
+            self.assertIn(fragment, skill)
+        for fragment in (
+            "营销、产品与服务页",
+            "电商、目录与预订",
+            "内容、编辑与媒体站",
+            "文档、知识库与课程站",
+            "管理台、数据产品与科研工具",
+            "公共服务与高风险表单",
+        ):
+            self.assertIn(fragment, archetypes)
+        for fragment in (
+            "主题、内容与配色互相证明",
+            "竞争色相",
+            "语义色不得承担无语义的大面积装饰",
+            "Radix Colors",
+            "Primer Primitives",
+            "Carbon 颜色分层",
+        ):
+            self.assertIn(fragment, colors)
+        for fragment in (
+            "组件合同",
+            "默认、hover、focus、pressed、selected、disabled、loading、empty、success、error、permission",
+            "动效可以在任意时刻被新输入中断",
+            "触控滑动不是唯一操作",
+        ):
+            self.assertIn(fragment, components)
+        for fragment in (
+            "抽象审美效果",
+            "优先核验的原始来源",
+            "许可证",
+            "不复制品牌色",
+            "项目级前端参考",
+            "shadcn/ui",
+            "Ant Design",
+            "MUI",
+            "Headless UI",
+        ):
+            self.assertIn(fragment, external)
+        for fragment in (
+            "独立的人工视觉门禁",
+            "竞争色相",
+            "不生成自动审美评分",
+            "候选审阅与部署状态",
+        ):
+            self.assertIn(fragment, quality)
+
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(encoding="utf-8")
+            )["cases"]
+        }
+        self.assertEqual(cases["restyle_dashboard_with_vague_theme"]["primary"], "build-web-ui")
+        self.assertEqual(cases["repair_local_web_spacing"]["primary"], "build-web-ui")
+        self.assertEqual(cases["design_commerce_flow"]["primary"], "build-web-ui")
+
     def test_static_audit_keeps_valid_noindex_page_clean(self) -> None:
         html = """<!doctype html>
         <html lang="zh-CN"><head><title>测试页</title>

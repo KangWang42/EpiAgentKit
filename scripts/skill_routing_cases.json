@@ -345,6 +345,27 @@
       "primary": "build-web-ui",
       "companions": [],
       "excluded": ["epi-project-audit", "research-visuals"]
+    },
+    {
+      "id": "restyle_dashboard_with_vague_theme",
+      "prompt": "没有现成品牌稿，把现有管理台按真实内容做得现代、协调、有层次，先研究合适配色并适配手机",
+      "primary": "build-web-ui",
+      "companions": [],
+      "excluded": ["research-visuals", "publication-figures"]
+    },
+    {
+      "id": "repair_local_web_spacing",
+      "prompt": "只把现有网页按钮间距从 8px 改为 12px，保持品牌、组件和其它页面不变",
+      "primary": "build-web-ui",
+      "companions": [],
+      "excluded": ["research-visuals", "publication-figures"]
+    },
+    {
+      "id": "design_commerce_flow",
+      "prompt": "基于真实商品和库存设计商品详情、筛选、购物车和结算流程，并验证触控和键盘状态",
+      "primary": "build-web-ui",
+      "companions": [],
+      "excluded": ["research-visuals", "publication-figures"]
     }
   ]
 }
