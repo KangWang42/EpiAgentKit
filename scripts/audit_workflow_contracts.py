@@ -27,6 +27,7 @@ from sync_user_configs import (
     SKILL_MANIFEST,
     hook_command,
     mirror_tree,
+    read_codex_login_shell_setting,
     sync_hook_config,
     sync_skills,
 )
@@ -398,6 +399,11 @@ def main() -> int:
             "只读检查发现所需运行时缺失时",
             "普通 R/Python 分析包缺失时",
             "09_backup/workbench/",
+            "项目 `.gitignore` 忽略整个 `09_backup/`",
+            "`powershell.exe` 按 Windows PowerShell 5.1 对待",
+            "只有实际发现 `pwsh` 时才使用 PowerShell 7",
+            "该命令实际支持时使用 `-LiteralPath`",
+            "不得嵌套 `powershell|pwsh -Command`",
             "`02_code/` 只保存会形成正式分析数据",
             "总分析入口只显式执行已经确认的正式分析脚本",
             "点名处仅为同类问题样例",
@@ -413,14 +419,19 @@ def main() -> int:
             "Use `epiagentkit-maintenance`",
             "do not initialize a repository or install Git",
             "09_backup/workbench/YYYY-MM-DD_HHMM_<topic>_<purpose>/",
+            "entire `09_backup/` tree is local-only",
             "Get-Content -Encoding utf8",
             "Treat mojibake as a failed read",
+            "Treat `powershell.exe` as Windows PowerShell 5.1",
+            "Use `-LiteralPath` only for cmdlets that support it",
+            "Avoid nested `powershell|pwsh -Command`",
             "representative case",
             "Do not stop at a literal replacement or the named file",
             "After every successful commit in this repository",
             "local Claude Code and Codex installations match the committed source",
             "pre-commit review gate",
-            "explicit approval of the current review artifacts",
+            "New skill additions follow the pre-commit review gate",
+            "existing skills use that gate only when the user explicitly requests review artifacts",
         ),
         "skills/epiagentkit-maintenance/SKILL.md": (
             "观察到的缺口",
@@ -441,6 +452,9 @@ def main() -> int:
             "用户无需重复声明",
             "09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_maintenance/",
             "Get-Content -Encoding utf8",
+            "`powershell.exe` 按 Windows PowerShell 5.1 对待",
+            "只在实际支持时用 `-LiteralPath`",
+            "避免嵌套 `-Command`",
             "同类问题边界",
             "中文修改按全局中文终审要求逐句检查",
             "用户纠正与真实失败的原因查找和修正",
@@ -450,12 +464,14 @@ def main() -> int:
             "接收其它项目的 `workflow.txt`",
             "不预先排除能够可靠实现目标的组件",
             "不替报告作者补全含义",
-            "Skill 变更的双成果审阅门槛",
+            "新建 Skill 与按需成果审阅",
             "至少两份可独立打开、分别验收的真实成果",
+            "既有 skill 时，默认使用代表性实跑和回归测试验收",
+            "只有用户当轮明确要求时才生成",
             "review/INDEX.md",
-            "只有用户明确确认当前这组成果无误并同意提交",
+            "只有用户明确确认当前成果无误并同意提交",
             "未获同意时保持未提交",
-            "此门槛只属于 skill 维护和提交前审阅",
+            "成果审阅只属于新建 skill 或用户明确要求的维护任务",
             "不得只写进当轮说明、临时提示词或审阅文档",
             "可作为其它 skill 的候选方法",
             "只迁移确有帮助的原则",
@@ -499,6 +515,8 @@ def main() -> int:
             "09_backup/archive/YYYY-MM-DD_HHMM_<主题>_<阶段>/",
             "只索引 `archive/`，不登记 workbench",
             "09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_<用途>/",
+            "整个 `09_backup/` 只在本地",
+            "不创建 `.gitkeep`",
             "E0：通常不建批次",
             "E1：一个批次保存 `PLAN.md` 和 `FINDINGS.md`",
             "E2：在 E1 基础上使用项目 `EXPERIMENTS.md`",
@@ -695,6 +713,10 @@ def main() -> int:
             "include: set[str] | None",
             "prune_stale: bool = True",
             "def update_install_manifest(",
+            "def sync_codex_runtime_settings(",
+            "def read_codex_login_shell_setting(",
+            'CODEX_LOGIN_SHELL_KEY = "allow_login_shell"',
+            'sync_codex_runtime_settings(codex_home / "config.toml", args.dry_run)',
             "scan_skill_conflicts(",
             "remove_skill_conflicts(",
             "remove_tree(resolved)",
@@ -756,6 +778,7 @@ def main() -> int:
             "不预建空模块",
             "默认使用 R",
             "Git 已存在时初始化",
+            "生成的 `.gitignore` 忽略整个 `09_backup/`",
             "不安装 Git",
             "不创建空的 `results/results.yaml`",
             "先按实际职责决定位置",
@@ -961,6 +984,7 @@ def main() -> int:
             '"--skip-doctor"',
             "只安装 EpiAgentKit 文件",
             "不安装或升级 R、Python 及其它运行环境或依赖",
+            "安全合并 allow_login_shell=false",
         ),
         "scripts/epiagentkit.py": (
             "def tree_matches(",
@@ -969,6 +993,7 @@ def main() -> int:
             'command == "install"',
             'command == "sync"',
             'command == "check-project"',
+            '"codex.runtime.allow_login_shell"',
         ),
         "scripts/epiclaude.py": ("from epiagentkit import main",),
         "hooks/_emit_notice.py": (
@@ -1491,6 +1516,8 @@ def main() -> int:
             "实际问题：",
             "必须保留：",
             "并新开 Codex 会话验证已安装的新 skill",
+            "allow_login_shell = false",
+            "不负责选择或安装 PowerShell 7",
         ),
         "docs/release-1.1-usage.md": (
             "推荐交给当前 Agent 安装",
@@ -2053,6 +2080,30 @@ def main() -> int:
                 )
             if "[[hooks." in codex_inline.read_text(encoding="utf-8"):
                 problems.append("hook conflict self-test: Codex inline hooks were not migrated")
+            try:
+                login_shell = read_codex_login_shell_setting(codex_inline)
+            except (OSError, ValueError) as error:
+                problems.append(
+                    "Codex runtime setting self-test could not read managed key: "
+                    + str(error)
+                )
+            else:
+                if login_shell is not False:
+                    problems.append(
+                        "Codex runtime setting self-test did not disable login-shell semantics"
+                    )
+            inline_text = codex_inline.read_text(encoding="utf-8")
+            if "model = 'personal-model'" not in inline_text:
+                problems.append(
+                    "Codex runtime setting self-test changed unrelated personal TOML"
+                )
+            if any(
+                line.strip().startswith("shell =")
+                for line in inline_text.splitlines()
+            ):
+                problems.append(
+                    "Codex runtime setting self-test wrote an unsupported shell key"
+                )
             reports = list((home / ".epiagentkit/hook-conflict-reports").glob("*/manifest.json"))
             if len(reports) != 1:
                 problems.append("hook conflict self-test: deletion report count is incorrect")
@@ -2096,6 +2147,10 @@ def main() -> int:
             if not {"claude.hook_runtime", "codex.hook_runtime"} <= runtime_checks:
                 problems.append(
                     "dual-platform doctor self-test did not execute both Windows hook launchers"
+                )
+            if "codex.runtime.allow_login_shell" not in runtime_checks:
+                problems.append(
+                    "dual-platform doctor self-test did not verify the Codex runtime setting"
                 )
 
             mirror_tree(

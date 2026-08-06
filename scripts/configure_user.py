@@ -179,6 +179,11 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
         )
     if target in {"codex", "all"}:
         print(f"- Codex skills 布局：{args.codex_layout}")
+        if "rules" in components:
+            print(
+                "- Codex 运行设置：安全合并 allow_login_shell=false；"
+                "保留其它 config.toml 内容，不安装或指定 PowerShell 版本"
+            )
         if args.codex_layout in {"codex", "both"}:
             print(f"- {CODEX_COMPATIBILITY_WARNING}")
     if "hooks" in components:

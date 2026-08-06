@@ -62,7 +62,8 @@ init_project <- function(name,
     dirs <- c("input", "code", "output")
   }
   invisible(lapply(file.path(project, dirs), dir.create, recursive = TRUE, showWarnings = FALSE))
-  invisible(file.create(file.path(project, dirs, ".gitkeep")))
+  tracked_dirs <- dirs[!startsWith(dirs, "09_backup/")]
+  invisible(file.create(file.path(project, tracked_dirs, ".gitkeep")))
 
   if (!formal) {
     write_utf8(
@@ -293,6 +294,7 @@ init_project <- function(name,
     if (formal) {
       c(
         "01_data/rawdata/*", "!01_data/rawdata/.gitkeep", "!01_data/README.md", "",
+        "/09_backup/", "",
         "results/derived/*", "!results/derived/.gitkeep", "results/runs/*.log", "results/runs/*-environment.txt", "",
         if (language == "r") c(".Rproj.user/", ".Rhistory", ".RData") else c("__pycache__/", "*.py[cod]", ".pytest_cache/"),
         ".DS_Store", "Thumbs.db", "~$*", "*.tmp", "*.bak"

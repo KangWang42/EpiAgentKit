@@ -177,6 +177,25 @@ def check_platform(
         source_rule = root / "CLAUDE.md"
         ok = target_rule.is_file() and digest(target_rule) == digest(source_rule)
         record(ok, f"{platform}.rules", str(target_rule))
+        if platform == "codex":
+            config_path = platform_home / "config.toml"
+            try:
+                login_shell = sync_user_configs.read_codex_login_shell_setting(
+                    config_path
+                )
+            except (OSError, ValueError) as error:
+                record(False, "codex.runtime.allow_login_shell", str(error))
+            else:
+                detail = (
+                    f"{config_path}: false"
+                    if login_shell is False
+                    else f"{config_path}: missing or not false"
+                )
+                record(
+                    login_shell is False,
+                    "codex.runtime.allow_login_shell",
+                    detail,
+                )
 
     if "skills" in components:
         skill_dirs = [Path(value) for value in manifest.get("skill_dirs", [])] or fallback_skill_dirs

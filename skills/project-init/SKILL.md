@@ -37,7 +37,7 @@ init_project(
 
 - `type` 支持 cohort、case_control、cross_sectional、rct、meta、rwd、methodology 的序号或名称。
 - 默认使用 R；只有用户明确选择或现有主流程为 Python 时使用 `language="python"`。
-- `git=TRUE` 仅在用户明确启用且 Git 已存在时初始化；不安装 Git，不自动 push。
+- `git=TRUE` 仅在用户明确启用且 Git 已存在时初始化；生成的 `.gitignore` 忽略整个 `09_backup/`，不安装 Git，不自动 push。旧项目中已经被 Git 跟踪的备份内容不自动移除，先由用户确认迁移范围。
 - 旧调用的 `mode="research"|"consulting"` 仅用于兼容已有代码；新文档和新模板统一使用 `profile` 参数。
 
 ## 3. 正式研究项目结构
@@ -52,8 +52,8 @@ init_project(
 04_figures/            实际生成的正式统计图
 results/derived/       可重建中间结果
 results/runs/          程序自动生成的运行记录、完整日志和环境说明
-09_backup/archive/     被当前版替代且需要恢复的正式文件
-09_backup/workbench/   实验、诊断、复现和一次性工作
+09_backup/archive/     本地保存被当前版替代且需要恢复的正式文件
+09_backup/workbench/   本地保存实验、诊断、复现和一次性工作
 PROTOCOL.md            研究设计
 SAP.md                 预设分析
 DECISIONS.md           方法选择与方案偏离
@@ -94,6 +94,6 @@ run_pipeline.R|py      从项目根运行全部已确认分析的总脚本
 4. 正式研究项目的总运行脚本、配置和所选语言的结果写入函数可以解析；
 5. 总运行脚本只显式列出正式分析步骤，未自动发现编号脚本；论文、验收和一次性代码未混入 `02_code/`；
 6. `results/results.yaml`、`SESSION_LOG.md` 和 `EXPERIMENTS.md` 未被提前创建；
-7. Git 状态与用户选择一致。
+7. Git 状态与用户选择一致；正式项目的 `.gitignore` 忽略整个 `09_backup/`，该目录下没有用于纳入 Git 的 `.gitkeep`。
 
 初始化只建立项目的基本结构，不代表 PROTOCOL、SAP、分析或交付已经完成。咨询结果包在分析完成并验证后由 `consulting-delivery` 创建。

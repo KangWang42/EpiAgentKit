@@ -30,9 +30,7 @@ cohort_analysis_demo/
   04_figures/.gitkeep
   09_backup
   09_backup/archive
-  09_backup/archive/.gitkeep
   09_backup/workbench
-  09_backup/workbench/.gitkeep
   AGENTS.md
   BACKLOG.md
   CLAUDE.md
@@ -55,4 +53,5 @@ cohort_analysis_demo/
 - 01_data/rawdata/ 仅含保护占位文件，未写入研究数据。
 - 总运行脚本与 02_code/00_setup.R 已生成。
 - .epiagentkit-layout.json 仅声明目录和正式产物类别。
+- 09_backup/ 两个本地分支均已创建，目录内无 .gitkeep，且由 .gitignore 整体排除。
 - 尚未提前创建 results/results.yaml、SESSION_LOG.md、EXPERIMENTS.md。

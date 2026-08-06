@@ -9,4 +9,4 @@
 
 两份模板在 `validate_proposal.py --mode showcase` 下通过，在 `--mode archive` 下会因待补字段、待核验引文和测试填充被明确阻断。这一正反结果用于证明 skill 已记录各部分深度预算，并能组织完整章节、设计分支、表格、约 20–30 页篇幅和 DOCX 文件流程；它不证明正式正文质量、真实证据、学院模板适配或归档资格。
 
-维护任务、验收证据和已知限制见[提交前审阅索引](../../../09_backup/workbench/2026-08-06_0010_graduate-opening-report_completeness_maintenance/review/INDEX.md)。
+提交前审阅材料仅保留在维护者本地的 `09_backup/workbench/`，不作为公开展示文件或仓库依赖。

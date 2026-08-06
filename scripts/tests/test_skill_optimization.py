@@ -162,6 +162,7 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn('find_skill_file("python-biostats", "scripts/emit_summary.py")', body)
         self.assertIn('profile = c("analysis", "paper", "consulting", "teaching", "oneoff")', body)
         self.assertIn('"09_backup/archive", "09_backup/workbench"', body)
+        self.assertIn('"/09_backup/"', body)
 
         rscript = shutil.which("Rscript")
         if rscript is None:
@@ -228,6 +229,12 @@ class SkillOptimizationTests(unittest.TestCase):
                 self.assertTrue({"01_data", "02_code", "results", "09_backup"}.issubset(declared))
                 self.assertTrue((project / "09_backup/archive").is_dir())
                 self.assertTrue((project / "09_backup/workbench").is_dir())
+                self.assertFalse((project / "09_backup/archive/.gitkeep").exists())
+                self.assertFalse((project / "09_backup/workbench/.gitkeep").exists())
+                self.assertIn(
+                    "/09_backup/",
+                    (project / ".gitignore").read_text(encoding="utf-8").splitlines(),
+                )
                 self.assertFalse((project / "results/results.yaml").exists())
                 self.assertFalse((project / "SESSION_LOG.md").exists())
                 self.assertFalse((project / "EXPERIMENTS.md").exists())
@@ -261,6 +268,69 @@ class SkillOptimizationTests(unittest.TestCase):
                 )
             self.assertFalse((Path(directory) / "teaching_demo/.epiagentkit-layout.json").exists())
             self.assertFalse((Path(directory) / "oneoff_demo/09_backup").exists())
+
+    def test_project_initializer_keeps_backup_out_of_git(self) -> None:
+        rscript = shutil.which("Rscript")
+        git = shutil.which("git")
+        if rscript is None or git is None:
+            self.skipTest("Rscript and Git are required for the Git ignore integration test")
+
+        script = ROOT / "skills/project-init/scripts/init_project.R"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).as_posix()
+            source = script.as_posix()
+            test_script = Path(directory) / "test_backup_gitignore.R"
+            test_script.write_text(
+                "\n".join(
+                    [
+                        f'source("{source}", encoding="UTF-8")',
+                        f'init_project("git_demo", root="{root}", profile="analysis", language="r", git=TRUE)',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            environment = dict(os.environ)
+            environment["EPIAGENTKIT_SKILLS"] = str(ROOT / "skills")
+            initialized = subprocess.run(
+                [rscript, str(test_script)],
+                cwd=ROOT,
+                env=environment,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(
+                initialized.returncode,
+                0,
+                initialized.stdout + initialized.stderr,
+            )
+
+            project = Path(directory) / "git_demo"
+            archive_file = project / "09_backup/archive/old-report.docx"
+            workbench_file = project / "09_backup/workbench/check/output.log"
+            archive_file.write_text("archived\n", encoding="utf-8")
+            workbench_file.parent.mkdir(parents=True)
+            workbench_file.write_text("diagnostic\n", encoding="utf-8")
+
+            for path in (archive_file, workbench_file):
+                ignored = subprocess.run(
+                    [git, "-C", str(project), "check-ignore", "-q", str(path)],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(ignored.returncode, 0, path)
+
+            status = subprocess.run(
+                [git, "-C", str(project), "status", "--porcelain", "--untracked-files=all"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(status.returncode, 0, status.stdout + status.stderr)
+            self.assertNotIn("09_backup", status.stdout.replace("\\", "/"))
 
     def test_global_writing_contract_and_r_first_default_are_preserved(self) -> None:
         rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")

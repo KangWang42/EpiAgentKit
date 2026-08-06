@@ -7,11 +7,17 @@ import argparse
 import filecmp
 import json
 import os
+import re
 import shlex
 import shutil
 import stat
 import uuid
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 compatibility
+    tomllib = None
 
 from config_core import (
     CODEX_COMPATIBILITY_WARNING,
@@ -38,6 +44,13 @@ CODEX_EXCLUDES = {"skill-creator"}
 LEGACY_SKILL_ALIASES = {"image-diagrams": "research-visuals"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
 VALID_COMPONENTS = {"rules", "skills", "hooks"}
+CODEX_LOGIN_SHELL_KEY = "allow_login_shell"
+CODEX_LOGIN_SHELL_ASSIGNMENT = re.compile(
+    r"(?m)^(?P<prefix>[ \t]*(?:allow_login_shell|\"allow_login_shell\"|"
+    r"'allow_login_shell')[ \t]*=[ \t]*)(?P<value>true|false)"
+    r"(?P<suffix>[ \t]*(?:#[^\r\n]*)?)(?P<ending>\r?\n|$)"
+)
+TOML_TABLE_HEADER = re.compile(r"(?m)^[ \t]*\[\[?")
 MANAGED_HOOK_SCRIPTS = {
     "protect_rawdata.sh",
     "post_edit_checks.sh",
@@ -189,6 +202,144 @@ def atomic_write_json(path: Path, data: dict) -> None:
     finally:
         if temporary.exists():
             temporary.unlink()
+
+
+def atomic_write_bytes(path: Path, data: bytes) -> None:
+    """Replace one user config without exposing a partial file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".epi-{uuid.uuid4().hex[:8]}.tmp")
+    try:
+        temporary.write_bytes(data)
+        if path.exists():
+            os.chmod(path, stat.S_IWRITE | stat.S_IREAD)
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            os.chmod(temporary, stat.S_IWRITE | stat.S_IREAD)
+            temporary.unlink()
+
+
+def _load_codex_toml(text: str, path: Path) -> dict:
+    """Read Codex TOML while keeping a safe Python 3.10 fallback."""
+    if tomllib is not None:
+        try:
+            data = tomllib.loads(text)
+        except tomllib.TOMLDecodeError as error:
+            raise ValueError(
+                f"Cannot update invalid TOML config {path}: {error}"
+            ) from error
+        if not isinstance(data, dict):
+            raise ValueError(f"Config root must be a TOML document: {path}")
+        return data
+
+    if "'''" in text or '"""' in text:
+        raise ValueError(
+            f"Cannot safely inspect multiline TOML on Python 3.10: {path}; "
+            "use Python 3.11 or later for this configuration update"
+        )
+    top_level = TOML_TABLE_HEADER.split(text, maxsplit=1)[0]
+    matches = list(CODEX_LOGIN_SHELL_ASSIGNMENT.finditer(top_level))
+    if len(matches) > 1:
+        raise ValueError(
+            f"Duplicate top-level {CODEX_LOGIN_SHELL_KEY} settings in {path}"
+        )
+    if not matches:
+        return {}
+    return {
+        CODEX_LOGIN_SHELL_KEY: matches[0].group("value") == "true",
+    }
+
+
+def read_codex_login_shell_setting(config_path: Path) -> bool | None:
+    """Return only the managed Codex setting without exposing other config values."""
+    if not config_path.is_file():
+        return None
+    try:
+        text = config_path.read_bytes().decode("utf-8-sig")
+    except UnicodeDecodeError as error:
+        raise ValueError(
+            f"Cannot decode Codex TOML config {config_path} as UTF-8"
+        ) from error
+    current = _load_codex_toml(text, config_path)
+    value = current.get(CODEX_LOGIN_SHELL_KEY)
+    if value is None:
+        return None
+    if not isinstance(value, bool):
+        raise ValueError(
+            f"Top-level {CODEX_LOGIN_SHELL_KEY} must be a boolean in {config_path}"
+        )
+    return value
+
+
+def sync_codex_runtime_settings(config_path: Path, dry_run: bool) -> None:
+    """Disable login-shell semantics while preserving unrelated Codex TOML text."""
+    existed = config_path.is_file()
+    if existed:
+        try:
+            raw = config_path.read_bytes()
+            has_bom = raw.startswith(b"\xef\xbb\xbf")
+            text = raw.decode("utf-8-sig")
+        except UnicodeDecodeError as error:
+            raise ValueError(
+                f"Cannot decode Codex TOML config {config_path} as UTF-8"
+            ) from error
+    else:
+        has_bom = False
+        text = ""
+
+    current = _load_codex_toml(text, config_path)
+    value = current.get(CODEX_LOGIN_SHELL_KEY)
+    if value is not None and not isinstance(value, bool):
+        raise ValueError(
+            f"Top-level {CODEX_LOGIN_SHELL_KEY} must be a boolean in {config_path}"
+        )
+
+    if value is None:
+        newline = "\r\n" if "\r\n" in text else "\n"
+        updated = f"{CODEX_LOGIN_SHELL_KEY} = false{newline}"
+        if text:
+            updated += newline if not text.startswith(("\r", "\n")) else ""
+            updated += text
+    else:
+        top_level = TOML_TABLE_HEADER.split(text, maxsplit=1)[0]
+        matches = list(CODEX_LOGIN_SHELL_ASSIGNMENT.finditer(top_level))
+        if len(matches) != 1:
+            raise ValueError(
+                f"Cannot safely locate the top-level {CODEX_LOGIN_SHELL_KEY} "
+                f"assignment in {config_path}"
+            )
+        match = matches[0]
+        updated = (
+            text[: match.start("value")]
+            + "false"
+            + text[match.end("value") :]
+        )
+
+    verified = _load_codex_toml(updated, config_path).get(CODEX_LOGIN_SHELL_KEY)
+    if verified is not False:
+        raise ValueError(
+            f"Failed to prepare {CODEX_LOGIN_SHELL_KEY}=false for {config_path}"
+        )
+    if updated == text:
+        print(
+            f"SKIP   {config_path} "
+            f"({CODEX_LOGIN_SHELL_KEY} already false)"
+        )
+        return
+
+    print(
+        f"MERGE  Codex setting {CODEX_LOGIN_SHELL_KEY}=false -> {config_path}"
+    )
+    if dry_run:
+        return
+    backup = config_path.with_name(f"{config_path.name}.epiagentkit.bak")
+    if existed and not backup.exists():
+        print(f"BACKUP {config_path} -> {backup}")
+        atomic_copy_file(config_path, backup)
+    payload = updated.encode("utf-8")
+    if has_bom:
+        payload = b"\xef\xbb\xbf" + payload
+    atomic_write_bytes(config_path, payload)
 
 
 def mirror_tree(source: Path, target: Path) -> None:
@@ -708,6 +859,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
     if args.target in {"all", "codex"}:
         print("\n[Codex]")
         if "rules" in components:
+            sync_codex_runtime_settings(codex_home / "config.toml", args.dry_run)
             sync_file(root / "CLAUDE.md", codex_home / "AGENTS.md", args.dry_run)
         if "skills" in components:
             for codex_skills in codex_skill_dirs:

@@ -155,7 +155,7 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | 队列研究的 `analysis` 结构，包含设计、SAP、分析代码、表图、结果和自动运行记录位置 | 横断面研究的 `consulting` 结构，在分析核心之外增加 `05_reports/`，但不提前创建空交付包 |
 | [查看实际初始化成果](docs/showcase/project-init/analysis.md)                        | [查看实际初始化成果](docs/showcase/project-init/consulting.md)                             |
 
-两套结构均由 [`init_project.R`](skills/project-init/scripts/init_project.R) 实际运行产生。原始数据目录只含保护占位文件；`results/results.yaml`、`SESSION_LOG.md`、`EXPERIMENTS.md` 和正式咨询包不会在没有实际结果时提前创建。
+两套结构均由 [`init_project.R`](skills/project-init/scripts/init_project.R) 实际运行产生。原始数据目录只含保护占位文件；`09_backup/` 保留在本地并由项目 `.gitignore` 整体排除；`results/results.yaml`、`SESSION_LOG.md`、`EXPERIMENTS.md` 和正式咨询包不会在没有实际结果时提前创建。
 
 </details>
 
@@ -266,6 +266,8 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 `09_backup/INDEX.md` 只索引 `archive/`；项目 `EXPERIMENTS.md` 只在 E2 出现时索引 `workbench/` 中的正式比较。新项目不再把批次直接写到 `09_backup/` 根，旧项目的根级历史批次仍可读取。
 
+整个 `09_backup/` 只在本地用于恢复、实验与核验，项目 `.gitignore` 会整体排除该目录；其中不放用于 Git 跟踪空目录的 `.gitkeep`，公开文档也不依赖其中的文件。
+
 ## 30 秒安装
 
 最简单的方法是把仓库地址交给当前使用的 Agent，让它完成检查、安装、备份和验收；不需要先手动克隆仓库、复制规则或逐个放置 skills。
@@ -297,7 +299,7 @@ release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex
 <details>
 <summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
 
-配置管理器会保留已有个人配置，只更新同名 EpiAgentKit 文件与受管 hook，并在安装结束后自动运行 `doctor`。
+配置管理器会保留已有个人配置，只更新同名 EpiAgentKit 文件与受管 hook，并在安装结束后自动运行 `doctor`。向 Codex 安装规则时，还会在 `~/.codex/config.toml` 顶层安全合并 [`allow_login_shell = false`](https://learn.chatgpt.com/docs/config-file/config-reference#configtoml)：该设置合并步骤仅修改这一项，保留其它设置、注释、换行和 UTF-8 BOM，先校验 TOML 再原子写入；dry-run 不落盘，重复同步不产生差异，`doctor` 只报告该键是否为 `false`，不回显配置内容。这个设置减少登录 shell 与 profile 带来的不确定性，不负责选择或安装 PowerShell 7；Windows 调用仍会先识别 `powershell.exe` 5.1 与 `pwsh` 7，并避免把只兼容 7 的复杂脚本交给 5.1。
 
 ```bash
 git clone https://github.com/KangWang42/EpiAgentKit.git
@@ -331,8 +333,7 @@ python scripts/epiagentkit.py doctor --target all
 python scripts/epiagentkit.py list
 
 # 自选技能，依赖项自动补齐
-python scripts/epiagentkit.py install --target all --preset custom \
-  --skills academic-ppt,report-writing --with-rules --yes
+python scripts/epiagentkit.py install --target all --preset custom --skills academic-ppt,report-writing --with-rules --yes
 
 # 对正式研究项目运行项目最终检查
 python scripts/epiagentkit.py check-project <项目根>
@@ -340,7 +341,7 @@ python scripts/epiagentkit.py check-project <项目根>
 
 Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。
 
-源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md` 并将其从 doctor 的受管组件中移除。这两个文件只表达本机策略，不进入 release。
+源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md`，不管理 Codex 的 `allow_login_shell`，并将规则从 doctor 的受管组件中移除。这两个文件只表达本机策略，不进入 release。
 
 </details>
 
@@ -403,7 +404,7 @@ $workflow-retrospective
 
 ### 用 Codex 快速完善 skills
 
-如果你有新的研究场景、补充方法或希望加入的 skill，欢迎一起参与共建。请尽量同时提供实际输入、期望结果、需要保留的旧行为和可靠参考；新增或改变行为的 skill 在提交前应附至少两份内容与验收重点不同的真实成果，使其他维护者能够直接比较、复核并继续改进。
+如果你有新的研究场景、补充方法或希望加入的 skill，欢迎一起参与共建。请尽量同时提供实际输入、期望结果、需要保留的旧行为和可靠参考。新建 skill 在提交前应附至少两份内容与验收重点不同的真实成果；修改既有 skill 默认以代表性实跑和回归测试验收，只有你明确要求时才另外生成审阅成果。
 
 从本仓库根目录启动 Codex，把实际失败、正确示例、必须保留的旧行为和希望改变的结果一起给出。Codex 官方支持用 `$skill-creator` 显式选择 skill 创建与更新流程；长期仓库规范放在 `AGENTS.md`，任务流程放在各 skill 的 `SKILL.md`、`references/` 和 `scripts/` 中。可直接发送：
 
@@ -415,10 +416,10 @@ $skill-creator
 正确结果：<说明希望得到什么，最好附一个可靠示例>
 必须保留：<列出不能被这次修改破坏的旧行为>
 
-请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。完成后为每个发生行为变化的 skill 生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查；运行目标组件验证、完整单元测试和 audit_workflow_contracts.py，但在我明确确认当前成果前不要 commit、sync 或 doctor。不要 push，除非我本轮明确要求。
+请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。运行目标组件验证、完整单元测试和 audit_workflow_contracts.py。新建 skill 时生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查，并在我明确确认当前成果前不要 commit、sync 或 doctor；修改既有 skill 时不要自动生成这些成果，除非我本轮明确要求。不要 push，除非我本轮明确要求。
 ```
 
-两份成果可以是图片、渲染截图、文档、表格、报告、代码产物或其它能直接检查的真实文件；同一结果的换色、格式转换、修订前后版或日志拆分不能替代两个代表性任务。确认提交后再运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，并新开 Codex 会话验证已安装的新 skill。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
+启用成果审阅时，成果可以是图片、渲染截图、文档、表格、报告、代码产物或其它能直接检查的真实文件；同一结果的换色、格式转换、修订前后版或日志拆分不能替代两个代表性任务。确认提交后再运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，并新开 Codex 会话验证已安装的新 skill。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
 
 维护本仓库时先使用 `epiagentkit-maintenance`。优化不是只增不减：先确认要保留的旧行为，再决定哪些内容重写、合并、移到专门的 reference 或脚本、删除或新增，并用新旧代表性场景共同验证。修改规则、skills、hooks 或安装器后，至少运行：
 
