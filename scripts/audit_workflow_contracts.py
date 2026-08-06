@@ -909,6 +909,43 @@ def main() -> int:
             "| 讨论 |",
             "| 局限 |",
             "| 结论 |",
+            "结构元话语",
+            "全局免责声明",
+            "防御性转折",
+        ),
+        "skills/academic-humanizer/references/chinese-academic-style.md": (
+            "论文、学位论文、开题报告、基金申请书和正式研究报告的正文共用",
+            "直接列出每个问题及其人群、比较、结局和时间窗",
+            "不要以第三者口吻写全局免责声明",
+            "审稿回复、rebuttal、cover letter",
+        ),
+        "skills/graduate-opening-report/SKILL.md": (
+            "开题正文的生成与终审均使用 `academic-humanizer`",
+            "逐部分生成的控制表",
+            "单层“研究目的”",
+            "零假设表不是通用组成",
+            "按矩阵逐部分生成",
+            "正文方法—流程节点—图件/表格—DOCX 位置",
+        ),
+        "skills/graduate-opening-report/references/full-report-blueprint.md": (
+            "矩阵用于逐部分生成",
+            "每一行都是一个独立生成单元",
+            "未关闭的行不得进入最终装配",
+        ),
+        "skills/graduate-opening-report/references/archive-checklist.md": (
+            "逐部分内容矩阵",
+            "按矩阵逐部分生成并关闭",
+            "学术展示表为白底三线表",
+        ),
+        "skills/academic-publishing/SKILL.md": (
+            "建立逐部分内容矩阵",
+            "关闭一行后再进入下一行",
+            "局部润色不因该矩阵扩大范围",
+        ),
+        "skills/academic-publishing/references/section-content-playbook.md": (
+            "逐部分内容矩阵",
+            "按行生成完整内容",
+            "未关闭的行不得装配为全文",
         ),
         "skills/academic-publishing/references/chinese-thesis.md": (
             "新项目统一从 `results/results.yaml` 读取数字",
@@ -929,6 +966,12 @@ def main() -> int:
             "w14:paraId",
             "--allow-insert-after",
             "single local DOCX change does not require",
+            "academic display tables use three-line rules",
+            "Independent list blocks restart explicitly",
+        ),
+        "skills/docx/references/scoped-revision.md": (
+            "first classify the target as an academic display table",
+            "each independent list block has an explicit numbering reference",
         ),
         "skills/academic-ppt/SKILL.md": (
             "用户提供的 `.pptx` / `.potx`",

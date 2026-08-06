@@ -283,7 +283,7 @@ sections: [{
 - **Never use `\n`** - use separate Paragraph elements
 - **Never use unicode bullets** - use `LevelFormat.BULLET` with numbering config
 - **PageBreak must be in Paragraph** - standalone creates invalid XML
-- **ImageRun requires `type`** - always specify png/jpg/etc
+- **ImageRun requires `type`** - always specify png/jpg/etc; map the figure to its body location and caption, then verify the relationship, alt text, displayed dimensions, and readability at final size
 - **Always set table `width` with DXA** - never use `WidthType.PERCENTAGE` (breaks in Google Docs)
 - **Tables need dual widths** - `columnWidths` array AND cell `width`, both must match
 - **Table width = sum of columnWidths** - for DXA, ensure they add up exactly
@@ -292,6 +292,8 @@ sections: [{
 - **TOC requires HeadingLevel only** - no custom styles on heading paragraphs
 - **Override built-in styles** - use exact IDs: "Heading1", "Heading2", etc.
 - **Include `outlineLevel`** - required for TOC (0 for H1, 1 for H2, etc.)
+- **Classify tables before styling** - academic display tables use three-line rules (top, below header, bottom) and white cells, center short headers/units/numeric columns when appropriate, and keep long text left/top aligned; official forms preserve template-approved complete borders, merged cells, and blank fields; verify the OOXML borders, widths, alignment, and pagination
+- **Independent list blocks restart explicitly** - use distinct numbering references unless a template requires a continuous sequence, and verify each visible first number after rendering
 
 ---
 

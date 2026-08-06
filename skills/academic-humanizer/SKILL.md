@@ -49,6 +49,10 @@ description: |
   `../academic-publishing/references/english-writing.md` 与
   `../academic-publishing/references/english-phrasebank.md` 中对应部件。
 
+论文、学位论文、开题报告、基金申请书和正式研究报告的正文共用
+`references/chinese-academic-style.md`（英文稿使用相应英文写作参考）的语体门控。
+内容 skill 负责各自的研究目的、结构和交付物；本技能负责把正文落实为研究者视角、直接陈述、证据匹配和术语一致的学术文本。审稿回复、rebuttal、cover letter、编辑部往来和科研邮件可以保留完成沟通所需的元话语，但这些表达不得直接回流到论文或开题报告正文。
+
 ## 四、检查后再改写
 
 固定执行以下顺序：

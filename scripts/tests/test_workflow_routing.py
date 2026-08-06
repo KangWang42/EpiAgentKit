@@ -687,6 +687,69 @@ class WorkflowRoutingTests(unittest.TestCase):
             cases["formal_project_local_word_revision"]["excluded"],
         )
 
+    def test_shared_academic_language_and_section_matrix_contract(self) -> None:
+        humanizer = (
+            ROOT / "skills/academic-humanizer/references/chinese-academic-style.md"
+        ).read_text(encoding="utf-8")
+        opening = (ROOT / "skills/graduate-opening-report/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        opening_blueprint = (
+            ROOT
+            / "skills/graduate-opening-report/references/full-report-blueprint.md"
+        ).read_text(encoding="utf-8")
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        playbook = (
+            ROOT / "skills/academic-publishing/references/section-content-playbook.md"
+        ).read_text(encoding="utf-8")
+        docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
+        scoped_docx = (
+            ROOT / "skills/docx/references/scoped-revision.md"
+        ).read_text(encoding="utf-8")
+
+        for fragment in (
+            "论文、学位论文、开题报告、基金申请书和正式研究报告的正文共用",
+            "结构元话语",
+            "全局免责声明",
+            "防御性转折",
+            "审稿回复、rebuttal、cover letter",
+        ):
+            self.assertIn(fragment, humanizer)
+        for fragment in (
+            "逐部分生成的控制表",
+            "按行逐部分生成并逐项验收",
+            "单层“研究目的”",
+            "零假设表不是通用组成",
+            "正文方法—流程节点—图件/表格—DOCX 位置",
+        ):
+            self.assertIn(fragment, opening)
+        for fragment in (
+            "每一行都是一个独立生成单元",
+            "登记依据 → 生成本部分 → 核对事实和语言",
+            "未关闭的行不得进入最终装配",
+        ):
+            self.assertIn(fragment, opening_blueprint)
+        for fragment in (
+            "建立逐部分内容矩阵",
+            "关闭一行后再进入下一行",
+            "局部润色不因该矩阵扩大范围",
+        ):
+            self.assertIn(fragment, publishing)
+        self.assertIn("按行生成完整内容", playbook)
+        for fragment in (
+            "academic display tables use three-line rules",
+            "Independent list blocks restart explicitly",
+        ):
+            self.assertIn(fragment, docx)
+        for fragment in (
+            "first classify the target as an academic display table",
+            "official forms, preserve the approved complete borders",
+            "each independent list block has an explicit numbering reference",
+        ):
+            self.assertIn(fragment, scoped_docx)
+
     def test_scoped_workflow_uses_proportionate_records_and_validation(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         revision = (
