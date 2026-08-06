@@ -331,6 +331,20 @@
       "primary": "git-commit-helper",
       "companions": [],
       "excluded": ["epiagentkit-maintenance"]
+    },
+    {
+      "id": "beautify_personal_website",
+      "prompt": "沿用现有 Flask 网站和真实内容，把公开页与后台页做得更有作者感但不浮夸，并适配手机",
+      "primary": "build-web-ui",
+      "companions": [],
+      "excluded": ["research-visuals", "publication-figures"]
+    },
+    {
+      "id": "audit_web_ui_in_real_browser",
+      "prompt": "检查这个网站桌面和真实 390 像素手机布局视口，保存截图并核对溢出、破图、控制台、网络、前台和后台状态",
+      "primary": "build-web-ui",
+      "companions": [],
+      "excluded": ["epi-project-audit", "research-visuals"]
     }
   ]
 }

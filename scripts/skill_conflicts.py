@@ -18,6 +18,14 @@ from pathlib import Path
 
 
 CONFLICT_DOMAINS = {
+    "build-web-ui": (
+        "网页与 web ui",
+        "网站美化",
+        "web ui 设计与构建",
+        "frontend webapp builder",
+        "responsive web design",
+        "real browser ui audit",
+    ),
     "academic-humanizer": (
         "去 ai 味",
         "去ai味",

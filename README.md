@@ -188,6 +188,7 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | `consulting-delivery` | 把已完成分析整理为外发交付包 | [具体交付图](docs/showcase/illustrations/consulting-delivery.png) · [咨询项目结构示例](docs/showcase/project-init/consulting.md) |
 | `manuscript-peer-review` | 以同行评审人身份生成可定位审稿报告 | [同行评审 DOCX](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx) · [审稿标准](skills/manuscript-peer-review/references/review-criteria.md) |
 | `epi-project-audit` | `python <skill>/scripts/run_check_project.py <项目根> --json` | [审查清单](skills/epi-project-audit/references/audit-checklist.md) · [论断校准](skills/epi-project-audit/references/claim-calibration.md) |
+| `build-web-ui` | 创建、美化或验收真实网页与 Web UI | [视觉设计手册](skills/build-web-ui/references/design-playbook.md) · [浏览器验收规范](skills/build-web-ui/references/quality-gates.md) · [CDP 审计脚本](skills/build-web-ui/scripts/audit_browser.py) |
 | `docx` / `pdf` | 打开、渲染、验证或转换实际文件 | [Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.pdf) |
 | `xlsx` | 读取、清洗、创建或核验工作簿 | [工作簿操作规范](skills/xlsx/SKILL.md)；需绑定用户数据后生成，不放虚构表格 |
 | `workflow-retrospective` | 根据会话纠正生成 `workflow.txt` | [交接报告 TXT](docs/demo/output/document-skills/workflow-retrospective/workflow.txt) · [展示 DOCX](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.docx) |
@@ -317,6 +318,9 @@ python scripts/epiagentkit.py install --target all --preset analysis --yes
 # 只安装论文与报告技能包
 python scripts/epiagentkit.py install --target all --preset writing --yes
 
+# 只安装网页设计、实现与浏览器验收技能
+python scripts/epiagentkit.py install --target all --preset web --yes
+
 # 只为 Codex 安装通用学术 PPT 与科研视觉技能包
 python scripts/epiagentkit.py install --target codex --preset ppt --yes
 
@@ -352,12 +356,13 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 原则、证据与设计 | `biostat-principles` · `evidence-research` · `epi-study-design`                                                                                |
 | 项目与分析       | `project-init` · `r-biostats` · `python-biostats` · `publication-figures`                                                                   |
 | 科研视觉         | `research-visuals` · `svg-diagrams`                                                                                                               |
+| 网页与 Web UI     | `build-web-ui`                                                                                                                                     |
 | 论文与报告       | `academic-publishing` · `graduate-opening-report` · `academic-humanizer` · `report-writing`                                                     |
 | 汇报与交付       | `academic-ppt` · `consulting-delivery`                                                                                                            |
 | 项目审查         | `epi-project-audit`                                                                                                                                  |
 | 文件与维护       | `docx` · `pdf` · `pptx` · `xlsx` · `workflow-retrospective` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
 
-先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；研究生学位论文开题报告使用 `biostat-principles → graduate-opening-report`，研究设计、证据核验、终审和 Word 文件分别加 `epi-study-design`、`evidence-research`、`academic-humanizer` 和 `docx`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
+先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；网页创建、改版、美化与真实浏览器验收使用 `build-web-ui`，独立图片再按需调用 imagegen；研究生学位论文开题报告使用 `biostat-principles → graduate-opening-report`，研究设计、证据核验、终审和 Word 文件分别加 `epi-study-design`、`evidence-research`、`academic-humanizer` 和 `docx`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
 
 ## 为什么不只是一个提示词仓库
 

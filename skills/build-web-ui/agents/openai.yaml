@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web UI 设计与构建"
+  short_description: "设计、美化并用真实桌面与手机浏览器验收网页界面"
+  default_prompt: "使用 $build-web-ui 基于现有内容与技术栈设计或优化网页，并完成可复现的桌面、手机、前后台和交互状态验收。"

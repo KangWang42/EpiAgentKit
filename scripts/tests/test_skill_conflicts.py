@@ -26,6 +26,29 @@ def write_skill(root: Path, name: str, description: str, body: str = "Instructio
 
 
 class SkillConflictTests(unittest.TestCase):
+    def test_web_ui_overlap_is_detected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            local = root / "home/.agents/skills"
+            write_skill(repo / "skills", "build-web-ui", "authoritative web workflow")
+            write_skill(
+                local,
+                "legacy-frontend-designer",
+                "负责网站美化、响应式布局和真实浏览器 UI audit",
+            )
+
+            conflicts = scan_skill_conflicts(
+                platform="codex",
+                source_root=repo,
+                incoming={"build-web-ui"},
+                discovery_roots=[local],
+                target_roots=[local],
+            )
+
+            self.assertEqual(len(conflicts), 1)
+            self.assertEqual(conflicts[0].authority, "build-web-ui")
+
     def test_manuscript_peer_review_overlap_is_detected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -201,6 +201,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "python-biostats",
             "publication-figures",
             "research-visuals",
+            "build-web-ui",
             "academic-publishing",
             "manuscript-peer-review",
             "academic-humanizer",

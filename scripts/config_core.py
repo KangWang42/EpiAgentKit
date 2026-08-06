@@ -23,6 +23,9 @@ LOCAL_RULES_PRESERVE_FILE = ".epiagentkit-preserve-global-rules"
 SYNC_EXCLUDES = {"python-ecg-analysis"}
 
 PRESETS = {
+    "web": {
+        "build-web-ui",
+    },
     "ppt": {
         "biostat-principles",
         "research-visuals",

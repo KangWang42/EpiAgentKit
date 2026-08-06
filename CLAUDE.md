@@ -26,6 +26,7 @@
 | 清洗、描述、回归、生存及其他统计分析 | `biostat-principles` → `r-biostats` | 明确或既有 Python 流程改用 `python-biostats`；出图加 `publication-figures` |
 | 统计图或其他数据结果图 | `biostat-principles` → `publication-figures` | 流程、机制和框架图不走此路径 |
 | 非统计视觉、流程、框架、机制或图形摘要 | `research-visuals` → `imagegen` | 只按该 skill 的条件转 `svg-diagrams` |
+| 网页与 Web UI 创建、改版、美化或验收 | `build-web-ui` | 独立图片按 `imagegen` 或相应视觉 skill；后端单独开发不触发 |
 | 从零论文、论文部件、投稿材料或结构性重写 | `biostat-principles` → `academic-publishing` | `academic-humanizer` 终审；Word 操作加 `docx` |
 | 论文同行评审 | `biostat-principles` → `manuscript-peer-review` | 核验加 `evidence-research`；实际读取 Word/PDF 时加 `docx`/`pdf` |
 | 已有学术文本的编辑、润色或压缩 | `academic-humanizer` | Word 操作加 `docx` |
