@@ -1,5 +1,17 @@
 # Editing Presentations
 
+## Choose the editing scope
+
+For an L bounded edit, use the existing presentation as the authoritative source without remapping the deck:
+
+1. Lock the input file, target slide numbers or stable slide relationships, exact elements, allowed package parts and protected scope.
+2. Inspect only the target slides and the masters/layouts they already consume; unpack the source and edit only the authorized slide XML, relationships, notes or media.
+3. Pack with the original presentation as the source, validate the package, and confirm slide order/count, masters, layouts, theme and all unauthorized parts remain unchanged.
+4. Extract and reconcile the changed text, then render the changed slides and adjacent slides only when pagination-like continuity, transitions or a shared visual edge can be affected.
+5. If the change touches a master, layout, theme, font, shared asset, slide order/count or deck-wide setting, upgrade to P and inspect every direct consumer; R performs complete presentation QA.
+
+Do not run template selection, slide mapping, placeholder replacement across all slides or deck-wide style cleanup for an L edit.
+
 ## Template-Based Workflow
 
 When using an existing presentation as a template:

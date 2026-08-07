@@ -34,7 +34,7 @@ description: |
 
 `稿件与轮次 / 文章类型和研究设计 / 期刊或目标读者 / 提供的附件 / 未提供的关键材料 / 允许的外部核验 / 输出语言和格式 / 是否要求推荐结论`
 
-完整读取正文、表图、补充材料和期刊表单。PDF 或 Word 分别用 `pdf` 或 `docx` 提取内容，并核对页码、表格、脚注、公式、图例和补充材料；不能只依据摘要或纯文本抽取结果审完整稿。
+完整同行评审应读取正文、表图、补充材料和期刊表单。PDF 或 Word 分别用 `pdf` 或 `docx` 提取内容，并核对页码、表格、脚注、公式、图例和补充材料；不能只依据摘要或纯文本抽取结果审完整稿。用户只要求一个章节、一个统计问题或一组可定位意见时按 L 局部审查：读取目标内容、其直接引用的方法/结果/表图和判断所需上下文，明确未审范围，不为给出局部意见强制通读全文或生成完整 reviewer report。
 
 ## 3. 整理稿件内容及证据对应关系
 
@@ -52,9 +52,9 @@ description: |
 
 ## 4. 分层审查
 
-始终读取 [references/review-criteria.md](references/review-criteria.md) 和 [references/report-template.md](references/report-template.md)。按文章类型读取 [references/reporting-guidelines.md](references/reporting-guidelines.md)，识别当前适用的报告规范和方法学评价工具。
+读取 [references/review-criteria.md](references/review-criteria.md) 中与当前范围适用的部分；生成完整审稿报告时再读取 [references/report-template.md](references/report-template.md)。按文章类型和实际审查问题读取 [references/reporting-guidelines.md](references/reporting-guidelines.md)，识别当前适用的报告规范和方法学评价工具。
 
-依次执行四轮，避免边读边给出失去上下文的零散意见：
+完整同行评审依次执行四轮，避免边读边给出失去上下文的零散意见；L 只执行与目标问题及其直接依赖有关的轮次，并声明其它维度未审：
 
 1. **可评审性与报告完整性**：研究类型、问题、方法、样本流和主要结果是否报告到足以评价；报告清单缺项只先记为 `reporting gap`。
 2. **数据、方法与统计**：核对稿内数字、分母、定义、时间顺序、设计、偏倚、模型适配、缺失、多重性、不确定性、诊断与验证。
@@ -96,9 +96,9 @@ description: |
 
 额外分析或实验必须标明是“支撑当前主张所必需”还是“仅能扩展或强化”。不要求超出稿件问题和目标范围的新研究，不以建议引用审稿人本人工作增加引文。
 
-## 7. 生成完整报告
+## 7. 生成报告
 
-使用 [references/report-template.md](references/report-template.md) 的结构，至少包含审查依据与限制、稿件概述、优点、major comments、minor comments、覆盖矩阵和未核验项。每条意见写清位置、证据、影响与最小修订请求。
+完整同行评审使用 [references/report-template.md](references/report-template.md) 的结构，至少包含审查依据与限制、稿件概述、优点、major comments、minor comments、覆盖矩阵和未核验项。L 局部审查只交付可定位意见、依据、影响、最小修订请求及明确的未审范围，不补写全文概述、优点、覆盖矩阵或推荐结论来伪装成完整报告。
 
 - 只有期刊表单或用户明确要求时给 accept/revise/reject 或数字评分，并严格使用该期刊定义；有效性与期刊优先级分开说明。
 - 只有存在真实敏感事项或期刊要求时写 confidential comments to the editor；科学评价原则上同时出现在作者可见部分，二者不得矛盾。
@@ -107,7 +107,7 @@ description: |
 
 ## 8. 反向核验后交付
 
-逐项确认：
+完整同行评审逐项确认下列内容；L 只核对目标意见及其直接依据，并明确哪些维度、材料和结论没有审查：
 
 - 每条 major comment 都能定位到稿件或已核验外部标准，并说明为何影响主要判断；
 - `reporting gap` 没有被写成已证实的方法错误，疑似完整性问题没有被写成不端结论；

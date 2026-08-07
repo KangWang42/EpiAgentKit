@@ -75,6 +75,33 @@ class WebUiWorkflowTests(unittest.TestCase):
         )
         self.assertIn('"skills/build-web-ui/"', workflow_audit)
 
+    def test_local_changes_use_risk_scoped_validation(self) -> None:
+        skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
+        quality = (ROOT / "skills/build-web-ui/references/quality-gates.md").read_text(
+            encoding="utf-8"
+        )
+        for fragment in (
+            "L 局部纯前端",
+            "不因网页 skill 自动触发无关的全仓测试",
+            "用户明确在实际页面接手视觉验收",
+            "部署后只做只读健康检查",
+            "不得声称全套测试通过",
+        ):
+            self.assertIn(fragment, skill)
+        for fragment in (
+            "先选验证层级",
+            "一个受影响 URL、状态和最危险视口",
+            "默认不做",
+            "用户明确接手实际页面的视觉验收",
+            "已知范围外失败只能去重",
+            "不运行会写入、回放旧负载或改变 revision 的探针",
+        ):
+            self.assertIn(fragment, quality)
+        self.assertNotIn(
+            "运行项目已有格式化、类型检查、lint、测试和生产构建",
+            skill,
+        )
+
     def test_web_ui_routes_types_palette_components_and_visual_gate(self) -> None:
         skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
         archetypes = (ROOT / "skills/build-web-ui/references/site-archetypes.md").read_text(

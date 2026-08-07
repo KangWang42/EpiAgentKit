@@ -565,6 +565,58 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn("neutral value `Reviewer`", docx)
         self.assertNotIn('Use "Claude" as the author', docx)
 
+    def test_bounded_tasks_use_scope_proportionate_validation(self) -> None:
+        academic_humanizer = (
+            ROOT / "skills/academic-humanizer/SKILL.md"
+        ).read_text(encoding="utf-8")
+        docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
+        docx_revision = (
+            ROOT / "skills/docx/references/scoped-revision.md"
+        ).read_text(encoding="utf-8")
+        pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
+        pptx_editing = (ROOT / "skills/pptx/editing.md").read_text(
+            encoding="utf-8"
+        )
+        xlsx = (ROOT / "skills/xlsx/SKILL.md").read_text(encoding="utf-8")
+        peer_review = (
+            ROOT / "skills/manuscript-peer-review/SKILL.md"
+        ).read_text(encoding="utf-8")
+        study_design = (ROOT / "skills/epi-study-design/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        ecg = (ROOT / "skills/python-ecg-analysis/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("受影响页面的显示", academic_humanizer)
+        self.assertIn(
+            "Read `references/scoped-revision.md` completely", docx
+        )
+        self.assertIn("For an L revision", docx_revision)
+        self.assertIn(
+            "Inspect every page only for a newly created", docx_revision
+        )
+
+        self.assertIn("L bounded edit", pptx)
+        self.assertIn("does not trigger template remapping", pptx)
+        self.assertIn("zero observed issues is valid evidence", pptx)
+        self.assertIn("For an L bounded edit", pptx_editing)
+        self.assertIn("Do not run template selection", pptx_editing)
+        self.assertNotIn(
+            "If you found zero issues on first inspection, you weren't looking hard enough.",
+            pptx,
+        )
+
+        self.assertIn("text-, comment- or format-only L edit", xlsx)
+        self.assertIn("zero new unintended formula errors", xlsx)
+        self.assertIn("L 局部审查", peer_review)
+        self.assertIn("明确未审范围", peer_review)
+        self.assertIn("Q：直接回答当前设计或方法问题", study_design)
+        self.assertIn("L：只完成用户点名的", study_design)
+        self.assertIn("Q 只读取回答当前问题", ecg)
+        self.assertIn("L 读取项目规则、目标脚本/配置", ecg)
+        self.assertIn("不为 L 重跑无关脚本", ecg)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -361,7 +361,7 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
 - **Replace entire `<w:r>` elements**: When adding tracked changes, replace the whole `<w:r>...</w:r>` block with `<w:del>...<w:ins>...` as siblings. Don't inject tracked change tags inside a run.
 - **Preserve `<w:rPr>` formatting**: Copy the original run's `<w:rPr>` block into your tracked change runs to maintain bold, font size, etc.
 
-### Required validation after any edit
+### Scope-based validation after any edit
 
 Follow every applicable layer in `references/scoped-revision.md`: package validation, authorized-scope comparison, clean/marked equivalence, structural and anonymity audit, content reconciliation, render and page inspection, then reopen the final DOCX. A file opening successfully is not sufficient. Keep intermediate XML, renderings, and test copies outside the active delivery directory.
 

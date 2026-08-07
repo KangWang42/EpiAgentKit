@@ -8,6 +8,14 @@ license: Proprietary. LICENSE.txt has complete terms
 
 Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
 
+## Validation scope
+
+- Q reads only the requested cells, sheets or workbook properties and returns an answer without creating a file.
+- L locks the input workbook, authorized cells/ranges/sheets and protected scope. Validate changed values, formulas, formatting, comments, names and the visible affected area, plus direct formula/chart/pivot/validation consumers. Do not inspect or restyle unrelated sheets.
+- P validates every affected sheet and shared workbook feature. R additionally checks the complete current workbook, required recalculation, external links, visible delivery state and release requirements.
+
+Recalculate only when the task creates or changes formulas, values that feed formulas, named ranges, calculation settings or other dependencies. A text-, comment- or format-only L edit does not trigger recalculation merely because the workbook already contains formulas. When recalculation is required, the provided script may scan the whole workbook; report unrelated pre-existing errors separately and do not call them new failures unless the current change can affect them.
+
 ## All Excel files
 
 ### Professional content and file checks
@@ -17,7 +25,7 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 - When a validated table model distinguishes parent rows and child levels, preserve that structure in the worksheet. Use the cell alignment's real indent setting for child levels, not leading spaces; do not expose helper fields such as `row_type` or `indent_level` as visible columns.
 - When a statistical-table filename already carries its table number and stable title, start the worksheet at row 1 with column headers. Do not repeat the table title inside the sheet, merge a decorative title row, insert a spacer row, or add separator rows unless the user or an established template explicitly requires them.
 - For statistical tables, use bold headers, alignment, widths and real indentation as the neutral hierarchy. Do not add white borders, decorative rules, shaded bands or separators to parent, total or ordinary group rows when they encode no information. Place any necessary note directly after the table body without a decorative blank row.
-- Complete the work item only after both sets of checks pass: domain assertions from the content skill, and workbook checks for values, formulas, structure, formatting, and visible display. Report a partial result if either set has not been verified.
+- Complete the work item only after both sets of checks pass within the current scope: domain assertions from the content skill, and applicable workbook checks for values, formulas, structure, formatting, and visible display. Report a partial result if either set has not been verified.
 
 ### Fonts
 - Preserve the existing template. If none exists and the user gives no typography requirement, retain the application's ordinary default font and use sizing, weight and spacing for hierarchy.
@@ -29,7 +37,7 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 - Apply cell fills only when the user explicitly requests them or an existing template already uses them. A light highlight for a specific exception is not permission to color the whole table.
 
 ### Zero Formula Errors
-- Any workbook that contains formulas must be delivered with zero unintended formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?). Intentional missing values must be represented explicitly, not hidden as errors.
+- When an L task changes formulas or their dependencies, require zero new unintended formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?) in the affected dependency chain and report unrelated pre-existing errors separately. P/R formula work requires zero unintended formula errors across the affected or complete delivery scope. Intentional missing values must be represented explicitly, not hidden as errors.
 
 ### Preserve Existing Templates (when updating templates)
 - Study and EXACTLY match existing format, style, and conventions when modifying files
@@ -155,7 +163,7 @@ This applies to calculations that the workbook is responsible for. Values whose 
 2. **Create/Load**: Create new workbook or load existing file
 3. **Modify**: Add/edit data, formulas, and formatting
 4. **Save**: Write to file
-5. **Recalculate formulas (MANDATORY IF USING FORMULAS)**: Use the scripts/recalc.py script
+5. **Recalculate when formulas or their dependencies changed**: Use `scripts/recalc.py`; skip this step for a text-, comment- or format-only L edit that preserves formula inputs and calculation settings
    ```bash
    python scripts/recalc.py output.xlsx
    ```
@@ -228,7 +236,7 @@ wb.save('modified.xlsx')
 
 ## Recalculating formulas
 
-Excel files created or modified by openpyxl contain formulas as strings but not calculated values. Use the provided `scripts/recalc.py` script to recalculate formulas:
+Excel files created or modified by openpyxl contain formulas as strings but not calculated values. After creating or changing formulas, their inputs, named ranges or calculation settings, use the provided `scripts/recalc.py` script to recalculate formulas. Do not run it solely because an unrelated L edit occurred in a workbook that already contains formulas:
 
 ```bash
 python scripts/recalc.py <excel_file> [timeout_seconds]

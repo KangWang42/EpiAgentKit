@@ -38,7 +38,7 @@ Route the answer as follows:
 
 Do not invent an official logo, color system, master, or institutional identity when the named organization has not supplied a template. Ask for the file or offer a neutral design. Reading, extracting, or making a bounded edit to an existing presentation does not require this routing question because the existing file is already the source.
 
-For every template-derived deck:
+For every newly created or substantially rebuilt template-derived deck:
 
 1. Inspect the template before drafting slides.
 2. Use the template-editing workflow, not the from-scratch workflow.
@@ -74,8 +74,10 @@ python scripts/office/unpack.py presentation.pptx unpacked/
 
 **Read [editing.md](editing.md) for full details.**
 
-1. Analyze template with `thumbnail.py`
-2. Unpack → manipulate slides → edit content → clean → pack
+- L bounded edit: lock the source presentation, target slides/elements, allowed package parts and protected scope; inspect and edit only those targets, validate the package, and render the changed slides plus direct consumers of any shared layout or theme change.
+- New or substantially rebuilt deck: analyze the template with `thumbnail.py`, then unpack → manipulate slides → edit content → clean → pack.
+
+A bounded edit does not trigger template remapping, deck-wide restyling, full-slide content review or a complete render. Upgrade to P when slide order/count, masters, layouts, theme, fonts, shared assets or other deck-wide consumers change; R adds complete presentation QA.
 
 ---
 
@@ -90,6 +92,8 @@ Use when no template or reference presentation is available.
 ## Design Ideas
 
 Let the content workflow, template, audience and display conditions determine the visual system. Use decoration only when it clarifies hierarchy or meaning.
+
+This section applies to new or substantially rebuilt decks. For an L edit, preserve all unrequested styles and do not use these deck-wide suggestions to redesign other slides.
 
 ### Before Starting
 
@@ -170,7 +174,7 @@ Use the template's fonts or fonts already available in the environment. Prioriti
 - **Don't default to blue** — pick colors that reflect the specific topic
 - **Don't mix spacing randomly** — choose 0.3" or 0.5" gaps and use consistently
 - **Don't style one slide and leave the rest plain** — commit fully or keep it simple throughout
-- **Don't create text-only slides** — add images, icons, charts, or visual elements; avoid plain title + bullets
+- **Don't add decorative visuals to satisfy a quota** — a concise text slide is valid when the content workflow shows that text communicates the message more clearly
 - **Don't forget text box padding** — when aligning lines or shapes with text edges, set `margin: 0` on the text box or offset the shape to account for padding
 - **Don't use low-contrast elements** — icons AND text need strong contrast against the background; avoid light text on light backgrounds or dark text on dark backgrounds
 - **NEVER use accent lines under titles** — these are a hallmark of AI-generated slides; use whitespace or background color instead
@@ -179,9 +183,9 @@ Use the template's fonts or fonts already available in the environment. Prioriti
 
 ## QA (Required)
 
-**Assume there are problems. Your job is to find them.**
+Inspect against the content, template and rendering contract. Look actively for real defects, but a first inspection with zero observed issues is valid evidence when the checks are complete; do not invent a change to make the QA loop appear useful.
 
-Your first render is almost never correct. Approach QA as a bug hunt, not a confirmation step. If you found zero issues on first inspection, you weren't looking hard enough.
+For an L edit, content and visual QA cover the changed slides, their directly affected notes/media and any consumers of an authorized shared change. New/rebuilt decks and R deliverables receive deck-wide content and visual QA.
 
 ### Content QA
 
@@ -201,7 +205,7 @@ If grep returns results, fix them before declaring success.
 
 ### Visual QA
 
-**⚠️ USE SUBAGENTS** — even for 2-3 slides. You've been staring at the code and will see what you expect, not what's there. Subagents have fresh eyes.
+Use an independent visual pass only when it materially improves a complex or formal review and is available within the current task. It is not a prerequisite for a bounded edit.
 
 Convert slides to images (see [Converting to Images](#converting-to-images)), then use this prompt:
 

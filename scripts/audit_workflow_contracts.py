@@ -512,6 +512,11 @@ def main() -> int:
         "skills/build-web-ui/SKILL.md": (
             "创建、改版、修复或优化真实网页与 Web UI",
             "页面能显示、静态检查通过或首屏截图好看都不能单独证明完成",
+            "L 局部纯前端",
+            "不因网页 skill 自动触发无关的全仓测试",
+            "用户明确在实际页面接手视觉验收",
+            "部署后只做只读健康检查",
+            "不得声称全套测试通过",
             "建立可检查的视觉合同",
             "效果堆叠候选",
             "公开页与后台页分别验收",
@@ -523,7 +528,6 @@ def main() -> int:
             "锚点、滚动深处或任务状态",
             "控制台异常、脚本异常、HTTP 失败和网络加载失败",
             "计算关键正文、次要文字、按钮、链接、焦点和状态色",
-            "静态产物运行随附结构审计脚本",
             "不能可靠自动判断时人工核对",
         ),
         "skills/build-web-ui/references/design-playbook.md": (
@@ -533,6 +537,11 @@ def main() -> int:
             "先删除效果",
         ),
         "skills/build-web-ui/references/quality-gates.md": (
+            "先选验证层级",
+            "一个受影响 URL、状态和最危险视口",
+            "用户明确接手实际页面的视觉验收",
+            "已知范围外失败只能去重",
+            "不运行会写入、回放旧负载或改变 revision 的探针",
             "公开页与后台页分别验收",
             "浏览器外窗宽度不等于页面布局视口",
             "Emulation.setDeviceMetricsOverride",
@@ -643,6 +652,11 @@ def main() -> int:
             "没有原始数据时不得写",
             "ethics/editor-only",
             "references/report-template.md",
+            "L 局部审查",
+            "明确未审范围",
+            "不为给出局部意见强制通读全文",
+            "L 只执行与目标问题及其直接依赖有关的轮次",
+            "不补写全文概述、优点、覆盖矩阵或推荐结论",
         ),
         "skills/manuscript-peer-review/references/review-criteria.md": (
             "样本和分母",
@@ -654,6 +668,13 @@ def main() -> int:
             "Major comments",
             "Coverage matrix",
             "Reviewer limitations and disclosures",
+        ),
+        "skills/epi-study-design/SKILL.md": (
+            "Q：直接回答当前设计或方法问题",
+            "L：只完成用户点名的",
+            "不强制补齐整份设计",
+            "轻量但完整的研究设计咨询",
+            "范围外设计不声称完成",
         ),
         "skills/project-init/scripts/init_project.R": (
             '"PROTOCOL.md"',
@@ -901,6 +922,11 @@ def main() -> int:
             "不为制造层级把一个完整方法或讨论拆成多个短块",
             "数据表使用白底三线表",
         ),
+        "skills/academic-humanizer/SKILL.md": (
+            "L 只检查范围外差异、文档结构和受影响页面的显示",
+            "共享样式、分页结构、页眉页脚或目录等全局消费者变化时才扩大",
+            "P/R 再按交付范围检查全稿页面",
+        ),
         "skills/academic-humanizer/references/revision-workflow.md": (
             "单个引用序号",
             "不创建修订记录文件或项目记录文件",
@@ -978,6 +1004,9 @@ def main() -> int:
         "skills/docx/references/scoped-revision.md": (
             "first classify the target as an academic display table",
             "each independent list block has an explicit numbering reference",
+            "For an L revision",
+            "adjacent pages where pagination can shift",
+            "Inspect every page only for a newly created or substantially rebuilt document",
         ),
         "skills/academic-ppt/SKILL.md": (
             "用户提供的 `.pptx` / `.potx`",
@@ -1010,6 +1039,16 @@ def main() -> int:
             "prefer Microsoft PowerPoint",
             "LibreOffice (`soffice`) is an optional renderer only",
             "visual QA remains incomplete",
+            "L bounded edit",
+            "does not trigger template remapping",
+            "zero observed issues is valid evidence",
+            "It is not a prerequisite for a bounded edit",
+        ),
+        "skills/pptx/editing.md": (
+            "For an L bounded edit",
+            "Do not run template selection",
+            "upgrade to P and inspect every direct consumer",
+            "R performs complete presentation QA",
         ),
         "skills/pptx/scripts/render_slides.ps1": (
             "Get-Process -Name POWERPNT",
@@ -1044,6 +1083,11 @@ def main() -> int:
             "只有确认 `--help` 会在业务逻辑前退出且不会写文件时",
             "无法确认某个程序在显示帮助信息前不会写文件时，不执行该命令",
             "上游依赖：开工前对齐 biostat-principles",
+            "Q 只读取回答当前问题所需的权威项目说明",
+            "L 读取项目规则、目标脚本/配置",
+            "不强制读取全部 PROTOCOL、SAP、DECISIONS 和 `02_code/`",
+            "不为 L 重跑无关脚本",
+            "P/R 再覆盖完整受影响数据链",
         ),
         "skills/publication-figures/SKILL.md": (
             "发表级统计图、数据图",
@@ -1566,6 +1610,11 @@ def main() -> int:
             "start the worksheet at row 1 with column headers",
             "Do not add white borders",
             "Report a partial result if either set has not been verified",
+            "L locks the input workbook",
+            "Do not inspect or restyle unrelated sheets",
+            "text-, comment- or format-only L edit does not trigger recalculation",
+            "zero new unintended formula errors",
+            "report unrelated pre-existing errors separately",
         ),
         "skills/epi-project-audit/scripts/check_consistency.py": (
             "请先选择要使用的 Python 环境和安装方式",
