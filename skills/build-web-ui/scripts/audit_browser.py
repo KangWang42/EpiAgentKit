@@ -56,6 +56,114 @@ PAGE_AUDIT_JS = r"""
     root ? root.scrollWidth : 0,
     body ? body.scrollWidth : 0
   );
+  const round = (value) => Math.round(value * 100) / 100;
+  const label = (element) => {
+    const tag = element.tagName.toLowerCase();
+    const id = element.id ? `#${element.id}` : '';
+    const classes = (element.getAttribute('class') || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((name) => `.${name}`)
+      .join('');
+    return `${tag}${id}${classes}`.slice(0, 200);
+  };
+  const visibleRect = (element) => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    if (
+      style.display === 'none'
+      || style.visibility === 'hidden'
+      || style.visibility === 'collapse'
+      || rect.width <= 0
+      || rect.height <= 0
+    ) return null;
+    return {style, rect};
+  };
+  const viewportWidth = root ? root.clientWidth : window.innerWidth;
+  const layoutNodes = [
+    body,
+    ...document.querySelectorAll(
+      'body > :not(script):not(style), header, main, footer, nav, article, '
+      + '[role="main"], main > section, main > article, main > div, '
+      + '[role="main"] > section, [role="main"] > article, [role="main"] > div, '
+      + '[data-audit-layout]'
+    )
+  ];
+  const seenLayoutNodes = new Set();
+  const layoutSamples = [];
+  for (const element of layoutNodes) {
+    if (!element || seenLayoutNodes.has(element)) continue;
+    seenLayoutNodes.add(element);
+    const visible = visibleRect(element);
+    if (!visible) continue;
+    const {style, rect} = visible;
+    const inlineStartGap = rect.left;
+    const inlineEndGap = viewportWidth - rect.right;
+    layoutSamples.push({
+      element: label(element),
+      auditRole: element.getAttribute('data-audit-layout') || null,
+      rect: {
+        left: round(rect.left),
+        right: round(rect.right),
+        top: round(rect.top),
+        width: round(rect.width),
+        height: round(rect.height)
+      },
+      inlineGaps: {
+        start: round(inlineStartGap),
+        end: round(inlineEndGap),
+        delta: round(inlineStartGap - inlineEndGap)
+      },
+      centerOffset: round((rect.left + rect.width / 2) - viewportWidth / 2),
+      box: {
+        display: style.display,
+        position: style.position,
+        marginInlineStart: style.marginInlineStart,
+        marginInlineEnd: style.marginInlineEnd,
+        paddingInlineStart: style.paddingInlineStart,
+        paddingInlineEnd: style.paddingInlineEnd,
+        minWidth: style.minWidth,
+        maxWidth: style.maxWidth,
+        overflowX: style.overflowX,
+        transform: style.transform === 'none' ? null : style.transform
+      }
+    });
+    if (layoutSamples.length >= 60) break;
+  }
+  const findHorizontalScroller = (element) => {
+    for (let current = element.parentElement; current && current !== body; current = current.parentElement) {
+      const style = getComputedStyle(current);
+      if (
+        ['auto', 'scroll'].includes(style.overflowX)
+        && current.scrollWidth > current.clientWidth + 1
+      ) return label(current);
+    }
+    return null;
+  };
+  const edgeClippedContent = [];
+  for (const element of document.querySelectorAll(
+    'h1, h2, h3, h4, p, li, a, button, input, select, textarea, label, table, img, video, canvas, svg'
+  )) {
+    const visible = visibleRect(element);
+    if (!visible) continue;
+    const {rect} = visible;
+    if (rect.left >= -1 && rect.right <= viewportWidth + 1) continue;
+    edgeClippedContent.push({
+      element: label(element),
+      rect: {
+        left: round(rect.left),
+        right: round(rect.right),
+        top: round(rect.top),
+        width: round(rect.width),
+        height: round(rect.height)
+      },
+      interactive: element.matches('a, button, input, select, textarea'),
+      horizontalScroller: findHorizontalScroller(element)
+    });
+    if (edgeClippedContent.length >= 40) break;
+  }
   return {
     url: location.href,
     title: document.title,
@@ -75,7 +183,12 @@ PAGE_AUDIT_JS = r"""
     missingAlt,
     brokenImages,
     imageCount: images.length,
-    fontStatus: document.fonts ? document.fonts.status : null
+    fontStatus: document.fonts ? document.fonts.status : null,
+    layoutGeometry: {
+      viewportWidth,
+      samples: layoutSamples,
+      edgeClippedContent
+    }
   };
 })()
 """
@@ -642,7 +755,8 @@ def capture_scenario(
         "runtime": runtime,
         "issues": issues,
         "manualChecksRequired": [
-            "visual hierarchy, alignment, clipping, fixed overlays, and font fallback",
+            "visual hierarchy and optical balance across the page shell, sections, and components",
+            "layoutGeometry inline gaps and center offsets, including intentional asymmetry and clipped content",
             "keyboard order, focus visibility, dialogs, errors, and back navigation",
             "touch-equivalent interaction and reduced-motion behavior",
             "WCAG contrast for real backgrounds and interactive states",

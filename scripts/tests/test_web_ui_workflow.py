@@ -155,6 +155,7 @@ class WebUiWorkflowTests(unittest.TestCase):
         }
         self.assertEqual(cases["restyle_dashboard_with_vague_theme"]["primary"], "build-web-ui")
         self.assertEqual(cases["repair_local_web_spacing"]["primary"], "build-web-ui")
+        self.assertEqual(cases["repair_mobile_visual_balance"]["primary"], "build-web-ui")
         self.assertEqual(cases["design_commerce_flow"]["primary"], "build-web-ui")
 
     def test_static_audit_keeps_valid_noindex_page_clean(self) -> None:
@@ -196,6 +197,18 @@ class WebUiWorkflowTests(unittest.TestCase):
             browser_audit.validate_urls(["http://127.0.0.1:8000/archive?year=2024#results"]),
             ["http://127.0.0.1:8000/archive?year=2024#results"],
         )
+
+    def test_browser_audit_collects_layout_geometry_without_scoring_aesthetics(self) -> None:
+        source = browser_audit.PAGE_AUDIT_JS
+        for fragment in (
+            "layoutGeometry",
+            "inlineGaps",
+            "centerOffset",
+            "edgeClippedContent",
+            "data-audit-layout",
+        ):
+            self.assertIn(fragment, source)
+        self.assertNotIn("aestheticScore", source)
 
     def test_browser_issue_summary_checks_rendered_failures(self) -> None:
         viewport = browser_audit.Viewport("mobile", 390, 844, True)

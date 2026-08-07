@@ -1,4 +1,4 @@
 interface:
   display_name: "Web UI 设计与构建"
-  short_description: "按网页类型与主题配色设计并验收真实 Web UI"
-  default_prompt: "使用 $build-web-ui 基于真实内容、页面类型和既有技术栈建立视觉与组件合同，选择有依据的配色和交互方案，并完成桌面、手机、前后台及状态验收。"
+  short_description: "按网页类型、视觉系统与响应式布局设计并验收 Web UI"
+  default_prompt: "使用 $build-web-ui 基于真实内容、页面类型和既有技术栈建立页面骨架、视觉与组件合同，重点检查手机端内容框、安全区、对齐和视觉重心，并完成桌面、前后台及状态验收。"

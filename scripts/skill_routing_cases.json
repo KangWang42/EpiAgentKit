@@ -361,6 +361,13 @@
       "excluded": ["research-visuals", "publication-figures"]
     },
     {
+      "id": "repair_mobile_visual_balance",
+      "prompt": "这个网站手机端没有横向滚动，但多个内容区整体偏左、左右留白不协调；修复共享布局并检查 320、390 和 430 像素视口，保留有依据的非对称构图",
+      "primary": "build-web-ui",
+      "companions": [],
+      "excluded": ["research-visuals", "publication-figures"]
+    },
+    {
       "id": "design_commerce_flow",
       "prompt": "基于真实商品和库存设计商品详情、筛选、购物车和结算流程，并验证触控和键盘状态",
       "primary": "build-web-ui",
