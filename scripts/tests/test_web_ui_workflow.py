@@ -127,6 +127,8 @@ class WebUiWorkflowTests(unittest.TestCase):
             "不得出现的特征",
             "待审阅",
             "第二次连续出现整体否定",
+            "不因科研、医疗或“专业”自动使用大面积深绿、深蓝",
+            "其配色不是本 skill 的默认值",
         ):
             self.assertIn(fragment, skill)
         for fragment in (
@@ -142,6 +144,8 @@ class WebUiWorkflowTests(unittest.TestCase):
             "主题、内容与配色互相证明",
             "竞争色相",
             "语义色不得承担无语义的大面积装饰",
+            "通用模板、示例站和 showcase 只提供结构与颜色角色槽位",
+            "当前页面的目的、读者、真实内容、使用环境",
             "Radix Colors",
             "Primer Primitives",
             "Carbon 颜色分层",
@@ -160,10 +164,16 @@ class WebUiWorkflowTests(unittest.TestCase):
             "许可证",
             "不复制品牌色",
             "项目级前端参考",
+            "按具体组件建立采用矩阵",
+            "组件状态与视觉回归参考",
+            "生产包实际增量",
+            "失败时保留实际图和差异图",
             "shadcn/ui",
             "Ant Design",
             "MUI",
             "Headless UI",
+            "Storybook",
+            "Playwright",
         ):
             self.assertIn(fragment, external)
         for fragment in (
@@ -171,6 +181,8 @@ class WebUiWorkflowTests(unittest.TestCase):
             "竞争色相",
             "不生成自动审美评分",
             "候选审阅与部署状态",
+            "共享组件状态与截图基线",
+            "禁止在测试失败时自动接受全部新截图",
         ):
             self.assertIn(fragment, quality)
 
@@ -184,6 +196,35 @@ class WebUiWorkflowTests(unittest.TestCase):
         self.assertEqual(cases["repair_local_web_spacing"]["primary"], "build-web-ui")
         self.assertEqual(cases["repair_mobile_visual_balance"]["primary"], "build-web-ui")
         self.assertEqual(cases["design_commerce_flow"]["primary"], "build-web-ui")
+
+    def test_web_ui_showcase_is_renderable_and_explicitly_simulated(self) -> None:
+        showcase = (ROOT / "docs/showcase/build-web-ui/index.html").read_text(
+            encoding="utf-8"
+        )
+        renderer = (ROOT / "docs/demo/render_build_web_ui_showcase.py").read_text(
+            encoding="utf-8"
+        )
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        for fragment in (
+            "全部名称与数字均为模拟内容",
+            "先关闭 28 条关键质控问题",
+            "数据冻结准备度",
+            "prefers-reduced-motion",
+            'aria-label="项目导航"',
+        ):
+            self.assertIn(fragment, showcase)
+        for relative in (
+            "docs/showcase/build-web-ui/desktop.png",
+            "docs/showcase/build-web-ui/mobile.png",
+        ):
+            self.assertTrue((ROOT / relative).is_file())
+            self.assertIn(relative, readme)
+        for fragment in (
+            "audit_browser.py",
+            "desktop=1440x960,mobile=390x844",
+            "Browser audit did not pass; refusing to publish screenshots",
+        ):
+            self.assertIn(fragment, renderer)
 
     def test_static_audit_keeps_valid_noindex_page_clean(self) -> None:
         html = """<!doctype html>

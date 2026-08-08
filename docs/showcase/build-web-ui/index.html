@@ -1,0 +1,1478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="description" content="build-web-ui 科研数据工作台响应式界面示例，全部数据均为模拟内容。">
+  <link rel="icon" href="data:,">
+  <title>队列研究数据工作台 · build-web-ui 示例</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #eef1f2;
+      --surface: #fffefb;
+      --surface-muted: #f4f5f3;
+      --surface-strong: #e7ebee;
+      --ink: #19222c;
+      --ink-soft: #596570;
+      --ink-faint: #7b8792;
+      --line: #d8dee2;
+      --line-strong: #c2ccd2;
+      --nav-bg: #f8f9f6;
+      --nav-ink: #243243;
+      --action-900: #244f75;
+      --action-800: #2f668f;
+      --action-700: #397ba7;
+      --action-100: #e2eef6;
+      --success-700: #2d755b;
+      --amber-700: #9b601f;
+      --amber-100: #f8ead2;
+      --danger-700: #a24632;
+      --danger-100: #f7e3dd;
+      --focus: #e2a948;
+      --shadow: 0 18px 50px rgba(31, 45, 57, 0.08);
+      --shadow-soft: 0 6px 20px rgba(31, 45, 57, 0.06);
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --sidebar: 244px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    html {
+      background: var(--canvas);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(31, 45, 57, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(31, 45, 57, 0.025) 1px, transparent 1px),
+        var(--canvas);
+      background-size: 28px 28px;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.55;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .skip-link {
+      position: fixed;
+      z-index: 30;
+      inset: 12px auto auto 12px;
+      padding: 10px 14px;
+      color: #fff;
+      background: var(--nav-ink);
+      border-radius: 8px;
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus {
+      transform: none;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      inset-block-start: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      padding: 26px 18px 20px;
+      color: var(--ink);
+      background: var(--nav-bg);
+      border-inline-end: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      padding-inline: 8px;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      color: var(--action-900);
+      background: var(--action-100);
+      border-radius: 11px;
+      box-shadow: inset 0 0 0 1px rgba(16, 37, 29, 0.1);
+    }
+
+    .brand-mark svg {
+      width: 23px;
+      height: 23px;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .brand-name {
+      display: block;
+      font-size: 17px;
+      font-weight: 760;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      display: block;
+      margin-top: 1px;
+      color: var(--ink-faint);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+
+    .project-switcher {
+      margin: 27px 6px 18px;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: var(--surface-muted);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .project-switcher small {
+      display: block;
+      color: var(--action-700);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .project-switcher strong {
+      display: block;
+      margin-top: 4px;
+      overflow: hidden;
+      font-size: 14px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .primary-nav {
+      display: grid;
+      gap: 5px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      gap: 11px;
+      padding: 9px 12px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      font-weight: 620;
+      text-decoration: none;
+      border-radius: 10px;
+    }
+
+    .nav-link:hover {
+      color: var(--ink);
+      background: var(--surface-strong);
+    }
+
+    .nav-link[aria-current="page"] {
+      color: var(--action-900);
+      background: var(--action-100);
+      box-shadow: inset 3px 0 0 var(--action-700);
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .nav-count {
+      margin-inline-start: auto;
+      min-width: 24px;
+      padding: 2px 7px;
+      color: #fff5e5;
+      background: #8c5a27;
+      border-radius: 999px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .sidebar-status {
+      margin-top: auto;
+      padding: 15px 14px;
+      color: var(--ink);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 13px;
+    }
+
+    .status-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 680;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success-700);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(45, 117, 91, 0.12);
+    }
+
+    .sidebar-status p {
+      margin: 8px 0 0;
+      color: var(--ink-soft);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .workspace {
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      min-height: 74px;
+      padding: 13px clamp(24px, 4vw, 58px);
+      background: rgba(255, 253, 248, 0.93);
+      border-block-end: 1px solid var(--line);
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 240px;
+      color: var(--ink-soft);
+      font-size: 12px;
+    }
+
+    .breadcrumbs strong {
+      color: var(--ink);
+    }
+
+    .search {
+      position: relative;
+      max-width: 390px;
+      margin-inline-start: auto;
+      flex: 1 1 320px;
+    }
+
+    .search svg {
+      position: absolute;
+      inset: 50% auto auto 15px;
+      width: 17px;
+      height: 17px;
+      color: var(--ink-faint);
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .search input {
+      width: 100%;
+      height: 42px;
+      padding: 0 16px 0 42px;
+      color: var(--ink);
+      background: var(--surface-muted);
+      border: 1px solid transparent;
+      border-radius: 10px;
+    }
+
+    .search input::placeholder {
+      color: #7c8881;
+    }
+
+    .search input:focus {
+      background: var(--surface);
+      border-color: var(--action-700);
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      color: #fff;
+      background: var(--action-800);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .profile-copy {
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .profile-copy span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 10px;
+    }
+
+    main {
+      width: min(100%, 1510px);
+      margin-inline: auto;
+      padding: 34px clamp(24px, 4vw, 58px) 48px;
+    }
+
+    .page-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--action-700);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-family: "Aptos Display", "Segoe UI", "PingFang SC", sans-serif;
+      font-size: clamp(29px, 3vw, 44px);
+      line-height: 1.16;
+      letter-spacing: -0.035em;
+    }
+
+    .heading-meta {
+      margin: 8px 0 0;
+      color: var(--ink-soft);
+      font-size: 13px;
+    }
+
+    .demo-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 300px;
+      padding: 9px 12px;
+      color: #6f4a1e;
+      background: var(--amber-100);
+      border: 1px solid #ebcca0;
+      border-radius: 9px;
+      font-size: 11px;
+    }
+
+    .demo-note svg {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+    }
+
+    .priority-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .priority-copy {
+      position: relative;
+      padding: clamp(26px, 3vw, 40px);
+    }
+
+    .priority-copy::after {
+      position: absolute;
+      inset: 26px 0 26px auto;
+      width: 1px;
+      content: "";
+      background: var(--line);
+    }
+
+    .priority-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+      color: var(--danger-700);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+    }
+
+    .priority-kicker::before {
+      width: 7px;
+      height: 7px;
+      content: "";
+      background: var(--danger-700);
+      border-radius: 50%;
+    }
+
+    .priority-copy h2 {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(24px, 2.6vw, 37px);
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+
+    .priority-copy > p {
+      max-width: 690px;
+      margin: 12px 0 22px;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      gap: 8px;
+      padding: 0 16px;
+      color: #fff;
+      background: var(--action-800);
+      border: 1px solid var(--action-800);
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 760;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: var(--action-700);
+      border-color: var(--action-700);
+    }
+
+    .button.secondary {
+      color: var(--action-800);
+      background: transparent;
+      border-color: var(--line-strong);
+    }
+
+    .button.secondary:hover {
+      background: var(--surface-muted);
+    }
+
+    .button svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .readiness {
+      display: grid;
+      align-content: center;
+      padding: clamp(24px, 3vw, 36px);
+      background: var(--surface-muted);
+    }
+
+    .readiness-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .readiness-label {
+      color: var(--ink-soft);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .readiness-value {
+      font-family: "Aptos Display", "Segoe UI", sans-serif;
+      font-size: 36px;
+      font-weight: 780;
+      letter-spacing: -0.04em;
+    }
+
+    .readiness-value span {
+      color: var(--ink-soft);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .progress-track {
+      height: 8px;
+      margin: 14px 0 18px;
+      overflow: hidden;
+      background: #dce3e7;
+      border-radius: 999px;
+    }
+
+    .progress-track span {
+      display: block;
+      width: 82%;
+      height: 100%;
+      background: var(--action-700);
+      border-radius: inherit;
+    }
+
+    .readiness-list {
+      display: grid;
+      gap: 9px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .readiness-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .readiness-list strong {
+      color: var(--ink);
+      font-weight: 750;
+    }
+
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin: 18px 0;
+      background: rgba(255, 253, 248, 0.74);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+    }
+
+    .summary-item {
+      min-width: 0;
+      padding: 18px 20px;
+    }
+
+    .summary-item + .summary-item {
+      border-inline-start: 1px solid var(--line);
+    }
+
+    .summary-item span {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-top: 3px;
+      font-family: "Aptos Display", "Segoe UI", sans-serif;
+      font-size: 23px;
+      letter-spacing: -0.03em;
+    }
+
+    .summary-item small {
+      color: var(--ink-faint);
+      font-size: 10px;
+    }
+
+    .work-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.58fr);
+      gap: 18px;
+    }
+
+    .panel {
+      min-width: 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 24px 0;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+
+    .panel-head p {
+      margin: 4px 0 0;
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .segmented {
+      display: inline-flex;
+      padding: 3px;
+      background: var(--surface-muted);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    .segmented button {
+      min-height: 30px;
+      padding: 0 11px;
+      color: var(--ink-soft);
+      background: transparent;
+      border: 0;
+      border-radius: 6px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 2px 7px rgba(31, 49, 40, 0.08);
+    }
+
+    .chart-wrap {
+      padding: 12px 18px 18px;
+    }
+
+    .chart-wrap svg {
+      display: block;
+      width: 100%;
+      height: 252px;
+    }
+
+    .chart-grid {
+      stroke: #dfe4de;
+      stroke-width: 1;
+    }
+
+    .chart-axis {
+      fill: var(--ink-faint);
+      font-size: 10px;
+    }
+
+    .chart-area {
+      fill: rgba(57, 123, 167, 0.1);
+    }
+
+    .chart-line {
+      fill: none;
+      stroke: var(--action-700);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 3;
+    }
+
+    .chart-target {
+      fill: none;
+      stroke: #b98745;
+      stroke-dasharray: 5 5;
+      stroke-width: 1.5;
+    }
+
+    .chart-point {
+      fill: var(--surface);
+      stroke: var(--action-700);
+      stroke-width: 2.5;
+    }
+
+    .chart-note {
+      fill: var(--action-900);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 0 24px 20px;
+      color: var(--ink-soft);
+      font-size: 10px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 18px;
+      height: 3px;
+      background: var(--action-700);
+      border-radius: 4px;
+    }
+
+    .legend .target {
+      height: 0;
+      background: none;
+      border-block-start: 2px dashed #b98745;
+      border-radius: 0;
+    }
+
+    .queue {
+      padding-bottom: 14px;
+    }
+
+    .queue-list {
+      display: grid;
+      gap: 0;
+      margin: 14px 0 0;
+      padding: 0 20px;
+      list-style: none;
+    }
+
+    .queue-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: start;
+      padding: 15px 4px;
+      border-block-start: 1px solid var(--line);
+    }
+
+    .queue-index {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      color: var(--action-800);
+      background: var(--action-100);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .queue-item.urgent .queue-index {
+      color: var(--danger-700);
+      background: var(--danger-100);
+    }
+
+    .queue-copy strong {
+      display: block;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .queue-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink-soft);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .queue-meta {
+      color: var(--ink-faint);
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    .queue-footer {
+      margin: 6px 24px 0;
+      padding-top: 13px;
+      border-block-start: 1px solid var(--line);
+    }
+
+    .text-link {
+      color: var(--action-700);
+      font-size: 11px;
+      font-weight: 760;
+      text-underline-offset: 3px;
+    }
+
+    .rules-panel {
+      grid-column: 1 / -1;
+      overflow: hidden;
+    }
+
+    .rules-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-button {
+      min-height: 34px;
+      padding: 0 11px;
+      color: var(--ink-soft);
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .filter-button:hover {
+      color: var(--ink);
+      background: var(--surface-muted);
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      margin-top: 14px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 13px 24px;
+      text-align: left;
+      border-block-start: 1px solid var(--line);
+    }
+
+    th {
+      color: var(--ink-soft);
+      background: var(--surface-muted);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+    }
+
+    td {
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    td:first-child {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 720;
+    }
+
+    .status::before {
+      width: 7px;
+      height: 7px;
+      content: "";
+      background: var(--amber-700);
+      border-radius: 50%;
+    }
+
+    .status.error {
+      color: var(--danger-700);
+    }
+
+    .status.error::before {
+      background: var(--danger-700);
+    }
+
+    .status.done {
+      color: var(--success-700);
+    }
+
+    .status.done::before {
+      background: var(--success-700);
+    }
+
+    .mobile-project {
+      display: none;
+    }
+
+    @media (max-width: 1060px) {
+      :root {
+        --sidebar: 216px;
+      }
+
+      .profile-copy,
+      .breadcrumbs span {
+        display: none;
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .summary-item:nth-child(3) {
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--line);
+      }
+
+      .summary-item:nth-child(4) {
+        border-block-start: 1px solid var(--line);
+      }
+
+      .work-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        background-size: 22px 22px;
+      }
+
+      .app-shell {
+        display: block;
+      }
+
+      .sidebar {
+        position: static;
+        display: block;
+        width: 100%;
+        height: auto;
+        padding: 15px 16px 0;
+      }
+
+      .brand {
+        padding-inline: 0;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+      }
+
+      .brand-subtitle,
+      .project-switcher,
+      .sidebar-status {
+        display: none;
+      }
+
+      .mobile-project {
+        display: block;
+        margin-inline-start: auto;
+        color: var(--ink-soft);
+        font-size: 10px;
+        font-weight: 700;
+      }
+
+      .primary-nav {
+        display: flex;
+        gap: 4px;
+        margin: 13px -16px 0;
+        padding: 0 16px 11px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .primary-nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .nav-link {
+        min-height: 38px;
+        flex: 0 0 auto;
+        padding: 7px 10px;
+        font-size: 11px;
+      }
+
+      .nav-link[aria-current="page"] {
+        box-shadow: inset 0 -2px 0 var(--action-700);
+      }
+
+      .nav-link svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .topbar {
+        min-height: 62px;
+        padding: 10px 16px;
+      }
+
+      .breadcrumbs {
+        display: none;
+      }
+
+      .search {
+        max-width: none;
+        margin: 0;
+        flex-basis: auto;
+      }
+
+      .search input {
+        height: 40px;
+        font-size: 12px;
+      }
+
+      .profile {
+        gap: 0;
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+      }
+
+      main {
+        padding: 24px 16px 38px;
+      }
+
+      .page-heading {
+        display: block;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        font-size: 30px;
+        letter-spacing: -0.045em;
+      }
+
+      .study-code {
+        display: block;
+      }
+
+      .heading-meta {
+        font-size: 12px;
+      }
+
+      .demo-note {
+        margin-top: 13px;
+        max-width: none;
+      }
+
+      .priority-panel {
+        grid-template-columns: 1fr;
+        border-radius: 18px;
+      }
+
+      .priority-copy {
+        padding: 24px 20px 22px;
+      }
+
+      .priority-copy::after {
+        display: none;
+      }
+
+      .priority-copy h2 {
+        font-size: 27px;
+      }
+
+      .priority-copy > p {
+        font-size: 12px;
+      }
+
+      .hero-actions {
+        align-items: stretch;
+      }
+
+      .button {
+        flex: 1 1 150px;
+      }
+
+      .readiness {
+        padding: 20px;
+        border-block-start: 1px solid var(--line);
+      }
+
+      .readiness-value {
+        font-size: 31px;
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: 14px 0;
+      }
+
+      .summary-item {
+        padding: 14px 15px;
+      }
+
+      .summary-item strong {
+        font-size: 20px;
+      }
+
+      .work-grid {
+        gap: 14px;
+      }
+
+      .panel-head {
+        padding: 18px 18px 0;
+      }
+
+      .chart-wrap {
+        padding-inline: 6px;
+      }
+
+      .chart-wrap svg {
+        height: 220px;
+      }
+
+      .queue-list {
+        padding-inline: 15px;
+      }
+
+      .rules-panel .panel-head {
+        display: block;
+      }
+
+      .rules-toolbar {
+        margin-top: 12px;
+      }
+
+      th,
+      td {
+        padding-inline: 18px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .summary-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-item + .summary-item {
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--line);
+      }
+
+      .hero-actions {
+        display: grid;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="项目导航">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 17.5V7.2M9.2 17.5V11M14.4 17.5V4.5M19.6 17.5V8.8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M3 20h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">Cohort Desk</span>
+          <span class="brand-subtitle">RESEARCH OPERATIONS</span>
+        </span>
+        <span class="mobile-project">CARDIO-AGE</span>
+      </div>
+
+      <div class="project-switcher">
+        <small>当前研究</small>
+        <strong>CARDIO-AGE 前瞻性队列</strong>
+      </div>
+
+      <nav class="primary-nav" aria-label="主要导航">
+        <a class="nav-link" aria-current="page" href="#overview">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-4H4v4Zm10 0h6v-9h-6v9Zm0-16v4h6V4h-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          概览
+        </a>
+        <a class="nav-link" href="#trend">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 18V9m5 9V5m5 13v-7m5 7V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          随访队列
+        </a>
+        <a class="nav-link" href="#rules">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4.5 6.2v5.1c0 4.7 3.1 8 7.5 9.7 4.4-1.7 7.5-5 7.5-9.7V6.2L12 3Z" stroke="currentColor" stroke-width="1.8"/><path d="m9 12 2 2 4-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          数据质控
+          <span class="nav-count" aria-label="28 条待处理">28</span>
+        </a>
+        <a class="nav-link" href="#analysis">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19V8m7 11V5m7 14v-7M3 19h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          分析计划
+        </a>
+        <a class="nav-link" href="#records">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12v16H6V4Zm3 4h6m-6 4h6m-6 4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          运行记录
+        </a>
+      </nav>
+
+      <div class="sidebar-status">
+        <div class="status-line"><span class="status-dot"></span>数据源连接正常</div>
+        <p>最后同步 10:42<br>下一次自动检查 12:00</p>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="breadcrumbs" aria-label="面包屑">
+          <span>研究项目</span>
+          <span aria-hidden="true">/</span>
+          <strong>CARDIO-AGE</strong>
+        </div>
+        <label class="search">
+          <span class="sr-only">搜索参与者或变量</span>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="search" placeholder="搜索参与者、变量或规则">
+        </label>
+        <div class="profile">
+          <span class="avatar" aria-hidden="true">LX</span>
+          <span class="profile-copy"><strong>林晓</strong><span>数据管理员</span></span>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <section class="page-heading" id="overview">
+          <div>
+            <p class="eyebrow">Week 32 · 数据冻结前 6 天</p>
+            <h1><span class="study-code">CARDIO-AGE</span> 队列研究工作台</h1>
+            <p class="heading-meta">从异常发现到复核关闭，保持每一项处理有来源、状态和责任人。</p>
+          </div>
+          <div class="demo-note">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 10v6m0-9h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            演示界面，全部名称与数字均为模拟内容
+          </div>
+        </section>
+
+        <section class="priority-panel" aria-labelledby="priority-title">
+          <div class="priority-copy">
+            <div class="priority-kicker">今日优先事项</div>
+            <h2 id="priority-title">先关闭 28 条关键质控问题</h2>
+            <p>其中 7 条会影响主要终点定义，需在本周数据冻结前完成双人复核。系统只展示已定位的异常，不自动修改原始记录。</p>
+            <div class="hero-actions">
+              <a class="button" href="#rules">
+                查看复核队列
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </a>
+              <button class="button secondary" type="button">导出质控清单</button>
+            </div>
+          </div>
+
+          <div class="readiness" aria-label="数据冻结准备度 82%">
+            <div class="readiness-head">
+              <span class="readiness-label">数据冻结准备度</span>
+              <strong class="readiness-value">82<span>%</span></strong>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span></span></div>
+            <ul class="readiness-list">
+              <li><span>随访窗口核对</span><strong>已完成</strong></li>
+              <li><span>主要终点复核</span><strong>7 条待处理</strong></li>
+              <li><span>分析数据集签核</span><strong>等待中</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="summary-strip" aria-label="项目摘要">
+          <div class="summary-item">
+            <span>纳入记录</span>
+            <strong>4,812</strong>
+            <small>模拟样本量</small>
+          </div>
+          <div class="summary-item">
+            <span>随访完成</span>
+            <strong>94.6%</strong>
+            <small>目标 95%</small>
+          </div>
+          <div class="summary-item">
+            <span>待复核问题</span>
+            <strong>28</strong>
+            <small>较昨日减少 6 条</small>
+          </div>
+          <div class="summary-item">
+            <span>责任中心</span>
+            <strong>12 / 12</strong>
+            <small>均已提交本周数据</small>
+          </div>
+        </section>
+
+        <div class="work-grid">
+          <section class="panel trend-panel" id="trend" aria-labelledby="trend-title">
+            <div class="panel-head">
+              <div>
+                <h2 id="trend-title">随访完成趋势</h2>
+                <p>直接标注当前完成率与目标线，减少图例往返。</p>
+              </div>
+              <div class="segmented" aria-label="趋势范围">
+                <button type="button" aria-pressed="true">近 8 周</button>
+                <button type="button" aria-pressed="false">全部</button>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg viewBox="0 0 720 250" role="img" aria-labelledby="chart-title chart-desc">
+                <title id="chart-title">最近八周随访完成率趋势</title>
+                <desc id="chart-desc">模拟完成率由第 25 周的 88.2% 上升至第 32 周的 94.6%，接近 95% 目标线。</desc>
+                <line class="chart-grid" x1="62" y1="42" x2="692" y2="42"/>
+                <line class="chart-grid" x1="62" y1="92" x2="692" y2="92"/>
+                <line class="chart-grid" x1="62" y1="142" x2="692" y2="142"/>
+                <line class="chart-grid" x1="62" y1="192" x2="692" y2="192"/>
+                <text class="chart-axis" x="24" y="46">96%</text>
+                <text class="chart-axis" x="24" y="96">93%</text>
+                <text class="chart-axis" x="24" y="146">90%</text>
+                <text class="chart-axis" x="24" y="196">87%</text>
+                <line class="chart-target" x1="62" y1="59" x2="692" y2="59"/>
+                <path class="chart-area" d="M62 172 L152 160 L242 143 L332 129 L422 105 L512 91 L602 77 L692 66 L692 208 L62 208 Z"/>
+                <path class="chart-line" d="M62 172 L152 160 L242 143 L332 129 L422 105 L512 91 L602 77 L692 66"/>
+                <circle class="chart-point" cx="62" cy="172" r="5"/>
+                <circle class="chart-point" cx="152" cy="160" r="5"/>
+                <circle class="chart-point" cx="242" cy="143" r="5"/>
+                <circle class="chart-point" cx="332" cy="129" r="5"/>
+                <circle class="chart-point" cx="422" cy="105" r="5"/>
+                <circle class="chart-point" cx="512" cy="91" r="5"/>
+                <circle class="chart-point" cx="602" cy="77" r="5"/>
+                <circle class="chart-point" cx="692" cy="66" r="5"/>
+                <text class="chart-note" x="635" y="50">目标 95%</text>
+                <text class="chart-note" x="650" y="86">94.6%</text>
+                <text class="chart-axis" x="52" y="229">W25</text>
+                <text class="chart-axis" x="142" y="229">W26</text>
+                <text class="chart-axis" x="232" y="229">W27</text>
+                <text class="chart-axis" x="322" y="229">W28</text>
+                <text class="chart-axis" x="412" y="229">W29</text>
+                <text class="chart-axis" x="502" y="229">W30</text>
+                <text class="chart-axis" x="592" y="229">W31</text>
+                <text class="chart-axis" x="682" y="229">W32</text>
+              </svg>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <span><i></i>已完成随访</span>
+              <span><i class="target"></i>冻结目标</span>
+            </div>
+          </section>
+
+          <section class="panel queue" aria-labelledby="queue-title">
+            <div class="panel-head">
+              <div>
+                <h2 id="queue-title">今日复核队列</h2>
+                <p>按影响范围与冻结期限排序</p>
+              </div>
+            </div>
+            <ol class="queue-list">
+              <li class="queue-item urgent">
+                <span class="queue-index">01</span>
+                <span class="queue-copy"><strong>主要终点日期早于入组日期</strong><span>中心 07 · 3 条记录 · 需研究者确认</span></span>
+                <span class="queue-meta">11:30</span>
+              </li>
+              <li class="queue-item">
+                <span class="queue-index">02</span>
+                <span class="queue-copy"><strong>心血管事件编码待双人复核</strong><span>跨 4 个中心 · 4 条记录</span></span>
+                <span class="queue-meta">今天</span>
+              </li>
+              <li class="queue-item">
+                <span class="queue-index">03</span>
+                <span class="queue-copy"><strong>随访窗口超出方案允许范围</strong><span>中心 03 · 6 条记录 · 可批量查看</span></span>
+                <span class="queue-meta">明天</span>
+              </li>
+            </ol>
+            <div class="queue-footer"><a class="text-link" href="#rules">查看全部 28 条质控问题</a></div>
+          </section>
+
+          <section class="panel rules-panel" id="rules" aria-labelledby="rules-title">
+            <div class="panel-head">
+              <div>
+                <h2 id="rules-title">最近规则命中</h2>
+                <p>每条异常保留规则、对象、责任人和处理状态。</p>
+              </div>
+              <div class="rules-toolbar" aria-label="规则筛选">
+                <button class="filter-button" type="button">全部状态</button>
+                <button class="filter-button" type="button">全部中心</button>
+              </div>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>规则与对象</th>
+                    <th>研究中心</th>
+                    <th>发现时间</th>
+                    <th>责任人</th>
+                    <th>当前状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Q-014 · 终点日期逻辑</td>
+                    <td>中心 07</td>
+                    <td>今天 09:18</td>
+                    <td>林晓</td>
+                    <td><span class="status error">等待研究者确认</span></td>
+                  </tr>
+                  <tr>
+                    <td>Q-021 · 事件编码一致性</td>
+                    <td>中心 02、05、11</td>
+                    <td>昨天 16:40</td>
+                    <td>周明</td>
+                    <td><span class="status">双人复核中</span></td>
+                  </tr>
+                  <tr>
+                    <td>Q-008 · 随访窗口范围</td>
+                    <td>中心 03</td>
+                    <td>昨天 14:05</td>
+                    <td>陈嘉</td>
+                    <td><span class="status done">已关闭并留痕</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

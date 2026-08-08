@@ -170,6 +170,18 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 </details>
 
 <details>
+<summary><strong>build-web-ui · 科研数据工作台</strong></summary>
+
+<a href="docs/showcase/build-web-ui/desktop.png"><img src="docs/showcase/build-web-ui/desktop.png" alt="科研数据工作台桌面端示例，显示研究对象、数据冻结准备度、随访趋势、复核队列和质控规则" width="72%"></a>
+<a href="docs/showcase/build-web-ui/mobile.png"><img src="docs/showcase/build-web-ui/mobile.png" alt="科研数据工作台 390 像素手机端响应式示例" width="22%"></a>
+
+[打开实际 HTML 页面](docs/showcase/build-web-ui/index.html) · [桌面端截图](docs/showcase/build-web-ui/desktop.png) · [手机端截图](docs/showcase/build-web-ui/mobile.png) · [浏览器渲染脚本](docs/demo/render_build_web_ui_showcase.py)
+
+示例属于管理台与科研工具界面，使用模拟名称和数字展示对象、状态、异常、动作与复核路径；未引入前端组件库，桌面与手机截图均来自已有 Chromium 的真实页面渲染。当前浅色蓝灰只服务这个管理台示例，不是 `build-web-ui` 的默认主题；实际网页必须按目的、读者、内容、使用环境、品牌与用户偏好重新建立配色合同。
+
+</details>
+
+<details>
 <summary><strong>其它内容、审查与文件 skills · 命令—输出索引</strong></summary>
 
 下面把其余可执行入口、当前仓库成果和适用格式规范集中在一个索引中，便于直接打开、下载或继续生成：
@@ -188,7 +200,7 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | `consulting-delivery` | 把已完成分析整理为外发交付包 | [具体交付图](docs/showcase/illustrations/consulting-delivery.png) · [咨询项目结构示例](docs/showcase/project-init/consulting.md) |
 | `manuscript-peer-review` | 以同行评审人身份生成可定位审稿报告 | [同行评审 DOCX](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx) · [审稿标准](skills/manuscript-peer-review/references/review-criteria.md) |
 | `epi-project-audit` | `python <skill>/scripts/run_check_project.py <项目根> --json` | [审查清单](skills/epi-project-audit/references/audit-checklist.md) · [论断校准](skills/epi-project-audit/references/claim-calibration.md) |
-| `build-web-ui` | 按网页类型、主题配色与组件行为创建、美化或验收真实网页与 Web UI | [类型分流](skills/build-web-ui/references/site-archetypes.md) · [视觉设计手册](skills/build-web-ui/references/design-playbook.md) · [配色系统](skills/build-web-ui/references/color-systems.md) · [组件交互](skills/build-web-ui/references/interaction-components.md) · [浏览器验收规范](skills/build-web-ui/references/quality-gates.md) · [CDP 审计脚本](skills/build-web-ui/scripts/audit_browser.py) |
+| `build-web-ui` | 按网页类型、主题配色与组件行为创建、美化或验收真实网页与 Web UI | [桌面示例](docs/showcase/build-web-ui/desktop.png) · [手机示例](docs/showcase/build-web-ui/mobile.png) · [实际 HTML](docs/showcase/build-web-ui/index.html) · [视觉设计手册](skills/build-web-ui/references/design-playbook.md) · [配色系统](skills/build-web-ui/references/color-systems.md) · [开源组件采用](skills/build-web-ui/references/external-design-research.md) · [浏览器验收规范](skills/build-web-ui/references/quality-gates.md) |
 | `docx` / `pdf` | 打开、渲染、验证或转换实际文件 | [Word](docs/demo/output/academic-publishing/manuscript-preview-zh.docx) · [PDF](docs/demo/output/academic-publishing/manuscript-preview-zh.pdf) |
 | `xlsx` | 读取、清洗、创建或核验工作簿 | [工作簿操作规范](skills/xlsx/SKILL.md)；需绑定用户数据后生成，不放虚构表格 |
 | `workflow-retrospective` | 根据会话纠正生成 `workflow.txt` | [交接报告 TXT](docs/demo/output/document-skills/workflow-retrospective/workflow.txt) · [展示 DOCX](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.docx) |

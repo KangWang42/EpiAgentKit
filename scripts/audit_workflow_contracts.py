@@ -529,12 +529,30 @@ def main() -> int:
             "控制台异常、脚本异常、HTTP 失败和网络加载失败",
             "计算关键正文、次要文字、按钮、链接、焦点和状态色",
             "不能可靠自动判断时人工核对",
+            "对当前需要的具体组件建立能力矩阵",
+            "差异失败不得通过自动更新基线关闭",
+            "不因科研、医疗或“专业”自动使用大面积深绿、深蓝",
+            "其配色不是本 skill 的默认值",
+        ),
+        "skills/build-web-ui/references/external-design-research.md": (
+            "按具体组件建立采用矩阵",
+            "生产包实际增量",
+            "组件状态与视觉回归参考",
+            "Storybook",
+            "Playwright",
+            "失败时保留实际图和差异图",
+            "局部样式修复不为此新增",
         ),
         "skills/build-web-ui/references/design-playbook.md": (
             "把视觉命题写成可检查合同",
             "控制效果预算",
             "同一视口出现两类或更多时",
             "先删除效果",
+        ),
+        "skills/build-web-ui/references/color-systems.md": (
+            "先区分权威品牌输入与通用模板输入",
+            "通用模板、示例站和 showcase 只提供结构与颜色角色槽位",
+            "当前页面的目的、读者、真实内容、使用环境",
         ),
         "skills/build-web-ui/references/quality-gates.md": (
             "先选验证层级",
@@ -552,6 +570,8 @@ def main() -> int:
             "未声明且无内容依据的左右间隙明显失衡",
             "自动工具跳过或近似计算的组合不能直接判为合格",
             "不能替代登录步骤、键盘操作、对比度计算",
+            "共享组件状态与截图基线",
+            "禁止在测试失败时自动接受全部新截图",
         ),
         "skills/build-web-ui/scripts/audit_static_html.py": (
             "Audit deterministic HTML",
@@ -573,6 +593,18 @@ def main() -> int:
             "manualChecksRequired",
             "URLs containing embedded credentials are not accepted",
             "Install nothing automatically",
+        ),
+        "docs/showcase/build-web-ui/index.html": (
+            "全部名称与数字均为模拟内容",
+            "先关闭 28 条关键质控问题",
+            "数据冻结准备度",
+            "prefers-reduced-motion",
+            'aria-label="项目导航"',
+        ),
+        "docs/demo/render_build_web_ui_showcase.py": (
+            "audit_browser.py",
+            "desktop=1440x960,mobile=390x844",
+            "Browser audit did not pass; refusing to publish screenshots",
         ),
         "skills/project-init/references/project-hygiene.md": (
             "只适用于 P 项目执行和 R 正式发布",
