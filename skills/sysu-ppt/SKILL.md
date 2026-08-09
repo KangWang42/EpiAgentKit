@@ -5,8 +5,6 @@ description: 基于 officer 与中山大学官方模板制作组会、开题、�
 
 # SYSU PPT Skill
 
-先按全局 `CLAUDE.md` 判定 Q 问答、L 局部产物、P 项目执行或 R 正式发布；加载本 skill 不扩大范围。
-
 用 R `officer` + 官方模板，代码化生成**可直接上台、精美完整**的学术汇报 PPT。**给定主题/内容/要求，按本文件流程即可产出合规 PPT。**
 
 ## 模板选择前置条件（CRITICAL）

@@ -433,20 +433,19 @@ $skill-creator
 正确结果：<说明希望得到什么，最好附一个可靠示例>
 必须保留：<列出不能被这次修改破坏的旧行为>
 
-请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。运行目标组件验证、完整单元测试和 audit_workflow_contracts.py。新建 skill 时生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查，并在我明确确认当前成果前不要 commit、sync 或 doctor；修改既有 skill 时不要自动生成这些成果，除非我本轮明确要求。不要 push，除非我本轮明确要求。
+请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。先运行目标组件验证和直接相关的测试；只有变更根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同合同时，才运行完整单元测试和 audit_workflow_contracts.py。新建 skill 时生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查，并在我明确确认当前成果前不要 commit、sync 或 doctor；修改既有 skill 时不要自动生成这些成果，除非我本轮明确要求。不要 push，除非我本轮明确要求。
 ```
 
 启用成果审阅时，成果可以是图片、渲染截图、文档、表格、报告、代码产物或其它能直接检查的真实文件；同一结果的换色、格式转换、修订前后版或日志拆分不能替代两个代表性任务。确认提交后再运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，并新开 Codex 会话验证已安装的新 skill。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
 
-维护本仓库时先使用 `epiagentkit-maintenance`。优化不是只增不减：先确认要保留的旧行为，再决定哪些内容重写、合并、移到专门的 reference 或脚本、删除或新增，并用新旧代表性场景共同验证。修改规则、skills、hooks 或安装器后，至少运行：
+维护本仓库时先使用 `epiagentkit-maintenance`。优化不是只增不减：先确认要保留的旧行为，再决定哪些内容重写、合并、移到专门的 reference 或脚本、删除或新增，并用新旧代表性场景共同验证。每次先运行目标 validator、语法检查、代表性实跑和直接相关测试：
 
 ```bash
 python scripts/audit_skill_contracts.py
-python scripts/audit_workflow_contracts.py
-python -m unittest discover -s scripts/tests -p "test_*.py"
-python scripts/epiagentkit.py sync --target all
-python scripts/epiagentkit.py doctor --target all
+python -m unittest scripts.tests.test_workflow_routing -v  # 示例：替换为受影响的测试模块
 ```
+
+根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同合同发生变化时，再运行完整单元测试和 `python scripts/audit_workflow_contracts.py`。提交成功后才运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`。
 
 维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.1/EpiAgentKit-release-1.1.zip` 及外部 SHA-256 文件。
 

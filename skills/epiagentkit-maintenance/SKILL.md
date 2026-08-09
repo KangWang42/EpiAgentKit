@@ -5,8 +5,6 @@ description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills
 
 # EpiAgentKit 维护
 
-先按全局 `CLAUDE.md` 判定 Q 问答、L 局部产物、P 项目执行或 R 正式发布；加载本 skill 不扩大范围。
-
 把规则、skills、hooks、脚本、测试和文档视为一个行为系统。基于真实缺口持续优化，不做追加式堆砌，不以缩短文件为由丢失已有能力。
 
 每次 skill 变更都自动执行本流程，用户无需重复声明。先保护完整工作流，再满足本次新增或修复需求。
@@ -16,10 +14,10 @@ description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills
 1. 确认目标是 EpiAgentKit 源仓库或用户明确指定的副本；不要把普通研究项目当成本仓库维护。
 2. 完整读取根 `CLAUDE.md`、`AGENTS.md`、目标组件及其直接 references、调用者、测试和同步路径。修改 skill 时先加载 `skill-creator`，并检查该 skill 的完整目录。
 3. 只读检查运行环境。先判断命令是否存在，再运行验证；缺少 R、Python、Node、Java、LibreOffice、TeX、Git 或依赖时说明影响和用户可执行的准备方式，不创建环境，也不安装、升级或降级任何工具。
-4. Git 仅作可选增强：命令可用且当前目录为仓库时读取状态和差异；Git 不可用或目录不是仓库时，改用文件清单、内容检索和直接校验建立基线，不执行 `git init`，不安装 Git，也不把缺少 Git 判为任务失败。
+4. 按全局 Git 规则建立基线：可用且当前目录为仓库时读取状态和差异；否则改用文件清单、内容检索和直接校验，不把缺少 Git 判为任务失败。
 5. 不读取后回显凭证、私密设置或环境变量完整内容；只报告键、类型和设置状态。
-6. 在 `09_backup/workbench/YYYY-MM-DD_HHMM_<主题>_maintenance/` 建立本次隔离工作区，先写 `PLAN.md`，再在其中创建和运行临时脚本、诊断与测试产物。只有新建 skill，或用户当轮明确要求审阅成果时，才建立 `review/`；修改、修复、重命名或删除既有 skill 时不自动生成。把当前验证进程的 `TEMP`、`TMP` 和 `TMPDIR` 指向该批次的 `runtime/`；结束后只清理可重建缓存，保留 `PLAN.md`、`FINDINGS.md`、实际生成的 `review/` 与需要追溯的试验依据。不得把 Agent 创建的文件写入系统 Temp 或仓库根。
-7. Windows 先核对实际 shell 与版本；`powershell.exe` 按 Windows PowerShell 5.1 对待，只有发现 `pwsh` 时才使用 PowerShell 7，缺失时不安装或静默运行仅兼容 7 的脚本。读取中文前显式设置 UTF-8 输出并使用 `Get-Content -Encoding utf8`；乱码视为读取失败。单条 cmdlet 只在实际支持时用 `-LiteralPath`，关键操作使用终止错误并核对原生命令退出码；多行逻辑、JSON、正则、非 ASCII 路径和复杂参数写入 workbench 脚本，避免嵌套 `-Command`、`Invoke-Expression`、字符串拼接命令及未经核验的 `cmd.exe /c` 或 `Start-Process -ArgumentList`。
+6. 按根 `AGENTS.md` 的 workbench 约定建立维护批次并先写 `PLAN.md`。只有新建 skill，或用户当轮明确要求审阅成果时，才建立 `review/`；修改、修复、重命名或删除既有 skill 时不自动生成。结束后保留 `FINDINGS.md`、实际生成的 `review/` 与需要追溯的试验依据，并按仓库规则清理可重建的 runtime。
+7. Windows 维护遵循全局与根 `AGENTS.md` 的 shell、编码和命令安全规则；临时多行逻辑放在本批次 workbench，长期工具放在职责匹配的 `scripts/`。
 
 ## 2. 记录变更依据
 
@@ -123,15 +121,15 @@ description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills
 
 ## 5. 验证与完成确认
 
-按变更范围从小到大运行：
+验证采用最低充分层级，不为防御性完整而自动升级：
 
-1. 目标组件的语法、validator 和代表性实跑。
-2. `python -m unittest discover -s scripts/tests -v`。
-3. 工作流规则变化时运行 `python scripts/audit_workflow_contracts.py`。
-4. 全量扫描验证输出中的 `error|warning|traceback|failed|nan`，逐项归因；不能把预期提示、库噪声或真实失败混为一类。
-5. 检查无占位文件、无失效引用、无重复维护位置、无 emoji、无生成过程痕迹，且未覆盖来源不明的既有改动。中文修改按全局中文终审要求逐句检查目标读者、主体、动作、依据、条件和确认责任；词面扫描只用于发现高确定性线索，不能代替语境审查。区分应清理的工程或管理隐喻与真实法律、技术和领域用语。
+1. 每次修改均运行目标组件的语法、validator、引用检查和能覆盖行为变化的代表性实跑。
+2. 运行直接覆盖受影响组件或合同的测试模块。只有修改根规则、任务分流、共享依赖、hooks、安装/同步器、跨多个 skill 的共同合同，或聚焦测试无法覆盖影响面时，才运行完整 `python -m unittest discover -s scripts/tests -v`。
+3. 只有修改安装器、同步器、依赖闭包、跨客户端文件清单、根工作流规则或共享分流合同时，才运行 `python scripts/audit_workflow_contracts.py`；孤立 skill 的正文、reference 或局部脚本变更不因此自动运行双平台安装审计。
+4. 扫描本轮实际验证输出中的 `error|warning|traceback|failed|nan` 并逐项归因；不额外运行无关命令来制造扫描对象，也不能把预期提示、库噪声或真实失败混为一类。
+5. 在受影响范围内检查占位文件、失效引用、重复维护位置、生成过程痕迹和来源不明的既有改动。中文修改按全局中文终审要求逐句检查目标读者、主体、动作、依据、条件和确认责任；词面扫描只用于发现高确定性线索，不能代替语境审查。
 
-Git 可用且当前目录为仓库时，最后审查完整差异。新建 skill 或用户当轮明确要求成果审阅时，先完成审阅并等待用户明确同意当前版本，未获同意时保持未提交；既有 skill 的普通维护按全局约定提交。每次提交成功后自动运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，确认本地 Claude Code 与 Codex 安装内容和已提交源文件一致；若检查后又产生修复提交，对新提交重复同步和 doctor。Git 不可用或当前目录不是仓库时，报告“Git 已跳过”，不初始化仓库、不安装 Git；此时仍在完成前运行一次同步和 doctor。Push 仍只在用户当轮明确要求时执行。
+Git 可用且当前目录为仓库时，最后审查完整差异。新建 skill 或用户当轮明确要求成果审阅时，先完成审阅并等待用户明确同意当前版本，未获同意时保持未提交；其余提交、push、提交后同步和 doctor 按根 `CLAUDE.md` 与 `AGENTS.md` 执行。Git 不可用或当前目录不是仓库时报告“Git 已跳过”，并在完成前按仓库规则运行同步和 doctor。
 
 ## 6. 交付说明
 

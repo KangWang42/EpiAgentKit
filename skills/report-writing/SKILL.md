@@ -6,7 +6,7 @@ description: |
 
 # 专业报告写作
 
-先按全局 `CLAUDE.md` 判定 Q/L/P/R；加载本 skill 不扩大范围。论文与投稿材料转 `academic-publishing`，咨询包打包转 `consulting-delivery`，已有文字的局部润色可只用 `academic-humanizer`。
+论文与投稿材料转 `academic-publishing`，咨询包打包转 `consulting-delivery`，已有文字的局部润色可只用 `academic-humanizer`。
 
 ## 1. 确认报告要求
 
@@ -48,9 +48,7 @@ description: |
 
 ## 5. 语体
 
-使用研究者、项目责任方或机构视角，术语准确，标题为名词短语，英文缩写首次出现给出全称。正式成品不出现助手口吻、生成过程、主动工具归因、套话或网络词；期刊、机构、伦理、合同或法规明确要求的真实披露必须保留。
-
-终稿使用 `academic-humanizer` 审查事实保真、内容功能、论证结构、论断强度、术语一致性以及学术书面语。
+终稿使用 `academic-humanizer` 审查事实保真、内容功能、论证结构、论断强度、术语、作者视角、学术书面语和真实披露边界。本 skill 只补充报告标题使用名词短语、英文缩写首次出现给出全称。
 
 ## 6. 完成条件
 

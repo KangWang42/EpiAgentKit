@@ -105,8 +105,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("判断最早出现问题的规则或步骤", maintenance)
         self.assertIn("修改最早且可复用的规则或步骤", maintenance)
         self.assertIn("完成状态不再夸大", maintenance)
-        self.assertIn("sync --target all", maintenance)
-        self.assertIn("doctor --target all", maintenance)
+        self.assertIn("sync --target all", repo_rules)
+        self.assertIn("doctor --target all", repo_rules)
+        self.assertIn("其余提交、push、提交后同步和 doctor", maintenance)
         self.assertIn("用户无需重复声明", maintenance)
         self.assertIn("新建 Skill 与按需成果审阅", maintenance)
         self.assertIn("至少两份可独立打开、分别验收的真实成果", maintenance)
@@ -124,11 +125,12 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("修改既有 skill 默认以代表性实跑和回归测试验收", readme)
         self.assertIn("明确确认当前成果前不要 commit、sync 或 doctor", readme)
         self.assertIn("Every request to add, revise, repair, rename or remove a skill", repo_rules)
+        self.assertIn("regression-safe optimization workflow", repo_rules)
         self.assertIn("Get-Content -Encoding utf8", repo_rules)
         self.assertIn("Treat mojibake as a failed read", repo_rules)
         self.assertIn("Treat `powershell.exe` as Windows PowerShell 5.1", repo_rules)
         self.assertIn("Use `-LiteralPath` only for cmdlets that support it", repo_rules)
-        self.assertIn("避免嵌套 `-Command`", maintenance)
+        self.assertIn("Windows 维护遵循全局与根 `AGENTS.md`", maintenance)
         self.assertIn("`powershell.exe` 按 Windows PowerShell 5.1 对待", global_rules)
         self.assertIn("Optimize, Don't Accumulate", creator)
         self.assertIn("remove superseded text in the same edit", creator)
@@ -343,12 +345,9 @@ class WorkflowRoutingTests(unittest.TestCase):
             "最小变更集",
             "代表性验证",
             "每项规则只在一处维护",
-            "不执行 `git init`",
-            "不安装 Git",
-            "sync --target all",
-            "doctor --target all",
-            "每次提交成功后自动运行",
-            "已提交源文件一致",
+            "验证采用最低充分层级",
+            "直接覆盖受影响组件或合同的测试模块",
+            "其余提交、push、提交后同步和 doctor",
             "普通研究项目的数据分析、写作或项目初始化不触发本 skill",
             "review/INDEX.md",
             "未获同意时保持未提交",
@@ -854,6 +853,19 @@ class WorkflowRoutingTests(unittest.TestCase):
             "执行者也是监测者",
             "发生了什么、证据位置、影响、已做检查和待决定事项",
             "异常可能改变分析集",
+        ):
+            self.assertIn(fragment, principles)
+
+    def test_optional_model_diagnostics_are_not_default_validation(self) -> None:
+        principles = (ROOT / "skills/biostat-principles/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "SHAP、特征重要性、替代模型、额外校准",
+            "用户明确要求、PROTOCOL/SAP 预设",
+            "不得把它们当作普通描述、回归、代码修复或模型复现的默认防御性检查",
+            "未生成这些不适用产物不构成缺项",
         ):
             self.assertIn(fragment, principles)
 

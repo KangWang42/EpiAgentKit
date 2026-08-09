@@ -30,10 +30,6 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
 
     def test_git_is_optional_and_never_installed(self) -> None:
         expected = {
-            "AGENTS.md": (
-                "only when Git is available and the current directory is a repository",
-                "do not initialize a repository or install Git",
-            ),
             "skills/git-commit-helper/SKILL.md": (
                 "Git is already available",
                 "Do not install Git",
@@ -54,6 +50,9 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
             body = self.read(relative)
             for fragment in fragments:
                 self.assertIn(fragment, body, relative)
+        self.assertIn(
+            "Follow `CLAUDE.md` for Git availability", self.read("AGENTS.md")
+        )
 
     def test_analysis_skills_follow_shared_install_first_policy(self) -> None:
         expected = {

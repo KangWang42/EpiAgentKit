@@ -254,16 +254,16 @@ class VisualRoutingTests(unittest.TestCase):
         ):
             self.assertIn(fragment, reference)
         for fragment in (
-            "正式科研流程默认采用 L0",
-            "禁止 emoji、装饰性小图标和图标化阶段标签",
-            "数据库/清单/漏斗/文档等小图标",
-            "图形摘要/教学例外中的大型图形对象确实承担内容编码",
+            "必须读取并完整执行",
+            "diagram-iconography.md",
+            "L0、方法图元和图像型例外的唯一规则来源",
+            "已按 `diagram-iconography.md` 完成 L0、方法图元和图像型例外检查",
         ):
             self.assertIn(fragment, body)
         for fragment in (
-            "正式技术路线采用 L0",
-            "数据库/清单/漏斗/文档等小图标",
-            "阶段栏小图标、节点小图标、结果图标",
+            "完整执行 [无图标边界与图像型例外](diagram-iconography.md) 的 L0 规则",
+            "只有在表达实际输入、变换或输出时才作为方法图元保留",
+            "已通过 `diagram-iconography.md` 的 L0 与方法图元检查",
         ):
             self.assertIn(fragment, patterns)
         for fragment in (
@@ -273,7 +273,7 @@ class VisualRoutingTests(unittest.TestCase):
             "Icon strategy: none; no emoji",
         ):
             self.assertIn(fragment, recipes)
-        self.assertIn("正式研究流程、研究设计、技术路线、病例流转与方法架构采用 L0", carrier)
+        self.assertIn("完整执行 [无图标边界与图像型例外](diagram-iconography.md)", carrier)
         self.assertIn("固定为 none，禁止 emoji、pictogram、clip-art 和小图标", planning)
         self.assertIn("网页内容插图、卡片插图和空状态", reference)
         self.assertIn("界面控制图标继续复用项目既有图标系统", reference)

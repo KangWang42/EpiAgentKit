@@ -444,10 +444,18 @@ class SkillOptimizationTests(unittest.TestCase):
         report = (ROOT / "skills/report-writing/SKILL.md").read_text(
             encoding="utf-8"
         )
-        for body in (publishing, project_init, figures, report):
+        for body in (publishing, project_init, figures):
             self.assertIn("全局 `CLAUDE.md`", body)
+        self.assertNotIn("加载本 skill 不扩大范围", report)
         self.assertIn("references/project-hygiene.md", project_init)
         self.assertIn("references/chart-gallery.md", figures)
+
+    def test_global_scope_contract_is_not_repeated_in_skills(self) -> None:
+        repeated = []
+        for skill_file in (ROOT / "skills").glob("*/SKILL.md"):
+            if "加载本 skill 不扩大范围" in skill_file.read_text(encoding="utf-8"):
+                repeated.append(skill_file.parent.name)
+        self.assertEqual([], repeated)
 
     def test_publication_figures_has_correct_calibration_and_neutral_output(self) -> None:
         body = (ROOT / "skills/publication-figures/SKILL.md").read_text(
@@ -463,12 +471,16 @@ class SkillOptimizationTests(unittest.TestCase):
         body = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
             encoding="utf-8"
         )
+        humanizer = (ROOT / "skills/academic-humanizer/SKILL.md").read_text(
+            encoding="utf-8"
+        )
         self.assertIn(
             "从主项目实际生成结果的分析脚本和最近一次成功运行的记录整理交付内容",
             body,
         )
         self.assertIn("不得只改外发包而不回写主项目", body)
-        self.assertIn("法规、合同、伦理或机构明确要求的真实披露必须保留", body)
+        self.assertIn("执行其成品视角与真实披露边界", body)
+        self.assertIn("期刊、机构、伦理、合同或法规明确要求的真实披露必须保留", humanizer)
         self.assertIn("没有明确数据分享授权时默认 `reference`", body)
         self.assertNotIn("`AI_assisted` → `研究者`", body)
 
