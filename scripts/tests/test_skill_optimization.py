@@ -393,6 +393,9 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertIn(fragment, schema)
         for removed in ("stale_interps", "confirm_interp", "set_conclusion"):
             self.assertNotIn(removed, schema)
+        self.assertIn("面向研究者说明时写“结果使用位置”", schema)
+        self.assertIn("不得把该字段译为“消费者”", schema)
+        self.assertIn("原始数据或专业分类中确实表示人的 `consumer`", schema)
         report_helper = (
             ROOT / "skills/report-writing/references/build_report.py"
         ).read_text(encoding="utf-8")
@@ -564,6 +567,43 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn("自动检查只是证据之一", body)
         self.assertNotIn("事件数 ≥ 10×协变量数", body)
         self.assertNotIn("Reviewer: Agent", body)
+
+    def test_workflow_regressions_have_executable_boundaries(self) -> None:
+        principles = (ROOT / "skills/biostat-principles/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        audit = (
+            ROOT / "skills/epi-project-audit/references/audit-checklist.md"
+        ).read_text(encoding="utf-8")
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "改动—影响—验证对应关系",
+            "从最早受影响步骤重跑",
+            "不因检查脚本、状态说明、README、审计配置或文件格式变化重复重建",
+            "不得直接改写历史运行记录",
+        ):
+            self.assertIn(fragment, principles)
+
+        for fragment in (
+            "逐项记录其实际输入、写出的正式产物或统计估计",
+            "只读取既有产物并给出通过/失败结论",
+            "生成脚本内与该产物直接相关的科学不变量检查可以保留",
+            "不构成再次完整重跑的理由",
+        ):
+            self.assertIn(fragment, audit)
+
+        for fragment in (
+            "明确文件交付要求",
+            "正文唯一来源格式",
+            "实际交付文件清单",
+            "不得默认推断为 Word",
+            "实际交付文件与已确认的文件交付要求逐项一致",
+        ):
+            self.assertIn(fragment, publishing)
+        self.assertIn("文件交付要求未选择 Word", publishing)
 
     def test_file_skills_do_not_force_unrequested_artifacts_or_edits(self) -> None:
         report = (ROOT / "skills/report-writing/SKILL.md").read_text(encoding="utf-8")
