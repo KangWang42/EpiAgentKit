@@ -37,26 +37,75 @@
 
 ## 3. 实现
 
-可以使用 `gtsummary` 生成常规表，也可以构建包含 `row_type`、`indent_level` 和显示标签的中间数据。辅助字段用于检查与格式处理，不作为最终可见列。
+### 3.1 默认选择顺序
+
+普通独立组或全样本的描述性表中，变量类型、连续变量汇总方式、分类水平、缺失呈现和所需检验都能由 compareGroups 明确表达时，把 `compareGroups` 作为兼容场景的首选。以下任一情况不强制使用：复杂抽样权重、配对或重复测量、聚类相关、目标统计量不受支持、目标模板需要它无法稳定生成的层级或格式，或当前版本的导出文件不能通过 Word/Excel 验收。
+
+compareGroups 的 `method = 1` 会把连续变量按正态分布方式处理，不能把该默认值当作分布判断。为每个连续变量按已确认口径显式指定 `method`；分类变量先设为有序且标签明确的 factor。`show.p.overall = FALSE` 只隐藏 P 值，底层仍会计算组间检验，因此相关 warning 仍需定位，复杂设计也不能因为“不显示 P 值”就忽略其不适用性。除非需要比值估计，设置 `compute.ratio = FALSE`。
+
+只有部分分类变量需要显示缺失水平时，先用 `forcats::fct_na_value_to_level()` 按已确认标签处理这些变量，再保持 `include.miss = FALSE`；不要把 `include.miss = TRUE` 无差别应用于没有缺失的 factor。这样既保留变量级口径，也避免人为添加空水平后由 `simplify` 删除并产生警告。
+
+两个导出函数的 `nmax = TRUE` 显示的是各组在所有行变量中至少有一个有效值的最大可用样本数，不自动等于预先定义的分析集分母。只有两者已经核对一致时才用它作为表头 N；不一致时设置 `nmax = FALSE`，并通过已确认模板或其它生成器写入真实分母。
+
+同一张表需要反复调整或同时导出时，默认使用 `compareGroups()` → `createTable()` 两步流程，只计算一次，再从同一个表对象输出 Excel 与 Word：
 
 ```r
-library(gtsummary)
+library(tidyverse)
+library(compareGroups)
 
-table_1 <- data |>
-  select(age, sex, bmi, group) |>
-  tbl_summary(
-    by = group,
-    statistic = list(
-      all_continuous() ~ "{mean} ({sd})",
-      all_categorical() ~ "{n} ({p}%)"
-    ),
-    label = list(age ~ "年龄", sex ~ "性别"),
-    missing = "ifany"
-  ) |>
-  add_overall()
+data_table_1 <- data_analysis |>
+  select(group, age, sex, bmi, smoking) |>
+  mutate(
+    group = factor(group, levels = c("对照组", "暴露组")),
+    sex = factor(sex, levels = c("女性", "男性")),
+    smoking = smoking |>
+      factor(levels = c("从不吸烟", "既往吸烟", "当前吸烟")) |>
+      fct_na_value_to_level(level = "缺失")
+  )
+
+comparison_1 <- compareGroups(
+  group ~ age + sex + bmi + smoking,
+  data = data_table_1,
+  method = c(age = 2, bmi = 1),
+  include.miss = FALSE,
+  byrow = FALSE,
+  compute.ratio = FALSE
+)
+
+table_1 <- createTable(
+  comparison_1,
+  show.p.overall = FALSE,
+  show.p.trend = FALSE,
+  show.p.mul = FALSE,
+  show.all = TRUE,
+  show.n = TRUE,
+  digits = 1
+)
+
+fs::dir_create("03_tables")
+export2xls(table_1, "03_tables/table1_baseline.xlsx", nmax = TRUE)
+withr::with_dir(
+  "03_tables",
+  export2word(
+    table_1,
+    "table1_baseline.docx",
+    nmax = TRUE,
+    caption = "",
+    strip = FALSE
+  )
+)
 ```
 
-组间检验确实适用时，再根据变量类型、分布、样本量和设计选择 t 检验、Wilcoxon 秩和检验、方差分析、Kruskal–Wallis 检验、卡方检验、Fisher 精确检验或考虑配对、聚类和抽样设计的相应方法。
+`export2xls()` 直接生成 Excel；`export2word()` 需要当前环境已有 Pandoc，并可能留下同名 `.Rmd` 中间文件。文件验证成功后只删除该导出器实际生成的明确路径，不让它混入正式表格目录。两个导出函数能写出文件不等于文件已经达到正式交付标准；包版本、Pandoc/Word 生成链和目标模板不同都可能影响结构、缩进、边框与分页。
+
+### 3.2 回退与专门场景
+
+- compareGroups 不兼容、缺失或导出未通过时，优先用 `gtsummary::tbl_summary()`；复杂抽样使用 `gtsummary::tbl_svysummary()`，不要把加权数据当作普通独立样本。
+- Word 可从同一个 gtsummary 对象经 `as_flex_table()` 进入文件生成流程；Excel 可从同一对象的结构化表数据进入 `openxlsx` 或项目既有的工作簿生成流程。两种文件分别使用 `docx`、`xlsx` skill 验收。
+- 项目已有经过验证的 `tableone`、`arsenal`、`finalfit` 或同类包时可以沿用；先核对它是否支持当前统计量、设计和双格式输出，不另起一套手工汇总。
+- 只有成熟包都不能表达已确认结构时，才构建包含 `row_type`、`indent_level` 和显示标签的最小中间数据。辅助字段用于检查与格式处理，不作为最终可见列。
+
+组间检验确实适用时，再根据变量类型、分布、样本量和设计选择 t 检验、Wilcoxon 秩和检验、方差分析、Kruskal–Wallis 检验、卡方检验、Fisher 精确检验或考虑配对、聚类和抽样设计的相应方法。包的自动选择必须与已确认方法一致；不一致时显式配置或换用更合适的专门包。
 
 ## 4. 文件生成与检查
 
@@ -65,6 +114,7 @@ table_1 <- data |>
 - 文件名已经包含表号和稳定表名时，工作表第 1 行直接写列标题，不在表内重复“表 1”或完整表题，不为装饰插入空白行、合并标题行或分隔行。只有用户提供的模板或目标期刊明确要求表内标题时例外。
 - 默认用白底黑字、必要字重、对齐、列宽和真实缩进表达层级；不为父行、总数行或普通分组添加白色边框、装饰性横线、色带或其它没有信息作用的分隔。表注紧接表体，并与正文、图题或文件名已经承担的内容分工。
 - 文件生成后同时核对内容和显示：变量名称是否只出现一次、分类水平是否归属正确、顺序是否正确、总数和百分比能否与来源数据及分母核对、辅助字段是否隐藏、缩进是否真实存在、表注是否说明统计口径。
+- 同时交付 `.xlsx` 和 `.docx` 时，核对两种文件来自同一个已确认的表对象或同一份结构化表数据，行、列、分母、统计量、缺失和 P 值逐项一致；只有两种文件都通过各自文件 skill 的结构与显示检查，才能把双格式表格标为完成。
 - 只检查工作簿能否重新打开、列宽、冻结窗格或颜色，不能证明 Table 1 内容合格。
 
 任一变量名称在分类水平行重复、分类水平脱离对应变量标题行、二分类含义不清、分母不一致或缩进仅靠空格实现时，不得把统计表工作项标为完成。

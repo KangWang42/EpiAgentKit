@@ -254,6 +254,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         code_style = (
             ROOT / "skills/r-biostats/references/code-style.md"
         ).read_text(encoding="utf-8")
+        package_selection = (
+            ROOT / "skills/r-biostats/references/package-selection.md"
+        ).read_text(encoding="utf-8")
         descriptive = (
             ROOT / "skills/r-biostats/references/descriptive.md"
         ).read_text(encoding="utf-8")
@@ -275,6 +278,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn("必须先读 [代码风格]", r_skill)
+        self.assertIn("必须先读 [包选择与复用]", r_skill)
         self.assertIn("在编写过程中按其组织主线", r_skill)
         self.assertIn("文件与参数预检集中在总运行入口", r_skill)
         self.assertIn("研究对象式命名", r_skill)
@@ -310,6 +314,20 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("start the worksheet at row 1 with column headers", xlsx)
         self.assertIn("Do not add white borders", xlsx)
         self.assertIn("tidyverse 是正式研究代码的整体默认表达方式", code_style)
+        self.assertIn("不要用长篇自定义函数重复", code_style)
+        self.assertIn("先查成熟包，再写最小适配", package_selection)
+        self.assertIn("tidyverse 官方博客", package_selection)
+        self.assertIn("`bruceR`", package_selection)
+        self.assertIn("`compareGroups`", package_selection)
+        self.assertIn("不得调用或复制未导出的内部函数", package_selection)
+        self.assertIn("兼容场景的首选", descriptive)
+        self.assertIn("`compareGroups()` → `createTable()`", descriptive)
+        self.assertIn("`export2xls()`", descriptive)
+        self.assertIn("`export2word()`", descriptive)
+        self.assertIn("`forcats::fct_na_value_to_level()`", descriptive)
+        self.assertIn("`nmax = TRUE`", descriptive)
+        self.assertIn("`gtsummary::tbl_svysummary()`", descriptive)
+        self.assertIn("只有两种文件都通过", descriptive)
         self.assertIn("`02_code/` 只保存正式数据处理", code_style)
         self.assertIn("与正文来源放在 `paper/`", academic)
         self.assertIn("不进入 `run_pipeline.R|py`", academic)
