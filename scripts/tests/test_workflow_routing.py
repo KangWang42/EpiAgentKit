@@ -260,6 +260,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         descriptive = (
             ROOT / "skills/r-biostats/references/descriptive.md"
         ).read_text(encoding="utf-8")
+        regression = (
+            ROOT / "skills/r-biostats/references/regression.md"
+        ).read_text(encoding="utf-8")
         xlsx = (ROOT / "skills/xlsx/SKILL.md").read_text(encoding="utf-8")
         academic = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
             encoding="utf-8"
@@ -280,6 +283,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("必须先读 [代码风格]", r_skill)
         self.assertIn("必须先读 [包选择与复用]", r_skill)
         self.assertIn("在编写过程中按其组织主线", r_skill)
+        self.assertIn("多个产物共享变量但口径不同时", r_skill)
+        self.assertIn("不为已有明确口径另建清单文件", r_skill)
         self.assertIn("文件与参数预检集中在总运行入口", r_skill)
         self.assertIn("研究对象式命名", r_skill)
         self.assertIn("同一稳定工具在多个主脚本重复出现时", code_style)
@@ -322,12 +327,21 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不得调用或复制未导出的内部函数", package_selection)
         self.assertIn("兼容场景的首选", descriptive)
         self.assertIn("`compareGroups()` → `createTable()`", descriptive)
+        self.assertIn("不得从模型使用多重插补推断 Table 1", descriptive)
+        self.assertIn("显式设置 `var.equal`", descriptive)
         self.assertIn("`export2xls()`", descriptive)
         self.assertIn("`export2word()`", descriptive)
         self.assertIn("`forcats::fct_na_value_to_level()`", descriptive)
         self.assertIn("`nmax = TRUE`", descriptive)
         self.assertIn("`gtsummary::tbl_svysummary()`", descriptive)
         self.assertIn("只有两种文件都通过", descriptive)
+        self.assertIn("第一条可运行方案", package_selection)
+        self.assertIn("`mice()` → `with()` → `pool()`", regression)
+        self.assertIn("不预先增加辅助包、自定义预测矩阵", regression)
+        self.assertIn("不因出现记录事件就自动改预测矩阵", regression)
+        self.assertIn("不使用脱离情境的 VIF 固定阈值", regression)
+        self.assertNotIn("vif(model)  # < 5", regression)
+        self.assertNotIn("library(pROC)", regression)
         self.assertIn("`02_code/` 只保存正式数据处理", code_style)
         self.assertIn("与正文来源放在 `paper/`", academic)
         self.assertIn("不进入 `run_pipeline.R|py`", academic)

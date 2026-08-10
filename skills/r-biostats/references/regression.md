@@ -1,73 +1,63 @@
 # 回归分析
 
-## 核心包
+本文件用于把已经确认的研究问题转成线性、Logistic、Poisson 等回归模型。生存结局使用 [生存分析](survival.md)，预测模型开发与验证使用 [预测模型](prognostic-models.md)。
+
+## 1. 先确定每个模型的角色
+
+拟合前逐项明确结局、暴露或主要预测变量、调整变量、效应尺度与报告增量、分析集、缺失方法、模型族、相关或抽样结构，以及需要交付的估计和诊断。变量相同不等于产物口径相同：描述表、单因素模型和多因素模型可以使用不同的缺失策略与分母，但每项都必须有独立依据并能从表注或结果来源核对。
+
+- 连续结局通常从 `lm()` 起步；二分类结局使用 `glm(..., family = binomial())`；计数或率根据过度离散、暴露时间和设计选择 Poisson、负二项或其它适用模型。
+- 参照水平、连续变量单位、非线性项、交互、权重、聚类和重复测量结构来自研究问题与 SAP，不由整理包默认值决定。
+- 单因素筛选、逐步回归或固定阈值入模只有在用户、方案或已确认探索目标要求时才执行，不把便利流程包装为预设调整策略。
+
+## 2. 分开处理缺失数据
+
+先按模型所需变量核对缺失比例、模式、原因和逐步样本量，再为每个模型确认完整病例、可用病例、加权或多重插补。模型使用多重插补不改变 Table 1 的数据来源；Table 1 使用观察数据也不限制模型采用已经确认的插补方案。
+
+用户或 SAP 已经指定 `mice` 的常规实现时，先按 [R 包选择与复用](package-selection.md) 使用公开的 `mice()` → `with()` → `pool()` 最小主线，不预先增加辅助包、自定义预测矩阵、ridge、额外筛选或多轮调参：
 
 ```r
-library(tidymodels)
-library(broom)
-library(gtsummary)
-library(car)  # VIF
+imputation <- mice::mice(
+  model_data,
+  seed = IMPUTATION_SEED,
+  printFlag = FALSE
+)
+
+models <- with(
+  imputation,
+  glm(outcome ~ exposure + age + sex, family = binomial())
+)
+pooled <- mice::pool(models)
 ```
 
-## 线性回归
+正式采用前按当前风险检查：
 
-```r
-model <- lm(outcome ~ exposure + cov1 + cov2, data = data)
+- 输入变量类型和插补方法与方案一致，不插补未授权的结构性缺失或结局；
+- `mids` 对象、插补份数、行数和模型所需变量的完成状态可核对；
+- `loggedEvents`、warning 和失败逐项归因，但不因出现记录事件就自动改预测矩阵，也不把未解释事件当作成功；
+- 各插补数据上的模型能够拟合，合并后的项、估计、区间和 P 值有限且对应同一公式；
+- 随机种子、实际 `m`、迭代次数、分析人数、事件数和合并方法进入运行记录、结果来源或表注。
 
-tbl_regression(model) |>
-  add_global_p() |>
-  add_glance_table(include = c(r.squared, nobs))
+只有实际出现无法插补、确定性依赖、奇异拟合、错误变量类型、模型不收敛、非有限估计，或方案明确要求特殊插补结构时，才在 workbench 隔离调整预测变量、方法或辅助包。一次只改变解决该失败所需的部分，记录触发证据并复核原目标；潜在共线性或“可能更稳健”本身不能启动方法扩展。
 
-# VIF
-vif(model)  # < 5
-```
+## 3. 拟合与检查
 
-## 逻辑回归
+先拟合已确认的最小模型，再检查与估计目标直接相关的假设和异常：
 
-```r
-model <- glm(outcome ~ exposure + age + sex, 
-             data = data, family = binomial)
+- 核对分析人数、事件数、参数自由度、参照水平、效应方向、尺度与报告增量；
+- 检查收敛、完全或近完全分离、非有限系数、区间和明显影响结果的异常记录；
+- 连续预测变量需要时检查函数形式；相关、聚类、重复测量或复杂抽样使用与设计匹配的方差和模型；
+- 只有模型目标需要时才增加残差、影响点、校准、判别或共线性诊断，不使用脱离情境的 VIF 固定阈值代替整体判断。
 
-tbl_regression(model, exponentiate = TRUE) |>  # OR
-  add_global_p() |>
-  bold_p()
-```
+诊断发现问题时回到最早来源或模型假设。修复代码错误后重跑；改变分析集、变量定义、缺失方法、模型族或调整集时先确认并更新方法决定。
 
-## Poisson 回归
+## 4. 结果与完成
 
-```r
-model <- glm(count ~ exposure + offset(log(person_years)),
-             data = data, family = poisson)
+从实际模型或 `pool()` 结果提取系数、标准误、置信区间和 P 值；按研究问题转换为均值差、OR、RR 或其它效应量，并保留原模型对象作为来源。回归表至少使读者能确定分析集、样本量或事件数、参照组、效应单位、调整变量、缺失方法和区间类型。森林图交给 `publication-figures`，不在回归脚本中另建第二套结果。
 
-tbl_regression(model, exponentiate = TRUE)  # RR
-```
+完成前确认：
 
-## 趋势检验
-
-```r
-data$exposure_num <- as.numeric(data$exposure)
-model <- glm(outcome ~ exposure_num, family = binomial, data = data)
-# P for trend = exposure_num 的 P 值
-```
-
-## 模型诊断
-
-```r
-# 线性: 残差图
-plot(model, which = 1:3)
-
-# 逻辑: ROC
-library(pROC)
-roc(data$outcome, fitted(model)) |> auc()
-```
-
-## 森林图
-
-```r
-tidy(model, exponentiate = TRUE, conf.int = TRUE) |>
-  ggplot(aes(estimate, term, xmin = conf.low, xmax = conf.high)) +
-  geom_point() +
-  geom_errorbarh(height = 0.2) +
-  geom_vline(xintercept = 1, linetype = "dashed") +
-  scale_x_log10()
-```
+- 模型公式、分析集和缺失方法与当前项目口径一致；
+- 每个结果均能追溯到实际模型对象、输入和运行编号；
+- warning、`loggedEvents`、不收敛和非有限值均已解释或阻断；
+- 表格、正文和 `results/results.yaml` 使用同一当前结果，没有残留旧样本量、旧插补份数或旧方法说明。
