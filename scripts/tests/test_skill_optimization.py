@@ -205,14 +205,24 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertFalse((r_project / "02_code/conventions.R").exists())
             self.assertFalse((r_project / "02_code/utils.R").exists())
             self.assertTrue((r_project / "02_code/vendored/emit_summary.R").is_file())
+            self.assertTrue((r_project / "02_code/vendored/data_readiness.R").is_file())
             self.assertTrue((r_project / "r_demo.Rproj").is_file())
+            self.assertIn(
+                "DATA_CONTRACT <- list(",
+                (r_project / "02_code/00_setup.R").read_text(encoding="utf-8"),
+            )
             self.assertTrue((py_project / "02_code/00_setup.py").is_file())
             self.assertFalse((py_project / "02_code/00_setup").exists())
             self.assertFalse((py_project / "02_code/config.py").exists())
             self.assertFalse((py_project / "02_code/conventions.py").exists())
             self.assertFalse((py_project / "02_code/utils.py").exists())
             self.assertTrue((py_project / "02_code/vendored/emit_summary.py").is_file())
+            self.assertTrue((py_project / "02_code/vendored/data_readiness.py").is_file())
             self.assertTrue((py_project / "02_code/01_data_cleaning.py").is_file())
+            self.assertIn(
+                "DATA_CONTRACT =",
+                (py_project / "02_code/00_setup.py").read_text(encoding="utf-8"),
+            )
             self.assertTrue((py_project / "paper").is_dir())
             self.assertTrue((Path(directory) / "consult_demo/05_reports").is_dir())
             self.assertFalse((r_project / "paper").exists())
@@ -227,6 +237,8 @@ class SkillOptimizationTests(unittest.TestCase):
                 self.assertEqual(manifest["policy"], "directory-and-artifact-types")
                 declared = {entry["path"] for entry in manifest["categories"]}
                 self.assertTrue({"01_data", "02_code", "results", "09_backup"}.issubset(declared))
+                artifact_classes = {entry["class"] for entry in manifest["artifact_classes"]}
+                self.assertIn("data_readiness", artifact_classes)
                 self.assertTrue((project / "09_backup/archive").is_dir())
                 self.assertTrue((project / "09_backup/workbench").is_dir())
                 self.assertFalse((project / "09_backup/archive/.gitkeep").exists())
@@ -558,6 +570,126 @@ class SkillOptimizationTests(unittest.TestCase):
             self.assertEqual(record["status"], "success")
             self.assertEqual(recorded, record["run_id"])
 
+    def test_python_data_readiness_rejects_pending_and_stale_inputs(self) -> None:
+        helper = load_module(
+            "data_readiness_helper",
+            ROOT / "skills/biostat-principles/scripts/data_readiness.py",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            (project / "01_data").mkdir()
+            (project / "02_code").mkdir()
+            authoritative = project / "01_data/analysis.csv"
+            producer = project / "02_code/01_data_cleaning.py"
+            authoritative.write_text("id,value\n1,2\n", encoding="utf-8")
+            producer.write_text("# test producer\n", encoding="utf-8")
+
+            helper.write_data_readiness(
+                status="pending_review",
+                authoritative_input="01_data/analysis.csv",
+                input_format="csv",
+                input_locator="file",
+                unresolved_issues=1,
+                producer="02_code/01_data_cleaning.py",
+                root=project,
+            )
+            with self.assertRaisesRegex(helper.DataReadinessError, "not analysis_ready"):
+                helper.assert_data_readiness(root=project)
+
+            helper.write_data_readiness(
+                status="analysis_ready",
+                authoritative_input="01_data/analysis.csv",
+                input_format="csv",
+                input_locator="file",
+                unresolved_issues=0,
+                producer="02_code/01_data_cleaning.py",
+                run_id="run-1",
+                root=project,
+            )
+            self.assertEqual(
+                helper.analysis_input(root=project),
+                authoritative,
+            )
+            self.assertEqual(helper.analysis_source(root=project)["locator"], "file")
+            authoritative.write_text("id,value\n1,3\n", encoding="utf-8")
+            with self.assertRaisesRegex(helper.DataReadinessError, "changed after readiness"):
+                helper.assert_data_readiness(root=project)
+
+    def test_r_pipeline_blocks_pending_data_before_analysis(self) -> None:
+        rscript = shutil.which("Rscript")
+        if rscript is None:
+            self.skipTest("Rscript is unavailable")
+        pipeline_source = ROOT / "skills/project-init/assets/run_pipeline.R"
+        readiness_source = ROOT / "skills/biostat-principles/scripts/data_readiness.R"
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            (project / "02_code/vendored").mkdir(parents=True)
+            (project / "results/derived").mkdir(parents=True)
+            pipeline_text = pipeline_source.read_text(encoding="utf-8").replace(
+                "analysis_scripts <- character()",
+                'analysis_scripts <- c("02_code/02_analysis.R")',
+            )
+            (project / "run_pipeline.R").write_text(pipeline_text, encoding="utf-8")
+            shutil.copy2(readiness_source, project / "02_code/vendored/data_readiness.R")
+            (project / "02_code/01_data_cleaning.R").write_text(
+                "\n".join(
+                    [
+                        'source("02_code/vendored/data_readiness.R", encoding = "UTF-8")',
+                        'writeLines("id,value\\n1,2", "results/derived/analysis.csv")',
+                        'ready <- identical(Sys.getenv("TEST_DATA_READY"), "yes")',
+                        "write_data_readiness(",
+                        '  status = if (ready) "analysis_ready" else "pending_review",',
+                        '  authoritative_input = "results/derived/analysis.csv",',
+                        '  input_format = "csv",',
+                        '  input_locator = "file",',
+                        "  unresolved_issues = if (ready) 0L else 1L,",
+                        '  producer = "02_code/01_data_cleaning.R"',
+                        ")",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (project / "02_code/02_analysis.R").write_text(
+                'writeLines("ran", "results/derived/analysis-ran.txt")\n',
+                encoding="utf-8",
+            )
+            pending_environment = dict(os.environ)
+            pending_environment["TEST_DATA_READY"] = "no"
+            pending = subprocess.run(
+                [rscript, "--vanilla", "run_pipeline.R"],
+                cwd=project,
+                env=pending_environment,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertNotEqual(pending.returncode, 0, pending.stdout + pending.stderr)
+            self.assertFalse((project / "results/derived/analysis-ran.txt").exists())
+            pending_record = json.loads(
+                (project / "results/runs/latest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(pending_record["status"], "failed")
+
+            ready_environment = dict(os.environ)
+            ready_environment["TEST_DATA_READY"] = "yes"
+            ready = subprocess.run(
+                [rscript, "--vanilla", "run_pipeline.R"],
+                cwd=project,
+                env=ready_environment,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            self.assertEqual(ready.returncode, 0, ready.stdout + ready.stderr)
+            self.assertTrue((project / "results/derived/analysis-ran.txt").is_file())
+            ready_record = json.loads(
+                (project / "results/runs/latest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(ready_record["status"], "success")
+
     def test_audit_uses_design_specific_scientific_judgment(self) -> None:
         body = (ROOT / "skills/epi-project-audit/SKILL.md").read_text(
             encoding="utf-8"
@@ -575,6 +707,15 @@ class SkillOptimizationTests(unittest.TestCase):
         audit = (
             ROOT / "skills/epi-project-audit/references/audit-checklist.md"
         ).read_text(encoding="utf-8")
+        readiness = (
+            ROOT / "skills/biostat-principles/references/data-readiness.md"
+        ).read_text(encoding="utf-8")
+        pipeline_r = (ROOT / "skills/project-init/assets/run_pipeline.R").read_text(
+            encoding="utf-8"
+        )
+        pipeline_py = (ROOT / "skills/project-init/assets/run_pipeline.py").read_text(
+            encoding="utf-8"
+        )
         publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
             encoding="utf-8"
         )
@@ -594,6 +735,19 @@ class SkillOptimizationTests(unittest.TestCase):
             "不构成再次完整重跑的理由",
         ):
             self.assertIn(fragment, audit)
+
+        for fragment in (
+            "权威分析输入",
+            "待核对",
+            "分析就绪",
+            "阻断性未决项为零",
+            "不得因为 Excel 显示为空白而合并为同一类缺失",
+        ):
+            self.assertIn(fragment, readiness)
+        for pipeline in (pipeline_r, pipeline_py):
+            self.assertIn("preparation_scripts", pipeline)
+            self.assertIn("analysis_scripts", pipeline)
+            self.assertIn("data readiness gate", pipeline)
 
         for fragment in (
             "明确文件交付要求",

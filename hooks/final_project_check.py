@@ -20,6 +20,7 @@ from _path_guard import raw_roots
 
 CHECK_CONTRACT_FILE = ".epiagentkit-check.json"
 LAYOUT_MANIFEST = ".epiagentkit-layout.json"
+DATA_READINESS_PATH = Path("results/derived/data-readiness.json")
 DEFAULT_CONTRACT: dict[str, Any] = {
     "code_helper_files": [
         "00_setup.R",
@@ -157,6 +158,10 @@ def finding(
         "rawdata": (
             "Raw-data immutability or provenance may be compromised.",
             "Return to the authoritative source and resolve the provenance issue without modifying raw data.",
+        ),
+        "readiness": (
+            "Formal analysis may be using unapproved, stale, or ambiguously represented data.",
+            "Return to the formal data-preparation script, close blocking decisions, regenerate the readiness state, and rerun analysis.",
         ),
         "code": (
             "The reproducible analysis sequence is incomplete or ambiguous.",
@@ -653,6 +658,77 @@ def sha256(path: Path) -> str:
     return value.hexdigest()
 
 
+def data_readiness_check(project: Path, findings: list[dict[str, str]]) -> None:
+    state_path = project / DATA_READINESS_PATH
+    layout_path = project / LAYOUT_MANIFEST
+    declared = False
+    if layout_path.is_file():
+        try:
+            layout = json.loads(layout_path.read_text(encoding="utf-8-sig"))
+            artifacts = layout.get("artifact_classes", []) if isinstance(layout, dict) else []
+            declared = any(
+                isinstance(entry, dict) and entry.get("class") == "data_readiness"
+                for entry in artifacts
+            )
+        except (OSError, json.JSONDecodeError, AttributeError):
+            pass
+    if not state_path.is_file():
+        if declared:
+            finding(findings, "ERROR", "readiness.state_missing", DATA_READINESS_PATH)
+        return
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as error:
+        finding(findings, "ERROR", "readiness.state_invalid", DATA_READINESS_PATH, type(error).__name__)
+        return
+    if not isinstance(state, dict) or state.get("schema_version") != 1:
+        finding(findings, "ERROR", "readiness.state_invalid", DATA_READINESS_PATH, "schema_version")
+        return
+    if state.get("status") != "analysis_ready":
+        finding(findings, "ERROR", "readiness.not_ready", DATA_READINESS_PATH, str(state.get("status")))
+    unresolved = state.get("unresolved_issues")
+    if isinstance(unresolved, bool) or not isinstance(unresolved, int) or unresolved != 0:
+        finding(findings, "ERROR", "readiness.unresolved", DATA_READINESS_PATH, str(unresolved))
+
+    def resolve_field(field: str, *, required: bool = True) -> Path | None:
+        raw = state.get(field)
+        if raw is None and not required:
+            return None
+        if not isinstance(raw, str) or not raw.strip():
+            finding(findings, "ERROR", "readiness.state_invalid", DATA_READINESS_PATH, field)
+            return None
+        normalized = raw.strip().replace("\\", "/")
+        candidate = Path(normalized)
+        if candidate.is_absolute() or re.match(r"^[A-Za-z]:/", normalized) or ".." in candidate.parts:
+            finding(findings, "ERROR", "readiness.path_escape", DATA_READINESS_PATH, field)
+            return None
+        target = (project / candidate).resolve(strict=False)
+        if relative(target, project).is_absolute():
+            finding(findings, "ERROR", "readiness.path_escape", DATA_READINESS_PATH, field)
+            return None
+        if not target.is_file():
+            finding(findings, "ERROR", "readiness.file_missing", relative(target, project), field)
+            return None
+        return target
+
+    input_path = resolve_field("authoritative_input")
+    resolve_field("producer")
+    if state.get("decision_source") is not None:
+        resolve_field("decision_source")
+    for field in ("input_format", "input_locator", "run_id", "hash_algorithm", "input_hash"):
+        if not isinstance(state.get(field), str) or not state[field].strip():
+            finding(findings, "ERROR", "readiness.state_invalid", DATA_READINESS_PATH, field)
+    algorithm = str(state.get("hash_algorithm", "")).casefold()
+    expected = str(state.get("input_hash", "")).casefold()
+    expected_length = 32 if algorithm == "md5" else 64
+    if algorithm not in {"md5", "sha256"} or not re.fullmatch(rf"[a-f0-9]{{{expected_length}}}", expected):
+        finding(findings, "ERROR", "readiness.hash_invalid", DATA_READINESS_PATH)
+    elif input_path is not None:
+        actual = hashlib.md5(input_path.read_bytes()).hexdigest() if algorithm == "md5" else sha256(input_path)
+        if actual != expected:
+            finding(findings, "ERROR", "readiness.hash_mismatch", relative(input_path, project))
+
+
 def provenance_check(
     project: Path,
     receipt_path: Path,
@@ -863,6 +939,7 @@ def run_checks(project: Path) -> list[dict[str, str]]:
     protected = raw_roots(project)
     git_raw_check(project, protected, findings)
     layout_check(project, protected, contract, findings)
+    data_readiness_check(project, findings)
     code_check(project, contract, findings)
     artifact_sequence_check(project / "03_tables", TABLE_PATTERN, "tables", findings)
     artifact_sequence_check(project / "04_figures", FIGURE_PATTERN, "figures", findings)

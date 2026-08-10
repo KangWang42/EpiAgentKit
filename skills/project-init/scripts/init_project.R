@@ -93,6 +93,8 @@ init_project <- function(name,
         "## 当前状态", "",
         "- 阶段：方案待确认",
         "- 当前总运行脚本：run_pipeline.R 或 run_pipeline.py",
+        "- 权威分析输入：待确定",
+        "- 数据就绪状态：尚未生成",
         "- 当前结果数据文件：尚未由正式分析脚本生成",
         "- 后续待解决事项：见 BACKLOG.md", "",
         "## 已经确认的研究口径", "",
@@ -136,7 +138,8 @@ init_project <- function(name,
         "## 分析目标与分析集", "", "- estimand：", "- 主要与次要假设：", "- 分析集：", "- 主要与次要终点：", "",
         "## 数据处理", "",
         paste0("- 变量定义、有序水平与表图登记：见 02_code/00_setup.", if (language == "r") "R" else "py"),
-        "- 缺失数据：", "- 异常值：", "- 样本量或精度依据：", "",
+        "- 清洗数据输出合同（相对路径、格式、用途、权威输入与镜像）：",
+        "- 缺失数据及可插补类别：", "- 异常值决定与分析就绪条件：", "- 样本量或精度依据：", "",
         "## 统计方法", "", "- 描述统计：", "- 主要模型与效应量：", "- 调整策略：", "- 模型诊断：",
         "- 多重性：", "- 亚组、敏感性与探索边界：", "- 随机种子或切分标识：", "",
         "## 计划确认与方案偏离", "", "- 主要分析确认日期与责任人：", "- 方案偏离：见 DECISIONS.md"
@@ -165,7 +168,7 @@ init_project <- function(name,
       c(
         paste0("# ", name), "",
         paste0("- 项目类型：", profile), paste0("- 研究设计：", type_name), paste0("- 分析语言：", language), "",
-        "先确认 PROTOCOL.md 与 SAP.md，再从项目根运行总运行脚本。`results/results.yaml` 由第一次正式分析创建，每次运行的命令、状态、日志和环境信息自动写入 `results/runs/`。",
+        "先确认 PROTOCOL.md、SAP.md 和权威分析输入合同，再从项目根运行总运行脚本。数据准备脚本生成 `results/derived/data-readiness.json`；只有状态为 `analysis_ready` 时才运行正式统计分析。`results/results.yaml` 由第一次正式分析创建，每次运行的命令、状态、日志和环境信息自动写入 `results/runs/`。",
         "",
         if (language == "r") "```text\nRscript --vanilla run_pipeline.R\n```" else "```text\npython run_pipeline.py\n```"
       ),
@@ -175,6 +178,10 @@ init_project <- function(name,
       c(
         "# 数据字典", "", "## 来源与权限", "",
         "- 数据集：", "- 权威来源：", "- 时间范围：", "- 获取日期：", "- 访问与共享权限：", "",
+        "## 清洗数据输出合同", "",
+        "| 相对路径 | 格式及工作表或对象 | 用途 | 角色 | 内容核对 |",
+        "| --- | --- | --- | --- | --- |",
+        "| 待确定 | 待确定 | 下游正式分析 | 权威分析输入 | 待核对 |", "",
         "## 变量", "", "| 变量 | 类型 | 单位或编码 | 定义 | 缺失 |", "| --- | --- | --- | --- | --- |"
       ),
       "01_data/README.md"
@@ -188,6 +195,12 @@ init_project <- function(name,
       write_utf8(
         c(
           "# 项目设置 --------------",
+          "DATA_CONTRACT <- list(",
+          '  authoritative_input = "",',
+          '  input_format = "",',
+          '  input_locator = "",',
+          "  mirrors = character()",
+          ")", "",
           "ORDERED_LEVELS <- list()", "", "PALETTE <- c(\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\")",
           "DIGITS_EST <- 2L", "DIGITS_P <- 3L", "P_FLOOR <- 0.001", "",
           "TABLE_REGISTRY <- character()", "FIG_REGISTRY <- character()", "",
@@ -205,12 +218,14 @@ init_project <- function(name,
         c(
           "# 从 01_data/rawdata/ 只读导入，核对键、类型、重复、缺失、范围和样本损失。",
           'source("02_code/00_setup.R", encoding = "UTF-8")',
-          'message("数据读取与核对脚本已准备；请填入已经确认的项目处理规则")'
+          'source("02_code/vendored/data_readiness.R", encoding = "UTF-8")',
+          'stop("尚未配置权威分析输入、清洗规则和数据就绪状态", call. = FALSE)'
         ),
         "02_code/01_data_cleaning.R"
       )
       helper_sources <- c(
         emit_summary.R = find_skill_file("r-biostats", "scripts/emit_summary.R"),
+        data_readiness.R = find_skill_file("biostat-principles", "scripts/data_readiness.R"),
         fig_setup.R = find_skill_file("publication-figures", "scripts/fig_setup.R")
       )
       pipeline_source <- find_skill_file("project-init", "assets/run_pipeline.R")
@@ -220,6 +235,7 @@ init_project <- function(name,
         c(
           '"""Project settings, conventions, paths, and stable project helpers."""', "",
           "from pathlib import Path", "", "ROOT = Path(__file__).resolve().parents[1]", "",
+          'DATA_CONTRACT = {"authoritative_input": "", "input_format": "", "input_locator": "", "mirrors": []}', "",
           "ORDERED_LEVELS = {}", "PALETTE = [\"#0072B2\", \"#D55E00\", \"#009E73\", \"#CC79A7\"]",
           "DIGITS_EST = 2", "DIGITS_P = 3", "P_FLOOR = 0.001", "",
           "TABLE_REGISTRY = []", "FIG_REGISTRY = []", "",
@@ -237,11 +253,14 @@ init_project <- function(name,
       write_utf8(
         c(
           '"""Read raw inputs without modifying them and create declared derived data."""',
-          'print("数据读取与核对脚本已准备；请填入已经确认的项目处理规则")'
+          'raise SystemExit("尚未配置权威分析输入、清洗规则和数据就绪状态")'
         ),
         "02_code/01_data_cleaning.py"
       )
-      helper_sources <- c(emit_summary.py = find_skill_file("python-biostats", "scripts/emit_summary.py"))
+      helper_sources <- c(
+        emit_summary.py = find_skill_file("python-biostats", "scripts/emit_summary.py"),
+        data_readiness.py = find_skill_file("biostat-principles", "scripts/data_readiness.py")
+      )
       pipeline_source <- find_skill_file("project-init", "assets/run_pipeline.py")
       pipeline_target <- file.path(project, "run_pipeline.py")
     }
@@ -274,6 +293,7 @@ init_project <- function(name,
     if (length(category_lines) > 1L) category_lines[-length(category_lines)] <- paste0(category_lines[-length(category_lines)], ",")
     artifact_lines <- c(
       '    {"class": "result_data_file", "pattern": "results/results.yaml", "producer": "analysis or confirmed-result import script", "consumers": ["tables", "figures", "paper", "reports"]},',
+      '    {"class": "data_readiness", "pattern": "results/derived/data-readiness.json", "producer": "formal data preparation script", "consumers": ["run_pipeline", "analysis scripts", "project audit"]},',
       '    {"class": "run_record", "pattern": "results/runs/*.json", "producer": "run_pipeline", "consumers": ["validation", "formal release review"]},',
       '    {"class": "statistical_table", "pattern": "03_tables/*", "producer": "registered analysis script", "consumers": ["paper", "reports", "delivery"]},',
       '    {"class": "statistical_figure", "pattern": "04_figures/*", "producer": "registered figure script", "consumers": ["paper", "reports", "delivery"]}'

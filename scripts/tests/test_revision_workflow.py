@@ -599,6 +599,63 @@ class RevisionWorkflowTests(unittest.TestCase):
             )
             self.assertIn("layout.path_escape", {item["check"] for item in findings})
 
+    def test_final_check_validates_declared_data_readiness(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            (project / "results/derived").mkdir(parents=True)
+            layout = {
+                "schema_version": 2,
+                "policy": "directory-and-artifact-types",
+                "profile": "analysis",
+                "categories": [],
+                "artifact_classes": [
+                    {
+                        "class": "data_readiness",
+                        "pattern": "results/derived/data-readiness.json",
+                        "producer": "formal data preparation script",
+                        "consumers": ["run_pipeline"],
+                    }
+                ],
+            }
+            (project / ".epiagentkit-layout.json").write_text(
+                json.dumps(layout), encoding="utf-8"
+            )
+            findings: list[dict[str, str]] = []
+            FINAL_CHECK.data_readiness_check(project, findings)
+            self.assertIn("readiness.state_missing", {item["check"] for item in findings})
+
+            (project / "01_data").mkdir()
+            (project / "02_code").mkdir()
+            authoritative = project / "01_data/analysis.csv"
+            producer = project / "02_code/01_data_cleaning.py"
+            authoritative.write_text("id,value\n1,2\n", encoding="utf-8")
+            producer.write_text("# producer\n", encoding="utf-8")
+            state = {
+                "schema_version": 1,
+                "status": "analysis_ready",
+                "authoritative_input": "01_data/analysis.csv",
+                "input_format": "csv",
+                "input_locator": "file",
+                "unresolved_issues": 0,
+                "producer": "02_code/01_data_cleaning.py",
+                "decision_source": None,
+                "run_id": "run-1",
+                "hash_algorithm": "sha256",
+                "input_hash": hashlib.sha256(authoritative.read_bytes()).hexdigest(),
+                "generated_at": "2026-08-10T12:00:00+08:00",
+            }
+            (project / "results/derived/data-readiness.json").write_text(
+                json.dumps(state), encoding="utf-8"
+            )
+            findings = []
+            FINAL_CHECK.data_readiness_check(project, findings)
+            self.assertEqual(findings, [])
+
+            authoritative.write_text("id,value\n1,3\n", encoding="utf-8")
+            findings = []
+            FINAL_CHECK.data_readiness_check(project, findings)
+            self.assertIn("readiness.hash_mismatch", {item["check"] for item in findings})
+
 
 if __name__ == "__main__":
     unittest.main()

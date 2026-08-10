@@ -17,11 +17,16 @@ ROOT = Path(__file__).resolve().parent
 if not (ROOT / "02_code").is_dir():
     raise SystemExit("run_pipeline.py must be located and run at the project root")
 
-# List only formal analysis steps. Classify a new file by purpose before adding it.
-scripts = [
+# List preparation and formal analysis separately. The readiness gate runs before analysis.
+preparation_scripts = [
     ROOT / "02_code" / "01_data_cleaning.py",
 ]
+analysis_scripts: list[Path] = []
+scripts = [*preparation_scripts, *analysis_scripts]
+readiness_helper = ROOT / "02_code" / "vendored" / "data_readiness.py"
 missing_scripts = [path.relative_to(ROOT).as_posix() for path in scripts if not path.is_file()]
+if analysis_scripts and not readiness_helper.is_file():
+    missing_scripts.append(readiness_helper.relative_to(ROOT).as_posix())
 if missing_scripts:
     raise SystemExit(f"formal analysis scripts are missing: {', '.join(missing_scripts)}")
 
@@ -35,24 +40,47 @@ environment = dict(os.environ)
 environment["EPI_RUN_ID"] = run_id
 exit_code = 0
 
+
+def run_step(
+    script: Path,
+    log,
+    *,
+    arguments: list[str] | None = None,
+    label: str | None = None,
+) -> int:
+    relative = label or script.relative_to(ROOT).as_posix()
+    log.write(f"\n===== {relative} =====\n")
+    completed = subprocess.run(
+        [sys.executable, str(script), *(arguments or [])],
+        cwd=ROOT,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    log.write(completed.stdout)
+    return completed.returncode
+
+
 with log_path.open("w", encoding="utf-8") as log:
-    for script in scripts:
-        relative = script.relative_to(ROOT).as_posix()
-        log.write(f"\n===== {relative} =====\n")
-        completed = subprocess.run(
-            [sys.executable, str(script)],
-            cwd=ROOT,
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        log.write(completed.stdout)
-        if completed.returncode:
-            exit_code = completed.returncode
+    for script in preparation_scripts:
+        exit_code = run_step(script, log)
+        if exit_code:
             break
+    if not exit_code and analysis_scripts:
+        exit_code = run_step(
+            readiness_helper,
+            log,
+            arguments=["--check"],
+            label="data readiness gate",
+        )
+    if not exit_code:
+        for script in analysis_scripts:
+            exit_code = run_step(script, log)
+            if exit_code:
+                break
 
 environment_lines = [
     f"python={sys.version.replace(chr(10), ' ')}",

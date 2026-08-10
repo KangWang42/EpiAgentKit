@@ -1,11 +1,17 @@
 # Run the project R scripts in order and save an automatic run record.
 if (!dir.exists("02_code")) stop("请从项目根运行 run_pipeline.R")
 
-# 只列出正式统计分析步骤；新增脚本时先判断职责，再按研究顺序加入。
-scripts <- c(
+# 数据准备和正式统计分析分别列出；第一项分析前会检查数据就绪状态。
+preparation_scripts <- c(
   "02_code/01_data_cleaning.R"
 )
+analysis_scripts <- character()
+scripts <- c(preparation_scripts, analysis_scripts)
+readiness_helper <- "02_code/vendored/data_readiness.R"
 missing_scripts <- scripts[!file.exists(scripts)]
+if (length(analysis_scripts) && !file.exists(readiness_helper)) {
+  missing_scripts <- c(missing_scripts, readiness_helper)
+}
 if (length(missing_scripts)) {
   stop("正式分析脚本缺失：", paste(missing_scripts, collapse = "，"))
 }
@@ -26,7 +32,7 @@ log_path <- file.path("results/runs", paste0(run_id, ".log"))
 environment_path <- file.path("results/runs", paste0(run_id, "-environment.txt"))
 status <- 0L
 
-run_script <- function(script, run_id) {
+run_script <- function(script, run_id, args = character()) {
   previous_run_id <- Sys.getenv("EPI_RUN_ID", unset = NA_character_)
   Sys.setenv(EPI_RUN_ID = run_id)
   on.exit(
@@ -35,21 +41,46 @@ run_script <- function(script, run_id) {
   )
   system2(
     file.path(R.home("bin"), "Rscript"),
-    c("--vanilla", script),
+    c("--vanilla", script, args),
     stdout = TRUE,
     stderr = TRUE
   )
 }
 
-for (script in scripts) {
-  output <- run_script(script, run_id)
+run_logged_step <- function(script, run_id, args = character(), label = script) {
+  output <- run_script(script, run_id, args)
   script_status <- attr(output, "status")
   if (is.null(script_status)) script_status <- 0L
-  cat("\n===== ", script, " =====\n", paste(output, collapse = "\n"), "\n",
+  cat("\n===== ", label, " =====\n", paste(output, collapse = "\n"), "\n",
       file = log_path, append = TRUE, sep = "")
-  if (script_status != 0L) {
-    status <- as.integer(script_status)
+  as.integer(script_status)
+}
+
+for (script in preparation_scripts) {
+  step_status <- run_logged_step(script, run_id)
+  if (step_status != 0L) {
+    status <- step_status
     break
+  }
+}
+
+if (status == 0L && length(analysis_scripts)) {
+  step_status <- run_logged_step(
+    readiness_helper,
+    run_id,
+    args = "--check",
+    label = "data readiness gate"
+  )
+  if (step_status != 0L) status <- step_status
+}
+
+if (status == 0L) {
+  for (script in analysis_scripts) {
+    step_status <- run_logged_step(script, run_id)
+    if (step_status != 0L) {
+      status <- step_status
+      break
+    }
   }
 }
 
