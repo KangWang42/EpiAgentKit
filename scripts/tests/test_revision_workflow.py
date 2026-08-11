@@ -34,6 +34,10 @@ REVISION_STATE = load_module(
     "revision_state",
     ROOT / "skills/academic-humanizer/scripts/validate_revision_state.py",
 )
+REVISION_INVARIANTS = load_module(
+    "revision_invariants",
+    ROOT / "skills/academic-humanizer/scripts/check_revision_invariants.py",
+)
 REVISE_DOCX = load_module(
     "revise_docx",
     ROOT / "skills/docx/scripts/revise_docx.py",
@@ -177,6 +181,58 @@ def layout_entry(path: str, kind: str) -> dict[str, str]:
 
 
 class RevisionWorkflowTests(unittest.TestCase):
+    def test_revision_invariant_fixtures_cover_preservation_and_drift(self) -> None:
+        fixture = json.loads(
+            (ROOT / "scripts/tests/fixtures/academic_guards.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for case in fixture["revision_cases"]:
+            with self.subTest(case=case["id"]):
+                result = REVISION_INVARIANTS.compare_texts(
+                    case["original"],
+                    case["revised"],
+                    case["protected_terms"],
+                )
+                changed = {
+                    name
+                    for name, detail in result["categories"].items()
+                    if detail["changed"]
+                }
+                self.assertEqual(result["status"], case["expected_status"])
+                self.assertEqual(changed, set(case["expected_changed_categories"]))
+                if case["id"] == "bilingual_tokens_preserved":
+                    citations = REVISION_INVARIANTS.extract_citations(case["original"])
+                    self.assertIn("doi:10.1000/test.01", citations)
+                    self.assertNotIn("doi:10.1000/test.01。the", citations)
+
+    def test_revision_invariant_cli_distinguishes_review_from_input_error(self) -> None:
+        script = ROOT / "skills/academic-humanizer/scripts/check_revision_invariants.py"
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            original = base / "original.md"
+            revised = base / "revised.md"
+            original.write_text("Result: 0.17 [1].", encoding="utf-8")
+            revised.write_text("Result: 0.21 [1].", encoding="utf-8")
+            review = subprocess.run(
+                [sys.executable, str(script), str(original), str(revised), "--json"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(review.returncode, 1, review.stdout + review.stderr)
+            self.assertEqual(json.loads(review.stdout)["status"], "REVIEW_REQUIRED")
+
+            original.write_bytes(b"\xff\xfe\x00\x00")
+            invalid = subprocess.run(
+                [sys.executable, str(script), str(original), str(revised), "--json"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+            )
+            self.assertEqual(invalid.returncode, 2, invalid.stdout + invalid.stderr)
+            self.assertEqual(json.loads(invalid.stdout)["status"], "ERROR")
+
     def test_soffice_shim_is_never_probed_on_windows(self) -> None:
         with mock.patch.object(SOFFICE.sys, "platform", "win32"), mock.patch.object(
             SOFFICE.socket,
