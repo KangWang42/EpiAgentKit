@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit DOCX structure, references, images, revisions, and anonymity risks."""
+"""Audit DOCX structure, references, images, revisions, and delivery requirements."""
 
 from __future__ import annotations
 
@@ -9,8 +9,10 @@ import json
 import posixpath
 import re
 import struct
+import sys
 import zipfile
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 
 from lxml import etree
@@ -36,6 +38,9 @@ W = f"{{{W_NS}}}"
 R = f"{{{R_NS}}}"
 EMU_PER_INCH = 914400
 REF_PATTERN = re.compile(r"\bREF\s+([^\s\\]+)", re.IGNORECASE)
+ACTIVE_TEXT_PART = re.compile(
+    r"^word/(?:document|header\d+|footer\d+|footnotes|endnotes)\.xml$"
+)
 
 
 def finding(level: str, rule: str, evidence: str, impact: str, action: str) -> dict[str, str]:
@@ -113,11 +118,503 @@ def location(part: str, node: etree._Element | None = None) -> str:
     return part
 
 
+def normalized_text(node: etree._Element) -> str:
+    """Return final-visible Word text with insignificant whitespace collapsed."""
+    return re.sub(
+        r"\s+",
+        " ",
+        "".join(node.xpath(".//w:t/text()", namespaces=NS)),
+    ).strip()
+
+
+def color_token(
+    node: etree._Element,
+    *,
+    value_attribute: str,
+    theme_attribute: str,
+) -> str:
+    theme = node.get(W + theme_attribute)
+    if theme:
+        return f"THEME:{theme.upper()}"
+    value = node.get(W + value_attribute, "AUTO")
+    return value.removeprefix("#").upper()
+
+
+def normalize_allowed_color(value: str) -> str:
+    value = value.strip().removeprefix("#").upper()
+    if value.startswith("THEME:"):
+        return value
+    return value
+
+
+def style_state(
+    parts: dict[str, bytes],
+) -> tuple[
+    etree._Element | None,
+    dict[str, etree._Element],
+    dict[str, str],
+]:
+    root = parse_xml(parts, "word/styles.xml")
+    styles: dict[str, etree._Element] = {}
+    defaults: dict[str, str] = {}
+    if root is None:
+        return None, styles, defaults
+    for node in root.xpath("./w:style", namespaces=NS):
+        style_id = node.get(W + "styleId")
+        style_type = node.get(W + "type")
+        if not style_id:
+            continue
+        styles[style_id] = node
+        if style_type and node.get(W + "default") in {"1", "true", "on"}:
+            defaults[style_type] = style_id
+    return root, styles, defaults
+
+
+def inherited_style_property(
+    styles: dict[str, etree._Element],
+    style_id: str | None,
+    xpath: str,
+) -> etree._Element | None:
+    seen: set[str] = set()
+    current = style_id
+    while current and current not in seen:
+        seen.add(current)
+        style = styles.get(current)
+        if style is None:
+            return None
+        values = style.xpath(xpath, namespaces=NS)
+        if values:
+            return values[0]
+        based_on = style.xpath("./w:basedOn/@w:val", namespaces=NS)
+        current = based_on[0] if based_on else None
+    return None
+
+
+def paragraph_style_id(
+    paragraph: etree._Element,
+    defaults: dict[str, str],
+) -> str | None:
+    values = paragraph.xpath("./w:pPr/w:pStyle/@w:val", namespaces=NS)
+    return values[0] if values else defaults.get("paragraph")
+
+
+def effective_run_color(
+    run: etree._Element,
+    styles_root: etree._Element | None,
+    styles: dict[str, etree._Element],
+    defaults: dict[str, str],
+) -> str:
+    direct = run.xpath("./w:rPr/w:color", namespaces=NS)
+    if direct:
+        return color_token(
+            direct[0], value_attribute="val", theme_attribute="themeColor"
+        )
+
+    run_style = run.xpath("./w:rPr/w:rStyle/@w:val", namespaces=NS)
+    styled = inherited_style_property(
+        styles,
+        run_style[0] if run_style else None,
+        "./w:rPr/w:color",
+    )
+    if styled is not None:
+        return color_token(
+            styled, value_attribute="val", theme_attribute="themeColor"
+        )
+
+    paragraph = next(iter(run.iterancestors(W + "p")), None)
+    if paragraph is not None:
+        paragraph_run = paragraph.xpath("./w:pPr/w:rPr/w:color", namespaces=NS)
+        if paragraph_run:
+            return color_token(
+                paragraph_run[0],
+                value_attribute="val",
+                theme_attribute="themeColor",
+            )
+        styled = inherited_style_property(
+            styles,
+            paragraph_style_id(paragraph, defaults),
+            "./w:rPr/w:color",
+        )
+        if styled is not None:
+            return color_token(
+                styled, value_attribute="val", theme_attribute="themeColor"
+            )
+
+    if styles_root is not None:
+        doc_default = styles_root.xpath(
+            "./w:docDefaults/w:rPrDefault/w:rPr/w:color", namespaces=NS
+        )
+        if doc_default:
+            return color_token(
+                doc_default[0],
+                value_attribute="val",
+                theme_attribute="themeColor",
+            )
+    return "000000"
+
+
+def effective_paragraph_alignment(
+    paragraph: etree._Element,
+    styles_root: etree._Element | None,
+    styles: dict[str, etree._Element],
+    defaults: dict[str, str],
+) -> str:
+    direct = paragraph.xpath("./w:pPr/w:jc/@w:val", namespaces=NS)
+    if direct:
+        return direct[0].lower()
+    styled = inherited_style_property(
+        styles,
+        paragraph_style_id(paragraph, defaults),
+        "./w:pPr/w:jc",
+    )
+    if styled is not None:
+        return styled.get(W + "val", "left").lower()
+    if styles_root is not None:
+        doc_default = styles_root.xpath(
+            "./w:docDefaults/w:pPrDefault/w:pPr/w:jc/@w:val", namespaces=NS
+        )
+        if doc_default:
+            return doc_default[0].lower()
+    return "left"
+
+
+def active_text_roots(parts: dict[str, bytes]) -> dict[str, etree._Element]:
+    roots: dict[str, etree._Element] = {}
+    for name in parts:
+        if ACTIVE_TEXT_PART.match(name):
+            root = parse_xml(parts, name)
+            if root is not None:
+                roots[name] = root
+    return roots
+
+
+def used_style_nodes(
+    roots: dict[str, etree._Element],
+    styles: dict[str, etree._Element],
+    defaults: dict[str, str],
+) -> dict[str, etree._Element]:
+    style_ids = set(defaults.values())
+    for root in roots.values():
+        style_ids.update(
+            root.xpath(
+                ".//w:pStyle/@w:val | .//w:rStyle/@w:val | .//w:tblStyle/@w:val",
+                namespaces=NS,
+            )
+        )
+    return {style_id: styles[style_id] for style_id in style_ids if style_id in styles}
+
+
+def requirements_error(rule: str, evidence: str, action: str) -> dict[str, str]:
+    return finding(
+        "ERROR",
+        rule,
+        evidence,
+        "The generated Word file does not match the confirmed delivery requirements.",
+        action,
+    )
+
+
+def audit_delivery_requirements(
+    parts: dict[str, bytes],
+    document: etree._Element,
+    requirements: dict[str, Any],
+) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    if not isinstance(requirements, dict) or requirements.get("schema_version") != 1:
+        return [
+            requirements_error(
+                "requirements.schema",
+                "schema_version must equal 1",
+                "Correct the UTF-8 JSON requirements file before auditing the document.",
+            )
+        ]
+
+    roots = active_text_roots(parts)
+    styles_root, styles, defaults = style_state(parts)
+    used_styles = used_style_nodes(roots, styles, defaults)
+
+    def allowed_colors(key: str) -> set[str] | None:
+        raw = requirements.get(key)
+        if raw is None:
+            return None
+        if not isinstance(raw, list) or not raw or not all(
+            isinstance(item, str) and item.strip() for item in raw
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{key} must be a non-empty string list",
+                    "Correct the color requirement before auditing the document.",
+                )
+            )
+            return None
+        return {normalize_allowed_color(item) for item in raw}
+
+    text_colors = allowed_colors("allowed_text_colors")
+    fill_colors = allowed_colors("allowed_fill_colors")
+    border_colors = allowed_colors("allowed_border_colors")
+
+    if text_colors is not None:
+        seen: set[tuple[str, int | None, str]] = set()
+        for part_name, root in roots.items():
+            for run in root.xpath(".//w:r[.//w:t]", namespaces=NS):
+                token = effective_run_color(run, styles_root, styles, defaults)
+                key = (part_name, run.sourceline, token)
+                if token not in text_colors and key not in seen:
+                    seen.add(key)
+                    findings.append(
+                        requirements_error(
+                            "requirements.text_color",
+                            f"{location(part_name, run)}:{token}",
+                            "Apply an allowed text color to the visible run or its effective style.",
+                        )
+                    )
+        for style_id, style in used_styles.items():
+            for node in style.xpath(".//w:rPr/w:color", namespaces=NS):
+                token = color_token(
+                    node, value_attribute="val", theme_attribute="themeColor"
+                )
+                if token not in text_colors:
+                    findings.append(
+                        requirements_error(
+                            "requirements.text_color",
+                            f"word/styles.xml:{style_id}:{token}",
+                            "Remove the unapproved color from the active style or authorize it explicitly.",
+                        )
+                    )
+
+    def audit_color_nodes(
+        allowed: set[str] | None,
+        rule: str,
+        xpath: str,
+        *,
+        value_attribute: str,
+        theme_attribute: str,
+        active_predicate: Callable[[etree._Element], bool] | None = None,
+    ) -> None:
+        if allowed is None:
+            return
+        nodes: list[tuple[str, etree._Element]] = []
+        for part_name, root in roots.items():
+            nodes.extend((part_name, node) for node in root.xpath(xpath, namespaces=NS))
+        for style_id, style in used_styles.items():
+            nodes.extend(
+                (f"word/styles.xml:{style_id}", node)
+                for node in style.xpath(xpath, namespaces=NS)
+            )
+        for part_name, node in nodes:
+            if active_predicate is not None and not active_predicate(node):
+                continue
+            token = color_token(
+                node,
+                value_attribute=value_attribute,
+                theme_attribute=theme_attribute,
+            )
+            if token not in allowed:
+                findings.append(
+                    requirements_error(
+                        rule,
+                        f"{location(part_name, node)}:{token}",
+                        "Apply an allowed color or update the confirmed requirements explicitly.",
+                    )
+                )
+
+    audit_color_nodes(
+        fill_colors,
+        "requirements.fill_color",
+        ".//w:shd",
+        value_attribute="fill",
+        theme_attribute="themeFill",
+        active_predicate=lambda node: node.get(W + "val", "clear")
+        not in {"nil", "none"},
+    )
+    audit_color_nodes(
+        border_colors,
+        "requirements.border_color",
+        ".//w:tblBorders/* | .//w:tcBorders/* | .//w:pBdr/*",
+        value_attribute="color",
+        theme_attribute="themeColor",
+        active_predicate=lambda node: node.get(W + "val", "single")
+        not in {"nil", "none"},
+    )
+
+    all_visible_text = "\n".join(normalized_text(root) for root in roots.values())
+    for key, should_exist in (("forbidden_text", False), ("required_text", True)):
+        values = requirements.get(key, [])
+        if not isinstance(values, list) or not all(
+            isinstance(item, str) and item for item in values
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{key} must be a string list",
+                    "Correct the text requirement before auditing the document.",
+                )
+            )
+            continue
+        for value in values:
+            present = value in all_visible_text
+            if present != should_exist:
+                rule = "requirements.required_text" if should_exist else "requirements.forbidden_text"
+                action = (
+                    "Restore the confirmed required text."
+                    if should_exist
+                    else "Remove the task-specific prohibited text without deleting scientific limitations or required disclosures."
+                )
+                findings.append(requirements_error(rule, value[:80], action))
+
+    body = document.find(W + "body")
+    blocks: list[dict[str, Any]] = []
+    table_index = 0
+    if body is not None:
+        for node in body:
+            if node.tag == W + "p":
+                blocks.append({"kind": "paragraph", "node": node, "text": normalized_text(node)})
+            elif node.tag == W + "tbl":
+                table_index += 1
+                blocks.append({"kind": "table", "node": node, "table_index": table_index})
+
+    tables = requirements.get("tables", [])
+    if not isinstance(tables, list):
+        findings.append(
+            requirements_error(
+                "requirements.schema",
+                "tables must be a list",
+                "Correct the table requirements before auditing the document.",
+            )
+        )
+        tables = []
+    matched_positions: list[int] = []
+    for index, item in enumerate(tables, 1):
+        required_fields = ("id", "role", "source", "placement", "caption", "alignment")
+        if not isinstance(item, dict) or any(
+            not isinstance(item.get(field), str) or not item[field].strip()
+            for field in required_fields
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"tables[{index - 1}] lacks id/role/source/placement/caption/alignment",
+                    "Complete the report table inventory before generating the Word file.",
+                )
+            )
+            continue
+        caption = re.sub(r"\s+", " ", item["caption"]).strip()
+        matches = [
+            position
+            for position, block in enumerate(blocks)
+            if block["kind"] == "paragraph" and block["text"] == caption
+        ]
+        if len(matches) != 1:
+            findings.append(
+                requirements_error(
+                    "requirements.caption_match",
+                    f"{item['id']}:matches={len(matches)}:{caption[:80]}",
+                    "Generate exactly one caption matching the confirmed table inventory.",
+                )
+            )
+            continue
+        position = matches[0]
+        matched_positions.append(position)
+        following = position + 1
+        while (
+            following < len(blocks)
+            and blocks[following]["kind"] == "paragraph"
+            and not blocks[following]["text"]
+        ):
+            following += 1
+        if following >= len(blocks) or blocks[following]["kind"] != "table":
+            findings.append(
+                requirements_error(
+                    "requirements.caption_target",
+                    f"{item['id']}:{caption[:80]}",
+                    "Place the intended table immediately after its caption, allowing only empty paragraphs between them.",
+                )
+            )
+        expected_alignment = item["alignment"].strip().lower()
+        alignment_alias = {"both": "justify", "distribute": "justify"}
+        actual_alignment = effective_paragraph_alignment(
+            blocks[position]["node"], styles_root, styles, defaults
+        )
+        actual_alignment = alignment_alias.get(actual_alignment, actual_alignment)
+        if expected_alignment not in {"left", "center", "right", "justify"}:
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{item['id']}:alignment={expected_alignment}",
+                    "Use left, center, right, or justify in the table inventory.",
+                )
+            )
+        elif actual_alignment != expected_alignment:
+            findings.append(
+                requirements_error(
+                    "requirements.caption_alignment",
+                    f"{item['id']}:expected={expected_alignment};actual={actual_alignment}",
+                    "Set the caption's effective paragraph alignment to the confirmed value.",
+                )
+            )
+        references = item.get("references", [])
+        if not isinstance(references, list) or not all(
+            isinstance(value, str) and value for value in references
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{item['id']}:references must be a string list",
+                    "Correct the table-reference inventory before auditing the document.",
+                )
+            )
+        else:
+            other_paragraphs = "\n".join(
+                block["text"]
+                for block_position, block in enumerate(blocks)
+                if block["kind"] == "paragraph" and block_position != position
+            )
+            for reference in references:
+                if reference not in other_paragraphs:
+                    findings.append(
+                        requirements_error(
+                            "requirements.table_reference",
+                            f"{item['id']}:{reference}",
+                            "Add or correct the confirmed body reference to this table.",
+                        )
+                    )
+
+    if matched_positions != sorted(matched_positions):
+        findings.append(
+            requirements_error(
+                "requirements.caption_order",
+                f"positions={matched_positions}",
+                "Reorder captions and their tables to match the confirmed table inventory.",
+            )
+        )
+    if requirements.get("require_all_tables_listed") is True and table_index != len(tables):
+        findings.append(
+            requirements_error(
+                "requirements.table_count",
+                f"document={table_index};inventory={len(tables)}",
+                "List every formal table or remove an unintended layout/data table before delivery.",
+            )
+        )
+
+    findings.append(
+        finding(
+            "INFO",
+            "requirements.summary",
+            f"tables={len(tables)};visible_parts={len(roots)}",
+            "The task-specific Word requirements were applied to the generated file.",
+            "Reconcile these static checks with the report content review and page rendering evidence.",
+        )
+    )
+    return findings
+
+
 def audit(
     path: Path,
     *,
     anonymous: bool = False,
     minimum_dpi: float = 300.0,
+    requirements: dict[str, Any] | None = None,
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
     try:
@@ -333,6 +830,8 @@ def audit(
 
     table_count = int(document.xpath("count(.//w:tbl)", namespaces=NS))
     field_count = len(field_nodes)
+    if requirements is not None:
+        findings.extend(audit_delivery_requirements(parts, document, requirements))
     findings.append(
         finding(
             "INFO",
@@ -350,13 +849,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("document", type=Path)
     parser.add_argument("--anonymous", action="store_true")
     parser.add_argument("--minimum-dpi", type=float, default=300.0)
+    parser.add_argument(
+        "--requirements",
+        type=Path,
+        help="UTF-8 JSON file with task-specific colors, captions, tables, and text requirements",
+    )
     parser.add_argument("--json", action="store_true", dest="as_json")
     return parser.parse_args()
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     args = parse_args()
-    findings = audit(args.document, anonymous=args.anonymous, minimum_dpi=args.minimum_dpi)
+    requirements: dict[str, Any] | None = None
+    requirements_findings: list[dict[str, str]] = []
+    if args.requirements is not None:
+        try:
+            loaded = json.loads(args.requirements.read_text(encoding="utf-8"))
+            if not isinstance(loaded, dict):
+                raise ValueError("requirements root must be an object")
+            requirements = loaded
+        except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+            requirements_findings.append(
+                requirements_error(
+                    "requirements.unreadable",
+                    f"{args.requirements}:{type(error).__name__}",
+                    "Provide a readable UTF-8 JSON requirements file.",
+                )
+            )
+    findings = requirements_findings + audit(
+        args.document,
+        anonymous=args.anonymous,
+        minimum_dpi=args.minimum_dpi,
+        requirements=requirements,
+    )
     errors = [item for item in findings if item["level"] == "ERROR"]
     payload: dict[str, Any] = {"ok": not errors, "document": str(args.document), "findings": findings}
     if args.as_json:

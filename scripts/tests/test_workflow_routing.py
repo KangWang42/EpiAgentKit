@@ -502,6 +502,67 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不在本 skill 固定某个转换工具或视觉模板", report)
         self.assertNotIn("无填充、白底黑字", report)
 
+    def test_statistical_report_delivery_uses_one_content_and_file_requirements_source(self) -> None:
+        report = (ROOT / "skills/report-writing/SKILL.md").read_text(encoding="utf-8")
+        assembly = (
+            ROOT / "skills/report-writing/references/report-assembly.md"
+        ).read_text(encoding="utf-8")
+        docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
+        requirements = (
+            ROOT / "skills/docx/references/delivery-requirements.md"
+        ).read_text(encoding="utf-8")
+        cases = {
+            case["id"]: case
+            for case in json.loads(
+                (ROOT / "scripts/skill_routing_cases.json").read_text(
+                    encoding="utf-8"
+                )
+            )["cases"]
+        }
+
+        for fragment in (
+            "同时完成正文与文件工作项",
+            "报告装配与当前任务验收清单",
+            "不得按文件遍历或生成顺序自动编号",
+            "逐项修补用户纠正不能代替全稿净稿检查",
+            "无法渲染时明确未验证范围",
+        ):
+            self.assertIn(fragment, report)
+        for fragment in (
+            "已有当前报告、用户模板或项目约定已经明确格式时沿用",
+            "稳定编号 | 内容功能 | 已核对来源",
+            "缺失数据专题报告",
+            "无读者功能的生成状态",
+            "同一组字段",
+        ):
+            self.assertIn(fragment, assembly)
+        self.assertIn("delivery requirements", docx)
+        for fragment in (
+            "重新生成同一文件后，必须重新执行整份清单",
+            '"role":',
+            '"source":',
+            '"placement":',
+            '"caption":',
+            '"alignment":',
+            "--requirements",
+            "不得把这些静态检查称为完整视觉验收",
+        ):
+            self.assertIn(fragment, requirements)
+
+        file_case = cases["existing_project_report_file_delivery"]
+        self.assertEqual(file_case["primary"], "report-writing")
+        self.assertIn("docx", file_case["companions"])
+        self.assertEqual(
+            file_case["expected_action"],
+            "complete_report_content_and_validated_word_file",
+        )
+        prose_case = cases["existing_project_report_chat_summary"]
+        self.assertIn("docx", prose_case["excluded"])
+        self.assertEqual(
+            prose_case["expected_action"],
+            "answer_with_prose_without_creating_a_file",
+        )
+
     def test_presentation_template_source_is_routed_before_creation(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         academic = (ROOT / "skills/academic-ppt/SKILL.md").read_text(

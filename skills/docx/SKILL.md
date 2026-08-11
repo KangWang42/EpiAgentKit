@@ -8,8 +8,6 @@ license: Proprietary. LICENSE.txt has complete terms
 
 Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
 
-## Overview
-
 A .docx file is a ZIP archive containing XML files.
 
 ## Quick Reference
@@ -60,6 +58,8 @@ python scripts/accept_changes.py input.docx output.docx
 If the active content skill or project provides a tested document generator, use it and apply this skill for validation and file QA. Otherwise inspect the existing environment and use an already available compatible generator; do not install one silently. The JavaScript `docx` workflow below remains the neutral reference implementation. When it is unavailable, an existing `python-docx` or R `officer` environment may be used only if the generated package passes the same structural and page checks.
 
 Generator-specific API names are not interchangeable. In `officer`, paragraph alignment uses `left`, `right`, `center`, or `justify`; do not pass Word UI labels such as `both`. With `python-docx`, pass image paths as strings for versions that do not accept `pathlib.Path`. Treat the first generated file as a compatibility check: run `scripts/office/validate.py`, and change the generator or correct the package when it fails rather than declaring the validator optional.
+
+For a new or substantially rebuilt Word file, repeated regeneration, strict formatting requirements, or any task with user corrections, read [delivery requirements](references/delivery-requirements.md) completely. Re-run the complete task-specific requirements after every regeneration; do not validate only the last correction.
 
 ### Neutral Default Formatting
 
@@ -365,7 +365,7 @@ Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate fal
 
 Follow every applicable layer in `references/scoped-revision.md`: package validation, authorized-scope comparison, clean/marked equivalence, structural and anonymity audit, content reconciliation, render and page inspection, then reopen the final DOCX. A file opening successfully is not sufficient. Keep intermediate XML, renderings, and test copies outside the active delivery directory.
 
-Use LibreOffice rendering when the executable is available. Do not use hidden Word COM automation as an automatic fallback: it can load the user's add-ins, reuse an existing Office session or wait on an invisible dialog. If any Word process is already running, do not start COM automation because a new application object does not guarantee process isolation; ask the user to save and close Word or use another renderer. Word-native rendering is allowed only when the user requests it, no Word process is running beforehand, the new process ID is recorded, and a timeout can close only that process. If rendering remains unavailable or times out, complete package, scope, content, structure and reopen checks, state explicitly that visual pagination was not verified, and do not launch or terminate an existing user Word process. Do not claim a structural-only check is equivalent to page inspection.
+Use LibreOffice rendering when the executable is available. Do not use hidden Word COM automation as an automatic fallback: it can load the user's add-ins, reuse an existing Office session or wait on an invisible dialog. If any Word process is already running, do not start COM automation because a new application object does not guarantee process isolation; ask the user to save and close Word or use another renderer. Word-native rendering is allowed only when the user requests it, no Word process is running beforehand, the new process ID is recorded, and a timeout can close only that process. If rendering remains unavailable or times out, complete package, scope, content, structure, task-specific requirements and reopen checks, state explicitly which pagination and final-display properties were not verified, and do not launch or terminate an existing user Word process. Do not claim a structural-only check is equivalent to page inspection.
 
 ## XML Reference
 

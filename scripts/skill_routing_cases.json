@@ -167,6 +167,22 @@
       "excluded": ["academic-publishing"]
     },
     {
+      "id": "existing_project_report_file_delivery",
+      "prompt": "这个正式项目已有当前 Word 报告和模板，请根据已验证结果继续生成完整阶段性统计报告并交付文件",
+      "primary": "report-writing",
+      "companions": ["academic-humanizer", "docx"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "complete_report_content_and_validated_word_file"
+    },
+    {
+      "id": "existing_project_report_chat_summary",
+      "prompt": "解释这个项目目前的统计结果，只在聊天中给我一段摘要，不生成报告文件",
+      "primary": "report-writing",
+      "companions": ["academic-humanizer"],
+      "excluded": ["docx"],
+      "expected_action": "answer_with_prose_without_creating_a_file"
+    },
+    {
       "id": "sysu_presentation_file",
       "prompt": "制作中山大学开题汇报并输出 pptx",
       "primary": "sysu-ppt",

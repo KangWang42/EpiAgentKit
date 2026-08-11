@@ -502,6 +502,135 @@ class RevisionWorkflowTests(unittest.TestCase):
             self.assertEqual(len(dpi), 1)
             self.assertIn("300dpi", dpi[0]["evidence"])
 
+    def test_docx_audit_applies_task_specific_report_requirements(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            valid = base / "valid-report.docx"
+            invalid = base / "invalid-report.docx"
+            left_template = base / "left-template-report.docx"
+            table_xml = (
+                '<w:tbl><w:tblPr><w:tblBorders>'
+                '<w:top w:val="single" w:color="000000"/>'
+                '<w:bottom w:val="single" w:color="000000"/>'
+                "</w:tblBorders></w:tblPr>"
+                '<w:tr><w:tc><w:tcPr><w:shd w:val="clear" w:fill="FFFFFF"/></w:tcPr>'
+                '<w:p><w:r><w:t>结果</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+            )
+            valid_caption = (
+                '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr>'
+                '<w:color w:val="000000"/></w:rPr><w:t>表1 描述性统计</w:t></w:r></w:p>'
+            )
+            make_docx(
+                valid,
+                ["主要结果见表1。"],
+                body_extra=valid_caption + table_xml,
+            )
+            invalid_table = table_xml.replace("FFFFFF", "D9EAF7").replace(
+                'w:color="000000"', 'w:color="666666"'
+            )
+            invalid_caption = valid_caption.replace("center", "left").replace(
+                "000000", "2E74B5"
+            )
+            make_docx(
+                invalid,
+                ["主要结果见表1。", "报告状态：最近一次成功生成。"],
+                body_extra=(
+                    invalid_caption
+                    + "<w:p><w:r><w:t>题注与目标表之间的非空段落</w:t></w:r></w:p>"
+                    + invalid_table
+                ),
+            )
+            left_caption = valid_caption.replace("center", "left").replace(
+                "表1 描述性统计", "表1 缺失概况"
+            )
+            make_docx(
+                left_template,
+                ["缺失情况见表1。"],
+                body_extra=left_caption + table_xml,
+            )
+
+            requirements = {
+                "schema_version": 1,
+                "allowed_text_colors": ["000000"],
+                "allowed_fill_colors": ["FFFFFF", "AUTO"],
+                "allowed_border_colors": ["000000", "AUTO"],
+                "require_all_tables_listed": True,
+                "forbidden_text": ["报告状态："],
+                "tables": [
+                    {
+                        "id": "table-1",
+                        "role": "describe the study population",
+                        "source": "verified-table.xlsx",
+                        "placement": "body",
+                        "caption": "表1 描述性统计",
+                        "alignment": "center",
+                        "references": ["见表1"],
+                    }
+                ],
+            }
+            valid_errors = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(valid, requirements=requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(valid_errors, set())
+            requirements_path = base / "docx-requirements.json"
+            requirements_path.write_text(
+                json.dumps(requirements, ensure_ascii=False), encoding="utf-8"
+            )
+            cli = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "skills/docx/scripts/audit_docx.py"),
+                    str(valid),
+                    "--requirements",
+                    str(requirements_path),
+                    "--json",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=False,
+            )
+            self.assertEqual(cli.returncode, 0, cli.stdout + cli.stderr)
+            self.assertTrue(json.loads(cli.stdout)["ok"])
+
+            invalid_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(invalid, requirements=requirements)
+                if item["level"] == "ERROR"
+            }
+            for rule in (
+                "requirements.text_color",
+                "requirements.fill_color",
+                "requirements.border_color",
+                "requirements.forbidden_text",
+                "requirements.caption_alignment",
+                "requirements.caption_target",
+            ):
+                self.assertIn(rule, invalid_rules)
+
+            left_requirements = dict(requirements)
+            left_requirements["tables"] = [
+                {
+                    "id": "table-1",
+                    "role": "describe missingness",
+                    "source": "verified-missingness.xlsx",
+                    "placement": "body",
+                    "caption": "表1 缺失概况",
+                    "alignment": "left",
+                    "references": ["见表1"],
+                }
+            ]
+            left_errors = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(
+                    left_template, requirements=left_requirements
+                )
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(left_errors, set())
+
     def test_archive_plan_execute_manifest_and_rollback(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             project = Path(directory) / "中文 项目"
