@@ -11,6 +11,7 @@
 - 最终文件格式和稳定文件名；
 - 模板来源，以及允许的文字、底纹和边框颜色；
 - 每张正式表的稳定编号、内容功能、数据来源、正文或附录位置、完整题注、题注对齐和正文引用；
+- 每张正式图的稳定编号、内容功能、图件来源、正文或附录位置、完整图题、图题对齐、正文引用和替代文字；
 - 必须出现或明确禁止的任务专属文字；
 - 页面大小、页边距、页眉页脚、分页、表格续页和字体等仍需渲染确认的项目。
 
@@ -25,6 +26,7 @@
   "allowed_fill_colors": ["FFFFFF", "AUTO"],
   "allowed_border_colors": ["000000", "AUTO"],
   "require_all_tables_listed": true,
+  "require_all_figures_listed": true,
   "required_text": [],
   "forbidden_text": ["<用户明确不要保留的完整文字或稳定片段>"],
   "tables": [
@@ -37,11 +39,25 @@
       "alignment": "center",
       "references": ["见表1"]
     }
+  ],
+  "figures": [
+    {
+      "id": "figure-1",
+      "role": "<该图在论文或报告中的内容功能>",
+      "source": "<已经核对的统计图或真实图像来源>",
+      "placement": "body",
+      "caption": "图1 <完整图题>",
+      "alignment": "center",
+      "references": ["见图1"],
+      "alt_text": "<准确描述图中对象和比较内容的替代文字>"
+    }
   ]
 }
 ```
 
 颜色使用 OOXML 十六进制值、`AUTO` 或 `THEME:<主题色名>`。只有清单包含对应字段时才检查颜色。`alignment` 只接受 `left`、`center`、`right` 或 `justify`。`role`、`source` 和 `placement` 由内容 skill 确认；DOCX 审计要求这些字段存在，并验证题注文本、顺序、有效对齐、与下一张表的相邻关系、正文引用和表格总数。
+
+`figures` 的 `role`、`source` 和 `placement` 由内容 skill 确认；审计验证图题文本、顺序、对齐、前一非空段落中的图形、正文引用和可选 `alt_text`。设置 `require_all_figures_listed` 时，每张列入清单的正式图必须对应一个嵌入图形，且文档中不得多出未登记图形；文档本来包含徽标、签名或装饰图时不要误设该开关，或把这些合法图形明确纳入任务清单。
 
 `forbidden_text` 只放用户或文档用途已经明确排除的稳定片段，不建立通用禁词表。不得用它删除研究设计、缺失处理、局限性、证据强度或期刊、机构、伦理、合同和法规要求的真实披露。
 

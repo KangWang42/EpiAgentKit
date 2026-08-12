@@ -360,6 +360,10 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("`mice()` → `with()` → `pool()`", regression)
         self.assertIn("不预先增加辅助包、自定义预测矩阵", regression)
         self.assertIn("不因出现记录事件就自动改预测矩阵", regression)
+        self.assertIn("最小观测结构摘要", regression)
+        self.assertIn("多个预测时点不等于重复结局", regression)
+        self.assertIn("轻量信息利用审查", regression)
+        self.assertIn("审查本身不自动运行有序模型", regression)
         self.assertIn("不使用脱离情境的 VIF 固定阈值", regression)
         self.assertNotIn("vif(model)  # < 5", regression)
         self.assertNotIn("library(pROC)", regression)
@@ -531,6 +535,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "已有当前报告、用户模板或项目约定已经明确格式时沿用",
             "稳定编号 | 内容功能 | 已核对来源",
+            "展示标签/单位 | 最终尺寸或页面槽位",
             "缺失数据专题报告",
             "无读者功能的生成状态",
             "同一组字段",
@@ -544,6 +549,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             '"placement":',
             '"caption":',
             '"alignment":',
+            '"figures":',
+            '"alt_text":',
+            "每张正式图的稳定编号",
+            "图题文本、顺序、对齐",
             "--requirements",
             "不得把这些静态检查称为完整视觉验收",
         ):
@@ -706,6 +715,8 @@ class WorkflowRoutingTests(unittest.TestCase):
             "不得通过措辞隐藏",
             "不要求固定五块、七段",
             "完整稿的正文段落应构成完整论证单元",
+            "稳定编号 | 内容功能 | 唯一来源",
+            "正文、统计图脚本和 Word 装配器从同一行读取",
         ):
             self.assertIn(fragment, playbook)
         self.assertIn("不要求恰好四段", chinese_paper)
@@ -817,6 +828,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         playbook = (
             ROOT / "skills/academic-publishing/references/section-content-playbook.md"
         ).read_text(encoding="utf-8")
+        docx_assembly = (
+            ROOT / "skills/academic-publishing/references/docx-assembly.md"
+        ).read_text(encoding="utf-8")
         docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
         scoped_docx = (
             ROOT / "skills/docx/references/scoped-revision.md"
@@ -851,6 +865,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         ):
             self.assertIn(fragment, publishing)
         self.assertIn("按行生成完整内容", playbook)
+        self.assertIn("先锁定本轮论文模式和正文唯一来源", docx_assembly)
+        self.assertIn("不得仅因它们存在就把进展状态", docx_assembly)
+        self.assertIn("同一份任务清单", docx_assembly)
         for fragment in (
             "academic display tables use three-line rules",
             "Independent list blocks restart explicitly",
@@ -1493,6 +1510,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("风险集表、纳入流程、分母比较", layout)
         self.assertIn("默认分别生成和审查每张图", layout)
         self.assertIn("不能为了展示方法数量", layout)
+        self.assertIn("统一可比较的绘图区左右边界", layout)
+        self.assertIn("参照线、标题基线、轴域和嵌入后的最终尺寸", layout)
+        self.assertIn("像素识别算法写成通用检查", layout)
         self.assertIn("以整张导出画布为参照", layout)
         self.assertIn("字号按最终物理尺寸设置和核对", layout)
         self.assertIn("Times New Roman", skill)

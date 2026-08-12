@@ -469,7 +469,15 @@ def audit_delivery_requirements(
     if body is not None:
         for node in body:
             if node.tag == W + "p":
-                blocks.append({"kind": "paragraph", "node": node, "text": normalized_text(node)})
+                drawings = node.xpath(".//w:drawing", namespaces=NS)
+                blocks.append(
+                    {
+                        "kind": "paragraph",
+                        "node": node,
+                        "text": normalized_text(node),
+                        "drawings": drawings,
+                    }
+                )
             elif node.tag == W + "tbl":
                 table_index += 1
                 blocks.append({"kind": "table", "node": node, "table_index": table_index})
@@ -597,11 +605,167 @@ def audit_delivery_requirements(
             )
         )
 
+    figures = requirements.get("figures", [])
+    if not isinstance(figures, list):
+        findings.append(
+            requirements_error(
+                "requirements.schema",
+                "figures must be a list",
+                "Correct the figure requirements before auditing the document.",
+            )
+        )
+        figures = []
+    matched_figure_positions: list[int] = []
+    for index, item in enumerate(figures, 1):
+        required_fields = ("id", "role", "source", "placement", "caption", "alignment")
+        if not isinstance(item, dict) or any(
+            not isinstance(item.get(field), str) or not item[field].strip()
+            for field in required_fields
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"figures[{index - 1}] lacks id/role/source/placement/caption/alignment",
+                    "Complete the report figure inventory before generating the Word file.",
+                )
+            )
+            continue
+        caption = re.sub(r"\s+", " ", item["caption"]).strip()
+        matches = [
+            position
+            for position, block in enumerate(blocks)
+            if block["kind"] == "paragraph" and block["text"] == caption
+        ]
+        if len(matches) != 1:
+            findings.append(
+                requirements_error(
+                    "requirements.figure_caption_match",
+                    f"{item['id']}:matches={len(matches)}:{caption[:80]}",
+                    "Generate exactly one caption matching the confirmed figure inventory.",
+                )
+            )
+            continue
+        position = matches[0]
+        matched_figure_positions.append(position)
+        preceding = position - 1
+        while (
+            preceding >= 0
+            and blocks[preceding]["kind"] == "paragraph"
+            and not blocks[preceding]["text"]
+            and not blocks[preceding].get("drawings")
+        ):
+            preceding -= 1
+        figure_drawings = (
+            blocks[preceding].get("drawings", [])
+            if preceding >= 0 and blocks[preceding]["kind"] == "paragraph"
+            else []
+        )
+        if len(figure_drawings) != 1:
+            findings.append(
+                requirements_error(
+                    "requirements.figure_caption_target",
+                    f"{item['id']}:{caption[:80]}:drawings={len(figure_drawings)}",
+                    "Place exactly one intended figure in the preceding non-empty paragraph.",
+                )
+            )
+        expected_alignment = item["alignment"].strip().lower()
+        alignment_alias = {"both": "justify", "distribute": "justify"}
+        actual_alignment = effective_paragraph_alignment(
+            blocks[position]["node"], styles_root, styles, defaults
+        )
+        actual_alignment = alignment_alias.get(actual_alignment, actual_alignment)
+        if expected_alignment not in {"left", "center", "right", "justify"}:
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{item['id']}:alignment={expected_alignment}",
+                    "Use left, center, right, or justify in the figure inventory.",
+                )
+            )
+        elif actual_alignment != expected_alignment:
+            findings.append(
+                requirements_error(
+                    "requirements.figure_caption_alignment",
+                    f"{item['id']}:expected={expected_alignment};actual={actual_alignment}",
+                    "Set the figure caption's effective paragraph alignment to the confirmed value.",
+                )
+            )
+        references = item.get("references", [])
+        if not isinstance(references, list) or not all(
+            isinstance(value, str) and value for value in references
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{item['id']}:references must be a string list",
+                    "Correct the figure-reference inventory before auditing the document.",
+                )
+            )
+        else:
+            other_paragraphs = "\n".join(
+                block["text"]
+                for block_position, block in enumerate(blocks)
+                if block["kind"] == "paragraph" and block_position != position
+            )
+            for reference in references:
+                if reference not in other_paragraphs:
+                    findings.append(
+                        requirements_error(
+                            "requirements.figure_reference",
+                            f"{item['id']}:{reference}",
+                            "Add or correct the confirmed body reference to this figure.",
+                        )
+                    )
+        alt_text = item.get("alt_text")
+        if alt_text is not None:
+            if not isinstance(alt_text, str) or not alt_text.strip():
+                findings.append(
+                    requirements_error(
+                        "requirements.schema",
+                        f"{item['id']}:alt_text must be a non-empty string",
+                        "Correct or remove the optional figure alt-text requirement.",
+                    )
+                )
+            elif len(figure_drawings) == 1:
+                descriptions = figure_drawings[0].xpath(
+                    ".//wp:docPr/@descr | .//wp:docPr/@title", namespaces=NS
+                )
+                if alt_text.strip() not in {value.strip() for value in descriptions if value.strip()}:
+                    findings.append(
+                        requirements_error(
+                            "requirements.figure_alt_text",
+                            f"{item['id']}:{alt_text[:80]}",
+                            "Set the embedded figure's title or description to the confirmed alt text.",
+                        )
+                    )
+
+    if matched_figure_positions != sorted(matched_figure_positions):
+        findings.append(
+            requirements_error(
+                "requirements.figure_caption_order",
+                f"positions={matched_figure_positions}",
+                "Reorder figures and captions to match the confirmed figure inventory.",
+            )
+        )
+    drawing_count = sum(
+        len(block.get("drawings", []))
+        for block in blocks
+        if block["kind"] == "paragraph"
+    )
+    if requirements.get("require_all_figures_listed") is True and drawing_count != len(figures):
+        findings.append(
+            requirements_error(
+                "requirements.figure_count",
+                f"document={drawing_count};inventory={len(figures)}",
+                "List every formal embedded figure or remove an unintended drawing before delivery.",
+            )
+        )
+
     findings.append(
         finding(
             "INFO",
             "requirements.summary",
-            f"tables={len(tables)};visible_parts={len(roots)}",
+            f"tables={len(tables)};figures={len(figures)};visible_parts={len(roots)}",
             "The task-specific Word requirements were applied to the generated file.",
             "Reconcile these static checks with the report content review and page rendering evidence.",
         )

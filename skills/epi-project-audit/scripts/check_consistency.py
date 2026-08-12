@@ -80,7 +80,13 @@ def source_value_set(doc):
     ci, pv, full_norms = set(), set(), {}
     for key, r in (doc.get("results") or {}).items():
         rend = r.get("display") or r.get("rendered") or {}
-        for which, s in rend.items():
+        numeric_fields = (
+            ("estimate", "interval", "p_value", "full")
+            if r.get("display")
+            else ("est", "ci", "p", "full")
+        )
+        for which in numeric_fields:
+            s = rend.get(which)
             n = norm(s)
             if not n:
                 continue

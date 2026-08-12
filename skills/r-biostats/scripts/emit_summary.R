@@ -78,11 +78,18 @@ fmt_p <- function(value, digits = .digits_p(), floor = .p_floor()) {
   gsub("\\\\", "/", value)
 }
 
+.display_text <- function(value) {
+  if (is.null(value) || length(value) != 1L || is.na(value)) return("")
+  trimws(as.character(value))
+}
+
 add_result <- function(path, key, producer, source, analysis_set, run_id,
                        input = NULL, input_hash = "", consumers = NULL,
                        label = "", est = NA, ci_low = NA, ci_high = NA,
                        p = NA, unit = "", section = "结果",
-                       digits = .digits_est(), style = "zh") {
+                       digits = .digits_est(), style = "zh",
+                       term_label = "", short_label = "",
+                       scale_label = "", change_definition = "") {
   if (!style %in% c("zh", "en")) stop("style 必须为 zh 或 en")
   required <- c(key = key, producer = producer, source = source,
                 analysis_set = analysis_set, run_id = run_id)
@@ -97,6 +104,16 @@ add_result <- function(path, key, producer, source, analysis_set, run_id,
     stop("旧版 results.yaml 只能读取；新结果请按第 2 版结构写入 results/results.yaml")
   }
   display <- .render_one(est, ci_low, ci_high, p, unit, digits, style)
+  presentation <- list(
+    term_label = term_label,
+    short_label = short_label,
+    scale_label = scale_label,
+    change_definition = change_definition
+  )
+  for (name in names(presentation)) {
+    value <- .display_text(presentation[[name]])
+    if (nzchar(value)) display[[name]] <- value
+  }
   provenance <- list(
     producer = gsub("\\\\", "/", producer), source = source,
     input = inputs, analysis_set = analysis_set, run_id = run_id

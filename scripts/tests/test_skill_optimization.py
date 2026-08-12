@@ -113,9 +113,20 @@ class SkillOptimizationTests(unittest.TestCase):
                 ci_low=1.12,
                 ci_high=1.87,
                 p=0.004,
+                term_label="连续指标（每 10 单位）",
+                short_label="连续指标\n（每 10 单位）",
+                scale_label="每 10 单位",
             )
             self.assertEqual(rendered, "1.45（95% CI：1.12，1.87），P = 0.004")
             self.assertEqual(helper.val(yaml_path, "exposure_hr"), rendered)
+            self.assertEqual(
+                helper.val(yaml_path, "exposure_hr", "term_label"),
+                "连续指标（每 10 单位）",
+            )
+            self.assertEqual(
+                helper.val(yaml_path, "exposure_hr", "short_label"),
+                "连续指标\n（每 10 单位）",
+            )
             helper.render_summary_md(yaml_path, md_path)
             self.assertIn("暴露与结局的关联", md_path.read_text(encoding="utf-8"))
             payload = helper.yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
@@ -398,6 +409,10 @@ class SkillOptimizationTests(unittest.TestCase):
             "analysis_set",
             "run_id",
             "consumers",
+            "display.term_label",
+            "display.short_label",
+            "display.scale_label",
+            "display.change_definition",
             'which="full"',
             "不保存解释、因果判断、显著性结论或跨结果总结",
             "旧版的 `raw` / `rendered` 字段",
@@ -408,6 +423,29 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn("面向研究者说明时写“结果使用位置”", schema)
         self.assertIn("不得把该字段译为“消费者”", schema)
         self.assertIn("原始数据或专业分类中确实表示人的 `consumer`", schema)
+        consistency = load_module(
+            "result_consistency",
+            ROOT / "skills/epi-project-audit/scripts/check_consistency.py",
+        )
+        ci, p_values, full_norms = consistency.source_value_set(
+            {
+                "results": {
+                    "effect": {
+                        "display": {
+                            "term_label": "连续指标（每 10 单位）",
+                            "short_label": "连续指标\n（每 10 单位）",
+                            "estimate": "1.45",
+                            "interval": "（95% CI：1.12，1.87）",
+                            "p_value": "P = 0.004",
+                            "full": "1.45（95% CI：1.12，1.87），P = 0.004",
+                        }
+                    }
+                }
+            }
+        )
+        self.assertEqual(ci, {"(95%ci:1.12,1.87)"})
+        self.assertEqual(p_values, {"p=0.004"})
+        self.assertNotIn("连续指标（每10单位）", full_norms)
         report_helper = (
             ROOT / "skills/report-writing/references/build_report.py"
         ).read_text(encoding="utf-8")

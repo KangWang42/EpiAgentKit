@@ -137,6 +137,10 @@ def add_result(
     p_digits: int = 3,
     p_floor: float = 0.001,
     style: str = "zh",
+    term_label: str = "",
+    short_label: str = "",
+    scale_label: str = "",
+    change_definition: str = "",
 ) -> str:
     """Upsert one schema-v2 result and return display.full."""
     if style not in {"zh", "en"}:
@@ -160,6 +164,15 @@ def add_result(
     if document["results"] and schema not in {None, 2}:
         raise ValueError("legacy results.yaml is read-only; write schema v2 to results/results.yaml")
     display = _render(est, ci_low, ci_high, p, unit, digits, p_digits, p_floor, style)
+    presentation = {
+        "term_label": term_label,
+        "short_label": short_label,
+        "scale_label": scale_label,
+        "change_definition": change_definition,
+    }
+    display.update(
+        {name: value.strip() for name, value in presentation.items() if value.strip()}
+    )
     provenance: dict[str, Any] = {
         "producer": producer.replace("\\", "/"),
         "source": source,

@@ -467,8 +467,11 @@ class RevisionWorkflowTests(unittest.TestCase):
                 image,
                 body_extra=(
                     '<w:p><w:r><w:drawing><wp:inline><wp:extent cx="1828800" cy="1828800"/>'
+                    '<wp:docPr id="1" name="Figure 1" descr="两组效应量比较"/>'
                     '<a:graphic><a:graphicData><a:blip r:embed="rIdImage"/></a:graphicData></a:graphic>'
                     "</wp:inline></w:drawing></w:r></w:p>"
+                    '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
+                    '<w:r><w:t>图1 两组效应量比较</w:t></w:r></w:p>'
                 ),
                 document_relationships=[
                     (
@@ -501,6 +504,67 @@ class RevisionWorkflowTests(unittest.TestCase):
             ]
             self.assertEqual(len(dpi), 1)
             self.assertIn("300dpi", dpi[0]["evidence"])
+            figure_requirements = {
+                "schema_version": 1,
+                "require_all_figures_listed": True,
+                "figures": [
+                    {
+                        "id": "figure-1",
+                        "role": "compare effect estimates",
+                        "source": "verified-forest.png",
+                        "placement": "body",
+                        "caption": "图1 两组效应量比较",
+                        "alignment": "center",
+                        "references": ["见图1"],
+                        "alt_text": "两组效应量比较",
+                    }
+                ],
+                "required_text": ["见图1"],
+            }
+            figure_with_reference = base / "figure-with-reference.docx"
+            make_docx(
+                figure_with_reference,
+                ["主要结果见图1。"],
+                body_extra=(
+                    '<w:p><w:r><w:drawing><wp:inline><wp:extent cx="1828800" cy="1828800"/>'
+                    '<wp:docPr id="1" name="Figure 1" descr="两组效应量比较"/>'
+                    '<a:graphic><a:graphicData><a:blip r:embed="rIdImage"/></a:graphicData></a:graphic>'
+                    "</wp:inline></w:drawing></w:r></w:p>"
+                    '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
+                    '<w:r><w:t>图1 两组效应量比较</w:t></w:r></w:p>'
+                ),
+                document_relationships=[
+                    (
+                        "rIdImage",
+                        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+                        "media/image1.png",
+                    )
+                ],
+                extra_parts={"word/media/image1.png": png},
+            )
+            figure_errors = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(
+                    figure_with_reference,
+                    requirements=figure_requirements,
+                )
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(figure_errors, set())
+
+            wrong_figure_requirements = json.loads(json.dumps(figure_requirements))
+            wrong_figure_requirements["figures"][0]["alignment"] = "left"
+            wrong_figure_requirements["figures"][0]["alt_text"] = "错误替代文字"
+            wrong_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(
+                    figure_with_reference,
+                    requirements=wrong_figure_requirements,
+                )
+                if item["level"] == "ERROR"
+            }
+            self.assertIn("requirements.figure_caption_alignment", wrong_rules)
+            self.assertIn("requirements.figure_alt_text", wrong_rules)
 
     def test_docx_audit_applies_task_specific_report_requirements(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
