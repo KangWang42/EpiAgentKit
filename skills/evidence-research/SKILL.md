@@ -41,6 +41,8 @@ python scripts/verify_sources.py "12345678" "article title" --pretty
 
 无法取得全文或无法核对关键结论时标记“未核验”，不得作为正式论断依据。发现 DOI/PMID 冲突、撤稿或来源不明时剔除或降级，并记录原因。
 
+需要为论文、研究报告或专项统计分析选择报告规范时，完整读取 [科研报告规范选择](references/reporting-guideline-routing.md)。先按研究设计选择基础规范，再叠加实际实施的方法和数据采集规范；不得因变量名称相似而自动采用专项清单，也不得用单一清单覆盖所有研究设计。
+
 ## 3. Formal 检索协议
 
 仅 formal 模式在检索前填写 [references/search-protocol.md](references/search-protocol.md)：

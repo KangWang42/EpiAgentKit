@@ -11,6 +11,7 @@
 - 最终文件格式和稳定文件名；
 - 模板来源，以及允许的文字、底纹和边框颜色；
 - 每张正式表的稳定编号、内容功能、数据来源、正文或附录位置、完整题注、题注对齐和正文引用；
+- 统计表的稳定行键、唯一内部字段 ID、显示标签、来源字段、Word 中的列位置，以及按最终显示值逐字段对账的证据位置；
 - 每张正式图的稳定编号、内容功能、图件来源、正文或附录位置、完整图题、图题对齐、正文引用和替代文字；
 - 必须出现或明确禁止的任务专属文字；
 - 页面大小、页边距、页眉页脚、分页、表格续页和字体等仍需渲染确认的项目。
@@ -37,7 +38,13 @@
       "placement": "body",
       "caption": "表1 <完整题注>",
       "alignment": "center",
-      "references": ["见表1"]
+      "references": ["见表1"],
+      "row_keys": [{"field_id": "term", "source_field": "term", "column_index": 0}],
+      "columns": [
+        {"field_id": "estimate", "label": "OR（95% CI）", "source_field": "estimate_display", "column_index": 1},
+        {"field_id": "model_p", "label": "P 值", "source_field": "model_p_display", "column_index": 2}
+      ],
+      "reconciliation_evidence": "<逐字段对账结果 JSON>"
     }
   ],
   "figures": [
@@ -56,6 +63,8 @@
 ```
 
 颜色使用 OOXML 十六进制值、`AUTO` 或 `THEME:<主题色名>`。只有清单包含对应字段时才检查颜色。`alignment` 只接受 `left`、`center`、`right` 或 `justify`。`role`、`source` 和 `placement` 由内容 skill 确认；DOCX 审计要求这些字段存在，并验证题注文本、顺序、有效对齐、与下一张表的相邻关系、正文引用和表格总数。
+
+统计表的 `columns` 使用唯一 `field_id` 标识真实统计字段，`label` 仅表示可见表头，因此多个列可以合法显示同一文字。`column_index` 使用从 0 开始的表格列位置；`source_field` 指向内容 skill 已确认的最终显示值来源。`audit_docx.py` 只检查清单结构、字段 ID 唯一性和列位置边界，不能证明数值正确；交付前仍需把 Word 表提取为矩阵，并以行键和字段 ID 对来源执行逐字段对账，把结果写入 `reconciliation_evidence` 指向的位置。
 
 `figures` 的 `role`、`source` 和 `placement` 由内容 skill 确认；审计验证图题文本、顺序、对齐、前一非空段落中的图形、正文引用和可选 `alt_text`。设置 `require_all_figures_listed` 时，每张列入清单的正式图必须对应一个嵌入图形，且文档中不得多出未登记图形；文档本来包含徽标、签名或装饰图时不要误设该开关，或把这些合法图形明确纳入任务清单。
 

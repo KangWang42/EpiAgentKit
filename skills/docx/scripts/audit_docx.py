@@ -539,6 +539,84 @@ def audit_delivery_requirements(
                     "Place the intended table immediately after its caption, allowing only empty paragraphs between them.",
                 )
             )
+        columns = item.get("columns")
+        if columns is not None:
+            if not isinstance(columns, list) or not columns:
+                findings.append(
+                    requirements_error(
+                        "requirements.schema",
+                        f"{item['id']}:columns must be a non-empty list",
+                        "Provide the stable field inventory for this statistical table.",
+                    )
+                )
+            else:
+                field_ids: list[str] = []
+                table_width = None
+                if following < len(blocks) and blocks[following]["kind"] == "table":
+                    row_widths = [
+                        len(row.xpath("./w:tc", namespaces=NS))
+                        for row in blocks[following]["node"].xpath("./w:tr", namespaces=NS)
+                    ]
+                    table_width = max(row_widths, default=0)
+                for column_index, column in enumerate(columns):
+                    required_column_fields = (
+                        "field_id",
+                        "label",
+                        "source_field",
+                        "column_index",
+                    )
+                    if not isinstance(column, dict) or any(
+                        field not in column for field in required_column_fields
+                    ):
+                        findings.append(
+                            requirements_error(
+                                "requirements.schema",
+                                f"{item['id']}:columns[{column_index}] lacks field_id/label/source_field/column_index",
+                                "Complete the stable field inventory before auditing the Word table.",
+                            )
+                        )
+                        continue
+                    if any(
+                        not isinstance(column[field], str) or not column[field].strip()
+                        for field in ("field_id", "label", "source_field")
+                    ) or not isinstance(column["column_index"], int):
+                        findings.append(
+                            requirements_error(
+                                "requirements.schema",
+                                f"{item['id']}:columns[{column_index}] has invalid field metadata",
+                                "Use non-empty field_id/label/source_field strings and a zero-based integer column_index.",
+                            )
+                        )
+                        continue
+                    field_ids.append(column["field_id"].strip())
+                    if table_width is not None and not 0 <= column["column_index"] < table_width:
+                        findings.append(
+                            requirements_error(
+                                "requirements.table_column",
+                                f"{item['id']}:{column['field_id']}:column={column['column_index']};width={table_width}",
+                                "Map the stable field to an existing zero-based Word table column.",
+                            )
+                        )
+                duplicates = sorted(
+                    {field_id for field_id in field_ids if field_ids.count(field_id) > 1}
+                )
+                if duplicates:
+                    findings.append(
+                        requirements_error(
+                            "requirements.table_field_id",
+                            f"{item['id']}:duplicates={','.join(duplicates)}",
+                            "Assign a unique stable field_id to every statistical column; visible labels may repeat.",
+                        )
+                    )
+                evidence = item.get("reconciliation_evidence")
+                if not isinstance(evidence, str) or not evidence.strip():
+                    findings.append(
+                        requirements_error(
+                            "requirements.table_reconciliation",
+                            f"{item['id']}:missing reconciliation_evidence",
+                            "Run row-key and field-ID reconciliation against the final-display source and record its evidence path.",
+                        )
+                    )
         expected_alignment = item["alignment"].strip().lower()
         alignment_alias = {"both": "justify", "distribute": "justify"}
         actual_alignment = effective_paragraph_alignment(
