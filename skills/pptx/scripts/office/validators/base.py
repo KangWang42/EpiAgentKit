@@ -3,6 +3,9 @@ Base validator with common validation logic for document files.
 """
 
 import re
+import tempfile
+import zipfile
+from collections import Counter
 from pathlib import Path
 
 import defusedxml.minidom
@@ -41,18 +44,12 @@ class BaseSchemaValidator:
     ELEMENT_RELATIONSHIP_TYPES = {}
 
     SCHEMA_MAPPINGS = {
-        "word": "ISO-IEC29500-4_2016/wml.xsd",  
         "ppt": "ISO-IEC29500-4_2016/pml.xsd",  
-        "xl": "ISO-IEC29500-4_2016/sml.xsd",  
         "[Content_Types].xml": "ecma/fouth-edition/opc-contentTypes.xsd",
         "app.xml": "ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
         "core.xml": "ecma/fouth-edition/opc-coreProperties.xsd",
         "custom.xml": "ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
         ".rels": "ecma/fouth-edition/opc-relationships.xsd",
-        "people.xml": "microsoft/wml-2012.xsd",
-        "commentsIds.xml": "microsoft/wml-cid-2016.xsd",
-        "commentsExtensible.xml": "microsoft/wml-cex-2018.xsd",
-        "commentsExtended.xml": "microsoft/wml-2012.xsd",
         "chart": "ISO-IEC29500-4_2016/dml-chart.xsd",
         "theme": "ISO-IEC29500-4_2016/dml-main.xsd",
         "drawing": "ISO-IEC29500-4_2016/dml-main.xsd",
@@ -71,7 +68,7 @@ class BaseSchemaValidator:
         "http://schemas.openxmlformats.org/package/2006/content-types"
     )
 
-    MAIN_CONTENT_FOLDERS = {"word", "ppt", "xl"}
+    MAIN_CONTENT_FOLDERS = {"ppt"}
 
     OOXML_NAMESPACES = {
         "http://schemas.openxmlformats.org/officeDocument/2006/math",
@@ -95,6 +92,7 @@ class BaseSchemaValidator:
         self.unpacked_dir = Path(unpacked_dir).resolve()
         self.original_file = Path(original_file) if original_file else None
         self.verbose = verbose
+        self._original_xsd_error_cache: dict[Path, Counter[str]] = {}
 
         self.schemas_dir = Path(__file__).parent.parent / "schemas"
 
@@ -621,19 +619,25 @@ class BaseSchemaValidator:
         )
 
         if is_valid is None:
-            return None, set()  
+            return None, Counter(), Counter()
         elif is_valid:
-            return True, set()  
+            return True, Counter(), Counter()
 
         original_errors = self._get_original_file_errors(xml_file)
 
         assert current_errors is not None
+        original_file_errors = current_errors & original_errors
         new_errors = current_errors - original_errors
 
-        new_errors = {
-            e for e in new_errors
-            if not any(pattern in e for pattern in self.IGNORED_VALIDATION_ERRORS)
-        }
+        new_errors = Counter(
+            {
+                error: count
+                for error, count in new_errors.items()
+                if not any(
+                    pattern in error for pattern in self.IGNORED_VALIDATION_ERRORS
+                )
+            }
+        )
 
         if new_errors:
             if verbose:
@@ -641,14 +645,17 @@ class BaseSchemaValidator:
                 print(f"FAILED - {relative_path}: {len(new_errors)} new error(s)")
                 for error in list(new_errors)[:3]:
                     truncated = error[:250] + "..." if len(error) > 250 else error
-                    print(f"  - {truncated}")
-            return False, new_errors
+                    count = new_errors[error]
+                    suffix = f" ({count} occurrences)" if count > 1 else ""
+                    print(f"  - {truncated}{suffix}")
+            return False, new_errors, original_file_errors
         else:
             if verbose:
                 print(
-                    f"PASSED - No new errors (original had {len(current_errors)} errors)"
+                    "PASSED - No new errors "
+                    f"({sum(original_file_errors.values())} matched the original)"
                 )
-            return True, set()
+            return True, Counter(), original_file_errors
 
     def validate_against_xsd(self):
         new_errors = []
@@ -658,25 +665,28 @@ class BaseSchemaValidator:
 
         for xml_file in self.xml_files:
             relative_path = str(xml_file.relative_to(self.unpacked_dir))
-            is_valid, new_file_errors = self.validate_file_against_xsd(
+            is_valid, new_file_errors, original_file_errors = self.validate_file_against_xsd(
                 xml_file, verbose=False
             )
 
             if is_valid is None:
                 skipped_count += 1
                 continue
-            elif is_valid and not new_file_errors:
-                valid_count += 1
-                continue
             elif is_valid:
-                original_error_count += 1
                 valid_count += 1
+                if original_file_errors:
+                    original_error_count += 1
                 continue
 
-            new_errors.append(f"  {relative_path}: {len(new_file_errors)} new error(s)")
-            for error in list(new_file_errors)[:3]:  
+            new_errors.append(
+                f"  {relative_path}: {sum(new_file_errors.values())} new error(s)"
+            )
+            for error in list(new_file_errors)[:3]:
+                count = new_file_errors[error]
+                suffix = f" ({count} occurrences)" if count > 1 else ""
                 new_errors.append(
-                    f"    - {error[:250]}..." if len(error) > 250 else f"    - {error}"
+                    (f"    - {error[:250]}..." if len(error) > 250 else f"    - {error}")
+                    + suffix
                 )
 
         if self.verbose:
@@ -706,10 +716,10 @@ class BaseSchemaValidator:
         if xml_file.suffix == ".rels":
             return self.schemas_dir / self.SCHEMA_MAPPINGS[".rels"]
 
-        if "charts/" in str(xml_file) and xml_file.name.startswith("chart"):
+        if "charts" in xml_file.parts and xml_file.name.startswith("chart"):
             return self.schemas_dir / self.SCHEMA_MAPPINGS["chart"]
 
-        if "theme/" in str(xml_file) and xml_file.name.startswith("theme"):
+        if "theme" in xml_file.parts and xml_file.name.startswith("theme"):
             return self.schemas_dir / self.SCHEMA_MAPPINGS["theme"]
 
         if xml_file.parent.name in self.MAIN_CONTENT_FOLDERS:
@@ -740,6 +750,13 @@ class BaseSchemaValidator:
     def _remove_ignorable_elements(self, root):
         elements_to_remove = []
 
+        # OOXML extension containers deliberately carry vendor namespaces.
+        # Their XSD uses a lax wildcard; deleting the child while retaining
+        # an empty <ext> creates a validation error that is absent in the file.
+        local_name = str(root.tag).split("}")[-1] if hasattr(root, "tag") else ""
+        if local_name == "ext":
+            return
+
         for elem in list(root):
             if not hasattr(elem, "tag") or callable(elem.tag):
                 continue
@@ -767,7 +784,7 @@ class BaseSchemaValidator:
     def _validate_single_file_xsd(self, xml_file, base_path):
         schema_path = self._get_schema_path(xml_file)
         if not schema_path:
-            return None, None  
+            return None, Counter()
 
         try:
             with open(schema_path, "rb") as xsd_file:
@@ -791,42 +808,43 @@ class BaseSchemaValidator:
                 xml_doc = self._clean_ignorable_namespaces(xml_doc)
 
             if schema.validate(xml_doc):
-                return True, set()
+                return True, Counter()
             else:
-                errors = set()
+                errors = Counter()
                 for error in schema.error_log:
-                    errors.add(error.message)
+                    errors[error.message] += 1
                 return False, errors
 
         except Exception as e:
-            return False, {str(e)}
+            return False, Counter({str(e): 1})
 
     def _get_original_file_errors(self, xml_file):
         if self.original_file is None:
-            return set()
-
-        import tempfile
-        import zipfile
+            return Counter()
 
         xml_file = Path(xml_file).resolve()
         unpacked_dir = self.unpacked_dir.resolve()
         relative_path = xml_file.relative_to(unpacked_dir)
+        if relative_path in self._original_xsd_error_cache:
+            return self._original_xsd_error_cache[relative_path].copy()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-
             with zipfile.ZipFile(self.original_file, "r") as zip_ref:
-                zip_ref.extractall(temp_path)
-
+                try:
+                    content = zip_ref.read(relative_path.as_posix())
+                except KeyError:
+                    self._original_xsd_error_cache[relative_path] = Counter()
+                    return Counter()
             original_xml_file = temp_path / relative_path
-
-            if not original_xml_file.exists():
-                return set()
-
+            original_xml_file.parent.mkdir(parents=True, exist_ok=True)
+            original_xml_file.write_bytes(content)
             is_valid, errors = self._validate_single_file_xsd(
                 original_xml_file, temp_path
             )
-            return errors if errors else set()
+            result = errors if errors else Counter()
+            self._original_xsd_error_cache[relative_path] = result.copy()
+            return result
 
     def _remove_template_tags_from_text_nodes(self, xml_doc):
         warnings = []

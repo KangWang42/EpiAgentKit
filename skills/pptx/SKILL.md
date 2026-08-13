@@ -4,284 +4,53 @@ description: "Operate actual .pptx files: create, read, edit, render, validate, 
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
-# PPTX Skill
+# PPTX 文件处理
 
-Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
+先按全局 `CLAUDE.md` 判定 Q/L/P/R；本 skill 不扩大任务范围。先完成 `academic-ppt`、`sysu-ppt` 或其它适用内容流程，再在确有 PPTX 输入或交付物时使用本 skill。
 
-## Quick Reference
+## 模板来源分流
 
-| Task | Guide |
-|------|-------|
-| Read/analyze content | `python -m markitdown presentation.pptx` |
-| Edit or create from template | Read [editing.md](editing.md) |
-| Create from scratch | Read [pptxgenjs.md](pptxgenjs.md) |
-| Render on Windows with PowerPoint | `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_slides.ps1 -InputPath output.pptx -OutputDir renders` |
+新建或大幅重建前，确认模板来源：中大官方模板、其他学校/机构或特定汇报类型、用户提供的模板，还是无模板的中性设计。已有 PPTX 的读取和局部修改不重复询问；多个合理当前模板且无法判断时才询问。
 
----
+| 来源 | 内容与文件路径 |
+| --- | --- |
+| 中大官方模板 | 加载 `sysu-ppt`，使用其已确认模板和工具，再由本 skill 做文件检查 |
+| 其它机构/汇报类型 | 学术内容 load `academic-ppt` as the content workflow，沿用项目或用户确认的 PPTX |
+| 用户模板 | 以该文件为权威，保留母版、版式、主题、品牌和固定组件 |
+| 无模板 | 学术内容加载 `academic-ppt`；确认中性设计后读取 `design-reference.md` 和 `pptxgenjs.md` |
 
-## Template Routing Gate
+模板派生的全新或大幅重建文件必须先检查模板，再编辑内容；完成后确认模板仍可见、版式关系和品牌资源未丢失、没有占位文字。
+使用模板编辑工作流（Use the template-editing workflow, not the from-scratch workflow），不把模板任务改走从零生成工作流。
 
-Before creating or substantially rebuilding a presentation, determine the template source. If the user has not already specified it and no authoritative input presentation settles it, ask one concise question:
+## 范围、工具和版本
 
-> 请确认模板来源：中大官方模板、其他学校/机构或特定汇报类型、您提供的模板，还是无模板的中性设计？
+- Q 只读取所需文字、页面属性或包部件，不创建文件。
+- L 锁定唯一输入、目标页面/对象、允许改动的包部件和保护范围；只检查目标、范围外差异、直接受影响的共享版式/主题、备注/媒体及改动页面的显示。L bounded edit does not trigger template remapping、整套页面重排或完整渲染。
+- P 创建、重组或改变页面顺序、母版、版式、主题、字体、共享资源或多个页面；检查所有受影响页面和共享对象。
+- R 用户明确投稿、外发、归档或正式质控时，执行完整演示内容与视觉检查。
 
-Do not ask again when the request, an attached `.pptx`, or the current project already identifies one authoritative template. If several plausible current templates exist and authority cannot be inferred, ask which one to use.
+文本提取可用 `python -m markitdown presentation.pptx`，缩略图可用 `python scripts/thumbnail.py presentation.pptx`，原始包编辑使用 `scripts/office/unpack.py`、`pack.py`、`validate.py`。这些脚本只处理 `.pptx`，输出默认不覆盖，失败不替换原文件。不要自行安装或升级运行时（do not install or upgrade it）；If any item is unavailable, explain the affected operation and state the未验证范围。
 
-Route the answer as follows:
+正式项目只保留一个稳定当前文件，旧版按项目规则归档；轻量任务保留输入并只写指定输出。
 
-| Template source | Route |
-|---|---|
-| SYSU official | Load `sysu-ppt`, create through its official asset and toolkit workflow, then use this skill for file QA |
-| Other school, institution, conference, or presentation type | For an academic presentation load `academic-ppt` as the content workflow, then use the supplied or project-authoritative `.pptx`; inspect it with [editing.md](editing.md) before writing content |
-| User-provided template or reference deck | Treat that file as authoritative unless the user says it is inspiration only; for a new academic presentation load `academic-ppt`, and preserve the file's masters, layouts, theme, branding, and fixed components |
-| No template | For a new academic presentation load `academic-ppt` and confirm the neutral route, then read [pptxgenjs.md](pptxgenjs.md) and create from scratch |
+## 新建和重建
 
-Do not invent an official logo, color system, master, or institutional identity when the named organization has not supplied a template. Ask for the file or offer a neutral design. Reading, extracting, or making a bounded edit to an existing presentation does not require this routing question because the existing file is already the source.
+先确定内容结构，再读取 [中性设计参考](design-reference.md)（read [neutral design reference](design-reference.md) completely）；需要从零生成时再读取 [PptxGenJS 参考](pptxgenjs.md)。视觉系统由内容、读者、模板和显示条件决定；图、表、流程、图标或形状只有在实质改善理解时才使用，纯文字页可以是正确选择。
 
-For every newly created or substantially rebuilt template-derived deck:
+## 质量检查
 
-1. Inspect the template before drafting slides.
-2. Use the template-editing workflow, not the from-scratch workflow.
-3. Preserve required master/layout/theme relationships and brand assets while adapting content geometry for readability.
-4. Verify in the rendered output that the intended template is visibly present and that no placeholder text remains.
+### 内容检查
 
----
+用 `markitdown` 提取输出文字，检查内容完整、顺序、术语、数字和题注；模板任务检查占位文字（`xxxx`、`lorem` 等）不存在。内容检查由内容 skill 决定科学含义，文件 skill 不重新决定统计方法或结论。
 
-## Output Version Hygiene
+### 视觉检查
 
-- In a formal project, keep one current presentation with a stable semantic filename and archive superseded source, output, renders and version-specific assets together under `09_backup/archive/`. Use `09_backup/workbench/` only for disposable render checks or isolated experiments.
-- In a lightweight task, do not create project archives; preserve the user's original and write only to the requested output path.
-- Make the generator write the stable current filename on every run. If two plausible current versions exist, ask the user which one is authoritative before archiving.
+只在本次修改可能影响页面显示、任务为新建/重建或属于 R 时渲染。检查重叠、裁切、溢出、边距、对齐、对比度、题注/来源碰撞和占位内容；只报告实际观察到的问题。独立视觉检查不是所有 L 任务的前置条件；It is not a prerequisite for a bounded edit。没有可用渲染器时，完成适用的包结构与文字检查，并明确 visual QA remains incomplete，不把结构检查称为视觉验收。
 
----
+### 验证循环
 
-## Reading Content
+新建或重建：生成 → 按需要渲染 → 记录真实问题 → 修正 → 只重渲染受影响页面。首次检查没有问题是有效证据，不为通过流程而作无必要修改（without making a gratuitous edit）。L 只重渲染改动页面及实际使用已改变共享对象的页面；R 才做完整演示 QA。
 
-```bash
-# Text extraction
-python -m markitdown presentation.pptx
+## 依赖边界
 
-# Visual overview
-python scripts/thumbnail.py presentation.pptx
-
-# Raw XML
-python scripts/office/unpack.py presentation.pptx unpacked/
-```
-
----
-
-## Editing Workflow
-
-**Read [editing.md](editing.md) for full details.**
-
-- L bounded edit: lock the source presentation, target slides/elements, allowed package parts and protected scope; inspect and edit only those targets, validate the package, and render the changed slides plus slides that use any shared layout or theme changed in this task.
-- New or substantially rebuilt deck: analyze the template with `thumbnail.py`, then unpack → manipulate slides → edit content → clean → pack.
-
-A bounded edit does not trigger template remapping, deck-wide restyling, full-slide content review or a complete render. Upgrade to P when slide order/count, masters, layouts, theme, fonts, shared assets or other deck-wide settings change; inspect the slides that actually use them. R adds complete presentation QA.
-
----
-
-## Creating from Scratch
-
-**Read [pptxgenjs.md](pptxgenjs.md) for full details.**
-
-Use when no template or reference presentation is available.
-
----
-
-## Design Ideas
-
-Let the content workflow, template, audience and display conditions determine the visual system. Use decoration only when it clarifies hierarchy or meaning.
-
-This section applies to new or substantially rebuilt decks. For an L edit, preserve all unrequested styles and do not use these deck-wide suggestions to redesign other slides.
-
-### Before Starting
-
-- **Choose a content-informed palette**: Preserve an existing template or brand system; otherwise use a restrained, readable palette suited to the topic and room conditions.
-- **Dominance over equality**: One color should dominate (60-70% visual weight), with 1-2 supporting tones and one sharp accent. Never give all colors equal weight.
-- **Contrast**: Meet readability needs at the actual display size; do not require dark title or conclusion slides.
-- **Commit to a visual motif**: Pick ONE distinctive element and repeat it — rounded image frames, icons in colored circles, thick single-side borders. Carry it across every slide.
-
-### Color Palettes
-
-Choose colors that match your topic — don't default to generic blue. Use these palettes as inspiration:
-
-| Theme | Primary | Secondary | Accent |
-|-------|---------|-----------|--------|
-| **Midnight Executive** | `1E2761` (navy) | `CADCFC` (ice blue) | `FFFFFF` (white) |
-| **Forest & Moss** | `2C5F2D` (forest) | `97BC62` (moss) | `F5F5F5` (cream) |
-| **Coral Energy** | `F96167` (coral) | `F9E795` (gold) | `2F3C7E` (navy) |
-| **Warm Terracotta** | `B85042` (terracotta) | `E7E8D1` (sand) | `A7BEAE` (sage) |
-| **Ocean Gradient** | `065A82` (deep blue) | `1C7293` (teal) | `21295C` (midnight) |
-| **Charcoal Minimal** | `36454F` (charcoal) | `F2F2F2` (off-white) | `212121` (black) |
-| **Teal Trust** | `028090` (teal) | `00A896` (seafoam) | `02C39A` (mint) |
-| **Berry & Cream** | `6D2E46` (berry) | `A26769` (dusty rose) | `ECE2D0` (cream) |
-| **Sage Calm** | `84B59F` (sage) | `69A297` (eucalyptus) | `50808E` (slate) |
-| **Cherry Bold** | `990011` (cherry) | `FCF6F5` (off-white) | `2F3C7E` (navy) |
-
-### For Each Slide
-
-Use a chart, image, diagram, icon or shape only when it materially improves comprehension. A concise text slide is valid when the message is inherently verbal.
-
-**Layout options:**
-- Two-column (text left, illustration on right)
-- Icon + text rows (icon in colored circle, bold header, description below)
-- 2x2 or 2x3 grid (image on one side, grid of content blocks on other)
-- Half-bleed image (full left or right side) with content overlay
-
-**Data display:**
-- Large stat callouts (big numbers 60-72pt with small labels below)
-- Comparison columns (before/after, pros/cons, side-by-side options)
-- Timeline or process flow (numbered steps, arrows)
-
-**Visual polish:**
-- Icons in small colored circles next to section headers
-- Italic accent text for key stats or taglines
-
-### Typography
-
-Use the template's fonts or fonts already available in the environment. Prioritize glyph coverage, legibility and portability over novelty.
-
-| Header Font | Body Font |
-|-------------|-----------|
-| Georgia | Calibri |
-| Arial Black | Arial |
-| Calibri | Calibri Light |
-| Cambria | Calibri |
-| Trebuchet MS | Calibri |
-| Impact | Arial |
-| Palatino | Garamond |
-| Consolas | Calibri |
-
-| Element | Size |
-|---------|------|
-| Slide title | 36-44pt bold |
-| Section header | 20-24pt bold |
-| Body text | 14-16pt |
-| Captions | 10-12pt muted |
-
-### Spacing
-
-- 0.5" minimum margins
-- 0.3-0.5" between content blocks
-- Leave breathing room—don't fill every inch
-
-### Avoid (Common Mistakes)
-
-- **Don't repeat the same layout** — vary columns, cards, and callouts across slides
-- **Don't center body text** — left-align paragraphs and lists; center only titles
-- **Don't skimp on size contrast** — titles need 36pt+ to stand out from 14-16pt body
-- **Don't default to blue** — pick colors that reflect the specific topic
-- **Don't mix spacing randomly** — choose 0.3" or 0.5" gaps and use consistently
-- **Don't style one slide and leave the rest plain** — commit fully or keep it simple throughout
-- **Don't add decorative visuals to satisfy a quota** — a concise text slide is valid when the content workflow shows that text communicates the message more clearly
-- **Don't forget text box padding** — when aligning lines or shapes with text edges, set `margin: 0` on the text box or offset the shape to account for padding
-- **Don't use low-contrast elements** — icons AND text need strong contrast against the background; avoid light text on light backgrounds or dark text on dark backgrounds
-- **NEVER use accent lines under titles** — these are a hallmark of AI-generated slides; use whitespace or background color instead
-
----
-
-## QA (Required)
-
-Inspect against the content, template and rendering contract. Look actively for real defects, but a first inspection with zero observed issues is valid evidence when the checks are complete; do not invent a change to make the QA loop appear useful.
-
-For an L edit, content and visual QA cover the changed slides, their directly affected notes/media and slides that use an authorized shared change. New/rebuilt decks and R deliverables receive deck-wide content and visual QA.
-
-### Content QA
-
-```bash
-python -m markitdown output.pptx
-```
-
-Check for missing content, typos, wrong order.
-
-**When using templates, check for leftover placeholder text:**
-
-```bash
-python -m markitdown output.pptx | grep -iE "xxxx|lorem|ipsum|this.*(page|slide).*layout"
-```
-
-If grep returns results, fix them before declaring success.
-
-### Visual QA
-
-Use an independent visual pass only when it materially improves a complex or formal review and is available within the current task. It is not a prerequisite for a bounded edit.
-
-Convert slides to images (see [Converting to Images](#converting-to-images)), then use this prompt:
-
-```
-Visually inspect these slides. Assume there are issues — find them.
-
-Look for:
-- Overlapping elements (text through shapes, lines through words, stacked elements)
-- Text overflow or cut off at edges/box boundaries
-- Decorative lines positioned for single-line text but title wrapped to two lines
-- Source citations or footers colliding with content above
-- Elements too close (< 0.3" gaps) or cards/sections nearly touching
-- Uneven gaps (large empty area in one place, cramped in another)
-- Insufficient margin from slide edges (< 0.5")
-- Columns or similar elements not aligned consistently
-- Low-contrast text (e.g., light gray text on cream-colored background)
-- Low-contrast icons (e.g., dark icons on dark backgrounds without a contrasting circle)
-- Text boxes too narrow causing excessive wrapping
-- Leftover placeholder content
-
-For each slide, report observed issues with their impact; do not invent defects to satisfy a checklist.
-
-Read and analyze these images:
-1. /path/to/slide-01.jpg (Expected: [brief description])
-2. /path/to/slide-02.jpg (Expected: [brief description])
-
-Report observed issues that violate the content, template or rendering contract; do not create a list of harmless differences.
-```
-
-### Verification Loop
-
-1. Generate slides → Convert to images → Inspect
-2. List observed issues and their affected slides
-3. Fix issues that violate the content, layout or rendering contract
-4. Re-render and re-verify changed slides
-5. If the first inspection passes, record that evidence without making a gratuitous edit
-
----
-
-## Converting to Images
-
-Use an already installed renderer; do not install LibreOffice or another runtime for this step.
-
-On Windows, prefer Microsoft PowerPoint when it is installed. The bundled script refuses to run while another PowerPoint process is open, opens only the requested file, exports a new empty directory of PNGs, and closes only the application object it created:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_slides.ps1 `
-  -InputPath output.pptx -OutputDir renders -Width 1280 -Height 720
-```
-
-If PowerPoint is unavailable and LibreOffice is already installed, convert through the existing helper and then rasterize the PDF:
-
-```bash
-python scripts/office/soffice.py --headless --convert-to pdf output.pptx
-pdftoppm -jpeg -r 150 output.pdf slide
-```
-
-This creates `slide-01.jpg`, `slide-02.jpg`, etc.
-
-If neither renderer is available, validate the PPTX package and extracted text, then state that visual QA remains incomplete. Do not treat package validity or text extraction as proof that the slides are ready to present.
-
-To re-render specific slides after fixes:
-
-```bash
-pdftoppm -jpeg -r 150 -f N -l N output.pdf slide-fixed
-```
-
----
-
-## Dependencies
-
-- `markitdown[pptx]` in the user-selected Python environment for text extraction
-- Pillow in the user-selected Python environment for thumbnail grids
-- PptxGenJS in the user-selected Node.js environment for creating from scratch
-- Microsoft PowerPoint on Windows is the preferred optional renderer for final visual QA; `scripts/render_slides.ps1` uses its installed COM interface without extra packages
-- LibreOffice (`soffice`) is an optional renderer only when it is already installed; it is not a prerequisite
-- Poppler (`pdftoppm`) is needed only for the LibreOffice-to-PDF rendering route
-
-Use only the dependencies needed by the selected route. If any item is unavailable, explain the affected operation and choose another already available route when equivalent; do not install or upgrade it.
+使用环境中已经存在的 `markitdown[pptx]`、Pillow、PptxGenJS、Microsoft PowerPoint、LibreOffice 或 Poppler。优先使用已安装的 Microsoft PowerPoint（prefer Microsoft PowerPoint）；LibreOffice (`soffice`) is an optional renderer only when already available。缺少依赖时说明影响和用户可选准备方式，不静默安装。

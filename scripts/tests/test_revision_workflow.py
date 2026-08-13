@@ -243,7 +243,6 @@ class RevisionWorkflowTests(unittest.TestCase):
         copies = [
             ROOT / "skills/docx/scripts/office/soffice.py",
             ROOT / "skills/pptx/scripts/office/soffice.py",
-            ROOT / "skills/xlsx/scripts/office/soffice.py",
         ]
         self.assertEqual(len({path.read_bytes() for path in copies}), 1)
 

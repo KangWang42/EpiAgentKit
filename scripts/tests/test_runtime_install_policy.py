@@ -129,7 +129,7 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
             "skills/docx/SKILL.md": ("without installing it", "user"),
             "skills/pptx/SKILL.md": ("do not install or upgrade it", "user"),
             "skills/pdf/SKILL.md": ("不得自行安装", "用户指定"),
-            "skills/xlsx/SKILL.md": ("do not install it", "user"),
+            "skills/xlsx/SKILL.md": ("不得自行安装", "用户"),
         }
         for relative, (marker, user_marker) in expected.items():
             body = self.read(relative)

@@ -805,7 +805,7 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn("只生成用户指定格式的文件，不擅自附加另一种格式", report)
         self.assertIn("用户只要正文时直接返回净稿，不创建文件", report)
         self.assertIn("without making a gratuitous edit", pptx)
-        self.assertIn("Verified statistical result or archival export", xlsx)
+        self.assertIn("经验证的统计结果或归档导出", xlsx)
         self.assertIn("neutral value `Reviewer`", docx)
         self.assertNotIn('Use "Claude" as the author', docx)
 
@@ -857,7 +857,7 @@ class SkillOptimizationTests(unittest.TestCase):
 
         self.assertIn("L bounded edit", pptx)
         self.assertIn("does not trigger template remapping", pptx)
-        self.assertIn("zero observed issues is valid evidence", pptx)
+        self.assertIn("首次检查没有问题是有效证据", pptx)
         self.assertIn("For an L bounded edit", pptx_editing)
         self.assertIn("Do not run template selection", pptx_editing)
         self.assertNotIn(
@@ -865,13 +865,17 @@ class SkillOptimizationTests(unittest.TestCase):
             pptx,
         )
 
-        self.assertIn("text-, comment- or format-only L edit", xlsx)
-        self.assertIn("zero new unintended formula errors", xlsx)
+        self.assertIn("纯文字、批注或格式 L 修改", xlsx)
+        self.assertIn("由本次修改新增的非预期公式错误为零", xlsx)
         self.assertIn("一次用户纠正或一次重新保存本身不触发整份报告重审", report)
         self.assertIn("L 默认只检查四项", pdf)
         self.assertIn("页数或页序没变时不重查目录、书签和其它页面", pdf)
         self.assertIn("每项检查必须能说明它用于发现本次修改可能造成的哪一种具体错误", global_rules)
         self.assertIn("一次新的局部纠正只使它实际影响的检查失效", global_rules)
+        self.assertIn("每次先用最少步骤生成能看出目标变化的预览", global_rules)
+        self.assertIn("对已经失效的项目做一次最终检查", global_rules)
+        self.assertIn("不等待其它修改，立即核验并在必要时停止", global_rules)
+        self.assertIn("没有可信的局部生成入口时", global_rules)
         self.assertIn("L 不重新规划整张图", svg)
         self.assertIn("不是 L 局部修改的固定清单", svg)
         self.assertIn("L 完成时只确认", svg)

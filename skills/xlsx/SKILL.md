@@ -1,325 +1,69 @@
 ---
 name: xlsx
-description: "Read, clean, create, edit, format, chart, validate or convert spreadsheet files (.xlsx, .xlsm, .csv, .tsv) when a spreadsheet is the primary input or deliverable. Do not trigger when the deliverable is primarily a document, report, standalone script, database pipeline or Google Sheets integration."
+description: 读取、清洗、创建、编辑、格式化、核验或转换 `.xlsx`、`.xlsm`、`.csv` 和 `.tsv` 文件。表格文件是主要输入或交付物时使用；统计表内容先用相应统计分析 skill，工作簿中的统计图内容先用 publication-figures。不用于以论文、报告、独立脚本、数据库流程或 Google Sheets 为主要交付物的任务。
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
-# Requirements for Outputs
+# 工作簿文件处理
 
-Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
+先按全局 `CLAUDE.md` 判定 Q/L/P/R。本 skill 负责表格文件的读写、结构、公式、格式和显示，不重新决定统计方法、表格内容或报告结论。
 
-## Validation scope
+## 1. 确认范围和唯一输入
 
-- Q reads only the requested cells, sheets or workbook properties and returns an answer without creating a file.
-- L locks the input workbook, authorized cells/ranges/sheets and protected scope. Validate only changed values, formulas, formatting, comments or names, the visible affected area, and formulas, charts, pivot tables or validation rules that actually refer to the changed cells. Do not inspect or restyle unrelated sheets.
-- P validates every affected sheet and shared workbook feature. R additionally checks the complete current workbook, required recalculation, external links, visible delivery state and release requirements.
+- Q：只读取回答问题所需的单元格、工作表、公式或文件属性，不创建文件。
+- L：锁定唯一输入、目标单元格/区域/工作表、允许修改的对象和不得改动的范围；只核对目标变化、范围外差异和实际引用已改单元格的公式、图表、数据透视表或数据验证规则。
+- P：创建或重组工作簿，或者修改共享名称、公式依赖、表格、图表、数据透视表、验证规则、宏或多个工作表；检查所有受影响工作表和共享功能。
+- R：用户明确外发、投稿或归档时，在 P 基础上核对完整当前版、可见内容、确认需要保留的隐藏区域、外部链接、宏、重新计算状态和发布要求。
 
-Recalculate only when the task creates or changes formulas, values that feed formulas, named ranges, calculation settings or other dependencies. A text-, comment- or format-only L edit does not trigger recalculation merely because the workbook already contains formulas. When recalculation is required, the provided script may scan the whole workbook; report unrelated pre-existing errors separately and do not call them new failures unless the current change can affect them.
+多个同名文件、多个合理当前版、工作表或列定位不唯一时先确认。保留原始文件，只写入用户指定或含义明确的新文件；L 不覆盖唯一原件。
 
-## All Excel files
+## 2. 选择文件与工具路径
 
-### Professional content and file checks
+| 输入或操作 | 执行方式 | 必须保留 |
+| --- | --- | --- |
+| `.xlsx` 读写和格式 | 优先使用项目已有且兼容的 `openpyxl`；大批量数据整理可用已有 `pandas` | 工作表顺序、公式、名称、样式、合并区域、图表及未授权对象 |
+| `.xlsm` | 使用能够保留 VBA 的既有工具；`openpyxl` 读取时设 `keep_vba=True` | VBA 包、控件、外部连接和既有公式；未明确授权时不另存为 `.xlsx` |
+| `.csv` / `.tsv` | 显式确认编码、分隔符、引号、换行、日期和缺失值规则 | 字段顺序、标识符前导零和原始文本；这两种格式不具备工作表、样式、公式或图表 |
+| 工作簿内图表 | 本 skill 负责嵌入、位置、引用区域和显示 | 新的统计映射、图型与科学解释由 `publication-figures` 决定 |
 
-- First identify the skill responsible for the workbook's professional content. Statistical tables use `r-biostats` and its applicable table rules; reports, schedules, or other domain content use their corresponding content skill. This skill implements and verifies the spreadsheet file; it does not redefine the analysis or writing standard.
-- Apply the content structure while building the workbook, not after formatting. A file that opens, recalculates, or looks tidy is not evidence that a statistical table, report, or other professional content is correct.
-- When a validated table model distinguishes parent rows and child levels, preserve that structure in the worksheet. Use the cell alignment's real indent setting for child levels, not leading spaces; do not expose helper fields such as `row_type` or `indent_level` as visible columns.
-- When a statistical-table filename already carries its table number and stable title, start the worksheet at row 1 with column headers. Do not repeat the table title inside the sheet, merge a decorative title row, insert a spacer row, or add separator rows unless the user or an established template explicitly requires them.
-- For statistical tables, use bold headers, alignment, widths and real indentation as the neutral hierarchy. Do not add white borders, decorative rules, shaded bands or separators to parent, total or ordinary group rows when they encode no information. Place any necessary note directly after the table body without a decorative blank row.
-- Complete the work item only after both sets of checks pass within the current scope: domain assertions from the content skill, and applicable workbook checks for values, formulas, structure, formatting, and visible display. Report a partial result if either set has not been verified.
-- For formal statistical tables, keep a unique stable `field_id` separate from the visible header label and map each `field_id` to its source field and worksheet column. Duplicate visible labels such as several `P value` columns are allowed; duplicate internal keys are not. Extract the delivered worksheet table by column position and reconcile every displayed cell against the content skill's final-display source using row keys and `field_id`. A workbook that opens, contains the expected numbers somewhere, or has the expected row/column count has not passed this check.
-- When a template is used for external delivery, inventory every visible sheet, table, chart, text box, note, comment, and intentionally retained hidden delivery region before editing. After assembly, extract and review the visible text and the confirmed retained hidden regions against the content skill's task-specific required/prohibited text. Do not preserve stale internal audit text merely because it belongs to the template; do not delete approved branding, declarations, formulas, or internal-only sheets that are explicitly outside the external package.
+不要自行安装、升级或更换 Python、LibreOffice、Excel 或相关包。缺少当前操作所需工具时，说明受影响的功能和用户可选择的准备方式，不静默采用会丢失公式、宏、样式或精度的近似方案。
 
-### Fonts
-- Preserve the existing template. If none exists and the user gives no typography requirement, retain the application's ordinary default font and use sizing, weight and spacing for hierarchy.
+## 3. 先确定内容与计算口径
 
-### Neutral Default Formatting
-- Unless the user or an existing template explicitly requests a visual theme, keep worksheets in the application's default neutral style: white background, black text, regular font sizes, and no decorative fills.
-- Keep necessary titles and headers bold on white. Use alignment, spacing, freeze panes and column widths for structure; add thin black or light-gray borders only when they convey a real table boundary required by the content or template.
-- Do not automatically add dark header bands, reversed white-on-dark text, colored first columns, shaded total rows, zebra striping, gradients, dashboard-style blocks, or background images.
-- Apply cell fills only when the user explicitly requests them or an existing template already uses them. A light highlight for a specific exception is not permission to color the whole table.
+先调用负责表格专业内容的 skill。流行病学与生物统计表使用 `r-biostats` 或既有 Python 主流程及其适用表格规范；本 skill 只把已确认内容正确写入并显示。制作工作簿时同步落实内容结构，不能以文件可打开、重新计算成功或外观整齐代替内容检查。
 
-### Zero Formula Errors
-- When an L task changes formulas or their dependencies, require zero new unintended formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?) in the affected dependency chain and report unrelated pre-existing errors separately. P/R formula work requires zero unintended formula errors across the affected or complete delivery scope. Intentional missing values must be represented explicitly, not hidden as errors.
+在写入前选择一种计算口径：
 
-### Preserve Existing Templates (when updating templates)
-- Study and EXACTLY match existing format, style, and conventions when modifying files
-- Never impose standardized formatting on files with established patterns
-- Existing template conventions ALWAYS override these guidelines
+- 交互式工作簿：由工作簿承担的派生值使用公式和明确单元格引用，核对依赖、绝对/相对引用、边界行列、除零和循环引用。
+- 经验证的统计结果或归档导出：从结果数字唯一来源写入固定值，保留精度和来源；不得在工作簿公式中重新实现统计分析。
+- 既有模板：沿用已经确认的公式/固定值结构，除非用户明确要求改变。
 
-## Financial models
+只有公式、公式输入、名称、计算设置或其它依赖发生变化时才重新计算。纯文字、批注或格式 L 修改不因工作簿中原本存在公式而触发重新计算。需要重新计算时，仅在兼容的 LibreOffice 已经可用、文件为 `.xlsx`、不存在待更新外部链接且用户给出 workbench 目录时使用：
 
-### Color Coding Standards
-Apply these conventions only when the user explicitly requests a financial-model color convention or the existing workbook already follows it. Otherwise use the neutral white-background default above.
-
-#### Industry-Standard Color Conventions
-- **Blue text (RGB: 0,0,255)**: Hardcoded inputs, and numbers users will change for scenarios
-- **Black text (RGB: 0,0,0)**: ALL formulas and calculations
-- **Green text (RGB: 0,128,0)**: Links pulling from other worksheets within same workbook
-- **Red text (RGB: 255,0,0)**: External links to other files
-- **Yellow background (RGB: 255,255,0)**: Key assumptions needing attention or cells that need to be updated
-
-### Number Formatting Standards
-
-#### Required Format Rules
-- **Years**: Format as text strings (e.g., "2024" not "2,024")
-- **Currency**: Use $#,##0 format; ALWAYS specify units in headers ("Revenue ($mm)")
-- **Zeros**: Use number formatting to make all zeros "-", including percentages (e.g., "$#,##0;($#,##0);-")
-- **Percentages**: Default to 0.0% format (one decimal)
-- **Multiples**: Format as 0.0x for valuation multiples (EV/EBITDA, P/E)
-- **Negative numbers**: Use parentheses (123) not minus -123
-
-### Formula Construction Rules
-
-#### Assumptions Placement
-- Place ALL assumptions (growth rates, margins, multiples, etc.) in separate assumption cells
-- Use cell references instead of hardcoded values in formulas
-- Example: Use =B5*(1+$B$6) instead of =B5*1.05
-
-#### Formula Error Prevention
-- Verify all cell references are correct
-- Check for off-by-one errors in ranges
-- Ensure consistent formulas across all projection periods
-- Test with edge cases (zero values, negative numbers)
-- Verify no unintended circular references
-
-#### Documentation Requirements for Hardcodes
-- Comment or in cells beside (if end of table). Format: "Source: [System/Document], [Date], [Specific Reference], [URL if applicable]"
-- Examples:
-  - "Source: Company 10-K, FY2024, Page 45, Revenue Note, [SEC EDGAR URL]"
-  - "Source: Company 10-Q, Q2 2025, Exhibit 99.1, [SEC EDGAR URL]"
-  - "Source: Bloomberg Terminal, 8/15/2025, AAPL US Equity"
-  - "Source: FactSet, 8/20/2025, Consensus Estimates Screen"
-
-# XLSX creation, editing, and analysis
-
-## Overview
-
-A user may ask you to create, edit, or analyze the contents of an .xlsx file. You have different tools and workflows available for different tasks.
-
-## Important Requirements
-
-**LibreOffice for Formula Recalculation**: Use `scripts/recalc.py` only when a compatible LibreOffice installation is already available. If `soffice` is unavailable, explain that cached formula values cannot be refreshed and tell the user how to prepare the prerequisite; do not install it. The script configures an existing LibreOffice process for sandboxed environments where Unix sockets are restricted.
-
-## Reading and analyzing data
-
-### Data analysis with pandas
-For data analysis, visualization, and basic operations, use **pandas** which provides powerful data manipulation capabilities:
-
-```python
-import pandas as pd
-
-# Read Excel
-df = pd.read_excel('file.xlsx')  # Default: first sheet
-all_sheets = pd.read_excel('file.xlsx', sheet_name=None)  # All sheets as dict
-
-# Analyze
-df.head()      # Preview data
-df.info()      # Column info
-df.describe()  # Statistics
-
-# Write Excel
-df.to_excel('output.xlsx', index=False)
+```text
+python scripts/recalc.py <输入.xlsx> <输出.xlsx> --work-dir <workbench/runtime>
 ```
 
-## Excel File Workflows
+该脚本使用隔离的 LibreOffice 配置，不写用户级宏或共享设置，也不覆盖输入文件。它不用于 `.xlsm`、外部链接、Excel 专有函数或宏计算；这些情况需要与原工作簿兼容的应用。`soffice` 不可用时只说明缓存公式值尚未刷新，不得自行安装，也不得把静态公式检查称为重新计算完成。
 
-## Calculation Mode
+## 4. 科研表格与模板
 
-Choose the calculation contract before writing cells:
+- 已验证的父行和分类水平结构在工作表中保持一致。子水平使用单元格的真实缩进属性，不用前导空格，也不把 `row_type`、`indent_level` 等辅助字段显示给读者。
+- 文件名已含稳定表号和表名时，第 1 行直接写列标题；不重复表题、合并装饰标题行、插入空白分隔行，除非用户或既有模板明确要求。
+- 正式统计表把稳定且唯一的 `field_id` 与可重复的显示表头分开；按行键、`field_id` 和列位置逐单元格核对交付表与最终展示数据。多个可见“P 值”合法，重复内部键不合法。
+- 外发模板编辑前列出可见工作表、表格、图表、文本框、批注和明确需要保留的隐藏区域。完成后按内容 skill 提供的必须保留/不得出现要求复核可见文字和指定隐藏区域；不因模板已有就保留过时内部审计文字，也不删除合法品牌、声明、公式或明确不外发的内部工作表。
 
-- **Interactive workbook or model**: use Excel formulas and cell references so user-editable inputs recalculate.
-- **Verified statistical result or archival export**: write fixed values from the validated analysis source, preserve precision and provenance, and do not recreate the statistical analysis as spreadsheet formulas.
-- **Existing template**: preserve its established formula/value pattern unless the user asks to change it.
+## 5. 中性默认格式
 
-### Interactive model: avoid hardcoding derived values
-```python
-# Bad: Calculating in Python and hardcoding result
-total = df['Sales'].sum()
-sheet['B10'] = total  # Hardcodes 5000
+保留既有模板。没有模板和用户样式要求时，使用应用默认字体、白底黑字、必要字重、对齐、真实缩进、列宽和冻结窗格建立层级；边框只用于真实表格边界。不自动添加深色表头带、反白文字、彩色首列、总计底色、斑马纹、渐变、仪表盘色块或背景图。数值格式、单位、小数位和缺失显示由内容口径决定，不套用金融模型或其它领域的默认格式。
 
-# Bad: Computing growth rate in Python
-growth = (df.iloc[-1]['Revenue'] - df.iloc[0]['Revenue']) / df.iloc[0]['Revenue']
-sheet['C5'] = growth  # Hardcodes 0.15
+## 6. 最少检查与完成条件
 
-# Bad: Python calculation for average
-avg = sum(values) / len(values)
-sheet['D20'] = avg  # Hardcodes 42.5
-```
+每项检查必须对应本次修改可能造成的一种具体错误：
 
-### Interactive model: use formulas
-```python
-# Good: Let Excel calculate the sum
-sheet['B10'] = '=SUM(B2:B9)'
+- 重新打开目标文件，核对工作表名称/顺序、目标值或公式、数据类型、日期、缺失、前导零、格式和受影响可见区域。
+- 公式或依赖变化时，要求受影响依赖链中由本次修改新增的非预期公式错误为零；P/R 再覆盖全部受影响或完整交付范围。与本次修改无关的既有错误单独报告，不冒充新失败。
+- `.xlsm` 核对 VBA 包仍存在；CSV/TSV 核对编码、分隔符、字段数和代表性记录；模板核对未授权工作表、公式、名称、图表、批注和隐藏区域未误改。
+- 统计表必须同时通过内容 skill 的变量、分母、统计量和字段映射检查，以及本 skill 的文件结构与显示检查；任何一项未验证时只报告部分完成。
 
-# Good: Growth rate as Excel formula
-sheet['C5'] = '=(C4-C2)/C2'
-
-# Good: Average using Excel function
-sheet['D20'] = '=AVERAGE(D2:D19)'
-```
-
-This applies to calculations that the workbook is responsible for. Values whose source of truth is an external validated analysis remain fixed and traceable.
-
-## Common Workflow
-1. **Choose tool**: pandas for data, openpyxl for formulas/formatting
-2. **Create/Load**: Create new workbook or load existing file
-3. **Modify**: Add/edit data, formulas, and formatting
-4. **Save**: Write to file
-5. **Recalculate when formulas or their dependencies changed**: Use `scripts/recalc.py`; skip this step for a text-, comment- or format-only L edit that preserves formula inputs and calculation settings
-   ```bash
-   python scripts/recalc.py output.xlsx
-   ```
-6. **Verify and fix any errors**: 
-   - The script returns JSON with error details
-   - If `status` is `errors_found`, check `error_summary` for specific error types and locations
-   - Fix the identified errors and recalculate again
-   - Common errors to fix:
-     - `#REF!`: Invalid cell references
-     - `#DIV/0!`: Division by zero
-     - `#VALUE!`: Wrong data type in formula
-     - `#NAME?`: Unrecognized formula name
-
-### Creating new Excel files
-
-```python
-# Using openpyxl for formulas and formatting
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, Side
-
-wb = Workbook()
-sheet = wb.active
-
-# Add data
-sheet['A1'] = 'Hello'
-sheet['B1'] = 'World'
-sheet.append(['Row', 'of', 'data'])
-
-# Add formula
-sheet['B2'] = '=SUM(A1:A10)'
-
-# Neutral formatting: bold black header on white with a thin bottom border
-thin = Side(style='thin', color='B7B7B7')
-sheet['A1'].font = Font(bold=True, color='000000')
-sheet['A1'].alignment = Alignment(horizontal='center')
-sheet['A1'].border = Border(bottom=thin)
-
-# Column width
-sheet.column_dimensions['A'].width = 20
-
-wb.save('output.xlsx')
-```
-
-### Editing existing Excel files
-
-```python
-# Using openpyxl to preserve formulas and formatting
-from openpyxl import load_workbook
-
-# Load existing file
-wb = load_workbook('existing.xlsx')
-sheet = wb.active  # or wb['SheetName'] for specific sheet
-
-# Working with multiple sheets
-for sheet_name in wb.sheetnames:
-    sheet = wb[sheet_name]
-    print(f"Sheet: {sheet_name}")
-
-# Modify cells
-sheet['A1'] = 'New Value'
-sheet.insert_rows(2)  # Insert row at position 2
-sheet.delete_cols(3)  # Delete column 3
-
-# Add new sheet
-new_sheet = wb.create_sheet('NewSheet')
-new_sheet['A1'] = 'Data'
-
-wb.save('modified.xlsx')
-```
-
-## Recalculating formulas
-
-Excel files created or modified by openpyxl contain formulas as strings but not calculated values. After creating or changing formulas, their inputs, named ranges or calculation settings, use the provided `scripts/recalc.py` script to recalculate formulas. Do not run it solely because an unrelated L edit occurred in a workbook that already contains formulas:
-
-```bash
-python scripts/recalc.py <excel_file> [timeout_seconds]
-```
-
-Example:
-```bash
-python scripts/recalc.py output.xlsx 30
-```
-
-The script:
-- Automatically sets up LibreOffice macro on first run
-- Recalculates all formulas in all sheets
-- Scans ALL cells for Excel errors (#REF!, #DIV/0!, etc.)
-- Returns JSON with detailed error locations and counts
-- Works where the bundled script can access a compatible existing LibreOffice installation
-
-## Formula Verification Checklist
-
-Quick checks to ensure formulas work correctly:
-
-### Essential Verification
-- [ ] **Test 2-3 sample references**: Verify they pull correct values before building full model
-- [ ] **Column mapping**: Confirm Excel columns match (e.g., column 64 = BL, not BK)
-- [ ] **Row offset**: Remember Excel rows are 1-indexed (DataFrame row 5 = Excel row 6)
-
-### Common Pitfalls
-- [ ] **NaN handling**: Check for null values with `pd.notna()`
-- [ ] **Far-right columns**: FY data often in columns 50+ 
-- [ ] **Multiple matches**: Search all occurrences, not just first
-- [ ] **Division by zero**: Check denominators before using `/` in formulas (#DIV/0!)
-- [ ] **Wrong references**: Verify all cell references point to intended cells (#REF!)
-- [ ] **Cross-sheet references**: Use correct format (Sheet1!A1) for linking sheets
-
-### Formula Testing Strategy
-- [ ] **Start small**: Test formulas on 2-3 cells before applying broadly
-- [ ] **Verify dependencies**: Check all cells referenced in formulas exist
-- [ ] **Test edge cases**: Include zero, negative, and very large values
-
-### Interpreting scripts/recalc.py Output
-The script returns JSON with error details:
-```json
-{
-  "status": "success",           // or "errors_found"
-  "total_errors": 0,              // Total error count
-  "total_formulas": 42,           // Number of formulas in file
-  "error_summary": {              // Only present if errors found
-    "#REF!": {
-      "count": 2,
-      "locations": ["Sheet1!B5", "Sheet1!C10"]
-    }
-  }
-}
-```
-
-## Best Practices
-
-### Library Selection
-- **pandas**: Best for data analysis, bulk operations, and simple data export
-- **openpyxl**: Best for complex formatting, formulas, and Excel-specific features
-
-### Working with openpyxl
-- Cell indices are 1-based (row=1, column=1 refers to cell A1)
-- Use `data_only=True` to read calculated values: `load_workbook('file.xlsx', data_only=True)`
-- **Warning**: If opened with `data_only=True` and saved, formulas are replaced with values and permanently lost
-- For large files: Use `read_only=True` for reading or `write_only=True` for writing
-- Formulas are preserved but not evaluated - use scripts/recalc.py to update values
-
-### Working with pandas
-- Specify data types to avoid inference issues: `pd.read_excel('file.xlsx', dtype={'id': str})`
-- For large files, read specific columns: `pd.read_excel('file.xlsx', usecols=['A', 'C', 'E'])`
-- Handle dates properly: `pd.read_excel('file.xlsx', parse_dates=['date_column'])`
-
-## Code Style Guidelines
-**IMPORTANT**: When generating Python code for Excel operations:
-- Write minimal, concise Python code without unnecessary comments
-- Avoid verbose variable names and redundant operations
-- Avoid unnecessary print statements
-
-**For Excel files themselves**:
-- Add comments to cells with complex formulas or important assumptions
-- Document data sources for hardcoded values
-- Include notes for key calculations and model sections
-- Default to white cells with black text and light borders; do not introduce dark or colored fills unless the user or existing template explicitly requires them
+L 完成时确认唯一输入与授权范围明确、原文件可恢复、目标修改正确、实际引用位置已核对、范围外差异为零。P/R 只同步实际受影响的内容；未执行的重新计算、宏、外部链接、完整可见内容或发布检查不包装成已通过。

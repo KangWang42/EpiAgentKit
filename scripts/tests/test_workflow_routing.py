@@ -335,10 +335,10 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不增加独立“分层”“水平”列", descriptive)
         self.assertIn("单元格的真实缩进属性", descriptive)
         self.assertIn("暴露组（N=...）", descriptive)
-        self.assertIn("Apply the content structure while building", xlsx)
-        self.assertIn("Use the cell alignment's real indent setting", xlsx)
-        self.assertIn("start the worksheet at row 1 with column headers", xlsx)
-        self.assertIn("Do not add white borders", xlsx)
+        self.assertIn("制作工作簿时同步落实内容结构", xlsx)
+        self.assertIn("单元格的真实缩进属性", xlsx)
+        self.assertIn("第 1 行直接写列标题", xlsx)
+        self.assertIn("边框只用于真实表格边界", xlsx)
         self.assertIn("tidyverse 是正式研究代码的整体默认表达方式", code_style)
         self.assertIn("不要用长篇自定义函数重复", code_style)
         self.assertIn("先查成熟包，再写最小适配", package_selection)
@@ -498,8 +498,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         ):
             self.assertIn(fragment, docx)
         for fragment in (
-            "Neutral Default Formatting",
-            "Do not automatically add dark header bands",
+            "中性默认格式",
+            "不自动添加深色表头带",
         ):
             self.assertIn(fragment, xlsx)
         self.assertIn("实际 `.docx` 操作调用 `docx`", report)
@@ -591,6 +591,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
+        pptx_design = (ROOT / "skills/pptx/design-reference.md").read_text(encoding="utf-8")
         sysu = (ROOT / "skills/sysu-ppt/SKILL.md").read_text(encoding="utf-8")
         cases = {
             case["id"]: case
@@ -607,7 +608,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("用户提供的 `.pptx` / `.potx`", academic)
         self.assertIn("meeting-and-journal-club.md", academic)
         self.assertIn("proposal-and-defense.md", academic)
-        self.assertIn("Template Routing Gate", pptx)
+        self.assertIn("模板来源分流", pptx)
+        self.assertIn("每页围绕一条主信息组织", pptx_design)
         self.assertIn("中大官方模板、其他学校/机构或特定汇报类型", pptx)
         self.assertIn("load `academic-ppt` as the content workflow", pptx)
         self.assertIn("Use the template-editing workflow, not the from-scratch workflow", pptx)
@@ -881,11 +883,14 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("先锁定本轮论文模式和正文唯一来源", docx_assembly)
         self.assertIn("不得仅因它们存在就把进展状态", docx_assembly)
         self.assertIn("同一份任务清单", docx_assembly)
+        docx_generation = (
+            ROOT / "skills/docx/references/docx-js-generation.md"
+        ).read_text(encoding="utf-8")
         for fragment in (
-            "academic display tables use three-line rules",
-            "Independent list blocks restart explicitly",
+            "三线表保持白底",
+            "独立列表块使用不同 reference 重新开始编号",
         ):
-            self.assertIn(fragment, docx)
+            self.assertIn(fragment, docx_generation)
         for fragment in (
             "first classify the target as an academic display table",
             "official forms, preserve the approved complete borders",

@@ -1,184 +1,191 @@
-"""
-Excel Formula Recalculation Script
-Recalculates all formulas in an Excel file using LibreOffice
-"""
+#!/usr/bin/env python3
+"""Recalculate a copy of an XLSX workbook with an isolated LibreOffice profile."""
 
+from __future__ import annotations
+
+import argparse
 import json
 import os
-import platform
+import shutil
 import subprocess
-import sys
+import tempfile
+import zipfile
 from pathlib import Path
-
-from office.soffice import get_soffice_env
 
 from openpyxl import load_workbook
 
-MACRO_DIR_MACOS = "~/Library/Application Support/LibreOffice/4/user/basic/Standard"
-MACRO_DIR_LINUX = "~/.config/libreoffice/4/user/basic/Standard"
-MACRO_FILENAME = "Module1.xba"
 
-RECALCULATE_MACRO = """<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
-<script:module xmlns:script="http://openoffice.org/2000/script" script:name="Module1" script:language="StarBasic">
-    Sub RecalculateAndSave()
-      ThisComponent.calculateAll()
-      ThisComponent.store()
-      ThisComponent.close(True)
-    End Sub
-</script:module>"""
+EXCEL_ERRORS = {"#VALUE!", "#DIV/0!", "#REF!", "#NAME?", "#NULL!", "#NUM!", "#N/A"}
 
 
-def has_gtimeout():
+def formula_count(path: Path) -> int:
+    workbook = load_workbook(path, read_only=True, data_only=False)
     try:
-        subprocess.run(
-            ["gtimeout", "--version"], capture_output=True, timeout=1, check=False
+        return sum(
+            1
+            for sheet in workbook.worksheets
+            for row in sheet.iter_rows()
+            for cell in row
+            if cell.data_type == "f"
         )
-        return True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return False
+    finally:
+        workbook.close()
 
 
-def setup_libreoffice_macro():
-    macro_dir = os.path.expanduser(
-        MACRO_DIR_MACOS if platform.system() == "Darwin" else MACRO_DIR_LINUX
-    )
-    macro_file = os.path.join(macro_dir, MACRO_FILENAME)
-
-    if (
-        os.path.exists(macro_file)
-        and "RecalculateAndSave" in Path(macro_file).read_text()
-    ):
-        return True
-
-    if not os.path.exists(macro_dir):
-        subprocess.run(
-            ["soffice", "--headless", "--terminate_after_init"],
-            capture_output=True,
-            timeout=10,
-            env=get_soffice_env(),
+def external_links(path: Path) -> bool:
+    with zipfile.ZipFile(path) as package:
+        names = set(package.namelist())
+        return any(name.startswith("xl/externalLinks/") for name in names) or (
+            "xl/connections.xml" in names
         )
-        os.makedirs(macro_dir, exist_ok=True)
 
+
+def cached_errors(path: Path) -> list[str]:
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    found: list[str] = []
     try:
-        Path(macro_file).write_text(RECALCULATE_MACRO)
-        return True
-    except Exception:
-        return False
+        for sheet in workbook.worksheets:
+            for row in sheet.iter_rows():
+                for cell in row:
+                    if cell.data_type == "e" or cell.value in EXCEL_ERRORS:
+                        found.append(f"{sheet.title}!{cell.coordinate}:{cell.value}")
+        return found
+    finally:
+        workbook.close()
 
 
-def recalc(filename, timeout=30):
-    if not Path(filename).exists():
-        return {"error": f"File {filename} does not exist"}
-
-    abs_path = str(Path(filename).absolute())
-
-    if not setup_libreoffice_macro():
-        return {"error": "Failed to setup LibreOffice macro"}
-
-    cmd = [
-        "soffice",
+def libreoffice_command(
+    executable: str,
+    source: Path,
+    output_dir: Path,
+    profile_dir: Path,
+) -> list[str]:
+    return [
+        executable,
+        f"-env:UserInstallation={profile_dir.resolve().as_uri()}",
         "--headless",
+        "--nologo",
+        "--nodefault",
+        "--nolockcheck",
         "--norestore",
-        "vnd.sun.star.script:Standard.Module1.RecalculateAndSave?language=Basic&location=application",
-        abs_path,
+        "--convert-to",
+        "xlsx",
+        "--outdir",
+        str(output_dir),
+        str(source),
     ]
 
-    if platform.system() == "Linux":
-        cmd = ["timeout", str(timeout)] + cmd
-    elif platform.system() == "Darwin" and has_gtimeout():
-        cmd = ["gtimeout", str(timeout)] + cmd
 
-    result = subprocess.run(cmd, capture_output=True, text=True, env=get_soffice_env())
+def recalculate(
+    source: Path,
+    output: Path,
+    work_dir: Path,
+    timeout: int = 60,
+    replace: bool = False,
+) -> dict[str, object]:
+    source = source.resolve()
+    output = output.resolve()
+    work_dir = work_dir.resolve()
 
-    if result.returncode != 0 and result.returncode != 124:  
-        error_msg = result.stderr or "Unknown error during recalculation"
-        if "Module1" in error_msg or "RecalculateAndSave" not in error_msg:
-            return {"error": "LibreOffice macro not configured properly"}
-        return {"error": error_msg}
+    if not source.is_file():
+        return {"status": "error", "message": "输入文件不存在"}
+    if source.suffix.lower() != ".xlsx" or output.suffix.lower() != ".xlsx":
+        return {"status": "unsupported", "message": "本脚本只处理 .xlsx；不会转换 .xlsm"}
+    if source == output:
+        return {"status": "error", "message": "输出必须与输入不同，以保留原文件"}
+    if output.exists() and not replace:
+        return {"status": "error", "message": "输出已存在；确认后使用 --replace"}
+    if not work_dir.is_dir():
+        return {"status": "error", "message": "--work-dir 必须是已经建立的 workbench 目录"}
 
     try:
-        wb = load_workbook(filename, data_only=True)
+        formulas = formula_count(source)
+    except Exception as exc:
+        return {"status": "error", "message": f"无法读取工作簿：{exc}"}
+    if formulas == 0:
+        return {"status": "not_needed", "formula_count": 0, "message": "工作簿没有公式，未运行重新计算"}
+    if external_links(source):
+        return {"status": "unsupported", "message": "工作簿含外部链接；未自动更新或访问外部来源"}
 
-        excel_errors = [
-            "#VALUE!",
-            "#DIV/0!",
-            "#REF!",
-            "#NAME?",
-            "#NULL!",
-            "#NUM!",
-            "#N/A",
-        ]
-        error_details = {err: [] for err in excel_errors}
-        total_errors = 0
+    executable = shutil.which("soffice")
+    if not executable:
+        return {"status": "unavailable", "message": "未发现兼容的 soffice；未写入输出文件"}
 
-        for sheet_name in wb.sheetnames:
-            ws = wb[sheet_name]
-            for row in ws.iter_rows():
-                for cell in row:
-                    if cell.value is not None and isinstance(cell.value, str):
-                        for err in excel_errors:
-                            if err in cell.value:
-                                location = f"{sheet_name}!{cell.coordinate}"
-                                error_details[err].append(location)
-                                total_errors += 1
-                                break
+    with tempfile.TemporaryDirectory(prefix="xlsx-recalc-", dir=work_dir) as temporary:
+        temporary_path = Path(temporary)
+        converted_dir = temporary_path / "converted"
+        profile_dir = temporary_path / "profile"
+        converted_dir.mkdir()
+        profile_dir.mkdir()
+        command = libreoffice_command(executable, source, converted_dir, profile_dir)
+        environment = os.environ.copy()
+        environment["SAL_USE_VCLPLUGIN"] = "svp"
+        try:
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env=environment,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return {"status": "error", "message": "LibreOffice 重新计算超时；未写入输出文件"}
+        if completed.returncode != 0:
+            detail = (completed.stderr or completed.stdout or "未提供错误信息").strip()
+            return {"status": "error", "message": f"LibreOffice 失败：{detail}"}
 
-        wb.close()
+        converted = converted_dir / f"{source.stem}.xlsx"
+        if not converted.is_file():
+            return {"status": "error", "message": "LibreOffice 未生成预期工作簿"}
+        try:
+            errors = cached_errors(converted)
+        except Exception as exc:
+            return {"status": "error", "message": f"无法核对重新计算结果：{exc}"}
+        if errors:
+            return {
+                "status": "errors_found",
+                "formula_count": formulas,
+                "error_count": len(errors),
+                "errors": errors[:20],
+                "message": "重新计算结果含公式错误；未写入正式输出",
+            }
 
-        result = {
-            "status": "success" if total_errors == 0 else "errors_found",
-            "total_errors": total_errors,
-            "error_summary": {},
+        output.parent.mkdir(parents=True, exist_ok=True)
+        staging = output.with_name(f".{output.name}.recalc.tmp")
+        try:
+            shutil.copy2(converted, staging)
+            os.replace(staging, output)
+        finally:
+            staging.unlink(missing_ok=True)
+        return {
+            "status": "success",
+            "formula_count": formulas,
+            "error_count": 0,
+            "output": str(output),
         }
 
-        for err_type, locations in error_details.items():
-            if locations:
-                result["error_summary"][err_type] = {
-                    "count": len(locations),
-                    "locations": locations[:20],  
-                }
 
-        wb_formulas = load_workbook(filename, data_only=False)
-        formula_count = 0
-        for sheet_name in wb_formulas.sheetnames:
-            ws = wb_formulas[sheet_name]
-            for row in ws.iter_rows():
-                for cell in row:
-                    if (
-                        cell.value
-                        and isinstance(cell.value, str)
-                        and cell.value.startswith("=")
-                    ):
-                        formula_count += 1
-        wb_formulas.close()
-
-        result["total_formulas"] = formula_count
-
-        return result
-
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python recalc.py <excel_file> [timeout_seconds]")
-        print("\nRecalculates all formulas in an Excel file using LibreOffice")
-        print("\nReturns JSON with error details:")
-        print("  - status: 'success' or 'errors_found'")
-        print("  - total_errors: Total number of Excel errors found")
-        print("  - total_formulas: Number of formulas in the file")
-        print("  - error_summary: Breakdown by error type with locations")
-        print("    - #VALUE!, #DIV/0!, #REF!, #NAME?, #NULL!, #NUM!, #N/A")
-        sys.exit(1)
-
-    filename = sys.argv[1]
-    timeout = int(sys.argv[2]) if len(sys.argv) > 2 else 30
-
-    result = recalc(filename, timeout)
-    print(json.dumps(result, indent=2))
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="使用隔离的 LibreOffice 配置重新计算 XLSX 副本，不覆盖输入文件"
+    )
+    parser.add_argument("source", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--work-dir", required=True, type=Path)
+    parser.add_argument("--timeout", type=int, default=60)
+    parser.add_argument("--replace", action="store_true")
+    args = parser.parse_args()
+    result = recalculate(
+        args.source,
+        args.output,
+        args.work_dir,
+        timeout=args.timeout,
+        replace=args.replace,
+    )
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0 if result["status"] in {"success", "not_needed"} else 2
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

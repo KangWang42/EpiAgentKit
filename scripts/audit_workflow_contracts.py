@@ -223,6 +223,21 @@ def main() -> int:
 
     problems.extend(audit_research_terminology())
 
+    obsolete_file_skill_paths = (
+        "skills/pptx/html2pptx.md",
+        "skills/pptx/ooxml.md",
+        "skills/pptx/ooxml",
+        "skills/pptx/scripts/html2pptx.js",
+        "skills/pptx/scripts/inventory.py",
+        "skills/pptx/scripts/rearrange.py",
+        "skills/pptx/scripts/replace.py",
+        "skills/xlsx/recalc.py",
+        "skills/xlsx/scripts/office",
+    )
+    for relative in obsolete_file_skill_paths:
+        if (ROOT / relative).exists():
+            problems.append(f"obsolete file-skill path remains: {relative}")
+
     validator = ROOT / "skills/skill-creator/scripts/quick_validate.py"
     skill_names = {
         item.name
@@ -338,6 +353,10 @@ def main() -> int:
             "把请求拆成实际工作项",
             "该 skill 的核心流程、明确要求读取的适用细则和完成条件必须执行",
             "规范在制作过程中执行，不等到最后审计才补做",
+            "每次先用最少步骤生成能看出目标变化的预览",
+            "对已经失效的项目做一次最终检查",
+            "不等待其它修改，立即核验并在必要时停止",
+            "没有可信的局部生成入口时",
             "不能用“项目已完成”概括",
             "项目 `README.md` 只说明运行方法、输入输出位置和阅读顺序",
             "项目整体阶段与各项工作完成状态只在项目 `CLAUDE.md` 更新",
@@ -1151,8 +1170,11 @@ def main() -> int:
             "w14:paraId",
             "--allow-insert-after",
             "single local DOCX change does not require",
-            "academic display tables use three-line rules",
-            "Independent list blocks restart explicitly",
+            "read [docx-js generation reference](references/docx-js-generation.md) completely",
+        ),
+        "skills/docx/references/docx-js-generation.md": (
+            "三线表保持白底",
+            "独立列表块使用不同 reference 重新开始编号",
         ),
         "skills/docx/references/scoped-revision.md": (
             "first classify the target as an academic display table",
@@ -1194,8 +1216,14 @@ def main() -> int:
             "visual QA remains incomplete",
             "L bounded edit",
             "does not trigger template remapping",
-            "zero observed issues is valid evidence",
+            "首次检查没有问题是有效证据",
             "It is not a prerequisite for a bounded edit",
+            "read [neutral design reference](design-reference.md) completely",
+        ),
+        "skills/pptx/design-reference.md": (
+            "每页围绕一条主信息组织",
+            "不使用低对比文字或图标",
+            "不因默认偏好套用蓝色",
         ),
         "skills/pptx/editing.md": (
             "For an L bounded edit",
@@ -1769,22 +1797,56 @@ def main() -> int:
             'res.get("display")',
         ),
         "skills/xlsx/SKILL.md": (
-            "Neutral Default Formatting",
-            "Do not automatically add dark header bands",
-            "Default to white cells with black text and light borders",
-            "Use `scripts/recalc.py` only when a compatible LibreOffice installation is already available",
-            "If `soffice` is unavailable",
-            "do not install it",
-            "First identify the skill responsible for the workbook's professional content",
-            "Use the cell alignment's real indent setting",
-            "start the worksheet at row 1 with column headers",
-            "Do not add white borders",
-            "Report a partial result if either set has not been verified",
-            "L locks the input workbook",
-            "Do not inspect or restyle unrelated sheets",
-            "text-, comment- or format-only L edit does not trigger recalculation",
-            "zero new unintended formula errors",
-            "report unrelated pre-existing errors separately",
+            "中性默认格式",
+            "不自动添加深色表头带",
+            "白底黑字",
+            "仅在兼容的 LibreOffice 已经可用",
+            "`soffice` 不可用时",
+            "不得自行安装",
+            "先调用负责表格专业内容的 skill",
+            "单元格的真实缩进属性",
+            "第 1 行直接写列标题",
+            "边框只用于真实表格边界",
+            "任何一项未验证时只报告部分完成",
+            "锁定唯一输入",
+            "实际引用已改单元格",
+            "纯文字、批注或格式 L 修改",
+            "由本次修改新增的非预期公式错误为零",
+            "与本次修改无关的既有错误单独报告",
+            "隔离的 LibreOffice 配置",
+            "不写用户级宏或共享设置",
+        ),
+        "skills/xlsx/scripts/recalc.py": (
+            "source == output",
+            "output.exists() and not replace",
+            "external_links(source)",
+            'TemporaryDirectory(prefix="xlsx-recalc-", dir=work_dir)',
+            "UserInstallation",
+            "未写入正式输出",
+            "os.replace(staging, output)",
+            "staging.unlink(missing_ok=True)",
+        ),
+        "skills/docx/scripts/accept_changes.py": (
+            "source == output",
+            "output.exists() and not replace",
+            'TemporaryDirectory(prefix="docx-accept-", dir=work_dir)',
+            "UserInstallation",
+            "候选净稿仍含修订标记；未写入输出文件",
+            "os.replace(staging, output)",
+            "staging.unlink(missing_ok=True)",
+        ),
+        "skills/pptx/scripts/office/package_io.py": (
+            "unsafe package member",
+            "destination must be absent or empty",
+            "output must be outside the unpacked input directory",
+            "symbolic links are not valid PPTX package parts",
+            "output.exists() and not replace",
+        ),
+        "skills/pptx/scripts/office/pack.py": (
+            "pack_verified",
+            "candidate failed validation",
+            "os.replace(candidate, output)",
+            "candidate.unlink(missing_ok=True)",
         ),
         "skills/epi-project-audit/scripts/check_consistency.py": (
             "请先选择要使用的 Python 环境和安装方式",

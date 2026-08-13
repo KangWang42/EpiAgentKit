@@ -1,17 +1,7 @@
-"""
-Command line tool to validate Office document XML files against XSD schemas and tracked changes.
+#!/usr/bin/env python3
+"""Validate a packed or unpacked PPTX package."""
 
-Usage:
-    python validate.py <path> [--original <original_file>] [--auto-repair] [--author NAME]
-
-The first argument can be either:
-- An unpacked directory containing the Office document XML files
-- A packed Office file (.docx/.pptx/.xlsx) which will be unpacked to a temp directory
-
-Auto-repair fixes:
-- paraId/durableId values that exceed OOXML limits
-- Missing xml:space="preserve" on w:t elements with whitespace
-"""
+from __future__ import annotations
 
 import argparse
 import sys
@@ -19,99 +9,56 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from validators import DOCXSchemaValidator, PPTXSchemaValidator, RedliningValidator
+try:
+    from .package_io import safe_extract_pptx
+    from .validators import PPTXSchemaValidator
+except ImportError:  # Direct CLI execution from this directory.
+    from package_io import safe_extract_pptx
+    from validators import PPTXSchemaValidator
 
 
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-if hasattr(sys.stderr, "reconfigure"):
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+def validate(path: Path, original: Path | None = None, *, repair: bool = False, verbose: bool = False) -> bool:
+    if original is not None and (not original.is_file() or original.suffix.lower() != ".pptx"):
+        raise ValueError("--original must be an existing .pptx file")
+    if path.is_file():
+        if path.suffix.lower() != ".pptx":
+            raise ValueError("packed input must be a .pptx file")
+        with tempfile.TemporaryDirectory(prefix="pptx-validate-") as directory:
+            unpacked = Path(directory)
+            safe_extract_pptx(path, unpacked)
+            return validate(unpacked, original, repair=repair, verbose=verbose)
+    if not path.is_dir():
+        raise ValueError("input must be a .pptx file or an unpacked directory")
+    validator = PPTXSchemaValidator(path, original, verbose=verbose)
+    if repair:
+        repairs = validator.repair()
+        if repairs:
+            print(f"Auto-repaired {repairs} issue(s)")
+    return validator.validate()
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Validate Office document XML files")
-    parser.add_argument(
-        "path",
-        help="Path to unpacked directory or packed Office file (.docx/.pptx/.xlsx)",
-    )
-    parser.add_argument(
-        "--original",
-        required=False,
-        default=None,
-        help="Path to original file (.docx/.pptx/.xlsx). If omitted, all XSD errors are reported and redlining validation is skipped.",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        help="Enable verbose output",
-    )
-    parser.add_argument(
-        "--auto-repair",
-        action="store_true",
-        help="Automatically repair common issues (hex IDs, whitespace preservation)",
-    )
-    parser.add_argument(
-        "--author",
-        default="Reviewer",
-        help="Author name for redlining validation (default: Reviewer)",
-    )
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("path", type=Path)
+    parser.add_argument("--original", type=Path)
+    parser.add_argument("--auto-repair", action="store_true")
+    parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
-
-    path = Path(args.path)
-    assert path.exists(), f"Error: {path} does not exist"
-
-    original_file = None
-    if args.original:
-        original_file = Path(args.original)
-        assert original_file.is_file(), f"Error: {original_file} is not a file"
-        assert original_file.suffix.lower() in [".docx", ".pptx", ".xlsx"], (
-            f"Error: {original_file} must be a .docx, .pptx, or .xlsx file"
+    try:
+        success = validate(
+            args.path,
+            args.original,
+            repair=args.auto_repair,
+            verbose=args.verbose,
         )
-
-    file_extension = (original_file or path).suffix.lower()
-    assert file_extension in [".docx", ".pptx", ".xlsx"], (
-        f"Error: Cannot determine file type from {path}. Use --original or provide a .docx/.pptx/.xlsx file."
-    )
-
-    if path.is_file() and path.suffix.lower() in [".docx", ".pptx", ".xlsx"]:
-        temp_dir = tempfile.mkdtemp()
-        with zipfile.ZipFile(path, "r") as zf:
-            zf.extractall(temp_dir)
-        unpacked_dir = Path(temp_dir)
-    else:
-        assert path.is_dir(), f"Error: {path} is not a directory or Office file"
-        unpacked_dir = path
-
-    match file_extension:
-        case ".docx":
-            validators = [
-                DOCXSchemaValidator(unpacked_dir, original_file, verbose=args.verbose),
-            ]
-            if original_file:
-                validators.append(
-                    RedliningValidator(unpacked_dir, original_file, verbose=args.verbose, author=args.author)  
-                )
-        case ".pptx":
-            validators = [
-                PPTXSchemaValidator(unpacked_dir, original_file, verbose=args.verbose),
-            ]
-        case _:
-            print(f"Error: Validation not supported for file type {file_extension}")
-            sys.exit(1)
-
-    if args.auto_repair:
-        total_repairs = sum(v.repair() for v in validators)
-        if total_repairs:
-            print(f"Auto-repaired {total_repairs} issue(s)")
-
-    success = all(v.validate() for v in validators)
-
+    except (OSError, ValueError, zipfile.BadZipFile) as exc:
+        print(f"ERROR: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 2
     if success:
         print("All validations PASSED!")
-
-    sys.exit(0 if success else 1)
+        return 0
+    return 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
