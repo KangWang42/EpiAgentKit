@@ -257,7 +257,7 @@ class VisualRoutingTests(unittest.TestCase):
             "必须读取并完整执行",
             "diagram-iconography.md",
             "L0、方法图元和图像型例外的唯一规则来源",
-            "已按 `diagram-iconography.md` 完成 L0、方法图元和图像型例外检查",
+            "正式科研流程的 L0、方法图元和图像型例外按 `diagram-iconography.md` 执行",
         ):
             self.assertIn(fragment, body)
         for fragment in (
@@ -384,7 +384,8 @@ class VisualRoutingTests(unittest.TestCase):
             "只有 imagegen 实际不可用、用户明确要求 SVG/矢量源",
             body,
         )
-        self.assertIn("第二次成功修改后已保存当前结果", body)
+        self.assertIn("第二次修改后停止自动修改", body)
+        self.assertIn("把该图保存为当前结果", body)
         self.assertIn("内容硬伤，包括错误", recipes)
         self.assertIn("表现身份漂移，包括写实/示意类型", recipes)
         self.assertIn("审美问题，包括比例", recipes)
@@ -408,6 +409,50 @@ class VisualRoutingTests(unittest.TestCase):
             self.assertNotIn(old_term, svg_fallback)
         self.assertEqual(recipes.count("每个最终提示词只保留三条永久约束"), 1)
         self.assertEqual(recipes.count("no watermark or false branding"), 1)
+
+    def test_local_figure_edits_use_only_necessary_checks(self) -> None:
+        body = (ROOT / "skills/research-visuals/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        planning = (
+            ROOT / "skills/research-visuals/references/figure-planning.md"
+        ).read_text(encoding="utf-8")
+        figures = (ROOT / "skills/publication-figures/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        hook = (ROOT / "hooks/fig_selfcheck.sh").read_text(encoding="utf-8")
+
+        for fragment in (
+            "每项检查必须能指出本次修改可能造成的一种具体错误",
+            "局部改图只检查两项",
+            "实际使用该图的论文、报告、PPT 或交付文件已经更新",
+            "已通过且本次修改不会影响的检查不重复执行",
+        ):
+            self.assertIn(fragment, body)
+        self.assertIn("局部修改只检查目标变化", planning)
+        self.assertIn("否则不执行", planning)
+        self.assertIn("不能说明所防止错误的检查不执行", figures)
+        self.assertIn("无关检查不执行", hook)
+        self.assertNotIn("## 强制自检", body)
+        self.assertNotIn("直接消费者", body + planning + figures + hook)
+
+    def test_deleted_figure_notes_are_not_moved_into_manuscript_automatically(self) -> None:
+        body = (ROOT / "skills/research-visuals/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        planning = (
+            ROOT / "skills/research-visuals/references/figure-planning.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("不能因从图中删除就机械转移到图注或正文", body)
+        self.assertIn("不把它自动转移到图注或正文", planning)
+        for fragment in (
+            "会改变科学解释的重要局限",
+            "阴性或不利结果",
+            "伦理合规披露",
+            "期刊强制信息",
+        ):
+            self.assertIn(fragment, body)
 
     def test_codex_builtin_imagegen_uses_current_tool_without_session_mutation(self) -> None:
         body = (

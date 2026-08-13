@@ -840,6 +840,11 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn(
             "Inspect every page only for a newly created", docx_revision
         )
+        self.assertIn("Do not probe LibreOffice for an ordinary L edit", docx)
+        self.assertIn(
+            "Replacing an inline image while preserving its extent and anchor",
+            docx_revision,
+        )
 
         self.assertIn("L bounded edit", pptx)
         self.assertIn("does not trigger template remapping", pptx)

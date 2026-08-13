@@ -543,7 +543,8 @@ class WorkflowRoutingTests(unittest.TestCase):
             self.assertIn(fragment, assembly)
         self.assertIn("delivery requirements", docx)
         for fragment in (
-            "重新生成同一文件后，必须重新执行整份清单",
+            "后续局部修改只复查本轮可能受到影响的内容",
+            "没有页面显示风险时不为探测能力调用 `soffice`",
             '"role":',
             '"source":',
             '"placement":',
@@ -554,9 +555,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             "每张正式图的稳定编号",
             "图题文本、顺序、对齐",
             "--requirements",
-            "不得把这些静态检查称为完整视觉验收",
+            "不得把静态检查称为完整视觉验收",
         ):
             self.assertIn(fragment, requirements)
+        self.assertNotIn("重新生成同一文件后，必须重新执行整份清单", requirements)
 
         file_case = cases["existing_project_report_file_delivery"]
         self.assertEqual(file_case["primary"], "report-writing")
