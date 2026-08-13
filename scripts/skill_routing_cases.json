@@ -183,6 +183,14 @@
       "expected_action": "answer_with_prose_without_creating_a_file"
     },
     {
+      "id": "existing_report_local_figure_replacement",
+      "prompt": "只替换现有 Word 报告中的一张图，图片位置和显示尺寸不变，其他正文、表格和页面不要重审",
+      "primary": "docx",
+      "companions": [],
+      "excluded": ["report-writing", "epi-project-audit"],
+      "expected_action": "replace_target_figure_and_check_only_affected_file_parts"
+    },
+    {
       "id": "sysu_presentation_file",
       "prompt": "制作中山大学开题汇报并输出 pptx",
       "primary": "sysu-ppt",
@@ -328,6 +336,14 @@
       "excluded": ["docx", "xlsx"]
     },
     {
+      "id": "rotate_single_pdf_page",
+      "prompt": "只把这份 PDF 的第 7 页顺时针旋转 90 度，保留其余页面、书签和表单，不做全文 OCR 或整份内容审查",
+      "primary": "pdf",
+      "companions": [],
+      "excluded": ["docx", "report-writing", "epi-project-audit"],
+      "expected_action": "rotate_only_target_page_and_preserve_unaffected_pdf_parts"
+    },
+    {
       "id": "clean_spreadsheet_deliverable",
       "prompt": "清洗这个表头错位的 xlsx，保留模板样式并输出修复后的工作簿",
       "primary": "xlsx",
@@ -339,7 +355,8 @@
       "prompt": "请把现有流程图审校后输出为完全可编辑的 SVG 矢量源",
       "primary": "svg-diagrams",
       "companions": [],
-      "excluded": ["publication-figures", "research-visuals"]
+      "excluded": ["publication-figures", "research-visuals"],
+      "expected_action": "edit_only_requested_svg_content_and_validate_affected_relationships"
     },
     {
       "id": "commit_validated_changes",

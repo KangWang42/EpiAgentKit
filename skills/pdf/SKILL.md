@@ -1,317 +1,63 @@
 ---
 name: pdf
-description: Read, extract, create, merge, split, rotate, watermark, OCR, secure, validate or fill actual PDF files. Use whenever a PDF is a primary input or requested output; do not replace the relevant writing or analysis content workflow.
+description: 读取、提取、创建、合并、拆分、旋转、裁切、加水印、OCR、加密、检查或填写实际 PDF 文件。PDF 是主要输入或指定输出时使用；论文、报告、表格和统计内容仍由相应内容 skill 决定。不用于只处理 Word、PPT、Excel、网页或聊天正文。
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
-# PDF Processing Guide
-
-Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
-
-## Overview
-
-This guide covers essential PDF processing operations using Python libraries and command-line tools. Before choosing a path, check required commands and imports read-only; reuse the compatible environment already present, and report missing prerequisites without installing them. For advanced features see [reference.md](reference.md). For forms read [forms.md](forms.md).
-
-## Quick Start
-
-```python
-from pypdf import PdfReader, PdfWriter
-
-# Read a PDF
-reader = PdfReader("document.pdf")
-print(f"Pages: {len(reader.pages)}")
-
-# Extract text
-text = ""
-for page in reader.pages:
-    text += page.extract_text()
-```
-
-## Python Libraries
-
-### pypdf - Basic Operations
-
-#### Merge PDFs
-```python
-from pypdf import PdfWriter, PdfReader
-
-writer = PdfWriter()
-for pdf_file in ["doc1.pdf", "doc2.pdf", "doc3.pdf"]:
-    reader = PdfReader(pdf_file)
-    for page in reader.pages:
-        writer.add_page(page)
-
-with open("merged.pdf", "wb") as output:
-    writer.write(output)
-```
-
-#### Split PDF
-```python
-reader = PdfReader("input.pdf")
-for i, page in enumerate(reader.pages):
-    writer = PdfWriter()
-    writer.add_page(page)
-    with open(f"page_{i+1}.pdf", "wb") as output:
-        writer.write(output)
-```
-
-#### Extract Metadata
-```python
-reader = PdfReader("document.pdf")
-meta = reader.metadata
-print(f"Title: {meta.title}")
-print(f"Author: {meta.author}")
-print(f"Subject: {meta.subject}")
-print(f"Creator: {meta.creator}")
-```
-
-#### Rotate Pages
-```python
-reader = PdfReader("input.pdf")
-writer = PdfWriter()
-
-page = reader.pages[0]
-page.rotate(90)  # Rotate 90 degrees clockwise
-writer.add_page(page)
-
-with open("rotated.pdf", "wb") as output:
-    writer.write(output)
-```
-
-### pdfplumber - Text and Table Extraction
-
-#### Extract Text with Layout
-```python
-import pdfplumber
-
-with pdfplumber.open("document.pdf") as pdf:
-    for page in pdf.pages:
-        text = page.extract_text()
-        print(text)
-```
-
-#### Extract Tables
-```python
-with pdfplumber.open("document.pdf") as pdf:
-    for i, page in enumerate(pdf.pages):
-        tables = page.extract_tables()
-        for j, table in enumerate(tables):
-            print(f"Table {j+1} on page {i+1}:")
-            for row in table:
-                print(row)
-```
-
-#### Advanced Table Extraction
-```python
-import pandas as pd
-
-with pdfplumber.open("document.pdf") as pdf:
-    all_tables = []
-    for page in pdf.pages:
-        tables = page.extract_tables()
-        for table in tables:
-            if table:  # Check if table is not empty
-                df = pd.DataFrame(table[1:], columns=table[0])
-                all_tables.append(df)
+# PDF 文件处理
 
-# Combine all tables
-if all_tables:
-    combined_df = pd.concat(all_tables, ignore_index=True)
-    combined_df.to_excel("extracted_tables.xlsx", index=False)
-```
+先按全局 `CLAUDE.md` 判定 Q/L/P/R。本 skill 只负责 PDF 的读取、页面操作、表单、文件结构和实际显示，不决定论文、报告、统计表或研究结论的专业内容，也不因输入是 PDF 自动扩大到整份材料审查。
 
-### reportlab - Create PDFs
+## 1. 确认任务范围与唯一输入
 
-#### Basic PDF Creation
-```python
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+- Q：读取用户指定的页、段落、表格、元数据或文件属性，只回答问题，不生成文件。
+- L：只处理指定页、页段、表单字段或一种文件操作；保留未授权页面、书签、注释、表单、附件、元数据和安全设置。
+- P：创建或重组完整 PDF，或者一次改动影响目录、书签、页码、表单结构、全文可搜索性、加密、签名或多个页面。
+- R：用户明确正式提交、外发或归档时，在 P 基础上检查完整当前版、授权、隐私、可访问性及机构明确要求。
 
-c = canvas.Canvas("hello.pdf", pagesize=letter)
-width, height = letter
+多个同名文件、多个合理当前版、页码口径不一致或密码权限不明时先确认。页面操作使用 PDF 实际页序号；正文印刷页码、罗马数字页码或附件编号另行记录，不能混用。
 
-# Add text
-c.drawString(100, height - 100, "Hello World!")
-c.drawString(100, height - 120, "This is a PDF created with reportlab")
+先只读检查完成本轮操作所需的命令和 Python 包是否已经存在。复用用户指定且兼容的环境；缺少前置工具时说明受影响的操作和用户可选择的准备方式，不得自行安装，也不静默换成会改变内容或质量的近似方案。
 
-# Add a line
-c.line(100, height - 140, 400, height - 140)
+## 2. 按操作选择路径
 
-# Save
-c.save()
-```
+| 操作 | 主要路径 | 最少检查 |
+| --- | --- | --- |
+| 读取文字、表格或元数据 | 文本型 PDF 用 `pypdf`、`pdfplumber` 或 `pdftotext`；需要坐标或复杂表格时按 [reference.md](reference.md) 选择 | 目标页正确；提取顺序、表头、脚注、单位和跨页关系没有被误读 |
+| 扫描件 OCR | 只对用户指定页或确认为扫描件的页执行 OCR；沿用已有 OCR/渲染环境 | 原图页保留；抽查目标页的字符、数字、表格列和阅读顺序；不把低置信识别包装为原文 |
+| 合并、拆分、重排、旋转或裁切 | 使用已有 `pypdf` 或 `qpdf`；复杂命令见 [reference.md](reference.md) | 页数、来源文件、页序、方向、裁切范围和未处理页面正确 |
+| 创建 PDF | 先由内容 skill 完成正文、表格和图件，再使用已有 ReportLab 或项目既有生成器；实现细节见 [reference.md](reference.md) | 内容写入完整，字体和符号可显示，分页、表格、图片和链接在目标尺寸可读 |
+| 填写表单 | 完整读取 [forms.md](forms.md)，优先使用现有 AcroForm 字段；无字段时才按页面坐标填写 | 字段名与值对应，文字没有截断或遮挡，复选/单选状态正确，未授权字段为空且原表单结构保留 |
+| 水印、加密或权限 | 使用已有 `pypdf` 或 `qpdf`，只按用户明确的文字、页面范围、密码与权限设置 | 水印位置和透明度不遮挡内容；密码、打开权限和允许操作符合要求 |
 
-#### Create PDF with Multiple Pages
-```python
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet
+填写保密、伦理、签名或身份字段时，只使用用户提供或已确认的信息。不得代签、猜测日期、伦理号、作者、机构、研究结果或权限密码。数字表格需要进一步整理为 Excel 时，提取本身由本 skill 完成；只有用户要求实际 `.xlsx` 输出时再调用 `xlsx`。
 
-doc = SimpleDocTemplate("report.pdf", pagesize=letter)
-styles = getSampleStyleSheet()
-story = []
+## 3. 执行要求
 
-# Add content
-title = Paragraph("Report Title", styles['Title'])
-story.append(title)
-story.append(Spacer(1, 12))
+1. 保留原始 PDF，只写到用户指定或含义明确的新文件；L 不覆盖唯一原件。
+2. 尽量使用不会栅格化全部页面的操作。合并、拆分、旋转、裁切和填写现有字段时保留矢量文字、链接、书签、注释、表单和可搜索性中未被当前任务要求改变的部分。
+3. 只有页面本身是扫描图像或用户明确要求扁平化时才栅格化。OCR 输出保留原页图像并增加可搜索文字层，不用识别文字重排原版面。
+4. 加密 PDF 仅在用户拥有权限并提供所需密码时处理。发现数字签名时，任何改写都可能使签名失效；先说明影响并等待用户决定。
+5. 临时页图、OCR 中间文件、拆包内容和检查副本放在任务 workbench，不写入正式交付目录。
 
-body = Paragraph("This is the body of the report. " * 20, styles['Normal'])
-story.append(body)
-story.append(PageBreak())
+## 4. 最少检查与扩大条件
 
-# Page 2
-story.append(Paragraph("Page 2", styles['Heading1']))
-story.append(Paragraph("Content for page 2", styles['Normal']))
+每项检查必须能指出本次操作可能造成的一种具体错误；不能说明时不执行。
 
-# Build PDF
-doc.build(story)
-```
+- Q 只核对被引用的目标页和答案所依赖的文字、表格或属性。
+- L 默认只检查四项：目标页或字段已按要求处理；未授权页和对象未改变；输出可以重新打开；目标页在实际显示中可读。页数或页序没变时不重查目录、书签和其它页面。
+- 只有页数、页序、页面尺寸、裁切、全文文字层、书签、表单结构、加密、签名或共享资源发生变化时，才增加相应的全文结构或代表页面检查。
+- 新建、完整重组或 R 正式发布时，检查完整页序、目录/书签、字体替换、链接、表单、可搜索性、元数据、隐私和最终页面显示中实际适用的项目。
+- 输入文件、处理方法和被检查页面未改变时，沿用最近一次成功检查。修复真实问题后，只复查该问题和实际受其影响的页面、目录、书签或表单字段。
 
-#### Subscripts and Superscripts
+渲染只用于检查页面显示或为 OCR 提供输入。L 只渲染目标页及页序变化可能影响的相邻页；新建、完整重组或 R 才渲染整份或按同一版式抽取代表页面。文件能打开、文本能提取或退出码为零都不能单独证明页面显示正确。
 
-**IMPORTANT**: Never use Unicode subscript/superscript characters (₀₁₂₃₄₅₆₇₈₉, ⁰¹²³⁴⁵⁶⁷⁸⁹) in ReportLab PDFs. The built-in fonts do not include these glyphs, causing them to render as solid black boxes.
+## 5. 完成条件
 
-Instead, use ReportLab's XML markup tags in Paragraph objects:
-```python
-from reportlab.platypus import Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+- 唯一输入、目标页或字段、允许操作和输出文件已经明确。
+- 输出页数、页序、方向、内容、表单状态或安全设置与请求一致，未授权部分没有意外变化。
+- 内容 skill 要求的正文、数字、表格和图件已经正确进入 PDF；本 skill 不重复审查已由内容 skill 确认且本次未改变的科研含义。
+- 实际受影响页面已显示检查；未执行的 OCR、全文结构、完整渲染或发布检查不包装成已通过。
+- 原始文件可恢复，中间文件未混入正式交付目录，正式当前版文件名含义明确。
 
-styles = getSampleStyleSheet()
-
-# Subscripts: use <sub> tag
-chemical = Paragraph("H<sub>2</sub>O", styles['Normal'])
-
-# Superscripts: use <super> tag
-squared = Paragraph("x<super>2</super> + y<super>2</super>", styles['Normal'])
-```
-
-For canvas-drawn text (not Paragraph objects), manually adjust font the size and position rather than using Unicode subscripts/superscripts.
-
-## Command-Line Tools
-
-### pdftotext (poppler-utils)
-```bash
-# Extract text
-pdftotext input.pdf output.txt
-
-# Extract text preserving layout
-pdftotext -layout input.pdf output.txt
-
-# Extract specific pages
-pdftotext -f 1 -l 5 input.pdf output.txt  # Pages 1-5
-```
-
-### qpdf
-```bash
-# Merge PDFs
-qpdf --empty --pages file1.pdf file2.pdf -- merged.pdf
-
-# Split pages
-qpdf input.pdf --pages . 1-5 -- pages1-5.pdf
-qpdf input.pdf --pages . 6-10 -- pages6-10.pdf
-
-# Rotate pages
-qpdf input.pdf output.pdf --rotate=+90:1  # Rotate page 1 by 90 degrees
-
-# Remove password
-qpdf --password=mypassword --decrypt encrypted.pdf decrypted.pdf
-```
-
-### pdftk (if available)
-```bash
-# Merge
-pdftk file1.pdf file2.pdf cat output merged.pdf
-
-# Split
-pdftk input.pdf burst
-
-# Rotate
-pdftk input.pdf rotate 1east output rotated.pdf
-```
-
-## Common Tasks
-
-### Extract Text from Scanned PDFs
-```python
-# Requires pytesseract and pdf2image in the user-selected environment.
-# If missing, explain the user's next setup step; do not install them.
-import pytesseract
-from pdf2image import convert_from_path
-
-# Convert PDF to images
-images = convert_from_path('scanned.pdf')
-
-# OCR each page
-text = ""
-for i, image in enumerate(images):
-    text += f"Page {i+1}:\n"
-    text += pytesseract.image_to_string(image)
-    text += "\n\n"
-
-print(text)
-```
-
-### Add Watermark
-```python
-from pypdf import PdfReader, PdfWriter
-
-# Create watermark (or load existing)
-watermark = PdfReader("watermark.pdf").pages[0]
-
-# Apply to all pages
-reader = PdfReader("document.pdf")
-writer = PdfWriter()
-
-for page in reader.pages:
-    page.merge_page(watermark)
-    writer.add_page(page)
-
-with open("watermarked.pdf", "wb") as output:
-    writer.write(output)
-```
-
-### Extract Images
-```bash
-# Using pdfimages (poppler-utils)
-pdfimages -j input.pdf output_prefix
-
-# This extracts all images as output_prefix-000.jpg, output_prefix-001.jpg, etc.
-```
-
-### Password Protection
-```python
-from pypdf import PdfReader, PdfWriter
-
-reader = PdfReader("input.pdf")
-writer = PdfWriter()
-
-for page in reader.pages:
-    writer.add_page(page)
-
-# Add password
-writer.encrypt("userpassword", "ownerpassword")
-
-with open("encrypted.pdf", "wb") as output:
-    writer.write(output)
-```
-
-## Quick Reference
-
-| Task | Best Tool | Command/Code |
-|------|-----------|--------------|
-| Merge PDFs | pypdf | `writer.add_page(page)` |
-| Split PDFs | pypdf | One page per file |
-| Extract text | pdfplumber | `page.extract_text()` |
-| Extract tables | pdfplumber | `page.extract_tables()` |
-| Create PDFs | reportlab | Canvas or Platypus |
-| Command line merge | qpdf | `qpdf --empty --pages ...` |
-| OCR scanned PDFs | pytesseract | Convert to image first |
-| Fill PDF forms | pdf-lib or pypdf (see [forms.md](forms.md)) | See [forms.md](forms.md) |
-
-## Next Steps
-
-- For advanced pypdfium2 usage, see [reference.md](reference.md)
-- For JavaScript libraries (pdf-lib), see [reference.md](reference.md)
-- If you need to fill out a PDF form, follow [forms.md](forms.md)
-- For troubleshooting guides, see [reference.md](reference.md)
+高级库接口、复杂页面操作、坐标提取、性能和故障处理见 [reference.md](reference.md)；表单定位、填写和验证见 [forms.md](forms.md)。只读取当前操作需要的部分。

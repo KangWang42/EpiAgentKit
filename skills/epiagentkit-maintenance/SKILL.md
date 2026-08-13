@@ -82,8 +82,9 @@ description: 回归安全地维护 EpiAgentKit 的 CLAUDE/AGENTS 规则、skills
 
 ### Skills 与 references
 
-- description 同时写清能力、具体触发场景、排除边界和上下游依赖；核心步骤用祈使式。
+- description 同时写清能力、具体触发场景、排除边界，以及需要在它之前或之后配合使用的 skill；核心步骤用祈使式。
 - `SKILL.md` 只保留选择和执行步骤，条件细节放在可以从中直接找到的 references。避免多层引用、重复说明、教程式铺陈和未被任何流程使用的资源。
+- 审查或修改 skill 时，用自然领域语言核对每个任务分支的触发、排除、唯一输入、专业动作、需要时配合的 skill、最少检查、扩大检查条件和完成证据。每项检查必须指出本次修改可能造成的具体错误；局部纠正不使未受影响的项目或发布检查失效。内容 skill 负责专业含义，文件 skill 负责文件结构和显示，不重复证明同一事项。
 - 一个 skill 中验证有效的提示词经验可作为其它 skill 的候选方法，但必须先核对目标任务、工具能力、输入结构、失败模式和验收责任是否相同，并用该 skill 的代表性任务验证收益。只迁移确有帮助的原则，不机械复制五段标题、字段、字数、禁止项或完整模板；不适用时保留原流程。多个 skill 共同调用同一内容 skill 时，由内容 skill 完成其专业步骤，调用者继续负责自己的成品位置、格式和交付验收。
 - 新 skill 必须使用 `skills/skill-creator/scripts/init_skill.py` 初始化；删除全部占位资源，仅保留实际需要的文件。
 - 运行 `python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>`，再检查引用存在、触发边界、旧场景与新场景。

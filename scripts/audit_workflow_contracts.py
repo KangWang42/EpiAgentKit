@@ -1200,7 +1200,7 @@ def main() -> int:
         "skills/pptx/editing.md": (
             "For an L bounded edit",
             "Do not run template selection",
-            "upgrade to P and inspect every direct consumer",
+            "upgrade to P and inspect the slides that actually use the changed item",
             "R performs complete presentation QA",
         ),
         "skills/pptx/scripts/render_slides.ps1": (
@@ -1216,9 +1216,10 @@ def main() -> int:
             "do not install it",
         ),
         "skills/pdf/SKILL.md": (
-            "Requires pytesseract and pdf2image",
-            "If missing, explain the user's next setup step",
-            "do not install them",
+            "L 默认只检查四项",
+            "页数或页序没变时不重查目录、书签和其它页面",
+            "缺少前置工具时说明受影响的操作和用户可选择的准备方式",
+            "不得自行安装",
         ),
         "skills/report-writing/SKILL.md": (
             "用户只要正文时直接返回净稿",
@@ -1235,7 +1236,7 @@ def main() -> int:
         "skills/python-ecg-analysis/SKILL.md": (
             "只有确认 `--help` 会在业务逻辑前退出且不会写文件时",
             "无法确认某个程序在显示帮助信息前不会写文件时，不执行该命令",
-            "上游依赖：开工前对齐 biostat-principles",
+            "配合规则：开工前对齐 biostat-principles",
             "Q 只读取回答当前问题所需的权威项目说明",
             "L 读取项目规则、目标脚本/配置",
             "不强制读取全部 PROTOCOL、SAP、DECISIONS 和 `02_code/`",

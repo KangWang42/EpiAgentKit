@@ -1,6 +1,6 @@
 ---
 name: publication-figures
-description: 为 R 或 Python 真实数据选择、绘制、返工和审查发表级统计图、数据图，包括森林图、生存曲线、ROC、热图、模型诊断和由多个子图组成的图件，并控制尺寸、字体与配色。任何 ggplot/matplotlib 统计出图均使用；流程、机制、框架和技术路线转 research-visuals。上游为 biostat-principles。
+description: 为 R 或 Python 真实数据选择、绘制、返工和审查发表级统计图、数据图，包括森林图、生存曲线、ROC、热图、模型诊断和由多个子图组成的图件，并控制尺寸、字体与配色。任何 ggplot/matplotlib 统计出图均使用；流程、机制、框架和技术路线转 research-visuals。开工先遵循 biostat-principles。
 ---
 
 # 统计图工作流

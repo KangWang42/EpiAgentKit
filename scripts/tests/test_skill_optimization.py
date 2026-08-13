@@ -831,11 +831,20 @@ class SkillOptimizationTests(unittest.TestCase):
         ecg = (ROOT / "skills/python-ecg-analysis/SKILL.md").read_text(
             encoding="utf-8"
         )
+        pdf = (ROOT / "skills/pdf/SKILL.md").read_text(encoding="utf-8")
+        report = (ROOT / "skills/report-writing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        svg = (ROOT / "skills/svg-diagrams/SKILL.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn("受影响页面的显示", academic_humanizer)
         self.assertIn(
-            "Read `references/scoped-revision.md` completely", docx
+            "read `references/scoped-revision.md` completely", docx
         )
+        self.assertIn("image replacement", docx)
         self.assertIn("For an L revision", docx_revision)
         self.assertIn(
             "Inspect every page only for a newly created", docx_revision
@@ -858,6 +867,14 @@ class SkillOptimizationTests(unittest.TestCase):
 
         self.assertIn("text-, comment- or format-only L edit", xlsx)
         self.assertIn("zero new unintended formula errors", xlsx)
+        self.assertIn("一次用户纠正或一次重新保存本身不触发整份报告重审", report)
+        self.assertIn("L 默认只检查四项", pdf)
+        self.assertIn("页数或页序没变时不重查目录、书签和其它页面", pdf)
+        self.assertIn("每项检查必须能说明它用于发现本次修改可能造成的哪一种具体错误", global_rules)
+        self.assertIn("一次新的局部纠正只使它实际影响的检查失效", global_rules)
+        self.assertIn("L 不重新规划整张图", svg)
+        self.assertIn("不是 L 局部修改的固定清单", svg)
+        self.assertIn("L 完成时只确认", svg)
         self.assertIn("L 局部审查", peer_review)
         self.assertIn("明确未审范围", peer_review)
         self.assertIn("Q：直接回答当前设计或方法问题", study_design)
@@ -865,6 +882,20 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn("Q 只读取回答当前问题", ecg)
         self.assertIn("L 读取项目规则、目标脚本/配置", ecg)
         self.assertIn("不为 L 重跑无关脚本", ecg)
+
+    def test_skill_authoring_requires_clear_routes_and_minimum_checks(self) -> None:
+        creator = (ROOT / "skills/skill-creator/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        for fragment in (
+            "explicit exclusions and companion skills",
+            "trigger, exclusion, unique input, domain action",
+            "minimum checks",
+            "changes that require wider checks",
+            "Every check must name a concrete error",
+            "do not let a local correction reopen project- or release-level checks",
+        ):
+            self.assertIn(fragment, creator)
 
 
 if __name__ == "__main__":

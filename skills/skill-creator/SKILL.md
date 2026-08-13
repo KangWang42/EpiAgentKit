@@ -331,11 +331,13 @@ Do not invent fields beyond these.
 
 ##### Description checklist (the triggering contract)
 
-A reliable description contains, in order: (1) one sentence on what the skill does; (2) an enumerated trigger list — concrete user phrases and situations ("Use when..." / "触发场景：(1)...(2)..."); (3) upstream/downstream skill dependencies if part of an ecosystem. Write the description in the same language users will phrase their requests in. Vague descriptions ("helps with documents") cause both missed triggers and false triggers.
+A reliable description contains, in order: (1) one sentence on what the skill does; (2) concrete user phrases and situations that trigger it; (3) explicit exclusions and companion skills when it belongs to an ecosystem. Write the description in the same language users will phrase their requests in. Vague descriptions ("helps with documents") cause both missed triggers and false triggers.
 
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
+
+For each distinct task branch, make the body answer eight questions without forcing every skill into the same headings: trigger, exclusion, unique input, domain action, companion skill when needed, minimum checks, changes that require wider checks, and completion evidence. Keep one owner for each decision. A file-format skill verifies structure and display while the content skill verifies professional meaning; neither repeats the other's judgment. Every check must name a concrete error the current change could cause. Reuse a recent successful check when its input, method and examined content are unchanged, and do not let a local correction reopen project- or release-level checks.
 
 ### Step 5: Packaging a Skill
 

@@ -528,7 +528,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "同时完成正文与文件工作项",
             "报告装配与当前任务验收清单",
             "不得按文件遍历或生成顺序自动编号",
-            "逐项修补用户纠正不能代替全稿净稿检查",
+            "一次用户纠正或一次重新保存本身不触发整份报告重审",
             "无法渲染时明确未验证范围",
         ):
             self.assertIn(fragment, report)
@@ -559,6 +559,17 @@ class WorkflowRoutingTests(unittest.TestCase):
         ):
             self.assertIn(fragment, requirements)
         self.assertNotIn("重新生成同一文件后，必须重新执行整份清单", requirements)
+
+        local_case = cases["existing_report_local_figure_replacement"]
+        self.assertEqual(local_case["primary"], "docx")
+        self.assertIn("report-writing", local_case["excluded"])
+
+        pdf_case = cases["rotate_single_pdf_page"]
+        self.assertEqual(pdf_case["primary"], "pdf")
+        self.assertEqual(
+            pdf_case["expected_action"],
+            "rotate_only_target_page_and_preserve_unaffected_pdf_parts",
+        )
 
         file_case = cases["existing_project_report_file_delivery"]
         self.assertEqual(file_case["primary"], "report-writing")

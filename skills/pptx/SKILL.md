@@ -74,10 +74,10 @@ python scripts/office/unpack.py presentation.pptx unpacked/
 
 **Read [editing.md](editing.md) for full details.**
 
-- L bounded edit: lock the source presentation, target slides/elements, allowed package parts and protected scope; inspect and edit only those targets, validate the package, and render the changed slides plus direct consumers of any shared layout or theme change.
+- L bounded edit: lock the source presentation, target slides/elements, allowed package parts and protected scope; inspect and edit only those targets, validate the package, and render the changed slides plus slides that use any shared layout or theme changed in this task.
 - New or substantially rebuilt deck: analyze the template with `thumbnail.py`, then unpack → manipulate slides → edit content → clean → pack.
 
-A bounded edit does not trigger template remapping, deck-wide restyling, full-slide content review or a complete render. Upgrade to P when slide order/count, masters, layouts, theme, fonts, shared assets or other deck-wide consumers change; R adds complete presentation QA.
+A bounded edit does not trigger template remapping, deck-wide restyling, full-slide content review or a complete render. Upgrade to P when slide order/count, masters, layouts, theme, fonts, shared assets or other deck-wide settings change; inspect the slides that actually use them. R adds complete presentation QA.
 
 ---
 
@@ -185,7 +185,7 @@ Use the template's fonts or fonts already available in the environment. Prioriti
 
 Inspect against the content, template and rendering contract. Look actively for real defects, but a first inspection with zero observed issues is valid evidence when the checks are complete; do not invent a change to make the QA loop appear useful.
 
-For an L edit, content and visual QA cover the changed slides, their directly affected notes/media and any consumers of an authorized shared change. New/rebuilt decks and R deliverables receive deck-wide content and visual QA.
+For an L edit, content and visual QA cover the changed slides, their directly affected notes/media and slides that use an authorized shared change. New/rebuilt decks and R deliverables receive deck-wide content and visual QA.
 
 ### Content QA
 
@@ -232,7 +232,7 @@ Read and analyze these images:
 1. /path/to/slide-01.jpg (Expected: [brief description])
 2. /path/to/slide-02.jpg (Expected: [brief description])
 
-Report ALL issues found, including minor ones.
+Report observed issues that violate the content, template or rendering contract; do not create a list of harmless differences.
 ```
 
 ### Verification Loop

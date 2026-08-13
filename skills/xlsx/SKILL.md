@@ -11,7 +11,7 @@ Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifa
 ## Validation scope
 
 - Q reads only the requested cells, sheets or workbook properties and returns an answer without creating a file.
-- L locks the input workbook, authorized cells/ranges/sheets and protected scope. Validate changed values, formulas, formatting, comments, names and the visible affected area, plus direct formula/chart/pivot/validation consumers. Do not inspect or restyle unrelated sheets.
+- L locks the input workbook, authorized cells/ranges/sheets and protected scope. Validate only changed values, formulas, formatting, comments or names, the visible affected area, and formulas, charts, pivot tables or validation rules that actually refer to the changed cells. Do not inspect or restyle unrelated sheets.
 - P validates every affected sheet and shared workbook feature. R additionally checks the complete current workbook, required recalculation, external links, visible delivery state and release requirements.
 
 Recalculate only when the task creates or changes formulas, values that feed formulas, named ranges, calculation settings or other dependencies. A text-, comment- or format-only L edit does not trigger recalculation merely because the workbook already contains formulas. When recalculation is required, the provided script may scan the whole workbook; report unrelated pre-existing errors separately and do not call them new failures unless the current change can affect them.

@@ -1,6 +1,6 @@
 ---
 name: consulting-delivery
-description: 把已完成并验证的 R 或 Python 分析打包为客户可独立复现、可直接阅读且保留真实溯源的咨询交付物。用于“给客户交付”“打包结果”或在 05_reports/ 建正式结果包；不用于未完成分析或内部探索。上游为 biostat-principles，文本终审配合 academic-humanizer，最终检查配合 epi-project-audit。
+description: 把已完成并验证的 R 或 Python 分析打包为客户可独立复现、可直接阅读且保留真实溯源的咨询交付物。用于“给客户交付”“打包结果”或在 05_reports/ 建正式结果包；不用于未完成分析或内部探索。开工先遵循 biostat-principles，文本终审配合 academic-humanizer，最终检查配合 epi-project-audit。
 ---
 
 # 咨询交付

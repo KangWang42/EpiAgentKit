@@ -126,15 +126,15 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
 
     def test_file_skills_explain_missing_prerequisites_without_installing(self) -> None:
         expected = {
-            "skills/docx/SKILL.md": "without installing it",
-            "skills/pptx/SKILL.md": "do not install or upgrade it",
-            "skills/pdf/SKILL.md": "do not install them",
-            "skills/xlsx/SKILL.md": "do not install it",
+            "skills/docx/SKILL.md": ("without installing it", "user"),
+            "skills/pptx/SKILL.md": ("do not install or upgrade it", "user"),
+            "skills/pdf/SKILL.md": ("不得自行安装", "用户指定"),
+            "skills/xlsx/SKILL.md": ("do not install it", "user"),
         }
-        for relative, marker in expected.items():
+        for relative, (marker, user_marker) in expected.items():
             body = self.read(relative)
             self.assertIn(marker, body, relative)
-            self.assertIn("user", body.lower(), relative)
+            self.assertIn(user_marker, body.lower(), relative)
 
     def test_missing_pyyaml_reports_choice_without_installing(self) -> None:
         body = self.read("skills/epi-project-audit/scripts/check_consistency.py")
