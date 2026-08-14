@@ -35,12 +35,22 @@ description: 基于已验证的代码、结果数字唯一来源和表图生成�
 
 完整稿或论文级结构性重写必须按下列条件读取并在写作过程中执行：
 
-- 所有完整稿：[内容与章节功能](references/section-content-playbook.md) 和 [统计报告](references/statistical-reporting.md)。
+- 所有完整稿：[内容与章节功能](references/section-content-playbook.md)。
+- 含量化估计、统计模型或定量证据综合的稿件，以及混合方法稿件中的量化部分：[统计报告](references/statistical-reporting.md)。纯质性研究、叙述性综述或不含量化结果的论文不读取该文件，按实际研究类型和经核验报告规范确定证据呈现要求。
 - 所有完整稿或论文级结构性重写：[流行病学稿件约定与适用要求](references/manuscript-contract.md)。约定需要跨命令或跨文件传递时，使用其中的任务级 JSON，并运行 `scripts/validate_manuscript_contract.py`；局部部件不因此建立整篇约定。
 - 所有完整稿或论文级结构性重写：写作前用 `evidence-research` 核验正文将使用的既有证据、适用的报告规范，以及已经确定的目标期刊要求。已有核验记录时先检查来源身份、版本、适用性和时效；仍然有效时沿用，不为形式重复整套检索。
 - 中文期刊稿：[中文期刊](references/chinese-paper.md)。
 - 英文稿：[英文写作](references/english-writing.md) 和 [英文功能表达与证据约束](references/english-phrasebank.md)；后者用于时态、衔接、hedging 和模板痕迹审查，不复制套句。
 - 单个论文部件或投稿材料需要新增或核验引文、方法依据、报告规范或目标期刊要求时，同样先用 `evidence-research` 核验。
+
+专项统计方法只读取稿件实际采用的对应 reference，未采用时不读取、不检查，也不补做：
+
+- 实际采用 MCA 或 PCA：[MCA 与 PCA 报告要求](references/method-dimension-reduction.md)。
+- 实际采用交互作用、效应修饰或亚组分析：[交互作用与亚组分析报告要求](references/method-interaction-subgroup.md)。
+- 实际采用 Bootstrap 或其它重抽样估计：[Bootstrap 与重抽样报告要求](references/method-resampling.md)。
+- 实际采用分位数回归：[分位数回归报告要求](references/method-quantile-regression.md)。
+- 实际构建、验证或比较预后模型、风险评分或分期系统：[预后模型与风险分层稿件要求](references/method-prognostic-models.md)。
+- 采用其它专项方法：使用相应分析 skill，并由 `evidence-research` 核验方法依据和适用报告规范；不得选择名称相近的上述分支代替。
 
 “读取最少必要参考”是排除与当前稿件无关的语言、论文类型或投稿材料分支，不是跳过适用的内容规范。
 

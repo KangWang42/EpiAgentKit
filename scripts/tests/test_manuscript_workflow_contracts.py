@@ -333,7 +333,7 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
                 )
             )
 
-    def test_signoff_workflow_is_method_specific_and_does_not_upgrade_local_edits(self) -> None:
+    def test_method_specific_references_are_loaded_only_when_used(self) -> None:
         signoff = (
             ROOT / "skills/academic-publishing/references/submission-signoff.md"
         ).read_text(encoding="utf-8")
@@ -343,6 +343,21 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
             encoding="utf-8"
         )
+        review_killers = (
+            ROOT / "skills/academic-publishing/references/review-killers.md"
+        ).read_text(encoding="utf-8")
+        method_references = {
+            "MCA 与 PCA": ROOT
+            / "skills/academic-publishing/references/method-dimension-reduction.md",
+            "交互作用与亚组": ROOT
+            / "skills/academic-publishing/references/method-interaction-subgroup.md",
+            "Bootstrap 与重抽样": ROOT
+            / "skills/academic-publishing/references/method-resampling.md",
+            "分位数回归": ROOT
+            / "skills/academic-publishing/references/method-quantile-regression.md",
+            "预后模型与风险分层": ROOT
+            / "skills/academic-publishing/references/method-prognostic-models.md",
+        }
 
         for fragment in (
             "局部修改只核对指定内容",
@@ -354,16 +369,48 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         ):
             self.assertIn(fragment, signoff)
         for fragment in (
-            "MCA、PCA 或其他数据驱动降维",
-            "交互和亚组分析",
-            "Bootstrap 或其他重抽样",
-            "分位数回归",
-            "不把上述四类方法变成所有论文的默认检查",
+            "每种实际采用的方法建立一行",
+            "没有对应本地 reference 时",
+            "未采用的方法不读取专项 reference、不检查相应字段、不补做分析",
+            "不得套用名称相近但 estimand、数据结构或假设不同的方法分支",
         ):
             self.assertIn(fragment, reporting)
+        for method_name in ("MCA", "Bootstrap", "分位数回归", "交互和亚组"):
+            self.assertNotIn(method_name, reporting)
+            self.assertNotIn(method_name, signoff)
+        for label, path in method_references.items():
+            body = path.read_text(encoding="utf-8")
+            self.assertIn("只在稿件实际", body, label)
+            self.assertIn("方法、结果、表图和讨论", body, label)
+            self.assertIn(path.name, publishing)
+        self.assertIn("未采用时不读取、不检查，也不补做", publishing)
+        self.assertIn("采用其它专项方法", publishing)
+        self.assertIn("不得选择名称相近的上述分支代替", publishing)
+        self.assertIn("含量化估计、统计模型或定量证据综合的稿件", publishing)
+        self.assertIn("纯质性研究、叙述性综述或不含量化结果的论文不读取", publishing)
+        self.assertNotIn(
+            "所有完整稿：[内容与章节功能](references/section-content-playbook.md) 和 [统计报告]",
+            publishing,
+        )
+        self.assertIn("纯质性研究或不含量化结果的论文不加载本文件", reporting)
+        self.assertIn("只检查稿件实际采用的专项方法", review_killers)
+        for project_specific_example in (
+            "FactoMineR",
+            "quantreg",
+            "ADL",
+            "Barthel",
+            "49 份文本",
+            "24.1±10.3",
+            "审稿人必抓",
+        ):
+            self.assertNotIn(project_specific_example, review_killers)
+        self.assertNotIn("bootstrap", review_killers.casefold())
         self.assertIn("局部润色、单项修正和纯版式修改不触发", publishing)
-        self.assertNotIn("18 项 ZBI", signoff + reporting)
-        self.assertNotIn("0–72", signoff + reporting)
+        all_method_text = "".join(
+            path.read_text(encoding="utf-8") for path in method_references.values()
+        )
+        self.assertNotIn("18 项 ZBI", signoff + reporting + all_method_text)
+        self.assertNotIn("0–72", signoff + reporting + all_method_text)
 
     def test_table_reconciliation_uses_position_for_repeated_visible_headers(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
