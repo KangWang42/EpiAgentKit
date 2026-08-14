@@ -825,6 +825,22 @@ class WorkflowRoutingTests(unittest.TestCase):
             "epi-project-audit",
             cases["formal_project_local_word_revision"]["excluded"],
         )
+        self.assertEqual(
+            cases["formal_project_manuscript_signoff"]["expected_action"],
+            "reuse_scientific_revision_and_file_evidence_then_sign_off_once",
+        )
+        self.assertIn(
+            "epi-project-audit",
+            cases["formal_project_manuscript_signoff"]["companions"],
+        )
+        self.assertEqual(
+            cases["external_manuscript_signoff_without_project_init"]["expected_action"],
+            "sign_off_declared_external_evidence_without_inventing_project_sources",
+        )
+        self.assertIn(
+            "project-init",
+            cases["external_manuscript_signoff_without_project_init"]["excluded"],
+        )
 
     def test_shared_academic_language_and_section_matrix_contract(self) -> None:
         humanizer = (

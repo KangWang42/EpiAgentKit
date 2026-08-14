@@ -12,6 +12,20 @@ from typing import Any
 ALLOWED_KINDS = {"design", "estimand", "method", "data", "reporting"}
 ALLOWED_STATES = {"pending", "passed", "blocked"}
 ALLOWED_MODES = {"complete_manuscript", "structural_rewrite"}
+ALLOWED_FACT_STATES = {"confirmed", "pending", "blocked"}
+ALLOWED_ANALYSIS_TIERS = {"primary", "secondary", "sensitivity", "exploratory"}
+ALLOWED_RELEASE_TARGETS = {"submission", "revision_resubmission", "external_release", "archive"}
+ALLOWED_RELEASE_STATES = {"passed", "blocked", "not_applicable"}
+ALLOWED_ANONYMITY_STATES = {"verified", "not_required"}
+REQUIRED_RELEASE_CHECKS = {
+    "evidence_chain",
+    "method_result_alignment",
+    "reporting_requirements",
+    "citations_cross_references",
+    "disclosures",
+    "artifact_sync",
+    "file_validation",
+}
 
 
 def nonempty(value: Any) -> bool:
@@ -36,12 +50,12 @@ def unique_ids(items: Any, label: str, errors: list[str]) -> set[str]:
 
 def string_list(value: Any, label: str, errors: list[str]) -> list[str]:
     if not isinstance(value, list) or not all(nonempty(item) for item in value):
-        errors.append(f"{label} 必须是非空字符串数组")
+        errors.append(f"{label} 必须是字符串数组且所有元素非空")
         return []
     return [item.strip() for item in value]
 
 
-def validate_contract(contract: Any) -> list[str]:
+def validate_contract(contract: Any, *, signoff: bool = False) -> list[str]:
     errors: list[str] = []
     if not isinstance(contract, dict):
         return ["稿件约定的根节点必须是对象"]
@@ -86,6 +100,8 @@ def validate_contract(contract: Any) -> list[str]:
                 continue
             if item.get("kind") not in ALLOWED_KINDS:
                 errors.append(f"modules[{index}].kind 不受支持")
+            if "status" in item and item.get("status") not in ALLOWED_STATES:
+                errors.append(f"modules[{index}].status 不受支持")
             for field in ("source", "manuscript_locations", "required_fields"):
                 string_list(item.get(field), f"modules[{index}].{field}", errors)
 
@@ -170,6 +186,132 @@ def validate_contract(contract: Any) -> list[str]:
                 if not nonempty(item.get(field)):
                     errors.append(f"figures[{index}].{field} 不能为空")
 
+    manuscript_lock = contract.get("manuscript_lock")
+    if manuscript_lock is not None or signoff:
+        if not isinstance(manuscript_lock, dict):
+            errors.append("manuscript_lock 必须是对象")
+            manuscript_lock = {}
+        for field in ("selected_input", "input_hash", "round"):
+            if not nonempty(manuscript_lock.get(field)):
+                errors.append(f"manuscript_lock.{field} 不能为空")
+        if manuscript_lock.get("anonymity") not in ALLOWED_ANONYMITY_STATES:
+            errors.append("manuscript_lock.anonymity 仅接受 verified 或 not_required")
+
+    fact_locks = contract.get("fact_locks")
+    if fact_locks is not None or signoff:
+        fact_ids = unique_ids(fact_locks, "fact_locks", errors)
+        if isinstance(fact_locks, list):
+            for index, item in enumerate(fact_locks):
+                if not isinstance(item, dict):
+                    continue
+                for field in ("topic", "value"):
+                    if not nonempty(item.get(field)):
+                        errors.append(f"fact_locks[{index}].{field} 不能为空")
+                sources = string_list(
+                    item.get("sources"), f"fact_locks[{index}].sources", errors
+                )
+                locations = string_list(
+                    item.get("manuscript_locations"),
+                    f"fact_locks[{index}].manuscript_locations",
+                    errors,
+                )
+                if not sources:
+                    errors.append(f"fact_locks[{index}].sources 至少包含一个权威来源")
+                if not locations:
+                    errors.append(f"fact_locks[{index}].manuscript_locations 至少包含一个位置")
+                unknown = sorted(set(locations) - section_ids)
+                if unknown:
+                    errors.append(
+                        f"fact_locks[{index}] 包含未声明的稿件位置：{', '.join(unknown)}"
+                    )
+                if item.get("status") not in ALLOWED_FACT_STATES:
+                    errors.append(f"fact_locks[{index}].status 不受支持")
+        if signoff and not fact_ids:
+            errors.append("正式提交前确认至少需要一项已经确认的研究事实")
+
+    analysis_items = contract.get("analysis_items")
+    if analysis_items is not None or signoff:
+        analysis_ids = unique_ids(analysis_items, "analysis_items", errors)
+        analysis_tiers: set[str] = set()
+        if isinstance(analysis_items, list):
+            for index, item in enumerate(analysis_items):
+                if not isinstance(item, dict):
+                    continue
+                tier = item.get("tier")
+                if tier not in ALLOWED_ANALYSIS_TIERS:
+                    errors.append(f"analysis_items[{index}].tier 不受支持")
+                else:
+                    analysis_tiers.add(tier)
+                for field in ("purpose", "analysis_set", "result_source"):
+                    if not nonempty(item.get(field)):
+                        errors.append(f"analysis_items[{index}].{field} 不能为空")
+                method_module = item.get("method_module")
+                if not nonempty(method_module):
+                    errors.append(f"analysis_items[{index}].method_module 不能为空")
+                elif method_module not in module_ids:
+                    errors.append(
+                        f"analysis_items[{index}] 引用了未声明的方法模块：{method_module}"
+                    )
+                locations = string_list(
+                    item.get("manuscript_locations"),
+                    f"analysis_items[{index}].manuscript_locations",
+                    errors,
+                )
+                unknown = sorted(set(locations) - section_ids)
+                if unknown:
+                    errors.append(
+                        f"analysis_items[{index}] 包含未声明的稿件位置：{', '.join(unknown)}"
+                    )
+                if item.get("status") not in ALLOWED_STATES:
+                    errors.append(f"analysis_items[{index}].status 不受支持")
+        if signoff:
+            if not analysis_ids:
+                errors.append("正式提交前确认至少需要一项分析或结果项目")
+            if "primary" not in analysis_tiers:
+                errors.append("正式提交前确认必须明确至少一项 primary 分析或结果项目")
+
+    release = contract.get("release")
+    release_checks: dict[str, dict[str, Any]] = {}
+    blocking_items: list[str] = []
+    if release is not None or signoff:
+        if not isinstance(release, dict):
+            errors.append("release 必须是对象")
+            release = {}
+        target = release.get("target")
+        if target not in ALLOWED_RELEASE_TARGETS:
+            errors.append("release.target 不受支持")
+        if target in {"submission", "revision_resubmission"} and not nonempty(
+            release.get("journal_requirements_source")
+        ):
+            errors.append("正式投稿必须记录目标期刊当前要求的核验来源")
+        checks_value = release.get("checks")
+        check_ids = unique_ids(checks_value, "release.checks", errors)
+        if isinstance(checks_value, list):
+            for index, item in enumerate(checks_value):
+                if not isinstance(item, dict) or not nonempty(item.get("id")):
+                    continue
+                check_id = item["id"].strip()
+                release_checks[check_id] = item
+                if item.get("status") not in ALLOWED_RELEASE_STATES:
+                    errors.append(f"release.checks[{index}].status 不受支持")
+                evidence = string_list(
+                    item.get("evidence"),
+                    f"release.checks[{index}].evidence",
+                    errors,
+                )
+                if not evidence:
+                    errors.append(f"release.checks[{index}].evidence 至少包含一项验收证据")
+        missing_checks = sorted(REQUIRED_RELEASE_CHECKS - check_ids)
+        if missing_checks:
+            errors.append(f"release.checks 缺少必要检查：{', '.join(missing_checks)}")
+        if target == "revision_resubmission":
+            if not nonempty(release.get("revision_state")):
+                errors.append("返修提交前确认必须记录唯一 revision_state")
+            if "revision_closure" not in check_ids:
+                errors.append("返修提交前确认必须包含 revision_closure 检查")
+        raw_blocking = release.get("blocking_items")
+        blocking_items = string_list(raw_blocking, "release.blocking_items", errors)
+
     checks = contract.get("checks")
     if not isinstance(checks, dict):
         errors.append("checks 必须是对象")
@@ -196,6 +338,41 @@ def validate_contract(contract: Any) -> list[str]:
         ):
             errors.append("status=complete 时，内容、字段对账和文件显示三项检查必须全部为 passed")
 
+    if signoff:
+        if status != "complete":
+            errors.append("正式提交前确认要求稿件约定 status=complete")
+        if isinstance(artifacts, list) and isinstance(manuscript_lock, dict):
+            outputs = {
+                item.get("output")
+                for item in artifacts
+                if isinstance(item, dict) and nonempty(item.get("output"))
+            }
+            if manuscript_lock.get("selected_input") not in outputs:
+                errors.append("manuscript_lock.selected_input 必须对应一个已声明的目标成品")
+        if isinstance(modules, list) and any(
+            isinstance(item, dict) and item.get("status") != "passed"
+            for item in modules
+        ):
+            errors.append("正式提交前确认时，每个实际采用的模块 status 必须为 passed")
+        if isinstance(fact_locks, list) and any(
+            isinstance(item, dict) and item.get("status") != "confirmed"
+            for item in fact_locks
+        ):
+            errors.append("正式提交前确认时，所有研究事实必须由权威来源确认为 confirmed")
+        if isinstance(analysis_items, list) and any(
+            isinstance(item, dict) and item.get("status") != "passed"
+            for item in analysis_items
+        ):
+            errors.append("正式提交前确认时，所有分析或结果项目 status 必须为 passed")
+        for check_id in sorted(REQUIRED_RELEASE_CHECKS):
+            if release_checks.get(check_id, {}).get("status") != "passed":
+                errors.append(f"正式提交前确认时，release.checks.{check_id} 必须为 passed")
+        if isinstance(release, dict) and release.get("target") == "revision_resubmission":
+            if release_checks.get("revision_closure", {}).get("status") != "passed":
+                errors.append("返修提交前确认时，release.checks.revision_closure 必须为 passed")
+        if blocking_items:
+            errors.append("存在 release.blocking_items 时不得确认稿件可正式提交")
+
     _ = (table_ids, figure_ids)
     return errors
 
@@ -203,6 +380,7 @@ def validate_contract(contract: Any) -> list[str]:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("contract", type=Path)
+    parser.add_argument("--signoff", action="store_true")
     parser.add_argument("--json", action="store_true", dest="as_json")
     return parser.parse_args()
 
@@ -214,7 +392,7 @@ def main() -> int:
     except (OSError, UnicodeError, json.JSONDecodeError) as error:
         errors = [f"无法读取稿件约定：{type(error).__name__}"]
     else:
-        errors = validate_contract(contract)
+        errors = validate_contract(contract, signoff=args.signoff)
     payload = {"status": "PASS" if not errors else "FAIL", "errors": errors}
     if args.as_json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))

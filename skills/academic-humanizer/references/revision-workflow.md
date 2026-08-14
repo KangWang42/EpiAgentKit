@@ -68,6 +68,8 @@ python scripts/validate_revision_state.py revision-state.json --signoff --json
 
 第一条检查输入、允许修改的范围和已经确认的决定是否被意外改变；第二条检查是否仍有未解决的审稿意见，若有则不允许正式交付。
 
+`--signoff` 只证明每条审稿意见具有可定位的实际动作、证据和回复，不证明整篇稿件已经符合报告规范、结果来源、引文、披露或文件要求。正式返修提交还应由 `academic-publishing/references/submission-signoff.md` 在同一当前稿上完成整套稿件提交前确认；稿件约定引用本文件的检查结果，不复制第二份审稿意见清单。
+
 ## 3. 可定位修改清单
 
 执行前在当前任务中逐项记录；只有现有的 `revision-state.json` 或确定性脚本需要时才写入文件，不另建用于交付的清单：

@@ -145,6 +145,22 @@
       "expected_action": "close_each_comment_across_same_source_deliverables"
     },
     {
+      "id": "formal_project_manuscript_signoff",
+      "prompt": "请对这个正式研究项目的当前论文做投稿前确认，核对研究事实、分析层级、方法与结果、报告规范、引文、声明和 Word 投稿文件，存在阻断项就不要称为可投稿",
+      "primary": "academic-publishing",
+      "companions": ["biostat-principles", "evidence-research", "academic-humanizer", "epi-project-audit", "docx"],
+      "excluded": ["manuscript-peer-review"],
+      "expected_action": "reuse_scientific_revision_and_file_evidence_then_sign_off_once"
+    },
+    {
+      "id": "external_manuscript_signoff_without_project_init",
+      "prompt": "只有作者提供的外部稿件、表图和正式统计输出，请按这些只读证据判断投稿材料是否闭合，不要初始化项目或声称复现了原始数据",
+      "primary": "academic-publishing",
+      "companions": ["biostat-principles", "evidence-research", "academic-humanizer"],
+      "excluded": ["project-init", "epi-project-audit", "manuscript-peer-review"],
+      "expected_action": "sign_off_declared_external_evidence_without_inventing_project_sources"
+    },
+    {
       "id": "ambiguous_current_manuscript",
       "prompt": "文件夹里有两份都可能是当前稿的 Word 文件，请继续修订论文，但我还没有指定使用哪一份",
       "primary": "academic-humanizer",

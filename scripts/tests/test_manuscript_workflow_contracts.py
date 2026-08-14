@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -123,6 +126,50 @@ def base_contract() -> dict:
     }
 
 
+def signed_contract() -> dict:
+    contract = base_contract()
+    for module in contract["modules"]:
+        module["status"] = "passed"
+    contract["manuscript_lock"] = {
+        "selected_input": "paper/manuscript.docx",
+        "input_hash": "sha256:verified-final-hash",
+        "round": "initial",
+        "anonymity": "not_required",
+    }
+    contract["fact_locks"] = [
+        {
+            "id": "study-design",
+            "topic": "study design",
+            "value": "prospective cohort",
+            "sources": ["PROTOCOL.md"],
+            "manuscript_locations": ["methods"],
+            "status": "confirmed",
+        }
+    ]
+    contract["analysis_items"] = [
+        {
+            "id": "primary-survival-analysis",
+            "tier": "primary",
+            "purpose": "estimate the primary survival association",
+            "method_module": "survival",
+            "analysis_set": "confirmed primary analysis set",
+            "result_source": "results/results.yaml#results.primary_survival",
+            "manuscript_locations": ["methods", "results"],
+            "status": "passed",
+        }
+    ]
+    contract["release"] = {
+        "target": "submission",
+        "journal_requirements_source": "verified official author instructions",
+        "checks": [
+            {"id": check_id, "status": "passed", "evidence": [f"evidence:{check_id}"]}
+            for check_id in sorted(CONTRACT_VALIDATOR.REQUIRED_RELEASE_CHECKS)
+        ],
+        "blocking_items": [],
+    }
+    return contract
+
+
 class ManuscriptWorkflowContractTests(unittest.TestCase):
     def test_cohort_survival_contract_passes_without_cross_sectional_template(self) -> None:
         errors = CONTRACT_VALIDATOR.validate_contract(base_contract())
@@ -188,6 +235,135 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         errors = CONTRACT_VALIDATOR.validate_contract(contract)
 
         self.assertTrue(any("三项检查必须全部为 passed" in error for error in errors))
+
+    def test_formal_signoff_passes_only_with_closed_author_side_evidence(self) -> None:
+        contract = signed_contract()
+
+        self.assertEqual(
+            CONTRACT_VALIDATOR.validate_contract(contract, signoff=True), []
+        )
+
+        contract["fact_locks"][0]["status"] = "pending"
+        errors = CONTRACT_VALIDATOR.validate_contract(contract, signoff=True)
+        self.assertTrue(any("研究事实" in error and "confirmed" in error for error in errors))
+
+        contract = signed_contract()
+        contract["fact_locks"][0]["manuscript_locations"] = ["unknown-section"]
+        errors = CONTRACT_VALIDATOR.validate_contract(contract, signoff=True)
+        self.assertTrue(any("未声明的稿件位置" in error for error in errors))
+
+        contract = signed_contract()
+        contract["analysis_items"][0]["result_source"] = ""
+        errors = CONTRACT_VALIDATOR.validate_contract(contract, signoff=True)
+        self.assertTrue(any("result_source 不能为空" in error for error in errors))
+
+        contract = signed_contract()
+        contract["release"]["checks"] = [
+            item
+            for item in contract["release"]["checks"]
+            if item["id"] != "disclosures"
+        ]
+        errors = CONTRACT_VALIDATOR.validate_contract(contract, signoff=True)
+        self.assertTrue(any("缺少必要检查：disclosures" in error for error in errors))
+
+    def test_revision_signoff_requires_one_revision_state_and_closed_comments(self) -> None:
+        contract = signed_contract()
+        contract["release"]["target"] = "revision_resubmission"
+
+        errors = CONTRACT_VALIDATOR.validate_contract(contract, signoff=True)
+        self.assertTrue(any("唯一 revision_state" in error for error in errors))
+        self.assertTrue(any("revision_closure" in error for error in errors))
+
+        contract["release"]["revision_state"] = "paper/revision-state.json"
+        contract["release"]["checks"].append(
+            {
+                "id": "revision_closure",
+                "status": "passed",
+                "evidence": ["validate_revision_state.py --signoff"],
+            }
+        )
+        self.assertEqual(
+            CONTRACT_VALIDATOR.validate_contract(contract, signoff=True), []
+        )
+
+    def test_signoff_cli_blocks_recorded_submission_issues(self) -> None:
+        script = (
+            ROOT
+            / "skills"
+            / "academic-publishing"
+            / "scripts"
+            / "validate_manuscript_contract.py"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            contract_path = Path(directory) / "manuscript-contract.json"
+            contract = signed_contract()
+            environment = dict(os.environ)
+            environment["PYTHONIOENCODING"] = "utf-8"
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False), encoding="utf-8"
+            )
+            passed = subprocess.run(
+                [sys.executable, str(script), str(contract_path), "--signoff", "--json"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                env=environment,
+                check=False,
+            )
+            self.assertEqual(passed.returncode, 0, passed.stdout + passed.stderr)
+            self.assertEqual(json.loads(passed.stdout)["status"], "PASS")
+
+            contract["release"]["blocking_items"] = ["ethics approval pending"]
+            contract_path.write_text(
+                json.dumps(contract, ensure_ascii=False), encoding="utf-8"
+            )
+            blocked = subprocess.run(
+                [sys.executable, str(script), str(contract_path), "--signoff", "--json"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                env=environment,
+                check=False,
+            )
+            self.assertEqual(blocked.returncode, 1, blocked.stdout + blocked.stderr)
+            self.assertTrue(
+                any(
+                    "blocking_items" in error
+                    for error in json.loads(blocked.stdout)["errors"]
+                )
+            )
+
+    def test_signoff_workflow_is_method_specific_and_does_not_upgrade_local_edits(self) -> None:
+        signoff = (
+            ROOT / "skills/academic-publishing/references/submission-signoff.md"
+        ).read_text(encoding="utf-8")
+        reporting = (
+            ROOT / "skills/academic-publishing/references/statistical-reporting.md"
+        ).read_text(encoding="utf-8")
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+
+        for fragment in (
+            "局部修改只核对指定内容",
+            "不得为“再保险”重复运行同一检查",
+            "多个合理当前稿并存时由用户指定",
+            "只能由作者或权威原始文件确认",
+            "声称实施的方法必须有非空结果",
+            "不复制第二份意见矩阵",
+        ):
+            self.assertIn(fragment, signoff)
+        for fragment in (
+            "MCA、PCA 或其他数据驱动降维",
+            "交互和亚组分析",
+            "Bootstrap 或其他重抽样",
+            "分位数回归",
+            "不把上述四类方法变成所有论文的默认检查",
+        ):
+            self.assertIn(fragment, reporting)
+        self.assertIn("局部润色、单项修正和纯版式修改不触发", publishing)
+        self.assertNotIn("18 项 ZBI", signoff + reporting)
+        self.assertNotIn("0–72", signoff + reporting)
 
     def test_table_reconciliation_uses_position_for_repeated_visible_headers(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

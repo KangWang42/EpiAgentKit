@@ -105,7 +105,7 @@ Response functions:
 
 Self-check: every comment has an allowed workflow status; every closed response cites the verified action,
 evidence, before/after summary, and location; declines are justified; new analyses are present in the result source,
-tables/figures, manuscript, and response. Run `validate_revision_state.py --signoff`; any open point blocks submission sign-off.
+tables/figures, manuscript, and response. Run `validate_revision_state.py --signoff`; any open point blocks submission sign-off. This closes reviewer points only. A formal resubmission must then use `submission-signoff.md` and run the manuscript contract with `--signoff` to confirm the current manuscript, disclosures, citations, tables/figures and files are synchronized; do not repeat the point-by-point matrix there.
 
 ---
 
@@ -178,6 +178,8 @@ promised actions must all be verifiable.
 ---
 
 ## 7 Pre-submission checklist (light)
+
+Use this list to prepare materials, not to certify scientific readiness. Formal submission or resubmission follows `submission-signoff.md`; items already supported by unchanged evidence are referenced once and are not rechecked solely because this list is opened.
 
 Confirm against the journal's Guide for Authors before submitting:
 - [ ] Manuscript matches Aim & Scope; journal has published comparable work

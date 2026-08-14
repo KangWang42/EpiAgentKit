@@ -1,6 +1,6 @@
 ---
 name: academic-publishing
-description: 基于已验证的代码、结果数字唯一来源和表图生成或结构性重写中英文期刊论文、学位论文部件、摘要、题名、cover letter、审稿回复、highlights 和投稿正式往来，并做投稿前一致性自查。开工先用 biostat-principles；完整稿或论文级结构性重写同时用 evidence-research 核验证据与报告要求，终审用 academic-humanizer；实际 Word 操作再配合 docx。研究生学位论文开题报告使用 graduate-opening-report；已有文本的局部润色或压缩只用 academic-humanizer。
+description: 基于已验证的代码、结果数字唯一来源和表图生成或结构性重写中英文期刊论文、学位论文部件、摘要、题名、cover letter、审稿回复、highlights 和投稿正式往来，并完成正式投稿或返修提交前确认。开工先用 biostat-principles；完整稿或论文级结构性重写同时用 evidence-research 核验证据与报告要求，终审用 academic-humanizer；实际 Word 操作再配合 docx。研究生学位论文开题报告使用 graduate-opening-report；已有文本的局部润色或压缩只用 academic-humanizer。
 ---
 
 # 学术论文与投稿材料
@@ -49,6 +49,7 @@ description: 基于已验证的代码、结果数字唯一来源和表图生成�
 - 中文学位论文：[references/chinese-thesis.md](references/chinese-thesis.md)
 - 投稿材料：[references/submission-materials.md](references/submission-materials.md)
 - 投稿前高风险问题：[references/review-killers.md](references/review-killers.md)
+- 正式投稿、返修提交、外发或归档：[references/submission-signoff.md](references/submission-signoff.md)。它复用已经完成的研究事实、分析、引文、返修和文件证据，只形成一次投稿前确认结论；局部润色、单项修正和纯版式修改不触发。
 
 结构由研究问题、研究设计、estimand、证据关系、表图和真实篇幅决定，不固定段数、列表数量或讨论模板。完整稿和论文级结构性重写使用逐部分矩阵驱动生成；局部润色不因该矩阵扩大范围。论文写作先建立论断与证据关系，再形成章节；不得把 `results/results.yaml` 的数字插值或文档拼装脚本当作内容生成步骤。
 
@@ -90,6 +91,8 @@ description: 基于已验证的代码、结果数字唯一来源和表图生成�
 - L：核对指定部件中的数字、引文、术语、交叉引用和范围外差异。
 - P：核对所有受影响章节、表图和固定结果名称；方法变化同步写入 `DECISIONS.md`，统计分析运行由总运行脚本自动记录，论文装配或渲染按其独立命令核对，不伪装成分析步骤。
 - R：逐项核对全文主要论断及其依据，并检查摘要、正文和表图的一致性，以及报告规范、期刊当前格式、声明、引用顺序、占位符和文件可打开性；对实际采用的研究设计、estimand、统计方法、数据来源和报告规范要求，以及成品用途边界、统计字段对账和页面显示分别给出验收结论。
+
+正式投稿、返修提交、外发或归档还必须按 `submission-signoff.md` 锁定唯一当前稿，确认研究事实和分析层级，复用适用的项目审查、引文核验、修订闭合和文件检查证据，并运行 `scripts/validate_manuscript_contract.py <稿件约定> --signoff --json`。返修同时运行 `academic-humanizer/scripts/validate_revision_state.py <修订状态> --signoff --json`；前者判定整套稿件是否可以提交，后者只判定逐条意见是否闭合，二者不重复检查。正式项目用 `epi-project-audit` 核对数据链和结果来源；外部稿件没有项目级结果文件时使用已声明的只读证据映射，不为提交前确认补建结果文件。任何仍可能改变研究设计、样本、量表、方法、结果、结论或伦理合规的作者待确认事项均阻止“可提交”结论。
 
 完成时确认：内容可由来源逐项核验；全文数字来自同一组已经确认的结果；结论和表述强度与研究设计及证据相符；文章结构清楚呈现研究问题、研究设计、结果及其解释；期刊、机构、伦理或法规要求披露的内容完整；实际交付文件与已确认的文件交付要求逐项一致。期刊未定、采用中性格式、文件交付要求未选择 Word 或没有创建与本次任务无关的项目记录，均不构成写作失败。
 
