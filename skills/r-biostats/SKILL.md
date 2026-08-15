@@ -6,7 +6,7 @@ description: |
 
 # R 生物统计执行
 
-先按全局 `CLAUDE.md` 判定 Q/L/P/R，并遵循 `biostat-principles`。本 skill 把已经确认的研究问题转成最小、可运行、可核验的 R 分析，不因加载本 skill 自动创建正式项目目录或额外记录文件。
+本 skill 把已经确认的研究问题转成最小、可运行、可核验的 R 分析。
 
 ## 1. 输入与方法
 

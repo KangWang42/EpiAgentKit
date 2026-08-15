@@ -6,8 +6,6 @@ license: Complete terms in LICENSE.txt
 
 # Skill Creator
 
-Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
-
 This skill provides guidance for creating effective skills.
 
 ## About Skills

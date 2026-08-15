@@ -6,7 +6,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # PDF 文件处理
 
-先按全局 `CLAUDE.md` 判定 Q/L/P/R。本 skill 只负责 PDF 的读取、页面操作、表单、文件结构和实际显示，不决定论文、报告、统计表或研究结论的专业内容，也不因输入是 PDF 自动扩大到整份材料审查。
+本 skill 只负责 PDF 的读取、页面操作、表单、文件结构和实际显示，不决定论文、报告、统计表或研究结论的专业内容。
 
 ## 1. 确认任务范围与唯一输入
 

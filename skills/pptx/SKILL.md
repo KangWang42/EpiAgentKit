@@ -6,7 +6,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # PPTX 文件处理
 
-先按全局 `CLAUDE.md` 判定 Q/L/P/R；本 skill 不扩大任务范围。先完成 `academic-ppt`、`sysu-ppt` 或其它适用内容流程，再在确有 PPTX 输入或交付物时使用本 skill。
+先完成 `academic-ppt`、`sysu-ppt` 或其它适用内容流程，再在确有 PPTX 输入或交付物时使用本 skill。
 
 ## 模板来源分流
 

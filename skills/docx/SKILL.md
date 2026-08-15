@@ -6,8 +6,6 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # DOCX creation, editing, and analysis
 
-Start by applying the global `CLAUDE.md` scope entry: Q answer, L bounded artifact, P project execution, or R formal release. Loading this skill never expands that scope.
-
 A .docx file is a ZIP archive containing XML files.
 
 ## Quick Reference

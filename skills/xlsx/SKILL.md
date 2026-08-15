@@ -6,7 +6,7 @@ license: Proprietary. LICENSE.txt has complete terms
 
 # 工作簿文件处理
 
-先按全局 `CLAUDE.md` 判定 Q/L/P/R。本 skill 负责表格文件的读写、结构、公式、格式和显示，不重新决定统计方法、表格内容或报告结论。
+本 skill 负责表格文件的读写、结构、公式、格式和显示，不重新决定统计方法、表格内容或报告结论。
 
 ## 1. 确认范围和唯一输入
 

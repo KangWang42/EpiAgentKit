@@ -487,30 +487,63 @@ class SkillOptimizationTests(unittest.TestCase):
         self.assertIn("biostat-principles/references/result-summary-schema.md", migration)
         self.assertNotIn("r-biostats/references/result-summary-schema.md", migration)
 
-        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(
-            encoding="utf-8"
-        )
         project_init = (ROOT / "skills/project-init/SKILL.md").read_text(
             encoding="utf-8"
         )
         figures = (ROOT / "skills/publication-figures/SKILL.md").read_text(
             encoding="utf-8"
         )
-        report = (ROOT / "skills/report-writing/SKILL.md").read_text(
-            encoding="utf-8"
-        )
-        for body in (publishing, project_init, figures):
-            self.assertIn("全局 `CLAUDE.md`", body)
-        self.assertNotIn("加载本 skill 不扩大范围", report)
         self.assertIn("references/project-hygiene.md", project_init)
         self.assertIn("references/chart-gallery.md", figures)
 
     def test_global_scope_contract_is_not_repeated_in_skills(self) -> None:
-        repeated = []
+        redundant_fragments = (
+            "先按全局 `CLAUDE.md` 判定",
+            "按根 `CLAUDE.md` 判定 Q/L/P/R",
+            "加载本 skill 不扩大范围",
+            "不因加载本 skill",
+            "本 skill 不扩大任务范围",
+            "Start by applying the global `CLAUDE.md` scope entry",
+            "Loading this skill never expands that scope",
+        )
+        repeated = {}
         for skill_file in (ROOT / "skills").glob("*/SKILL.md"):
-            if "加载本 skill 不扩大范围" in skill_file.read_text(encoding="utf-8"):
-                repeated.append(skill_file.parent.name)
-        self.assertEqual([], repeated)
+            body = skill_file.read_text(encoding="utf-8")
+            matches = [item for item in redundant_fragments if item in body]
+            if matches:
+                repeated[skill_file.parent.name] = matches
+        self.assertEqual({}, repeated)
+
+    def test_inherited_product_defaults_are_not_repeated_in_content_skills(self) -> None:
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        humanizer = (ROOT / "skills/academic-humanizer/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "英文正文、表格、图注和图内标签默认使用 Times New Roman",
+            global_rules,
+        )
+        for skill_name in (
+            "academic-humanizer",
+            "academic-publishing",
+            "publication-figures",
+            "report-writing",
+        ):
+            body = (ROOT / f"skills/{skill_name}/SKILL.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertNotIn("Times New Roman", body, skill_name)
+
+        report = (ROOT / "skills/report-writing/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        sysu = (ROOT / "skills/sysu-ppt/SKILL.md").read_text(encoding="utf-8")
+        self.assertNotIn("本 skill 只补充报告标题使用名词短语", report)
+        self.assertNotIn("标题用规范名词短语", sysu)
+        self.assertNotIn("英文缩写首次出现给全称", sysu)
+        self.assertNotIn("正式成品不加入助手口吻", humanizer)
+        self.assertIn("`.fp()` 内置，无需手动切", sysu)
+        self.assertIn("<a:latin>=Times New Roman", sysu)
 
     def test_publication_figures_has_correct_calibration_and_neutral_output(self) -> None:
         body = (ROOT / "skills/publication-figures/SKILL.md").read_text(
@@ -526,16 +559,14 @@ class SkillOptimizationTests(unittest.TestCase):
         body = (ROOT / "skills/consulting-delivery/SKILL.md").read_text(
             encoding="utf-8"
         )
-        humanizer = (ROOT / "skills/academic-humanizer/SKILL.md").read_text(
-            encoding="utf-8"
-        )
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
         self.assertIn(
             "从主项目实际生成结果的分析脚本和最近一次成功运行的记录整理交付内容",
             body,
         )
         self.assertIn("不得只改外发包而不回写主项目", body)
         self.assertIn("执行其成品视角与真实披露边界", body)
-        self.assertIn("期刊、机构、伦理、合同或法规明确要求的真实披露必须保留", humanizer)
+        self.assertIn("期刊、机构、伦理、合同或法规明确要求披露", global_rules)
         self.assertIn("没有明确数据分享授权时默认 `reference`", body)
         self.assertNotIn("`AI_assisted` → `研究者`", body)
 
