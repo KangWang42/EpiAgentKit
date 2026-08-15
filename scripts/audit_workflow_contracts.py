@@ -409,8 +409,6 @@ def main() -> int:
             "研究者“我做了 X”的视角",
             "不使用助手口吻",
             "英文正文、表格、图注和图内标签默认使用 Times New Roman",
-            "拉丁统计符号",
-            "其中 `P` 默认设为粗斜体",
             "不生成没有任务内容的概念背景图",
             "游戏化隐喻",
             "使用临床研究、流行病学与生物统计的准确术语",
@@ -1023,8 +1021,6 @@ def main() -> int:
             "只保留表顶线、表头下分隔线和表底线",
             "不得为模拟出版外观添加彩色表头、隔行底色或卡片式表格",
             "英文正文、表格、图注和图内标签默认使用 Times New Roman",
-            "拉丁统计符号",
-            "其中 `P` 默认使用粗斜体",
             "只有上述内容检查和 `academic-humanizer` 终审均已完成",
         ),
         "skills/academic-publishing/references/section-content-playbook.md": (
@@ -1257,8 +1253,6 @@ def main() -> int:
             "短报告可以简洁，但不能省略理解结论所必需的内容",
             "作者视角、学术书面语和真实披露边界",
             "英文正文、表格、图注和图内标签默认使用 Times New Roman",
-            "拉丁统计符号",
-            "其中 `P` 设为粗斜体",
             "L 范围外差异为零",
         ),
         "skills/python-ecg-analysis/SKILL.md": (
@@ -1291,8 +1285,6 @@ def main() -> int:
             "图题通常只用简短名词短语",
             "带计数的病例筛选流程仍由 `research-visuals` 处理",
             "英文轴标题、刻度、图例、图内标签和必要图内标题默认使用 Times New Roman",
-            "拉丁统计符号",
-            "其中 `P` 使用粗斜体",
             "不要写 `OR（对数……）`",
             "绘图示例代码和说明资料尚未完成来源",
             "不得把它们作为方法或样式依据",
@@ -1307,9 +1299,6 @@ def main() -> int:
             "以整张导出画布为参照",
             "字号按最终物理尺寸设置和核对",
             "图题保持简短",
-            "Times New Roman 粗斜体",
-            "其它拉丁统计符号",
-            "效应量与区间缩写保持正体",
         ),
         "skills/publication-figures/scripts/fig_setup.R": (
             "PLOT_FAMILY_EN <- .register_en_font()",
@@ -2003,6 +1992,7 @@ def main() -> int:
             "data URL",
             "base64",
             "修改会话 JSONL",
+            "拉丁统计符号（如",
         ),
         "README.md": (
             '审查只看代码即可通过',
@@ -2066,6 +2056,31 @@ def main() -> int:
             "生成或润色任一部件",
             "批准→下一部件",
             "09_backup/<日期>_scripts_oneoff/",
+            "拉丁统计符号（如",
+        ),
+        "skills/academic-publishing/references/statistical-reporting.md": (
+            "拉丁统计符号（如",
+        ),
+        "skills/academic-publishing/references/review-killers.md": (
+            "粗斜体",
+            "加粗正体",
+        ),
+        "skills/academic-humanizer/SKILL.md": (
+            "拉丁统计符号（如",
+        ),
+        "skills/report-writing/SKILL.md": (
+            "拉丁统计符号（如",
+        ),
+        "skills/report-writing/references/build_report.py": (
+            "P 粗斜体",
+            "统计符号使用正体",
+        ),
+        "skills/docx/references/scoped-revision.md": (
+            "bold-italic `P`",
+            "italic `t`/`F`/`z`/`r`/`R`",
+        ),
+        "skills/graduate-opening-report/references/full-report-blueprint.md": (
+            "英文和统计符号字体",
         ),
         "skills/academic-publishing/references/chinese-thesis.md": (
             "数字唯一来源 = `0_result_summaries.md`",
@@ -2074,6 +2089,12 @@ def main() -> int:
         "skills/publication-figures/SKILL.md": (
             "用户要求出图、画图、做图、生成 Fig",
             "多结局图含全部结局",
+            "拉丁统计符号（如",
+        ),
+        "skills/publication-figures/references/manuscript-layout.md": (
+            "Times New Roman 粗斜体",
+            "其它拉丁统计符号",
+            "统计符号和必要图内标题默认使用 Times New Roman",
         ),
         "skills/epi-project-audit/SKILL.md": (
             "python <EpiAgentKit仓库>/scripts/epiagentkit.py check-project",

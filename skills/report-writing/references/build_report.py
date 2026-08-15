@@ -1,7 +1,7 @@
 """报告 docx 构建助手（report-writing skill 配套）。
 
 用途：在用户没有指定其他模板时，把已经写好的报告内容排成中性 Word 文档，采用
-中文宋体 / 英文 Times New Roman、三线表、表上图下题注、纯黑、统计符号 P 粗斜体、
+中文宋体 / 英文 Times New Roman、三线表、表上图下题注、纯黑、
 干净的居中加粗标题页（白底黑字，无深色标题条或灰色说明小字）。
 
 用法（在生成脚本里 import）：
@@ -9,11 +9,10 @@
     rep = Report()
     rep.title_lines(["一项 ... 研究", "24--36 周体重反弹补充分析报告"])  # 多行居中加粗，无副标题灰字
     rep.heading("一、分析背景与目的", level=1)
-    rep.para("本补充分析用于评估 ...")                 # 完整段落；statt 符号见 rep.para_runs
+    rep.para("本补充分析用于评估 ...")                 # 完整段落
     rep.table_caption("表1 24--36周体重反弹分析样本量")
     rep.three_line_table(header=[...], rows=[...])      # 或 rep.table_from_xlsx(path, sheet)
-    # 需要统计符号时，把单元格写成 runs；P 粗斜体，其它拉丁统计符号斜体
-    rep.three_line_table(header=["效应", "P 值"], rows=[["HR 0.74", [("P", {"bold": True, "italic": True}), " < 0.001"]]])
+    rep.three_line_table(header=["效应", "P 值"], rows=[["HR 0.74", "P < 0.001"]])
     rep.note("注：随机入组 N 按 ...")
     rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 使用表图登记表或已经确认的输出路径
     rep.save("报告.docx", also_md=False)                # 仅在用户要求双格式时设 True
@@ -132,7 +131,7 @@ def _iter_explicit_runs(value, bold_default=False):
 
 
 def _write_runs(paragraph, value, size, bold_default=False):
-    """写普通值或显式 run 列表；不自动猜测统计符号。"""
+    """写普通值或显式 run 列表。"""
     for text, bold, italic in _iter_explicit_runs(value, bold_default):
         setfont(paragraph.add_run(text), size=size, bold=bold, italic=italic)
 
@@ -204,7 +203,7 @@ class Report:
         self._md.append(text + "\n")
 
     def para_runs(self, runs, size=None):
-        """混合排版段落；P 传入粗斜体，其它拉丁统计符号传入斜体。"""
+        """混合排版段落。"""
         sz = size or self.body_size
         p = self.doc.add_paragraph()
         p.paragraph_format.line_spacing = 1.5

@@ -143,7 +143,7 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 | `manuscript-peer-review` | [DOCX](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.docx) · [PDF](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.pdf) · [代表页](docs/demo/output/document-skills/manuscript-peer-review/cohort-manuscript-review-report.png) |
 | `workflow-retrospective` | [workflow.txt](docs/demo/output/document-skills/workflow-retrospective/workflow.txt) · [展示 DOCX](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.docx) · [PDF](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.pdf) · [代表页](docs/demo/output/document-skills/workflow-retrospective/workflow-retrospective-display.png) |
 
-研究设计稿把未知的精度假设保留为待确认；分析报告只读取固定模拟结果；同行评审报告区分报告缺项、稿内不一致与解释越界，并明确未取得原始数据；工作流复盘仍以 `workflow.txt` 为正式交接内容，DOCX 是便于 README 展示和下载的排版副本。四份文件的英文和拉丁统计符号使用 Times New Roman，统计符号按规范区分斜体与正体，数据表为白底三线表。[查看生成与渲染脚本](docs/demo/generate_document_skill_showcase.py)
+研究设计稿把未知的精度假设保留为待确认；分析报告只读取固定模拟结果；同行评审报告区分报告缺项、稿内不一致与解释越界，并明确未取得原始数据；工作流复盘仍以 `workflow.txt` 为正式交接内容，DOCX 是便于 README 展示和下载的排版副本。四份文件的英文使用 Times New Roman，数据表为白底三线表。[查看生成与渲染脚本](docs/demo/generate_document_skill_showcase.py)
 
 </details>
 

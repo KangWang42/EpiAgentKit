@@ -750,8 +750,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("优先符合学科通行写法", humanizer)
         for text in (publishing, humanizer, report):
             self.assertIn("Times New Roman", text)
-            self.assertIn("拉丁统计符号", text)
-            self.assertIn("`P`", text)
+            self.assertNotIn("拉丁统计符号", text)
+            self.assertNotIn("粗斜体", text)
         self.assertIn("可迁移性测试", editorial)
         self.assertIn("结构与长度由任务复杂度决定", report)
         self.assertIn("不强制背景—方法—结果—结论模板", report)
@@ -1344,6 +1344,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn('EN_FONT = "Times New Roman"', generator)
         self.assertIn("add_three_line_table", generator)
         self.assertNotIn('table.style = "Table Grid"', generator)
+        self.assertNotIn('("P", {"bold":', generator)
 
         paths = (
             ROOT
@@ -1360,7 +1361,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         namespace = {
             "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
         }
-        p_formatted_documents = 0
+        p_documents_without_italics = 0
         for path in paths:
             self.assertTrue(path.is_file(), path)
             with zipfile.ZipFile(path) as package:
@@ -1370,21 +1371,27 @@ class WorkflowRoutingTests(unittest.TestCase):
             self.assertIn(b"Times New Roman", styles_xml)
             document = ET.fromstring(document_xml)
 
-            found_formatted_p = False
+            found_p = False
             for run in document.findall(".//w:r", namespace):
                 text = "".join(
                     node.text or "" for node in run.findall("./w:t", namespace)
                 )
-                if text == "P":
+                if "P" in text:
                     properties = run.find("./w:rPr", namespace)
-                    if (
-                        properties is not None
-                        and properties.find("./w:b", namespace) is not None
-                        and properties.find("./w:i", namespace) is not None
-                    ):
-                        found_formatted_p = True
-            if found_formatted_p:
-                p_formatted_documents += 1
+                    if properties is not None:
+                        italic = properties.find("./w:i", namespace)
+                        if italic is not None:
+                            italic_value = italic.get(
+                                f"{{{namespace['w']}}}val", "true"
+                            ).lower()
+                            self.assertIn(
+                                italic_value,
+                                {"0", "false", "off"},
+                                path.name,
+                            )
+                    found_p = True
+            if found_p:
+                p_documents_without_italics += 1
 
             for table in document.findall(".//w:tbl", namespace):
                 rows = table.findall("./w:tr", namespace)
@@ -1425,7 +1432,7 @@ class WorkflowRoutingTests(unittest.TestCase):
                             expected_bottom,
                             path.name,
                         )
-        self.assertGreaterEqual(p_formatted_documents, 3)
+        self.assertGreaterEqual(p_documents_without_italics, 3)
         workflow = (
             ROOT
             / "docs/demo/output/document-skills/workflow-retrospective/workflow.txt"
@@ -1550,10 +1557,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("以整张导出画布为参照", layout)
         self.assertIn("字号按最终物理尺寸设置和核对", layout)
         self.assertIn("Times New Roman", skill)
-        self.assertIn("拉丁统计符号", skill)
-        self.assertIn("粗斜体", skill)
-        self.assertIn("Times New Roman 粗斜体", layout)
-        self.assertIn("其它拉丁统计符号", layout)
+        self.assertNotIn("拉丁统计符号", skill + layout)
+        self.assertNotIn("粗斜体", skill + layout)
         self.assertIn("图内标题 10–12 pt、轴标题 8–10 pt", layout)
         self.assertIn("图题通常只用简短名词短语", layout)
         self.assertIn("不把方法段或读图说明自动接在图题后", layout)

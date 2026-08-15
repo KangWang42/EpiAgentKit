@@ -453,6 +453,8 @@ class SkillOptimizationTests(unittest.TestCase):
             ROOT / "skills/sysu-ppt/scripts/sysu_toolkit.R"
         ).read_text(encoding="utf-8")
         self.assertIn('res.get("display")', report_helper)
+        self.assertIn('"P < 0.001"', report_helper)
+        self.assertNotIn('("P", {"bold":', report_helper)
         self.assertIn("item$display", ppt_helper)
         self.assertIn('legacy_names <- c(estimate = "est"', ppt_helper)
 
