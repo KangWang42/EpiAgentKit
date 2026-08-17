@@ -39,6 +39,7 @@ description: 基于已验证的代码、结果数字唯一来源和表图生成�
 - 含量化估计、统计模型或定量证据综合的稿件，以及混合方法稿件中的量化部分：[统计报告](references/statistical-reporting.md)。纯质性研究、叙述性综述或不含量化结果的论文不读取该文件，按实际研究类型和经核验报告规范确定证据呈现要求。
 - 所有完整稿或论文级结构性重写：[流行病学稿件约定与适用要求](references/manuscript-contract.md)。约定需要跨命令或跨文件传递时，使用其中的任务级 JSON，并运行 `scripts/validate_manuscript_contract.py`；局部部件不因此建立整篇约定。
 - 所有完整稿或论文级结构性重写：写作前用 `evidence-research` 核验正文将使用的既有证据、适用的报告规范，以及已经确定的目标期刊要求。已有核验记录时先检查来源身份、版本、适用性和时效；仍然有效时沿用，不为形式重复整套检索。
+- 所有中文论文和学位论文：在各部件写作与终审中执行 [共用中文语言编辑门控](../academic-humanizer/references/chinese-academic-style.md)，并用 [中文稿内容、结构与语言检查](references/chinese-style-audit.md) 核对论文部件功能。前者统一维护事实保真、句段编辑、因果强度、术语和高风险表达；本 skill 不另建同义语体规则。
 - 中文期刊稿：[中文期刊](references/chinese-paper.md)。
 - 英文稿：[英文写作](references/english-writing.md) 和 [英文功能表达与证据约束](references/english-phrasebank.md)；后者用于时态、衔接、hedging 和模板痕迹审查，不复制套句。
 - 单个论文部件或投稿材料需要新增或核验引文、方法依据、报告规范或目标期刊要求时，同样先用 `evidence-research` 核验。
@@ -92,7 +93,7 @@ P 值采用精确值并保持统一精度。论文图默认不重复 P 值或解
 
 正式项目的论文正文、图注和投稿文字以 `paper/` 中的 Markdown、Quarto、R Markdown、Word 或项目既有文本格式为来源，不把整篇正文写入 `02_code/` 的字符向量。只有结果占位符需要从唯一结果来源稳定装配、且后续确需重复运行时，才保留短小的装配或渲染脚本，并与正文来源放在 `paper/`；它不属于统计分析，也不进入 `run_pipeline.R|py`。本次导出、格式试验和一次性核对放在 `09_backup/workbench/`，长期自动检查放在项目明确的 `tests/` 或 `checks/`。
 
-最终文本用 `academic-humanizer` 审校事实保真、章节功能、论证、论断强度、术语一致性、作者视角、学术书面语、真实披露边界及期刊适配。
+写作中每完成一个部件，即用 `academic-humanizer` 在该部件范围内审校事实保真、章节功能、论证、论断强度、术语一致性、作者视角和学术书面语；完整稿装配后再对当前全文做一次跨部件终审。发现内容或统计逻辑疑问时单列给作者核实，不在语言编辑中猜值、调和版本或补充解释。正式披露和期刊适配仍按本 skill 的证据与提交要求核对。
 
 ## 6. 验证
 

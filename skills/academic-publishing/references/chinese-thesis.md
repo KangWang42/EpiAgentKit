@@ -136,4 +136,4 @@
 - [ ] 结果未逐表复述，讨论未逐因素套同一段式，结论未强制纯正面收口。
 - [ ] 中英文摘要内容一致，缩写、术语、引文、表图和公式编号全文一致。
 - [ ] 所有待补和待确认项已集中列出；不存在编造的作者、伦理、基金、成果或引文。
-- [ ] 全文通过 `chinese-academic-style.md`、`chinese-style-audit.md`、`review-killers.md` 和 `academic-humanizer` 终审。
+- [ ] 全文通过 `../../academic-humanizer/references/chinese-academic-style.md`、`chinese-style-audit.md`、`review-killers.md` 和 `academic-humanizer` 终审。

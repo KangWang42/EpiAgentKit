@@ -1,6 +1,6 @@
 # 中文期刊论文写作参考
 
-> 用于中文期刊论文及其部件。目标期刊当前官方投稿须知、文章类型规范与既有作者指南优先。本文件只提供跨期刊稳定的内容与审校要求，不保存可能变化的期刊字数、图表数或作者信息要求。
+> 用于中文期刊论文及其部件。目标期刊当前官方投稿须知、文章类型规范与既有作者指南优先。本文件只提供跨期刊稳定的内容与审校要求，不保存可能变化的期刊字数、图表数或作者信息要求。语言编辑执行 `../../academic-humanizer/references/chinese-academic-style.md`。
 
 ## 目录
 
@@ -109,4 +109,4 @@
 - [ ] 方法保留复现和偏倚判断所需内容，没有隐藏缺失、质量控制、偏离或验证状态。
 - [ ] 结果未逐表复述，讨论未逐结果机械配置一个文献和机制。
 - [ ] 每个经验性论断可定位到数据、表图或真实引文，观察性证据未因果化。
-- [ ] 全文通过 `chinese-academic-style.md`、`chinese-style-audit.md` 和 `academic-humanizer` 的内容、结构、措辞、术语一致性及学术语体终审。
+- [ ] 全文通过 `../../academic-humanizer/references/chinese-academic-style.md`、`chinese-style-audit.md` 和 `academic-humanizer` 的内容、结构、措辞、术语一致性及学术语体终审。

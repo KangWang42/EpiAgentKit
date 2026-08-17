@@ -1,4 +1,4 @@
 interface:
   display_name: "Academic Humanizer"
   short_description: "Scoped, evidence-bound editing for research texts"
-  default_prompt: "Use $academic-humanizer to lock facts and revision scope, make only the authorized academic edits, preserve out-of-scope content, and verify evidence, structure, and author voice."
+  default_prompt: "Use $academic-humanizer to lock facts, statistics, claim boundaries, user corrections, and revision scope; make only the authorized academic edits; separate content or statistical questions instead of silently fixing them; and verify evidence, structure, terminology, and author voice."
