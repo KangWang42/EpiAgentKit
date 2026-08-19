@@ -492,8 +492,11 @@ class WorkflowRoutingTests(unittest.TestCase):
 
         for fragment in (
             "Neutral Default Formatting",
-            "Keep every table cell white by default",
-            "preserve its existing styles and layout",
+            "Use white table cells throughout",
+            "Classifying Existing Word Inputs",
+            "layout-master-inheritance.md",
+            "Choose the visual contract from the active content skill",
+            "inherit its protected styles and layout",
             "do not install one silently",
             "`python-docx` or R `officer`",
             "Do not use hidden Word COM automation as an automatic fallback",
@@ -507,7 +510,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         ):
             self.assertIn(fragment, xlsx)
         self.assertIn("实际 `.docx` 操作调用 `docx`", report)
-        self.assertIn("不在本 skill 固定某个转换工具或视觉模板", report)
+        self.assertIn("报告 Word 采用连续的黑白学术文档", report)
         self.assertNotIn("无填充、白底黑字", report)
 
     def test_statistical_report_delivery_uses_one_content_and_file_requirements_source(self) -> None:
@@ -518,6 +521,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
         requirements = (
             ROOT / "skills/docx/references/delivery-requirements.md"
+        ).read_text(encoding="utf-8")
+        report_helper = (
+            ROOT / "skills/report-writing/references/build_report.py"
         ).read_text(encoding="utf-8")
         cases = {
             case["id"]: case
@@ -531,13 +537,17 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "同时完成正文与文件工作项",
             "报告装配与当前任务验收清单",
+            "内容来源、版式母版、两者兼具还是仅供背景",
+            "用户要求根据或参照同一研究的 Word 生成、续写报告时记为内容与版式来源",
             "不得按文件遍历或生成顺序自动编号",
             "一次用户纠正或一次重新保存本身不触发整份报告重审",
             "无法渲染时明确未验证范围",
         ):
             self.assertIn(fragment, report)
+        self.assertIn("居中加粗文首标题", report_helper)
         for fragment in (
-            "已有当前报告、用户模板或项目约定已经明确格式时沿用",
+            "同一研究的 Word 生成报告",
+            "报告用途决定内容范围，版式来源决定文件外观",
             "稳定编号 | 内容功能 | 已核对来源",
             "展示标签/单位 | 最终尺寸或页面槽位",
             "缺失数据专题报告",
@@ -548,6 +558,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("delivery requirements", docx)
         for fragment in (
             "后续局部修改只复查本轮可能受到影响的内容",
+            "layout-master-inheritance.md",
+            "两组证据共同构成文件验收",
             "没有页面显示风险时不为探测能力调用 `soffice`",
             '"role":',
             '"source":',
@@ -582,6 +594,27 @@ class WorkflowRoutingTests(unittest.TestCase):
             file_case["expected_action"],
             "complete_report_content_and_validated_word_file",
         )
+        inherit_case = cases["report_from_plan_word_inherit_layout"]
+        self.assertEqual(inherit_case["primary"], "report-writing")
+        self.assertIn("docx", inherit_case["companions"])
+        self.assertIn(
+            "master_baseline_plus_confirmed_changes",
+            inherit_case["expected_action"],
+        )
+        content_only_case = cases["report_from_content_only_word"]
+        self.assertEqual(content_only_case["primary"], "report-writing")
+        self.assertEqual(
+            content_only_case["expected_action"],
+            "treat_source_as_content_only_and_create_a_black_academic_partial_report",
+        )
+        combined_contract = "\n".join((report, assembly, docx, requirements))
+        for fragment in (
+            "与论文一致的学术句法、论证方式、统计表达和证据边界",
+            "内容范围以当前问题为界",
+            "连续的黑白学术文档",
+            "正文、标题、题注、页眉页脚和表格文字均为黑色",
+        ):
+            self.assertIn(fragment, combined_contract)
         prose_case = cases["existing_project_report_chat_summary"]
         self.assertIn("docx", prose_case["excluded"])
         self.assertEqual(

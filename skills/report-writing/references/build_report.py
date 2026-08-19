@@ -2,7 +2,7 @@
 
 用途：在用户没有指定其他模板时，把已经写好的报告内容排成中性 Word 文档，采用
 中文宋体 / 英文 Times New Roman、三线表、表上图下题注、纯黑、
-干净的居中加粗标题页（白底黑字，无深色标题条或灰色说明小字）。
+干净的居中加粗文首标题；页面保持白底，以字号、字重和间距建立层级。
 
 用法（在生成脚本里 import）：
     from build_report import Report
@@ -164,9 +164,9 @@ class Report:
         normal.font.size = Pt(body_size)
         normal._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), CN_BODY)
 
-    # ---- 标题页 ----
+    # ---- 文首标题 ----
     def title_lines(self, lines, size=16):
-        """多行居中加粗标题；保持白底，不加色块或灰色说明小字。"""
+        """多行居中加粗文首标题，采用白底黑字。"""
         for ln in lines:
             p = self.doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -176,7 +176,7 @@ class Report:
         self._md.append("# " + " ".join(lines) + "\n")
 
     def meta(self, text):
-        """可选的日期/版本，纯黑正常字号、居中。绝不灰、不缩小、不加解说。"""
+        """可选的日期或版本，采用纯黑正常字号并居中。"""
         p = self.doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         setfont(p.add_run(text), size=self.body_size)
@@ -225,7 +225,7 @@ class Report:
         self._md.append("".join(md) + "\n")
 
     def summary_item(self, label, text):
-        """执行摘要项：加粗标签 + 整句，不用项目符号点。"""
+        """当前章节内的并列提要段落：加粗标签 + 整句。"""
         p = self.doc.add_paragraph()
         p.paragraph_format.line_spacing = 1.5
         p.paragraph_format.space_after = Pt(3)
@@ -249,7 +249,7 @@ class Report:
         self._md.append(f"*{text}*\n")
 
     def three_line_table(self, header, rows, num_cols_right=None):
-        """白底黑字三线表：顶线/表头下线/底线，无填充、竖线或内部横线。
+        """白底黑字三线表：仅设置顶线、表头下线和底线。
         num_cols_right: 右对齐的列索引集合（数字列）；默认除第 1 列外全右对齐。
         单元格可传普通值，或传由字符串和 ``(文字, {bold, italic})`` 组成的 run 列表。
         """

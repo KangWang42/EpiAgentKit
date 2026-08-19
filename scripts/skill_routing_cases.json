@@ -191,6 +191,22 @@
       "expected_action": "complete_report_content_and_validated_word_file"
     },
     {
+      "id": "report_from_plan_word_inherit_layout",
+      "prompt": "请根据同一研究的方案 Word 生成当前结果报告，并沿用原文档格式",
+      "primary": "report-writing",
+      "companions": ["academic-humanizer", "docx"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "classify_plan_as_content_and_layout_source_then_verify_master_baseline_plus_confirmed_changes"
+    },
+    {
+      "id": "report_from_content_only_word",
+      "prompt": "研究方案 Word 只供内容参考；请生成一份内容范围仅为当前结果的黑白学术报告",
+      "primary": "report-writing",
+      "companions": ["academic-humanizer", "docx"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "treat_source_as_content_only_and_create_a_black_academic_partial_report"
+    },
+    {
       "id": "existing_project_report_chat_summary",
       "prompt": "解释这个项目目前的统计结果，只在聊天中给我一段摘要，不生成报告文件",
       "primary": "report-writing",

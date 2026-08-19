@@ -1,6 +1,6 @@
 ---
 name: docx
-description: "Operate actual Word .docx files: create, read, edit, render, validate, convert, or handle layout, images, comments and tracked changes. Use the relevant paper or report content skill first, then add docx only when a Word file is an input or deliverable. Do not use for prose-only requests, PDFs, spreadsheets or Google Docs."
+description: "Operate actual Word .docx files: create, read, edit, render, validate, convert, or handle layout, images, comments and tracked changes. Use the relevant paper or report content skill first, then add docx when a Word file is an input or deliverable; when an existing Word informs a new same-series document, classify whether it is a content source, layout master, or both before choosing a generator. Do not use for prose-only requests, PDFs, spreadsheets or Google Docs."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
@@ -14,6 +14,7 @@ A .docx file is a ZIP archive containing XML files.
 |------|----------|
 | Read/analyze content | `pandoc` or unpack for raw XML |
 | Create new document | Use the content skill's established generator; otherwise use the compatible workflow below |
+| Create from existing Word | Classify every input role → inherit the confirmed layout master → compare protected format properties |
 | Edit existing document | Lock scope → derive clean/marked files from one exact revision record → compare scope and visible equivalence |
 
 ### Converting .doc to .docx
@@ -53,9 +54,17 @@ The script keeps the input read-only, uses an isolated LibreOffice profile, veri
 
 ---
 
+## Classifying Existing Word Inputs
+
+Before choosing the creation or editing path, classify every supplied Word file as a content source, layout master, both, or background-only reference. Read [layout-master inheritance](references/layout-master-inheritance.md) completely when an existing Word may govern a new or substantially rebuilt same-series document.
+
+Classify an explicitly content-only file as a content source. Classify a same-study plan, report, or template as both content source and layout master when the user asks to generate or continue a document based on it. Choose the visual contract from the active content skill, project instructions, and confirmed layout master. If multiple plausible files or roles would produce materially different documents, stop and request the selection.
+
+Use the new-document path when no layout master applies and follow the active content skill's format. Map substantive sections to the confirmed hierarchy; record every additional document component and visual property in the task's confirmed format contract.
+
 ## Creating New Documents
 
-If the active content skill or project provides a tested document generator, use it and apply this skill for validation and file QA. Otherwise inspect the existing environment and use an already available compatible generator; do not install one silently. When JavaScript `docx` is selected for a new or substantially rebuilt file, read [docx-js generation reference](references/docx-js-generation.md) completely. An existing `python-docx` or R `officer` environment may be used only if the generated package passes the same structural and page checks.
+If no layout master applies and the active content skill or project provides a tested document generator, use it and apply this skill for validation and file QA. Otherwise inspect the existing environment and use an already available compatible generator; do not install one silently. When JavaScript `docx` is selected for a new or substantially rebuilt file, read [docx-js generation reference](references/docx-js-generation.md) completely. An existing `python-docx` or R `officer` environment may be used only if the generated package passes the same structural and page checks.
 
 Generator-specific API names are not interchangeable. In `officer`, paragraph alignment uses `left`, `right`, `center`, or `justify`; do not pass Word UI labels such as `both`. With `python-docx`, pass image paths as strings for versions that do not accept `pathlib.Path`. Treat the first generated file as a compatibility check: run `scripts/office/validate.py`, and change the generator or correct the package when it fails rather than declaring the validator optional.
 
@@ -63,9 +72,9 @@ For a new or substantially rebuilt Word file, a strict formatting task, or the f
 
 ### Neutral Default Formatting
 
-- Unless the user or an existing template specifies a visual theme, use a white page, black text, regular font sizes, and no decorative fills. Build hierarchy with font size, weight, spacing, alignment, and restrained borders.
-- Keep every table cell white by default, including headers, first columns, and total rows. Do not automatically add dark or colored header bands, reversed text, gradients, or large gray backgrounds.
-- When editing an established document, preserve its existing styles and layout instead of imposing this default.
+- Unless the user or an existing template specifies a visual theme, use a white page, black text, regular font sizes, and restrained borders. Build hierarchy with font size, weight, spacing, and alignment.
+- Use white table cells throughout, including headers, first columns, and total rows; distinguish structure with font weight, alignment, spacing, and black or gray borders.
+- When editing an established document or creating from a confirmed layout master, inherit its protected styles and layout.
 
 ### Validation
 After creating the file, validate it. If validation fails, unpack, fix the XML, and repack.
