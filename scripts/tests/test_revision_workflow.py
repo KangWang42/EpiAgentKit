@@ -50,6 +50,10 @@ AUDIT_DOCX = load_module(
     "audit_docx",
     ROOT / "skills/docx/scripts/audit_docx.py",
 )
+REPORT_BUILDER = load_module(
+    "report_builder",
+    ROOT / "skills/report-writing/references/build_report.py",
+)
 ARCHIVE = load_module(
     "archive_deliverables",
     ROOT / "skills/project-init/scripts/archive_deliverables.py",
@@ -637,6 +641,16 @@ class RevisionWorkflowTests(unittest.TestCase):
                 if item["level"] == "ERROR"
             }
             self.assertEqual(valid_errors, set())
+
+            missing_kind = json.loads(json.dumps(requirements))
+            missing_kind["schema_version"] = 2
+            missing_kind["tables"][0].pop("table_kind", None)
+            missing_kind_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(valid, requirements=missing_kind)
+                if item["level"] == "ERROR"
+            }
+            self.assertIn("requirements.schema", missing_kind_rules)
             requirements_path = base / "docx-requirements.json"
             requirements_path.write_text(
                 json.dumps(requirements, ensure_ascii=False), encoding="utf-8"
@@ -693,6 +707,175 @@ class RevisionWorkflowTests(unittest.TestCase):
                 if item["level"] == "ERROR"
             }
             self.assertEqual(left_errors, set())
+
+    def test_docx_audit_checks_academic_table_topology_and_row_hierarchy(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            valid = base / "hierarchical-three-line.docx"
+            report = REPORT_BUILDER.Report()
+            report.table_caption("表1 分层统计")
+            report.three_line_table(
+                ["指标", "结果"],
+                [
+                    {
+                        "row_key": "domain",
+                        "row_role": "parent",
+                        "display_label": "指标类别",
+                        "indent_level": 0,
+                        "values": [""],
+                    },
+                    {
+                        "row_key": "domain.metric",
+                        "row_role": "level",
+                        "parent_key": "domain",
+                        "display_label": "指标A",
+                        "indent_level": 1,
+                        "values": ["1.23"],
+                    },
+                    {
+                        "row_key": "domain.metric.next",
+                        "row_role": "continuation",
+                        "parent_key": "domain.metric",
+                        "display_label": "",
+                        "indent_level": 1,
+                        "values": ["2.34"],
+                    },
+                ],
+            )
+            report.save(valid)
+
+            hierarchy = {
+                "header_rows": 1,
+                "label_column_index": 0,
+                "indent_twips_per_level": 200,
+                "rows": [
+                    {
+                        "row_key": "domain",
+                        "row_role": "parent",
+                        "display_label": "指标类别",
+                        "indent_level": 0,
+                    },
+                    {
+                        "row_key": "domain.metric",
+                        "row_role": "level",
+                        "parent_key": "domain",
+                        "display_label": "指标A",
+                        "indent_level": 1,
+                    },
+                    {
+                        "row_key": "domain.metric.next",
+                        "row_role": "continuation",
+                        "parent_key": "domain.metric",
+                        "display_label": "",
+                        "indent_level": 1,
+                    },
+                ],
+            }
+            requirements = {
+                "schema_version": 2,
+                "require_all_tables_listed": True,
+                "tables": [
+                    {
+                        "id": "table-1",
+                        "role": "show hierarchical estimates",
+                        "source": "verified-display-matrix.csv",
+                        "placement": "body",
+                        "table_kind": "academic_display",
+                        "caption": "表1 分层统计",
+                        "alignment": "center",
+                        "references": [],
+                        "row_hierarchy": hierarchy,
+                    }
+                ],
+            }
+            valid_errors = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(valid, requirements=requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(valid_errors, set())
+
+            def border_xml(top: str, bottom: str, side: str = "nil") -> str:
+                return (
+                    "<w:tcBorders>"
+                    f'<w:top w:val="{top}" w:color="000000"/>'
+                    f'<w:left w:val="{side}" w:color="000000"/>'
+                    f'<w:bottom w:val="{bottom}" w:color="000000"/>'
+                    f'<w:right w:val="{side}" w:color="000000"/>'
+                    f'<w:insideH w:val="{side}" w:color="000000"/>'
+                    f'<w:insideV w:val="{side}" w:color="000000"/>'
+                    "</w:tcBorders>"
+                )
+
+            def cell_xml(text: str, borders: str, indent: int = 0) -> str:
+                indent_xml = f'<w:pPr><w:ind w:left="{indent}"/></w:pPr>'
+                return (
+                    f"<w:tc><w:tcPr>{borders}</w:tcPr><w:p>{indent_xml}"
+                    f"<w:r><w:t>{escape(text)}</w:t></w:r></w:p></w:tc>"
+                )
+
+            def table_xml(*, grid: bool, parent_label: str, child_indent: int) -> str:
+                side = "single" if grid else "nil"
+                middle = "single" if grid else "nil"
+                header = "<w:tr>" + "".join(
+                    cell_xml(text, border_xml("single", "single", side))
+                    for text in ("指标", "结果")
+                ) + "</w:tr>"
+                parent = "<w:tr>" + cell_xml(
+                    parent_label, border_xml(middle, middle, side)
+                ) + cell_xml("", border_xml(middle, middle, side)) + "</w:tr>"
+                child = "<w:tr>" + cell_xml(
+                    "指标A", border_xml(middle, middle, side), child_indent
+                ) + cell_xml("1.23", border_xml(middle, middle, side)) + "</w:tr>"
+                continuation = "<w:tr>" + cell_xml(
+                    "", border_xml(middle, "single", side), child_indent
+                ) + cell_xml("2.34", border_xml(middle, "single", side)) + "</w:tr>"
+                return f"<w:tbl>{header}{parent}{child}{continuation}</w:tbl>"
+
+            caption = (
+                '<w:p><w:pPr><w:jc w:val="center"/></w:pPr>'
+                '<w:r><w:t>表1 分层统计</w:t></w:r></w:p>'
+            )
+            grid = base / "grid.docx"
+            make_docx(
+                grid,
+                body_extra=caption
+                + table_xml(grid=True, parent_label="指标类别", child_indent=200),
+            )
+            grid_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(grid, requirements=requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertIn("requirements.table_border_topology", grid_rules)
+
+            flattened = base / "flattened.docx"
+            make_docx(
+                flattened,
+                body_extra=caption
+                + table_xml(
+                    grid=False,
+                    parent_label="指标类别：指标A",
+                    child_indent=0,
+                ),
+            )
+            flattened_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(flattened, requirements=requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertIn("requirements.table_row_label", flattened_rules)
+            self.assertIn("requirements.table_row_indent", flattened_rules)
+
+            form_requirements = json.loads(json.dumps(requirements))
+            form_requirements["tables"][0]["table_kind"] = "official_form"
+            form_requirements["tables"][0].pop("row_hierarchy")
+            form_errors = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(grid, requirements=form_requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(form_errors, set())
 
     def test_archive_plan_execute_manifest_and_rollback(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

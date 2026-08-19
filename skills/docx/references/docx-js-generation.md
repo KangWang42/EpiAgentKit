@@ -27,6 +27,7 @@ Packer.toBuffer(doc).then(buffer => fs.writeFileSync("doc.docx", buffer));
 
 - 不使用 Unicode 圆点或换行符模拟列表；用 `LevelFormat.BULLET`、numbering reference 和独立 `Paragraph`。独立列表块使用不同 reference 重新开始编号。
 - 表格总宽度等于 `columnWidths` 之和，同时给各单元格设置相符 DXA 宽度和必要内边距；不使用 `WidthType.PERCENTAGE`。三线表保持白底，只设置顶线、表头下横线和底线；机构表单服从模板边框。
+- 分层统计表从内容 skill 确认的最终显示矩阵逐行生成；分组/父级行、子级缩进和连续行空白标签均保留对应稳定行键，数值对账继续使用来源行键与字段 ID。
 - `ImageRun` 必须声明图像类型、尺寸和替代文字。图件对应正文位置和题注，核对媒体关系、显示尺寸及最终尺寸可读性。
 - 分页使用含 `PageBreak` 的 `Paragraph` 或 `pageBreakBefore`，不能把 `PageBreak` 单独放入 children。
 - 目录段落使用 `HeadingLevel`，避免以自定义样式代替真正标题层级。

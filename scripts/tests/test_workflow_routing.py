@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -30,6 +32,7 @@ from sync_user_configs import source_skills, sync_skills
 from audit_workflow_contracts import (
     RESEARCH_TERMINOLOGY,
     audit_research_terminology,
+    configure_utf8_environment,
     research_term_violations,
 )
 
@@ -78,12 +81,69 @@ class WorkflowRoutingTests(unittest.TestCase):
         audit = (ROOT / "scripts" / "audit_workflow_contracts.py").read_text(
             encoding="utf-8"
         )
-        self.assertIn("def configure_utf8_output()", audit)
+        self.assertIn("def configure_utf8_environment()", audit)
         self.assertIn('reconfigure(encoding="utf-8", errors="replace")', audit)
         self.assertIn('os.environ["PYTHONIOENCODING"] = "utf-8"', audit)
+        self.assertIn('name.upper().startswith("LC_") and normalized == "cutf8"', audit)
+        rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        for fragment in (
+            "[System.Text.UTF8Encoding]::new($false)",
+            "`PYTHONIOENCODING=utf-8` 与 `PYTHONUTF8=1`",
+            "只在调用 R 的当前任务进程环境中移除这些无效值",
+            "中文工作目录和中文参数",
+        ):
+            self.assertIn(fragment, rules)
         self.assertIn("for name in public_skills(ROOT):", audit)
         self.assertNotIn("local_skill_excludes(ROOT)", audit)
-        self.assertIn("configure_utf8_output()\n    raise SystemExit(main())", audit)
+        self.assertIn("configure_utf8_environment()\n    raise SystemExit(main())", audit)
+
+    @unittest.skipUnless(os.name == "nt", "Windows R locale regression")
+    def test_windows_r_keeps_chinese_paths_after_utf8_setup(self) -> None:
+        rscript = shutil.which("Rscript")
+        if rscript is None:
+            self.skipTest("Rscript is unavailable")
+        previous = {name: os.environ.get(name) for name in ("LC_ALL", "LC_CTYPE")}
+        try:
+            os.environ["LC_ALL"] = "C.UTF-8"
+            os.environ["LC_CTYPE"] = "C.UTF-8"
+            configure_utf8_environment()
+            self.assertNotIn("LC_ALL", os.environ)
+            self.assertNotIn("LC_CTYPE", os.environ)
+            with tempfile.TemporaryDirectory() as directory:
+                base = Path(directory) / "中文路径"
+                base.mkdir()
+                probe = base / "编码检查.R"
+                probe.write_text(
+                    "\n".join(
+                        (
+                            'cat("utf8=", l10n_info()[["UTF-8"]], "\\n", sep="")',
+                            'cat("cwd=", normalizePath(getwd(), winslash="/"), "\\n", sep="")',
+                            'cat("arg=", commandArgs(trailingOnly=TRUE)[[1]], "\\n", sep="")',
+                        )
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                completed = subprocess.run(
+                    [rscript, "--vanilla", str(probe), "中文参数"],
+                    cwd=base,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="strict",
+                    env=os.environ.copy(),
+                )
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            self.assertIn("utf8=TRUE", completed.stdout)
+            self.assertIn("中文路径", completed.stdout)
+            self.assertIn("arg=中文参数", completed.stdout)
+            self.assertNotIn("Setting LC_", completed.stderr)
+        finally:
+            for name, value in previous.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
 
     def test_skill_maintenance_contract_is_regression_safe(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
@@ -525,6 +585,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         report_helper = (
             ROOT / "skills/report-writing/references/build_report.py"
         ).read_text(encoding="utf-8")
+        manuscript_contract = (
+            ROOT / "skills/academic-publishing/references/manuscript-contract.md"
+        ).read_text(encoding="utf-8")
         cases = {
             case["id"]: case
             for case in json.loads(
@@ -553,8 +616,16 @@ class WorkflowRoutingTests(unittest.TestCase):
             "缺失数据专题报告",
             "无读者功能的生成状态",
             "同一组字段",
+            "正式统计表在装配前建立最终显示矩阵",
+            "group`（分组）、`parent`（父级变量）、`level`（分类水平）",
+            "学术展示表的三线表拓扑已经核验",
         ):
             self.assertIn(fragment, assembly)
+        for fragment in (
+            "group/parent/level/data/continuation",
+            "Word 交付时把该矩阵写入 `docx` schema 2 任务清单",
+        ):
+            self.assertIn(fragment, manuscript_contract)
         self.assertIn("delivery requirements", docx)
         for fragment in (
             "后续局部修改只复查本轮可能受到影响的内容",
@@ -566,6 +637,10 @@ class WorkflowRoutingTests(unittest.TestCase):
             '"placement":',
             '"caption":',
             '"alignment":',
+            '"schema_version": 2',
+            '"table_kind": "academic_display"',
+            '"row_hierarchy":',
+            '"row_role": "parent"',
             '"figures":',
             '"alt_text":',
             "每张正式图的稳定编号",
@@ -574,6 +649,11 @@ class WorkflowRoutingTests(unittest.TestCase):
             "不得把静态检查称为完整视觉验收",
         ):
             self.assertIn(fragment, requirements)
+        for fragment in (
+            "row_key/row_role/parent_key/display_label/indent_level/values",
+            "普通二维 rows 保持原有行为",
+        ):
+            self.assertIn(fragment, report_helper)
         self.assertNotIn("重新生成同一文件后，必须重新执行整份清单", requirements)
 
         local_case = cases["existing_report_local_figure_replacement"]
@@ -607,7 +687,9 @@ class WorkflowRoutingTests(unittest.TestCase):
             content_only_case["expected_action"],
             "treat_source_as_content_only_and_create_a_black_academic_partial_report",
         )
-        combined_contract = "\n".join((report, assembly, docx, requirements))
+        combined_contract = "\n".join(
+            (report, assembly, manuscript_contract, docx, requirements)
+        )
         for fragment in (
             "与论文一致的学术句法、论证方式、统计表达和证据边界",
             "内容范围以当前问题为界",

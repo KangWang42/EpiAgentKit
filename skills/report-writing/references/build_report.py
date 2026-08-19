@@ -150,6 +150,61 @@ def _markdown_runs(value, bold_default=False):
     return "".join(markdown)
 
 
+def _normalize_table_rows(rows, ncol):
+    rows = list(rows)
+    if not rows or not any(isinstance(row, dict) for row in rows):
+        return [
+            {"cells": list(row), "row_role": "data", "indent_level": 0}
+            for row in rows
+        ]
+    if not all(isinstance(row, dict) for row in rows):
+        raise ValueError("结构化表格的 rows 必须全部使用行对象")
+
+    allowed_roles = {"group", "parent", "level", "data", "continuation"}
+    normalized = []
+    seen = {}
+    for index, row in enumerate(rows):
+        required = ("row_key", "row_role", "display_label", "indent_level", "values")
+        if any(field not in row for field in required):
+            raise ValueError(f"结构化表格第 {index + 1} 行缺少必要字段")
+        row_key = row["row_key"]
+        row_role = row["row_role"]
+        label = row["display_label"]
+        indent_level = row["indent_level"]
+        values = row["values"]
+        parent_key = row.get("parent_key")
+        if not isinstance(row_key, str) or not row_key or row_key in seen:
+            raise ValueError(f"结构化表格第 {index + 1} 行的 row_key 无效或重复")
+        if row_role not in allowed_roles:
+            raise ValueError(f"结构化表格第 {index + 1} 行的 row_role 无效")
+        if not isinstance(label, str) or not isinstance(indent_level, int) or indent_level < 0:
+            raise ValueError(f"结构化表格第 {index + 1} 行的标签或缩进层级无效")
+        if not isinstance(values, (list, tuple)) or len(values) != ncol - 1:
+            raise ValueError(f"结构化表格第 {index + 1} 行的 values 列数不匹配")
+        if row_role in {"level", "continuation"} and not parent_key:
+            raise ValueError(f"结构化表格第 {index + 1} 行需要 parent_key")
+        if parent_key:
+            if parent_key not in seen:
+                raise ValueError(f"结构化表格第 {index + 1} 行的父级必须先出现")
+            if row_role == "continuation" and indent_level != seen[parent_key]:
+                raise ValueError(f"结构化表格第 {index + 1} 行应与首次标签行使用相同缩进")
+            if row_role != "continuation" and indent_level <= seen[parent_key]:
+                raise ValueError(f"结构化表格第 {index + 1} 行必须比父级缩进更深")
+        if row_role == "continuation" and label:
+            raise ValueError(f"结构化表格第 {index + 1} 行的连续标签应为空")
+        if row_role in {"group", "parent"} and any(str(value).strip() for value in values):
+            raise ValueError(f"结构化表格第 {index + 1} 行的结构行应使用空数据单元格")
+        seen[row_key] = indent_level
+        normalized.append(
+            {
+                "cells": [label, *values],
+                "row_role": row_role,
+                "indent_level": indent_level,
+            }
+        )
+    return normalized
+
+
 class Report:
     def __init__(self, body_size=10.5):
         self.doc = Document()
@@ -248,12 +303,21 @@ class Report:
         setfont(p.add_run(text), size=self.body_size - 1.5, italic=True)
         self._md.append(f"*{text}*\n")
 
-    def three_line_table(self, header, rows, num_cols_right=None):
+    def three_line_table(
+        self,
+        header,
+        rows,
+        num_cols_right=None,
+        indent_pt_per_level=10,
+    ):
         """白底黑字三线表：仅设置顶线、表头下线和底线。
         num_cols_right: 右对齐的列索引集合（数字列）；默认除第 1 列外全右对齐。
         单元格可传普通值，或传由字符串和 ``(文字, {bold, italic})`` 组成的 run 列表。
+        分层行传 ``row_key/row_role/parent_key/display_label/indent_level/values``；
+        普通二维 rows 保持原有行为。
         """
         ncol = len(header)
+        normalized_rows = _normalize_table_rows(rows, ncol)
         if num_cols_right is None:
             num_cols_right = set(range(1, ncol))
         t = self.doc.add_table(rows=1, cols=ncol)
@@ -268,22 +332,35 @@ class Report:
             _write_runs(p, htext, size=self.body_size, bold_default=True)
             _set_cell_border(cell, top=(big,), bottom=(small,))
         # 数据行
-        for i, row in enumerate(rows):
+        for i, row_spec in enumerate(normalized_rows):
+            row = row_spec["cells"]
             cells = t.add_row().cells
-            last = (i == len(rows) - 1)
+            last = (i == len(normalized_rows) - 1)
             for j, val in enumerate(row):
                 cell = cells[j]
                 cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 p = cell.paragraphs[0]
                 p.alignment = (WD_ALIGN_PARAGRAPH.RIGHT if j in num_cols_right
                                else WD_ALIGN_PARAGRAPH.LEFT)
-                _write_runs(p, val, size=self.body_size)
+                if j == 0 and row_spec["indent_level"]:
+                    p.paragraph_format.left_indent = Pt(
+                        indent_pt_per_level * row_spec["indent_level"]
+                    )
+                _write_runs(
+                    p,
+                    val,
+                    size=self.body_size,
+                    bold_default=(
+                        j == 0 and row_spec["row_role"] in {"group", "parent"}
+                    ),
+                )
                 _set_cell_border(cell, bottom=(big,) if last else None)
         # markdown 镜像
         header_md = [_markdown_runs(value, bold_default=True) for value in header]
         self._md.append("| " + " | ".join(header_md) + " |")
         self._md.append("| " + " | ".join(["---"] * ncol) + " |")
-        for row in rows:
+        for row_spec in normalized_rows:
+            row = row_spec["cells"]
             row_md = [_markdown_runs(value) for value in row]
             self._md.append("| " + " | ".join(row_md) + " |")
         self._md.append("")

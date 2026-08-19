@@ -53,7 +53,7 @@
 - 不自行安装或升级 R、Python、Node、Java、LibreOffice、TeX、Git、包管理器或系统依赖。先复用项目已有环境；普通 R/Python 分析包缺失时，优先从 CRAN、Bioconductor 或 PyPI 等官方来源安装到项目隔离环境，遵循锁文件和兼容版本，不改用户级、全局或 Codex/插件共享环境，也不默认追求最新版。
 - 安装系统库、编译器、运行时或从非官方来源安装前必须先征得用户同意。用户同意后按明确范围安装，记录名称、版本、来源与环境并重跑原方案；失败或需要不兼容升级时停下报告。用户不同意时按等价实现规则提供现有环境内备选，不得静默改用非等价包、方法或分析语言。详细流程见 `biostat-principles/references/runtime-dependencies.md`。
 - Windows 上先只读确认当前 shell、可执行文件和版本；`powershell.exe` 按 Windows PowerShell 5.1 对待，只有实际发现 `pwsh` 时才使用 PowerShell 7。缺少 `pwsh` 时不自行安装，也不把仅适用于 PowerShell 7 的复杂脚本交给 5.1 运行。
-- Windows 单条 cmdlet 在该命令实际支持时使用 `-LiteralPath`，关键操作使用终止错误；多行逻辑、JSON、正则、非 ASCII 路径或复杂原生命令参数写入职责匹配的脚本后执行。PowerShell 向 R、Python 或其它解释器传递含 `$`、反引号、`$()`、嵌套引号或多行代码时，不把内层代码嵌入外层双引号字符串，改用脚本文件或经核验的参数数组；读取 UTF-8 文本时显式指定编码，乱码视为读取失败。不得嵌套 `powershell|pwsh -Command`、使用 `Invoke-Expression` 或用大字符串拼接命令；原生命令用参数列表调用并立即核对退出码，只有经过核验的现有启动器才能使用 `cmd.exe /c` 或 `Start-Process`。
+- Windows PowerShell 处理 UTF-8 内容前，以 `[System.Text.UTF8Encoding]::new($false)` 同时设置 `[Console]::InputEncoding` 和 `[Console]::OutputEncoding`，并为 Python 设置 `PYTHONIOENCODING=utf-8` 与 `PYTHONUTF8=1`。Windows R 若因继承 `LC_*=C.UTF-8` 而启动告警并退回 `C`，只在调用 R 的当前任务进程环境中移除这些无效值，并用 `l10n_info()`、中文工作目录和中文参数确认 UTF-8 生效。单条 cmdlet 在实际支持时使用 `-LiteralPath`，关键操作使用终止错误；多行逻辑、JSON、正则、非 ASCII 路径或复杂原生命令参数写入职责匹配的脚本后执行。PowerShell 向 R、Python 或其它解释器传递含 `$`、反引号、`$()`、嵌套引号或多行代码时，使用脚本文件或经核验的参数数组；读取 UTF-8 文本时显式指定编码，乱码视为读取失败。不得嵌套 `powershell|pwsh -Command`、使用 `Invoke-Expression` 或用大字符串拼接命令；原生命令用参数列表调用并立即核对退出码，只有经过核验的现有启动器才能使用 `cmd.exe /c` 或 `Start-Process`。
 
 ## 3. 证据、追溯与正式项目唯一来源
 

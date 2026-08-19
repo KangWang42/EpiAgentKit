@@ -86,10 +86,15 @@ RESEARCH_TERM_ALLOWLIST: dict[tuple[str, str], tuple[str, ...]] = {
 }
 
 
-def configure_utf8_output() -> None:
-    """Keep Windows diagnostics printable even when the active code page is GBK."""
+def configure_utf8_environment() -> None:
+    """Keep Python diagnostics and Windows R child paths UTF-8 safe."""
     os.environ["PYTHONIOENCODING"] = "utf-8"
     os.environ["PYTHONUTF8"] = "1"
+    if os.name == "nt":
+        for name, value in tuple(os.environ.items()):
+            normalized = value.strip().lower().replace("-", "").replace(".", "")
+            if name.upper().startswith("LC_") and normalized == "cutf8":
+                os.environ.pop(name, None)
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if callable(reconfigure):
@@ -424,8 +429,13 @@ def main() -> int:
             "项目 `.gitignore` 忽略整个 `09_backup/`",
             "`powershell.exe` 按 Windows PowerShell 5.1 对待",
             "只有实际发现 `pwsh` 时才使用 PowerShell 7",
-            "该命令实际支持时使用 `-LiteralPath`",
-            "不把内层代码嵌入外层双引号字符串",
+            "[System.Text.UTF8Encoding]::new($false)",
+            "同时设置 `[Console]::InputEncoding` 和 `[Console]::OutputEncoding`",
+            "`PYTHONIOENCODING=utf-8` 与 `PYTHONUTF8=1`",
+            "只在调用 R 的当前任务进程环境中移除这些无效值",
+            "`l10n_info()`、中文工作目录和中文参数",
+            "单条 cmdlet 在实际支持时使用 `-LiteralPath`",
+            "使用脚本文件或经核验的参数数组",
             "读取 UTF-8 文本时显式指定编码",
             "乱码视为读取失败",
             "不得嵌套 `powershell|pwsh -Command`",
@@ -1084,8 +1094,8 @@ def main() -> int:
         ),
         "skills/academic-humanizer/references/chinese-academic-style.md": (
             "论文、学位论文、开题报告、基金申请书和正式研究报告的正文共用",
-            "直接列出每个问题及其人群、比较、结局和时间窗",
-            "不要以第三者口吻写全局免责声明",
+            "报告没有相应部件时不强行套用论文结构",
+            "研究结果报告中功能相同的部分执行同一语体门控",
             "审稿回复、rebuttal、cover letter",
         ),
         "skills/graduate-opening-report/SKILL.md": (
@@ -1122,6 +1132,11 @@ def main() -> int:
             "同一份任务清单",
             "内容验收和文件验收不得各维护一套表序",
         ),
+        "skills/academic-publishing/references/manuscript-contract.md": (
+            "group/parent/level/data/continuation",
+            "父级键、显示标签和缩进层级",
+            "schema 2 任务清单",
+        ),
         "skills/report-writing/references/report-assembly.md": (
             "内容来源、版式母版、两者兼具还是仅供背景",
             "报告用途决定内容范围，版式来源决定文件外观",
@@ -1131,11 +1146,15 @@ def main() -> int:
             "展示标签/单位 | 最终尺寸或页面槽位",
             "表格和图件编号、功能、来源、位置、题注、引用",
             "避免正文和文件各自维护一套表图顺序",
+            "正式统计表在装配前建立最终显示矩阵",
+            "学术展示表的三线表拓扑已经核验",
         ),
         "skills/report-writing/references/build_report.py": (
             "居中加粗文首标题",
             "当前章节内的并列提要段落",
             "白底黑字三线表",
+            "row_key/row_role/parent_key/display_label/indent_level/values",
+            "普通二维 rows 保持原有行为",
         ),
         "skills/docx/references/delivery-requirements.md": (
             "layout-master-inheritance.md",
@@ -1145,6 +1164,9 @@ def main() -> int:
             '"figures":',
             '"alt_text":',
             "图题文本、顺序、对齐",
+            '"schema_version": 2',
+            '"table_kind": "academic_display"',
+            '"row_hierarchy":',
         ),
         "skills/docx/scripts/audit_docx.py": (
             "requirements.figure_caption_match",
@@ -1153,6 +1175,9 @@ def main() -> int:
             "requirements.figure_reference",
             "requirements.figure_alt_text",
             "requirements.figure_count",
+            "requirements.table_border_topology",
+            "requirements.table_row_label",
+            "requirements.table_row_indent",
         ),
         "skills/epi-project-audit/scripts/check_consistency.py": (
             "numeric_fields",
@@ -1191,6 +1216,7 @@ def main() -> int:
         ),
         "skills/docx/references/docx-js-generation.md": (
             "三线表保持白底",
+            "最终显示矩阵逐行生成",
             "独立列表块使用不同 reference 重新开始编号",
         ),
         "skills/docx/references/scoped-revision.md": (
@@ -3257,5 +3283,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    configure_utf8_output()
+    configure_utf8_environment()
     raise SystemExit(main())

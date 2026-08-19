@@ -278,6 +278,353 @@ def effective_paragraph_alignment(
     return "left"
 
 
+def effective_paragraph_left_indent(
+    paragraph: etree._Element,
+    styles_root: etree._Element | None,
+    styles: dict[str, etree._Element],
+    defaults: dict[str, str],
+) -> int:
+    direct = paragraph.xpath("./w:pPr/w:ind", namespaces=NS)
+    if direct:
+        return int(direct[0].get(W + "start", direct[0].get(W + "left", "0")))
+    styled = inherited_style_property(
+        styles,
+        paragraph_style_id(paragraph, defaults),
+        "./w:pPr/w:ind",
+    )
+    if styled is not None:
+        return int(styled.get(W + "start", styled.get(W + "left", "0")))
+    if styles_root is not None:
+        doc_default = styles_root.xpath(
+            "./w:docDefaults/w:pPrDefault/w:pPr/w:ind", namespaces=NS
+        )
+        if doc_default:
+            return int(
+                doc_default[0].get(
+                    W + "start", doc_default[0].get(W + "left", "0")
+                )
+            )
+    return 0
+
+
+def border_is_active(node: etree._Element | None) -> bool:
+    return node is not None and node.get(W + "val", "single") not in {
+        "nil",
+        "none",
+    }
+
+
+def direct_border_state(
+    owner: etree._Element,
+    container_xpath: str,
+    edge: str,
+) -> bool | None:
+    nodes = owner.xpath(f"{container_xpath}/w:{edge}", namespaces=NS)
+    return border_is_active(nodes[0]) if nodes else None
+
+
+def effective_table_border_state(
+    table: etree._Element,
+    styles: dict[str, etree._Element],
+    edge: str,
+) -> bool | None:
+    direct = direct_border_state(table, "./w:tblPr/w:tblBorders", edge)
+    if direct is not None:
+        return direct
+    style_ids = table.xpath("./w:tblPr/w:tblStyle/@w:val", namespaces=NS)
+    styled = inherited_style_property(
+        styles,
+        style_ids[0] if style_ids else None,
+        f"./w:tblPr/w:tblBorders/w:{edge}",
+    )
+    return border_is_active(styled) if styled is not None else None
+
+
+def audit_academic_table_borders(
+    table: etree._Element,
+    table_id: str,
+    styles: dict[str, etree._Element],
+) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    rows = table.xpath("./w:tr", namespaces=NS)
+    if not rows:
+        return [
+            requirements_error(
+                "requirements.table_border_topology",
+                f"{table_id}:rows=0",
+                "Generate the confirmed academic display table before delivery.",
+            )
+        ]
+
+    invalid_edges: list[str] = []
+    for edge in ("left", "right", "insideH", "insideV"):
+        if effective_table_border_state(table, styles, edge) is True:
+            invalid_edges.append(f"table:{edge}")
+
+    last_index = len(rows) - 1
+    for row_index, row in enumerate(rows):
+        for cell_index, cell in enumerate(row.xpath("./w:tc", namespaces=NS)):
+            for edge in ("left", "right", "insideH", "insideV"):
+                if direct_border_state(cell, "./w:tcPr/w:tcBorders", edge) is True:
+                    invalid_edges.append(f"r{row_index}c{cell_index}:{edge}")
+            if (
+                row_index not in {0, 1}
+                and direct_border_state(cell, "./w:tcPr/w:tcBorders", "top")
+                is True
+            ):
+                invalid_edges.append(f"r{row_index}c{cell_index}:top")
+            if (
+                row_index not in {0, last_index}
+                and direct_border_state(cell, "./w:tcPr/w:tcBorders", "bottom")
+                is True
+            ):
+                invalid_edges.append(f"r{row_index}c{cell_index}:bottom")
+
+    if invalid_edges:
+        findings.append(
+            requirements_error(
+                "requirements.table_border_topology",
+                f"{table_id}:extra={','.join(invalid_edges[:12])}",
+                "Apply only the top rule, header separator, and bottom rule to the academic display table.",
+            )
+        )
+
+    header_cells = rows[0].xpath("./w:tc", namespaces=NS)
+    body_first_cells = (
+        rows[1].xpath("./w:tc", namespaces=NS) if len(rows) > 1 else []
+    )
+    last_cells = rows[-1].xpath("./w:tc", namespaces=NS)
+    top_ok = effective_table_border_state(table, styles, "top") is True or (
+        bool(header_cells)
+        and all(
+            direct_border_state(cell, "./w:tcPr/w:tcBorders", "top") is True
+            for cell in header_cells
+        )
+    )
+    separator_ok = bool(header_cells) and all(
+        direct_border_state(cell, "./w:tcPr/w:tcBorders", "bottom") is True
+        for cell in header_cells
+    )
+    if not separator_ok and body_first_cells:
+        separator_ok = all(
+            direct_border_state(cell, "./w:tcPr/w:tcBorders", "top") is True
+            for cell in body_first_cells
+        )
+    bottom_ok = effective_table_border_state(table, styles, "bottom") is True or (
+        bool(last_cells)
+        and all(
+            direct_border_state(cell, "./w:tcPr/w:tcBorders", "bottom") is True
+            for cell in last_cells
+        )
+    )
+    missing = [
+        label
+        for label, passed in (
+            ("top", top_ok),
+            ("header_separator", separator_ok),
+            ("bottom", bottom_ok),
+        )
+        if not passed
+    ]
+    if missing:
+        findings.append(
+            requirements_error(
+                "requirements.table_border_topology",
+                f"{table_id}:missing={','.join(missing)}",
+                "Apply the complete three-line border topology to the academic display table.",
+            )
+        )
+    return findings
+
+
+def audit_table_row_hierarchy(
+    table: etree._Element,
+    table_id: str,
+    hierarchy: Any,
+    styles_root: etree._Element | None,
+    styles: dict[str, etree._Element],
+    defaults: dict[str, str],
+) -> list[dict[str, str]]:
+    findings: list[dict[str, str]] = []
+    if not isinstance(hierarchy, dict):
+        return [
+            requirements_error(
+                "requirements.schema",
+                f"{table_id}:row_hierarchy must be an object",
+                "Provide the confirmed final-display row hierarchy.",
+            )
+        ]
+
+    header_rows = hierarchy.get("header_rows")
+    label_column = hierarchy.get("label_column_index")
+    indent_unit = hierarchy.get("indent_twips_per_level")
+    expected_rows = hierarchy.get("rows")
+    if (
+        not isinstance(header_rows, int)
+        or header_rows < 0
+        or not isinstance(label_column, int)
+        or label_column < 0
+        or not isinstance(indent_unit, int)
+        or indent_unit <= 0
+        or not isinstance(expected_rows, list)
+        or not expected_rows
+    ):
+        return [
+            requirements_error(
+                "requirements.schema",
+                f"{table_id}:invalid row_hierarchy metadata",
+                "Provide non-negative header_rows/label_column_index, a positive indent unit, and the ordered row inventory.",
+            )
+        ]
+
+    actual_rows = table.xpath("./w:tr", namespaces=NS)
+    expected_count = header_rows + len(expected_rows)
+    if len(actual_rows) != expected_count:
+        findings.append(
+            requirements_error(
+                "requirements.table_row_count",
+                f"{table_id}:expected={expected_count};actual={len(actual_rows)}",
+                "Generate one Word row for every confirmed final-display row.",
+            )
+        )
+
+    allowed_roles = {"group", "parent", "level", "data", "continuation"}
+    seen: dict[str, tuple[int, int]] = {}
+    for row_offset, spec in enumerate(expected_rows):
+        required = ("row_key", "row_role", "display_label", "indent_level")
+        if not isinstance(spec, dict) or any(field not in spec for field in required):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{table_id}:row_hierarchy.rows[{row_offset}] lacks required fields",
+                    "Record the stable key, role, display label, and indent level for every final-display row.",
+                )
+            )
+            continue
+        row_key = spec["row_key"]
+        row_role = spec["row_role"]
+        display_label = spec["display_label"]
+        indent_level = spec["indent_level"]
+        parent_key = spec.get("parent_key")
+        if (
+            not isinstance(row_key, str)
+            or not row_key.strip()
+            or row_key in seen
+            or row_role not in allowed_roles
+            or not isinstance(display_label, str)
+            or not isinstance(indent_level, int)
+            or indent_level < 0
+            or (parent_key is not None and not isinstance(parent_key, str))
+        ):
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{table_id}:invalid row metadata at index {row_offset}",
+                    "Use unique row keys, supported row roles, text labels, and non-negative indent levels.",
+                )
+            )
+            continue
+        if row_role in {"level", "continuation"} and not parent_key:
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{table_id}:{row_key}:parent_key is required for {row_role}",
+                    "Link each child or continuation row to its preceding parent row.",
+                )
+            )
+        if parent_key:
+            parent = seen.get(parent_key)
+            if parent is None:
+                findings.append(
+                    requirements_error(
+                        "requirements.table_row_parent",
+                        f"{table_id}:{row_key}:parent={parent_key}",
+                        "Place and declare the parent row before its child rows.",
+                    )
+                )
+            elif row_role == "continuation" and indent_level != parent[1]:
+                findings.append(
+                    requirements_error(
+                        "requirements.table_row_indent",
+                        f"{table_id}:{row_key}:continued_level={parent[1]};level={indent_level}",
+                        "Keep continuation rows at the same indentation level as the first labeled row.",
+                    )
+                )
+            elif row_role != "continuation" and indent_level <= parent[1]:
+                findings.append(
+                    requirements_error(
+                        "requirements.table_row_indent",
+                        f"{table_id}:{row_key}:parent_level={parent[1]};level={indent_level}",
+                        "Assign child rows a deeper indentation level than their parent row.",
+                    )
+                )
+        if row_role == "continuation" and display_label:
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{table_id}:{row_key}:continuation label is not empty",
+                    "Use an empty display label for a confirmed continuation row while retaining its stable row key.",
+                )
+            )
+        seen[row_key] = (row_offset, indent_level)
+
+        actual_index = header_rows + row_offset
+        if actual_index >= len(actual_rows):
+            continue
+        cells = actual_rows[actual_index].xpath("./w:tc", namespaces=NS)
+        if label_column >= len(cells):
+            findings.append(
+                requirements_error(
+                    "requirements.table_row_label",
+                    f"{table_id}:{row_key}:label_column={label_column};cells={len(cells)}",
+                    "Map the display label to an existing Word table column.",
+                )
+            )
+            continue
+        label_cell = cells[label_column]
+        actual_label = normalized_text(label_cell)
+        if actual_label != re.sub(r"\s+", " ", display_label).strip():
+            findings.append(
+                requirements_error(
+                    "requirements.table_row_label",
+                    f"{table_id}:{row_key}:expected={display_label!r};actual={actual_label!r}",
+                    "Write the confirmed display label without changing the stable source row.",
+                )
+            )
+        paragraphs = label_cell.xpath("./w:p", namespaces=NS)
+        actual_indent = (
+            effective_paragraph_left_indent(
+                paragraphs[0], styles_root, styles, defaults
+            )
+            if paragraphs
+            else 0
+        )
+        expected_indent = indent_level * indent_unit
+        if abs(actual_indent - expected_indent) > 5:
+            findings.append(
+                requirements_error(
+                    "requirements.table_row_indent",
+                    f"{table_id}:{row_key}:expected={expected_indent};actual={actual_indent}",
+                    "Apply the confirmed indentation level to the display-label paragraph.",
+                )
+            )
+        if row_role in {"group", "parent"}:
+            data_text = [
+                normalized_text(cell)
+                for cell_index, cell in enumerate(cells)
+                if cell_index != label_column
+            ]
+            if any(data_text):
+                findings.append(
+                    requirements_error(
+                        "requirements.table_row_structure",
+                        f"{table_id}:{row_key}:structural row contains data cells",
+                        "Keep structural parent and group rows separate from their child data rows.",
+                    )
+                )
+    return findings
+
+
 def active_text_roots(parts: dict[str, bytes]) -> dict[str, etree._Element]:
     roots: dict[str, etree._Element] = {}
     for name in parts:
@@ -320,14 +667,18 @@ def audit_delivery_requirements(
     requirements: dict[str, Any],
 ) -> list[dict[str, str]]:
     findings: list[dict[str, str]] = []
-    if not isinstance(requirements, dict) or requirements.get("schema_version") != 1:
+    if not isinstance(requirements, dict) or requirements.get("schema_version") not in {
+        1,
+        2,
+    }:
         return [
             requirements_error(
                 "requirements.schema",
-                "schema_version must equal 1",
+                "schema_version must equal 1 or 2",
                 "Correct the UTF-8 JSON requirements file before auditing the document.",
             )
         ]
+    schema_version = requirements["schema_version"]
 
     roots = active_text_roots(parts)
     styles_root, styles, defaults = style_state(parts)
@@ -494,7 +845,9 @@ def audit_delivery_requirements(
         tables = []
     matched_positions: list[int] = []
     for index, item in enumerate(tables, 1):
-        required_fields = ("id", "role", "source", "placement", "caption", "alignment")
+        required_fields = ["id", "role", "source", "placement", "caption", "alignment"]
+        if schema_version >= 2:
+            required_fields.append("table_kind")
         if not isinstance(item, dict) or any(
             not isinstance(item.get(field), str) or not item[field].strip()
             for field in required_fields
@@ -502,7 +855,7 @@ def audit_delivery_requirements(
             findings.append(
                 requirements_error(
                     "requirements.schema",
-                    f"tables[{index - 1}] lacks id/role/source/placement/caption/alignment",
+                    f"tables[{index - 1}] lacks required table metadata for schema {schema_version}",
                     "Complete the report table inventory before generating the Word file.",
                 )
             )
@@ -539,6 +892,38 @@ def audit_delivery_requirements(
                     "Place the intended table immediately after its caption, allowing only empty paragraphs between them.",
                 )
             )
+        target_table = (
+            blocks[following]["node"]
+            if following < len(blocks) and blocks[following]["kind"] == "table"
+            else None
+        )
+        table_kind = item.get("table_kind")
+        if table_kind is not None and table_kind not in {
+            "academic_display",
+            "official_form",
+        }:
+            findings.append(
+                requirements_error(
+                    "requirements.schema",
+                    f"{item['id']}:table_kind={table_kind!r}",
+                    "Use academic_display or official_form for a declared table kind.",
+                )
+            )
+        elif table_kind == "academic_display" and target_table is not None:
+            findings.extend(
+                audit_academic_table_borders(target_table, item["id"], styles)
+            )
+        if item.get("row_hierarchy") is not None and target_table is not None:
+            findings.extend(
+                audit_table_row_hierarchy(
+                    target_table,
+                    item["id"],
+                    item["row_hierarchy"],
+                    styles_root,
+                    styles,
+                    defaults,
+                )
+            )
         columns = item.get("columns")
         if columns is not None:
             if not isinstance(columns, list) or not columns:
@@ -552,10 +937,10 @@ def audit_delivery_requirements(
             else:
                 field_ids: list[str] = []
                 table_width = None
-                if following < len(blocks) and blocks[following]["kind"] == "table":
+                if target_table is not None:
                     row_widths = [
                         len(row.xpath("./w:tc", namespaces=NS))
-                        for row in blocks[following]["node"].xpath("./w:tr", namespaces=NS)
+                        for row in target_table.xpath("./w:tr", namespaces=NS)
                     ]
                     table_width = max(row_widths, default=0)
                 for column_index, column in enumerate(columns):
