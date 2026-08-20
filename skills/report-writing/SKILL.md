@@ -51,6 +51,10 @@ description: |
 
 报告 Word 采用连续的黑白学术文档：正文、标题、题注、页眉页脚和表格文字均为黑色，页面和表格单元格保持白底，以字号、字重、间距、对齐和必要黑/灰细线建立层级。科学图件按其内容 skill 保留经核验的必要颜色，Word 正文继续使用黑白学术版式。采用默认版式时可复用 `references/build_report.py` 装配已完成正文；视觉要求与验收仍由 `docx` 负责。
 
+- 首次装配或严格黑白要求必须在任务 workbench 建立 `docx` 机器可读清单，至少声明 `allowed_text_colors: ["000000"]`、`allowed_fill_colors: ["FFFFFF", "AUTO"]` 和 `allowed_border_colors: ["000000", "AUTO"]`，再用 `validate.py` 与 `audit_docx.py --requirements` 检查候选 DOCX。未声明颜色清单不等于通过黑白验收。
+- Pandoc 可以保留或生成 Word 的 `Hyperlink`、主题色和 `accent1` 样式；Pandoc 转换成功、文件可打开或正文可回读均不能证明文字颜色正确。涉及 Pandoc 时，检查候选文件中正文、题注、页眉页脚、表格文字和超链接文字的有效颜色；图像内部颜色不纳入文字颜色检查。
+- 先把 DOCX 写到隔离 workbench 候选路径，完成结构、颜色、内容和适用页面检查后再提升稳定文件。使用 `build_report.py` 时调用 `Report.save_candidate()` 与 `Report.promote_candidate()`；目标被占用或权限不足时保留候选并停止，不强制关闭 Word/LibreOffice。
+
 ## 5. 语体
 
 中文正式报告在写作与终审中执行 [共用中文语言编辑门控](../academic-humanizer/references/chinese-academic-style.md)，再用 `academic-humanizer` 审查事实保真、内容功能、论证结构、论断强度、术语、作者视角、学术书面语和真实披露边界。研究结果报告中的摘要、背景、方法、结果、解释、建议、局限和结论按各自功能控制语体；决策备忘、进展报告、操作指南和会议纪要仍围绕读者任务组织，不强行套论文结构。

@@ -15,11 +15,14 @@
     rep.three_line_table(header=["效应", "P 值"], rows=[["HR 0.74", "P < 0.001"]])
     rep.note("注：随机入组 N 按 ...")
     rep.figure(figure_paths["trajectory"], caption="图1 各组体重变化轨迹")  # 使用表图登记表或已经确认的输出路径
-    rep.save("报告.docx", also_md=False)                # 仅在用户要求双格式时设 True
+    rep.save_candidate("workbench/报告-candidate.docx", also_md=False)
+    # 运行 docx validate/audit 和适用的页面检查后，再提升为当前版：
+    rep.promote_candidate("workbench/报告-candidate.docx", "报告.docx")
 
 正文内容必须由调用方按 skill 强制要求写入（数据有源、完整段落、零编造），
-本模块只负责"排版正确"，不负责"内容生成"。
+本模块只负责"排版正确"，不负责"内容生成"。候选文件通过检查前不要覆盖稳定交付文件。
 """
+import os
 from pathlib import Path
 
 from docx import Document
@@ -217,6 +220,7 @@ class Report:
         normal = self.doc.styles["Normal"]
         normal.font.name = EN_FONT
         normal.font.size = Pt(body_size)
+        normal.font.color.rgb = RGBColor(*BLACK)
         normal._element.get_or_add_rPr().rFonts.set(qn("w:eastAsia"), CN_BODY)
 
     # ---- 文首标题 ----
@@ -404,11 +408,35 @@ class Report:
 
     # ---- 保存文件 ----
     def save(self, docx_path, also_md=False):
-        self.doc.save(docx_path)
+        self.doc.save(str(docx_path))
         out = [docx_path]
         if also_md:
-            md_path = docx_path.rsplit(".", 1)[0] + ".md"
+            md_path = str(Path(docx_path).with_suffix(".md"))
             with open(md_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(self._md).rstrip() + "\n")
             out.append(md_path)
         return out
+
+    def save_candidate(self, candidate_path, also_md=False):
+        """Write an isolated candidate; promote it only after DOCX checks pass."""
+        return self.save(candidate_path, also_md=also_md)
+
+    @staticmethod
+    def promote_candidate(candidate_path, target_path):
+        """Atomically replace a stable DOCX while preserving a locked candidate."""
+        candidate = Path(candidate_path)
+        target = Path(target_path)
+        if not candidate.is_file():
+            raise FileNotFoundError(f"候选 DOCX 不存在：{candidate}")
+        if candidate.resolve() == target.resolve():
+            raise ValueError("候选 DOCX 与稳定目标必须是不同文件")
+        if not target.parent.is_dir():
+            raise FileNotFoundError(f"稳定文件所在目录不存在：{target.parent}")
+        try:
+            os.replace(str(candidate), str(target))
+        except OSError as error:
+            raise RuntimeError(
+                f"无法替换稳定 DOCX：{target}；候选文件已保留：{candidate}。"
+                "请关闭占用程序后重试。"
+            ) from error
+        return target

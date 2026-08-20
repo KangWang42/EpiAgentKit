@@ -708,6 +708,85 @@ class RevisionWorkflowTests(unittest.TestCase):
             }
             self.assertEqual(left_errors, set())
 
+    def test_docx_audit_rejects_pandoc_hyperlink_theme_color_for_black_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            document = base / "pandoc-hyperlink-theme.docx"
+            hyperlink = (
+                '<w:p><w:hyperlink w:anchor="doi">'
+                '<w:r><w:rPr><w:rStyle w:val="Hyperlink"/></w:rPr>'
+                '<w:t>doi:10.1000/test</w:t></w:r>'
+                "</w:hyperlink></w:p>"
+            )
+            styles = (
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                '<w:style w:type="character" w:styleId="Hyperlink">'
+                '<w:name w:val="Hyperlink"/><w:rPr><w:color w:themeColor="accent1"/></w:rPr>'
+                "</w:style></w:styles>"
+            )
+            make_docx(document, ["正文"], body_extra=hyperlink, extra_parts={"word/styles.xml": styles})
+            black_requirements = {"schema_version": 1, "allowed_text_colors": ["000000"]}
+            black_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(document, requirements=black_requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertIn("requirements.text_color", black_rules)
+
+            template_requirements = {
+                "schema_version": 1,
+                "allowed_text_colors": ["000000", "THEME:ACCENT1"],
+            }
+            template_rules = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(document, requirements=template_requirements)
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(template_rules, set())
+
+    def test_report_candidate_promotion_preserves_locked_target(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            candidate = base / "report-candidate.docx"
+            target = base / "report.docx"
+            target.write_bytes(b"stable-current-version")
+
+            report = REPORT_BUILDER.Report()
+            report.para("已核对的报告正文。")
+            saved = report.save_candidate(candidate)
+            self.assertEqual(saved[0], candidate)
+            candidate_errors = {
+                item["rule"]
+                for item in AUDIT_DOCX.audit(
+                    candidate,
+                    requirements={
+                        "schema_version": 1,
+                        "allowed_text_colors": ["000000"],
+                        "allowed_fill_colors": ["FFFFFF", "AUTO"],
+                        "allowed_border_colors": ["000000", "AUTO"],
+                    },
+                )
+                if item["level"] == "ERROR"
+            }
+            self.assertEqual(candidate_errors, set())
+            promoted = REPORT_BUILDER.Report.promote_candidate(candidate, target)
+            self.assertEqual(promoted, target)
+            self.assertFalse(candidate.exists())
+            self.assertTrue(target.is_file())
+            self.assertNotEqual(target.read_bytes(), b"stable-current-version")
+
+            locked_candidate = base / "report-candidate-locked.docx"
+            report.save_candidate(locked_candidate)
+            stable_bytes = target.read_bytes()
+            with mock.patch.object(
+                REPORT_BUILDER.os, "replace", side_effect=PermissionError("locked")
+            ):
+                with self.assertRaisesRegex(RuntimeError, "候选文件已保留"):
+                    REPORT_BUILDER.Report.promote_candidate(locked_candidate, target)
+            self.assertTrue(locked_candidate.is_file())
+            self.assertEqual(target.read_bytes(), stable_bytes)
+
     def test_docx_audit_checks_academic_table_topology_and_row_hierarchy(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

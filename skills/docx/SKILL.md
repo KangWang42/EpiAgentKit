@@ -68,6 +68,8 @@ If no layout master applies and the active content skill or project provides a t
 
 Generator-specific API names are not interchangeable. In `officer`, paragraph alignment uses `left`, `right`, `center`, or `justify`; do not pass Word UI labels such as `both`. With `python-docx`, pass image paths as strings for versions that do not accept `pathlib.Path`. Treat the first generated file as a compatibility check: run `scripts/office/validate.py`, and change the generator or correct the package when it fails rather than declaring the validator optional.
 
+Pandoc 转换或回读成功不等于 Word 版式通过。Pandoc 可能保留参考文档的 `Hyperlink`、主题色或 `accent1` 样式；当内容 skill 已确认连续黑白版式时，必须在任务清单声明 `allowed_text_colors: ["000000"]`，并用 `scripts/audit_docx.py --requirements` 检查正文、题注、页眉页脚、表格文字和超链接文字的有效颜色。图像内部颜色不属于文字颜色审计。
+
 For a new or substantially rebuilt Word file, a strict formatting task, or the first assembly of a complete formal document, read [delivery requirements](references/delivery-requirements.md) completely. For a bounded correction or regeneration, repeat only requirements that the current content, editing method, package parts, or page geometry could affect; an additional user correction does not by itself reopen the complete document checklist.
 
 ### Neutral Default Formatting
@@ -81,6 +83,10 @@ After creating the file, validate it. If validation fails, unpack, fix the XML, 
 ```bash
 python scripts/office/validate.py doc.docx
 ```
+
+### Candidate-first delivery
+
+When creating or regenerating a stable DOCX, write the output to an isolated workbench candidate first. Run package validation, the task-specific audit, content reconciliation, and any required page rendering against that candidate. Promote it only after all applicable checks pass, using a same-volume atomic replace such as `Report.promote_candidate()` from the report-writing helper. If the target is locked or replacement fails, keep the candidate, preserve the existing target, and stop with the target and candidate paths; do not force-close Word/LibreOffice or describe the candidate as the current delivery.
 
 ## Editing Existing Documents
 

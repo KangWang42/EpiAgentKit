@@ -49,6 +49,14 @@
 
 Word 文件的模板、颜色、题注对齐、页面和显示检查由 `docx` 决定。存在版式母版时，按 `docx` 的 Word 输入角色与母版继承流程制作。采用默认版式时，可复用 [中性报告构建助手](build_report.py) 生成连续的黑白学术文档并装配已经完成的内容；本参考的表图清单与净稿检查继续作为内容验收依据。
 
+装配顺序固定为“候选、检查、提升”：
+
+1. 在任务 workbench 生成候选 DOCX，并把连续黑白版式写入 `docx` 要求清单（`allowed_text_colors` 至少为 `["000000"]`）。
+2. 运行 `python skills/docx/scripts/office/validate.py <candidate.docx>` 和 `python skills/docx/scripts/audit_docx.py <candidate.docx> --requirements <requirements.json> --json`；需要页面检查时渲染候选文件，不直接渲染稳定当前版。
+3. 所有适用检查通过后再用 `Report.promote_candidate()` 或等价的同卷原子替换提升稳定文件。目标被占用、权限不足或候选检查失败时保留候选并停止，不删除原当前版。
+
+Pandoc 仅是转换或文字提取环节。它可能保留 `Hyperlink` 和主题 `accent1` 样式，即使命令成功也不能替代有效文字颜色审计；可点击关系继续保留，但其文字必须满足当前任务清单。统计图内部的颜色只由图件内容检查负责，不因黑白文字要求而清除。
+
 把当前报告的文件要求按 `docx/references/delivery-requirements.md` 转成机器可读验收要求。内容清单中的表格和图件编号、功能、来源、位置、题注、引用、展示标签/单位、表格类型、行层级和最终尺寸应与 DOCX 审计使用同一组字段，避免正文和文件各自维护一套表图顺序。
 
 ## 6. 完成判定
