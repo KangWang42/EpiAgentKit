@@ -712,6 +712,12 @@ class WorkflowRoutingTests(unittest.TestCase):
         pptx = (ROOT / "skills/pptx/SKILL.md").read_text(encoding="utf-8")
         pptx_design = (ROOT / "skills/pptx/design-reference.md").read_text(encoding="utf-8")
         sysu = (ROOT / "skills/sysu-ppt/SKILL.md").read_text(encoding="utf-8")
+        sysu_design = (
+            ROOT / "skills/sysu-ppt/references/slide-design-practice.md"
+        ).read_text(encoding="utf-8")
+        meeting_skeleton = (
+            ROOT / "skills/sysu-ppt/references/deck_skeleton.R"
+        ).read_text(encoding="utf-8")
         cases = {
             case["id"]: case
             for case in json.loads(
@@ -729,6 +735,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("proposal-and-defense.md", academic)
         self.assertIn("模板来源分流", pptx)
         self.assertIn("每页围绕一条主信息组织", pptx_design)
+        self.assertIn("科研 PPT 的美观首先是排版质量", pptx_design)
+        self.assertIn("连续多页自然段", pptx_design)
+        self.assertIn("装饰性左栏", pptx_design)
         self.assertIn("中大官方模板、其他学校/机构或特定汇报类型", pptx)
         self.assertIn("load `academic-ppt` as the content workflow", pptx)
         self.assertIn("Use the template-editing workflow, not the from-scratch workflow", pptx)
@@ -736,6 +745,19 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("LibreOffice (`soffice`) is an optional renderer only", pptx)
         self.assertIn("不得把未说明学校的通用 PPT 自动套成中大模板", sysu)
         self.assertIn("绕过 `sysu_init()`", sysu)
+        self.assertIn("科研汇报不是展报或海报", academic)
+        self.assertIn("连续多页自然段", academic)
+        self.assertIn("样本量、轮次数、组合数", academic)
+        self.assertIn("有材料却只写“标签 + 一句泛泛说明”属于内容未完成", academic)
+        self.assertIn("连续自然段页不因版式相同而判为问题", sysu)
+        self.assertIn("版式由内容关系决定，不设固定页数内必须更换构图的配额", sysu_design)
+        self.assertIn("统计图在表达分布、趋势、效应、不确定性或组间比较时保留", sysu_design)
+        self.assertIn("研究依据、方法解释和证据评述默认用自然段", meeting_skeleton)
+        self.assertIn("研究对象、测量条件和人群或应用场景", meeting_skeleton)
+        self.assertIn("怎样影响样本量、估计目标、结果可比性、解释边界和下一步工作", meeting_skeleton)
+        self.assertNotIn('f("concept.png")', meeting_skeleton)
+        self.assertNotIn("任意连续 4 张实质内容页至少使用 2 种主构图", sysu)
+        self.assertNotIn("连续纯文字页", sysu_design)
         self.assertEqual(
             cases["generic_presentation_template_unspecified"]["primary"],
             "academic-ppt",
@@ -771,6 +793,9 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "封面后直接进入第一张实质内容页",
             "不生成目录、Agenda",
+            "连续使用自然段页",
+            "公式 + 符号、条件和含义的解释段落",
+            "不把三条依据默认做成编号列、箭头链或展板",
             "已完成",
             "需要讨论",
         ):
