@@ -63,13 +63,11 @@ ppt <- sysu_add_image_caption(ppt, "2.1 方法谱系与分类依据",
   block_list(prose(bd("要点　"), tx("概述下列各类方法的共同脉络与划分依据。"))), img_pos = "top",
   caption = "图3　方法谱系总览")
 
-# 2.2 并列要点：卡片（真正并列的 3-4 项，全篇≤2-3 页卡片）
-ppt <- sysu_add_cards(ppt, "2.2 三类方法的适用边界",
-  list(
-    list(tag = "①", head = "方法 A", body = "简述核心机制与代表性工作。"),
-    list(tag = "②", head = "方法 B", body = "简述核心机制与代表性工作。"),
-    list(tag = "③", head = "方法 C", body = "简述核心机制与代表性工作。")),
-  intro = block_list(prose(bd("关键　"), tx("引出三者的共同点或区别。"))))
+# 2.2 并列要点：正文编号（内容优先；不把解释性文字切成卡片）
+ppt <- sysu_add_text(ppt, "2.2 三类方法的适用边界", block_list(
+  num_item("①", "方法 A", "说明核心机制、适用场景和主要边界。"),
+  num_item("②", "方法 B", "说明核心机制、适用场景和主要边界。"),
+  num_item("③", "方法 C", "说明核心机制、适用场景和主要边界。")))
 
 # 2.3 机制细节：左文右图（流程图讲清步骤）
 ppt <- sysu_add_text_image(ppt, "2.3 关键机制与信息流",

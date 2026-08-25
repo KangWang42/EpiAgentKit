@@ -46,11 +46,13 @@ ppt <- sysu_add_table(ppt, "6 表格页", sysu_flextable(df, widths = c(2.2,2.6,
 ppt <- sysu_add_text_table(ppt, "7 左文右表",
   block_list(bullet("解读"), sub_bullet("看右表对比")), sysu_flextable(df, widths = c(1.6,1.8,1.6)))
 
-ppt <- sysu_add_cards(ppt, "8 卡片页",
+# 受控 API 示例：只展示真正并列的短对象，不作为正文页的默认构图。
+ppt <- sysu_add_cards(ppt, "8 受控并列卡片（API 示例）",
   list(list(tag="①", head="方法 A", body="简述核心机制。"),
        list(tag="②", head="方法 B", body="简述核心机制。"),
        list(tag="③", head="方法 C", body="简述核心机制。")),
-  intro = block_list(prose(bd("引言　"), tx("真正并列的 3-4 项才用卡片。"))))
+  cols = 3,
+  intro = block_list(prose(bd("引言　"), tx("仅用于 3 项短并列；长句改用 prose、双栏或表格。"))))
 
 ppt <- sysu_add_code(ppt, "9 代码 / 示例",
   c("library(rms)", "fit <- ols(y ~ rcs(x, 4), data = dat)", "Predict(fit, x)  # 剂量-反应曲线"),

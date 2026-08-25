@@ -498,14 +498,42 @@ sysu_add_text_table <- function(ppt, title, content, ft, top = NULL) {
 .cfp <- function(size, bold, color) fp_text(font.size = size, bold = bold, color = color,
   font.family = SYSU$en, hansi.family = SYSU$cn, eastasia.family = SYSU$cn, cs.family = SYSU$en)
 
-#' 卡片网格页。cards = list(list(tag, head, body), ...)（统一近白绿灰风格）
-#' @param cols 每行卡片数（默认：<=3 一行；4 用 2x2；6 用 2x3）
+#' 受控卡片页。仅用于 2-4 个真正并列的短对象；长正文请改用 prose、双栏、表格或拆页。
+#' cards = list(list(tag, head, body), ...)
+#' @param cols 每行卡片数（3 项默认一行；4 项必须明确选择 2x2 且文本很短）
 #' @param intro 顶部可选说明（block_list）
 #' @param card_h 单卡高度（英寸）；默认按内容自适应并垂直居中。给定则固定。
 sysu_add_cards <- function(ppt, title, cards, cols = NULL, intro = NULL, card_h = NULL) {
   ppt <- .new(ppt, title)
   n <- length(cards)
-  if (is.null(cols)) cols <- if (n <= 3) n else if (n == 4) 2 else 3
+  if (!(n %in% 2:4)) {
+    stop("sysu_add_cards() 仅支持 2–4 个短并列对象；请改用 prose、双栏、表格或拆页。")
+  }
+  head_chars <- vapply(cards, function(card) {
+    if (is.null(card$head)) "" else gsub("[[:space:]]+", "", as.character(card$head))
+  }, character(1))
+  body_chars <- vapply(cards, function(card) {
+    if (is.null(card$body)) "" else gsub("[[:space:]]+", "", as.character(card$body))
+  }, character(1))
+  if (any(nchar(head_chars, type = "chars") > 18L) ||
+      any(nchar(body_chars, type = "chars") > 48L)) {
+    stop("卡片文字过长：每项只保留短标题和 2–3 行要点；长句请改用 prose、双栏、表格或拆页。")
+  }
+  if (is.null(cols)) {
+    if (n == 4) {
+      stop("4 项卡片不再默认生成 2×2 网格；请改用对齐表/双栏，或明确确认短并列布局后传 cols = 2。")
+    }
+    cols <- n
+  }
+  if (n == 4 && cols != 2) {
+    stop("4 项卡片只允许明确选择 cols = 2，且每项必须是短并列内容；长解释请改用表格或拆页。")
+  }
+  if (length(cols) != 1L || !is.numeric(cols) || is.na(cols) || cols != floor(cols) || cols < 1 || cols > n) {
+    stop("cols 必须是 1 到卡片数量之间的单个数字；请按内容关系选择版式。")
+  }
+  if (n == 4 && any(nchar(body_chars, type = "chars") > 32L)) {
+    stop("两行卡片不能承载完整段落；请删减为短语，或改用段落、双栏、表格或拆页。")
+  }
   rows <- ceiling(n / cols)
 
   top0 <- 1.62
