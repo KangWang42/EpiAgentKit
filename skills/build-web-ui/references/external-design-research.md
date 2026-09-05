@@ -74,6 +74,16 @@ Radix、Primer、Carbon 和 USWDS 带有各自产品语境。学习角色、状�
 | [Next.js](https://nextjs.org/docs) / [仓库](https://github.com/vercel/next.js) | 官方文档与仓库；MIT | 静态、服务端、客户端与路由边界 | 只沿用既有 Next.js 项目的渲染和数据合同；它是应用框架，不是视觉参考或为改版自动迁移的理由 |
 | [Tailwind CSS](https://tailwindcss.com/docs) / [仓库](https://github.com/tailwindlabs/tailwindcss) | 官方文档与仓库；MIT | 低层样式组合、响应式与 token 消费 | 适合项目已经采用时复用；工具类不能替代语义组件、状态合同、可访问性和视觉身份 |
 
+非科研管理台可进一步查看以下完整任务界面，而不只查看底层组件文档（2026-09-05 核验，实际采用时重新核对）：
+
+| 原始项目 | 许可与技术边界 | 可以借鉴 | 不直接带入 |
+| --- | --- | --- | --- |
+| [shadcn-admin](https://github.com/satnaing/shadcn-admin) / [作者演示](https://shadcn-admin.netlify.app/) | MIT；React、Vite、Tailwind | 导航密度、标题与操作层级、列表筛选和表单状态 | 演示品牌、销售指标、鉴权服务和整套框架迁移 |
+| [Tremor](https://github.com/tremorlabs/tremor) / [组件站](https://www.tremor.so/) | Apache-2.0；React、Tailwind，付费模板另计 | 数据排版、趋势与摘要组合、紧凑排行 | 付费资源、与真实业务无关的指标和未经测量的图表依赖 |
+| [Tabler](https://github.com/tabler/tabler) / [演示](https://preview.tabler.io/) | MIT；HTML、Bootstrap | 原生页面组织、长列表、状态与响应式组件 | 第二套样式库、旧式密度和整页模板外观 |
+
+这些来源用于比较具体任务和实际画面，不是固定主题。普通后台可以借鉴现代产品的比例与细节；科研结果页继续走科研分支。只做设计研究时不安装任何依赖。
+
 主要迁移原则如下：
 
 - 组件库解决状态、语义和工程一致性，视觉身份仍由当前项目的真实内容、读者、素材、排版和颜色角色决定。

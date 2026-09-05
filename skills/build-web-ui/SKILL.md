@@ -10,7 +10,7 @@ description: 创建、改版、修复或优化真实网页与 Web UI，按页面
 ## 按范围与页面类型读取
 
 1. 先判断本轮是局部修复、既有页面改版、新页面还是跨页面系统重构。局部文案、间距或单组件修复只处理受影响角色，不重建整站设计系统，也不强制外部研究。
-2. 新站、整页改版或跨页面系统重构必须读取 [site-archetypes.md](references/site-archetypes.md)，按主任务选择营销/服务、电商、内容/编辑、文档/知识、个人/文化、管理台/数据、社区/账户或公共服务分支；混合站逐页分流，不取平均风格。
+2. 新站、整页改版或跨页面系统重构必须读取 [site-archetypes.md](references/site-archetypes.md)，先按页面用途区分科研结果/操作、非科研任务界面与表达型页面，再选择具体类型。科研页面保持保守清晰，其他页面可采用更丰富的视觉表达；不能因作者从事科研、需要登录或名称含“管理台”就继承科研工具风格。混合站逐页分流，不取平均风格。
 3. 确定风格、排版、内容密度、视觉角色或消除通用 AI 感时，读取 [design-playbook.md](references/design-playbook.md)。整体美化、主题重构或配色决定整页身份时，同时读取 [color-systems.md](references/color-systems.md)。
 4. 新建或重构复合组件、筛选/表格、导航、弹窗、标签页、轮播、拖拽或动效时，读取 [interaction-components.md](references/interaction-components.md)。
 5. 个人生活、作品集、摄影、音乐、艺术、文化或活动站必须读取 [personal-cultural-sites.md](references/personal-cultural-sites.md)，按用户语气校准作者性与表达强度。
