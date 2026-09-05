@@ -40,6 +40,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 | 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录                 |
 | 制作发表级统计图               | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图                                                     | PDF、PNG 或 SVG 图件及对应出图代码                           |
 | 生成科研非统计视觉             | 为论文、PPT、标书、报告、README 和技术文档生成流程、路线、框架、机制与图形摘要，并区分内容图、真实截图和氛围图                | 经来源、结构、文字和嵌入后显示复核的完整图件                 |
+| 调用 ChatGPT 网页协作           | 在用户启用的当前 Codex 会话中复用 Edge 或 Chrome 的已登录 GPT 网页，辅助寻找文献线索、逐段审校文字、扩展思路和交叉检查      | 候选线索、逐段修改建议、独立检查结果及本地核验结论           |
 | 写论文与投稿材料               | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校                         | Markdown 或 Word 稿件、投稿材料与自检记录                    |
 | 评审论文与生成审稿报告         | 以同行评审人身份核对稿件中的数据与论断是否对应，并审查设计、偏倚、统计、解释、报告规范、语言和伦理，区分报告缺项与方法错误    | 可定位、分 major/minor、说明未核验内容的完整 reviewer report |
 | 写报告与制作学术汇报           | 把分析结果转成面向读者的报告，或按用户模板、机构/会议模板或中性设计生成组会、开题、中期与答辩汇报                  | 报告正文、DOCX、可直接汇报的 PPTX                            |
@@ -368,13 +369,13 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 | 原则、证据与设计 | `biostat-principles` · `evidence-research` · `epi-study-design`                                                                                |
 | 项目与分析       | `project-init` · `r-biostats` · `python-biostats` · `publication-figures`                                                                   |
 | 科研视觉         | `research-visuals` · `svg-diagrams`                                                                                                               |
-| 网页与 Web UI     | `build-web-ui`                                                                                                                                     |
+| 网页与协作        | `build-web-ui` · `chatgpt-web-collaboration`                                                                                                     |
 | 论文与报告       | `academic-publishing` · `graduate-opening-report` · `academic-humanizer` · `report-writing`                                                     |
 | 汇报与交付       | `academic-ppt` · `consulting-delivery`                                                                                                            |
 | 项目审查         | `epi-project-audit`                                                                                                                                  |
 | 文件与维护       | `docx` · `pdf` · `pptx` · `xlsx` · `workflow-retrospective` · `epiagentkit-maintenance` · `skill-creator` · `git-commit-helper` |
 
-先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；网页创建、改版、美化与真实浏览器验收使用 `build-web-ui`，独立图片再按需调用 imagegen；研究生学位论文开题报告使用 `biostat-principles → graduate-opening-report`，研究设计、证据核验、终审和 Word 文件分别加 `epi-study-design`、`evidence-research`、`academic-humanizer` 和 `docx`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
+先选择完成任务所需的内容工作流，再添加必要的图件或文件操作，最后进行相应检查。研究设计使用 `biostat-principles → epi-study-design`；统计分析默认转 `r-biostats`，仅在用户明确选择或既有 Python 项目中转 `python-biostats`，实际出统计图时再加 `publication-figures`；网页创建、改版、美化与真实浏览器验收使用 `build-web-ui`，独立图片再按需调用 imagegen；用户启用当前会话的 GPT 网页协作后，`chatgpt-web-collaboration` 复用已登录的 Edge 或 Chrome，但文献、文字和结果仍由原内容 skill 核验；研究生学位论文开题报告使用 `biostat-principles → graduate-opening-report`，研究设计、证据核验、终审和 Word 文件分别加 `epi-study-design`、`evidence-research`、`academic-humanizer` 和 `docx`；论文从零生成使用 `academic-publishing → academic-humanizer`，需要 Word 时再加 `docx`；组会、开题和答辩使用 `academic-ppt → pptx`；非统计视觉统一使用 `research-visuals → imagegen`。最多定向修改两轮，第二次修改后披露当前图的内容硬伤和审美问题，由用户决定是否继续；只有 imagegen 实际不可用、用户明确要求 SVG/矢量源、编辑现有 SVG 或目标格式强制矢量时才使用 `svg-diagrams`。
 
 ## 为什么不只是一个提示词仓库
 

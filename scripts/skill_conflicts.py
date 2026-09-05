@@ -18,6 +18,13 @@ from pathlib import Path
 
 
 CONFLICT_DOMAINS = {
+    "chatgpt-web-collaboration": (
+        "chatgpt 网页协作",
+        "gpt 网页端",
+        "调用 chatgpt 网页",
+        "chatgpt web collaboration",
+        "use the signed-in gpt website",
+    ),
     "build-web-ui": (
         "网页与 web ui",
         "网站美化",

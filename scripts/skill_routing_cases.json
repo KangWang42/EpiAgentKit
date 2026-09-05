@@ -23,6 +23,38 @@
       "excluded": ["workflow-retrospective", "project-init", "epi-project-audit"]
     },
     {
+      "id": "enable_chatgpt_web_for_session",
+      "prompt": "接下来这个 Codex 会话可以自行调用 ChatGPT 网页，用我已登录的 GPT 账号协助调研、润色和交叉检查，直到我说停止",
+      "primary": "chatgpt-web-collaboration",
+      "companions": [],
+      "excluded": ["build-web-ui"],
+      "expected_action": "activate_session_bind_edge_then_chrome_prepare_exact_batch_and_confirm_only_at_browser_action_time"
+    },
+    {
+      "id": "active_session_manuscript_web_review",
+      "prompt": "这个会话已经启用 ChatGPT 网页协作；请把当前讨论部分按段交给网页端独立审查，再按锁定事实完成本地终审",
+      "primary": "academic-humanizer",
+      "companions": ["chatgpt-web-collaboration"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "review_each_changed_section_once_then_verify_locked_content_locally"
+    },
+    {
+      "id": "paste_document_text_without_upload",
+      "prompt": "这个会话已经启用 ChatGPT 网页协作；请审查这份 Word 稿，但不要上传文件，先在本地提取文字，再按可定位的完整段落复制到网页端",
+      "primary": "academic-humanizer",
+      "companions": ["docx", "chatgpt-web-collaboration"],
+      "excluded": ["academic-publishing"],
+      "expected_action": "extract_utf8_text_preserve_structure_paste_numbered_semantic_blocks_and_verify_nontext_locally"
+    },
+    {
+      "id": "stop_chatgpt_web_for_session",
+      "prompt": "从现在开始不需要网页端了，停止调用 GPT 网页，后面的工作只在本地完成",
+      "primary": "chatgpt-web-collaboration",
+      "companions": [],
+      "excluded": ["build-web-ui", "academic-humanizer"],
+      "expected_action": "stop_browser_messages_until_explicit_reactivation"
+    },
+    {
       "id": "new_empty_project",
       "prompt": "在空工作区初始化一个新的队列研究项目",
       "primary": "project-init",
@@ -409,7 +441,7 @@
       "prompt": "检查这个网站桌面和真实 390 像素手机布局视口，保存截图并核对溢出、破图、控制台、网络、前台和后台状态",
       "primary": "build-web-ui",
       "companions": [],
-      "excluded": ["epi-project-audit", "research-visuals"]
+      "excluded": ["epi-project-audit", "research-visuals", "chatgpt-web-collaboration"]
     },
     {
       "id": "restyle_dashboard_with_vague_theme",
