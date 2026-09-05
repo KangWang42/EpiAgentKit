@@ -1,12 +1,14 @@
 ---
 name: docx
-description: "Operate actual Word .docx files: create, read, edit, render, validate, convert, or handle layout, images, comments and tracked changes. Use the relevant paper or report content skill first, then add docx when a Word file is an input or deliverable; when an existing Word informs a new same-series document, classify whether it is a content source, layout master, or both before choosing a generator. Do not use for prose-only requests, PDFs, spreadsheets or Google Docs."
+description: "Create, read, edit, render or validate Word .docx files, including layout, comments and tracked changes. Use when a Word file is an input or deliverable. Do not use for prose-only requests or other file formats."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
 # DOCX creation, editing, and analysis
 
 A .docx file is a ZIP archive containing XML files.
+
+Use the relevant paper or report content skill first; this skill handles file structure and display. Preserve the selected content source and layout master.
 
 ## Quick Reference
 
@@ -98,59 +100,9 @@ Use `scripts/revise_docx.py` first for exact text changes in ordinary body or ta
 
 ### Advanced OOXML editing
 
-Use this path only for supported changes that the deterministic revision script correctly refuses, such as fields, bookmarks, comments, pre-existing tracked changes, drawings, or complex mixed formatting. Create an exact locator list first and keep all work in an isolated temporary directory.
+For fields, bookmarks, comments, pre-existing tracked changes, drawings or complex mixed formatting that the deterministic revision script correctly refuses, read [OOXML editing reference](references/ooxml-editing.md) completely. It contains the isolated unpack/edit/pack commands and XML invariants. Do not use this path for an ordinary supported replacement.
 
-### Step 1: Unpack
-```bash
-python scripts/office/unpack.py document.docx isolated/unpacked/ --merge-runs false --simplify-redlines false
-```
-Disabling run merging and redline simplification avoids unrelated structural changes during a minimal revision.
-
-### Step 2: Edit XML
-
-Edit files in `unpacked/word/`. Before changing raw XML, read [OOXML editing reference](references/ooxml-editing.md) completely for element order, tracked-change, comment and image-relationship patterns.
-
-Use the author name supplied by the user or existing review workflow. If none is available, use the neutral value `Reviewer` and disclose that choice; do not insert an assistant or model name.
-
-Use structural XML edits against the recorded locator. A one-off replacement must still be exact and unique; repeated or fragile operations belong in a tested reusable script. Never apply a document-wide regex to prose, statistical symbols, captions, fields, or styles.
-
-**CRITICAL: Use smart quotes for new content.** When adding text with apostrophes or quotes, use XML entities to produce smart quotes:
-```xml
-<!-- Use these entities for professional typography -->
-<w:t>Here&#x2019;s a quote: &#x201C;Hello&#x201D;</w:t>
-```
-| Entity | Character |
-|--------|-----------|
-| `&#x2018;` | ‘ (left single) |
-| `&#x2019;` | ’ (right single / apostrophe) |
-| `&#x201C;` | “ (left double) |
-| `&#x201D;` | ” (right double) |
-
-**Adding comments:** Use `comment.py` to handle boilerplate across multiple XML files (text must be pre-escaped XML):
-```bash
-python scripts/comment.py unpacked/ 0 "Comment text with &amp; and &#x2019;"
-python scripts/comment.py unpacked/ 1 "Reply text" --parent 0  # reply to comment 0
-python scripts/comment.py unpacked/ 0 "Text" --author "Custom Author"  # custom author name
-```
-Then add markers to `document.xml` as specified in the OOXML editing reference.
-
-### Step 3: Pack
-```bash
-python scripts/office/pack.py isolated/unpacked/ output.docx --original document.docx
-```
-Validates with auto-repair, condenses XML, and creates DOCX. Use `--validate false` to skip.
-
-**Auto-repair will fix:**
-- `durableId` >= 0x7FFFFFFF (regenerates valid ID)
-- Missing `xml:space="preserve"` on `<w:t>` with whitespace
-
-**Auto-repair won't fix:**
-- Malformed XML, invalid element nesting, missing relationships, schema violations
-
-### Common Pitfalls
-
-- **Replace entire `<w:r>` elements**: When adding tracked changes, replace the whole `<w:r>...</w:r>` block with `<w:del>...<w:ins>...` as siblings. Don't inject tracked change tags inside a run.
-- **Preserve `<w:rPr>` formatting**: Copy the original run's `<w:rPr>` block into your tracked change runs to maintain bold, font size, etc.
+Use the user or workflow's author name; otherwise use the neutral value `Reviewer` and disclose the choice.
 
 ### Scope-based validation after any edit
 

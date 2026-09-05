@@ -127,7 +127,7 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
     def test_file_skills_explain_missing_prerequisites_without_installing(self) -> None:
         expected = {
             "skills/docx/SKILL.md": ("without installing it", "user"),
-            "skills/pptx/SKILL.md": ("do not install or upgrade it", "user"),
+            "skills/pptx/SKILL.md": ("do not install or upgrade it", "用户可选准备方式"),
             "skills/pdf/SKILL.md": ("不得自行安装", "用户指定"),
             "skills/xlsx/SKILL.md": ("不得自行安装", "用户"),
         }

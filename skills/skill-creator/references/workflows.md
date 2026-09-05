@@ -1,28 +1,17 @@
 # Workflow Patterns
 
-## Sequential Workflows
+Read when a skill needs distinct operating modes or dependencies. A short task does not need a workflow diagram or a fixed number of steps.
 
-For complex tasks, break operations into clear, sequential steps. It is often helpful to give Claude an overview of the process towards the beginning of SKILL.md:
+## Dependencies
 
-```markdown
-Filling a PDF form involves these steps:
+Prescribe order where a later action needs verified output from an earlier one. Filling a supplied PDF form requires identifying fields, checking the mapping, applying values and verifying output. It does not require review pauses between steps when the values and action are already authorized.
 
-1. Analyze the form (run analyze_form.py)
-2. Create field mapping (edit fields.json)
-3. Validate mapping (run validate_fields.py)
-4. Fill the form (run fill_form.py)
-5. Verify output (run verify_output.py)
-```
+Describe inputs, outputs and failure conditions. Independent reads or checks may run together when supported; dependent writes remain sequential.
 
-## Conditional Workflows
+## Conditional Loading
 
-For tasks with branching logic, guide Claude through decision points:
+Put the branch decision before detailed instructions. Text extraction uses the extraction helper; form filling loads field-mapping guidance; existing-document edits load scope-preservation guidance. Explain when another branch becomes necessary. Do not load all references before choosing, or make a narrow correction repeat the creation workflow.
 
-```markdown
-1. Determine the modification type:
-   **Creating new content?** → Follow "Creation workflow" below
-   **Editing existing content?** → Follow "Editing workflow" below
+## Stopping Conditions
 
-2. Creation workflow: [steps]
-3. Editing workflow: [steps]
-```
+Distinguish missing evidence, user decisions and routine implementation failures. Continue authorized work independent of pending decisions. Retry correctable failures within scope; stop when the next action requires new scientific definitions, unavailable inputs or additional authorization. After relevant checks pass, deliver without inventing another review stage.

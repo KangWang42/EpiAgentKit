@@ -1,6 +1,6 @@
 ---
 name: pptx
-description: "Operate actual .pptx files: create, read, edit, render, validate, combine, split, or handle templates, layouts, notes and comments. For new or rebuilt decks, choose the SYSU official template, another institution or type, a user template, or a neutral design before creating slides. Use the relevant content workflow first, then add pptx only when a presentation file is an input or deliverable. Do not trigger for discussion of a talk without file work."
+description: "Create, read, edit, render or validate .pptx files, including templates, layouts, notes and comments. Use when a presentation file is an input or deliverable, not for discussion of a talk without file work."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 

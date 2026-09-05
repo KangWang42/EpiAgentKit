@@ -1,7 +1,6 @@
 ---
 name: report-writing
-description: |
-  把分析结果、进展、流程或操作要求写成数据有源、面向读者决策与行动的中文报告、指南、备忘或纪要，并以 academic-humanizer 终审。用户要求生成、继续制作或交付完整报告文件，或根据既有方案、报告或模板生成同一研究的报告时，同时完成正文与文件工作项；只要正文时不调用 docx；只要解释或聊天摘要时也不创建文件。实际生成 Word 时配合 docx。不用于论文与投稿材料（academic-publishing）或咨询交付包打包（consulting-delivery）。
+description: 撰写、续写或重构中文分析报告、进展报告、操作指南、备忘或纪要，按请求交付正文或完整文件。只要解释或聊天摘要时不创建文件；论文、投稿材料和咨询交付包打包分别使用对应技能。
 ---
 
 # 专业报告写作
@@ -47,13 +46,11 @@ description: |
 
 只加入对当前读者有独立贡献的表图，不因目录中存在就全部嵌入。现有正式表图优先复用；需要新统计图时调用 `publication-figures`，流程或框架图调用 `research-visuals`。表题、图题、编号、尺寸和格式服从实际 Markdown、Word 或其他指定文件及机构要求。报告图只保留读图所必需的对象、坐标、单位、图例和必要数值，不在图内添加解释性段落或 `OR（对数……）` 等教材式文字。
 
-用户只要正文时直接返回净稿，不创建文件。用户要求完整报告文件时，不得以聊天摘要或 Markdown 草稿代替；已有当前报告、项目约定或已经判定的版式母版时沿用，格式仍不清且会改变工作量时只问一个简短问题。指定 Markdown 或 Word 时只生成用户指定格式的文件，不擅自附加另一种格式；实际 `.docx` 操作调用 `docx`。
+用户只要正文时直接返回净稿，不创建文件；只要正文时不调用 docx。用户要求完整报告文件时，不得以聊天摘要或 Markdown 草稿代替；已有当前报告、项目约定或已经判定的版式母版时沿用，格式仍不清且会改变工作量时只问一个简短问题。指定 Markdown 或 Word 时只生成用户指定格式的文件，不擅自附加另一种格式；实际 `.docx` 操作调用 `docx`。
 
 报告 Word 采用连续的黑白学术文档：正文、标题、题注、页眉页脚和表格文字均为黑色，页面和表格单元格保持白底，以字号、字重、间距、对齐和必要黑/灰细线建立层级。科学图件按其内容 skill 保留经核验的必要颜色，Word 正文继续使用黑白学术版式。采用默认版式时可复用 `references/build_report.py` 装配已完成正文；视觉要求与验收仍由 `docx` 负责。
 
-- 首次装配或严格黑白要求必须在任务 workbench 建立 `docx` 机器可读清单，至少声明 `allowed_text_colors: ["000000"]`、`allowed_fill_colors: ["FFFFFF", "AUTO"]` 和 `allowed_border_colors: ["000000", "AUTO"]`，再用 `validate.py` 与 `audit_docx.py --requirements` 检查候选 DOCX。未声明颜色清单不等于通过黑白验收。
-- Pandoc 可以保留或生成 Word 的 `Hyperlink`、主题色和 `accent1` 样式；Pandoc 转换成功、文件可打开或正文可回读均不能证明文字颜色正确。涉及 Pandoc 时，检查候选文件中正文、题注、页眉页脚、表格文字和超链接文字的有效颜色；图像内部颜色不纳入文字颜色检查。
-- 先把 DOCX 写到隔离 workbench 候选路径，完成结构、颜色、内容和适用页面检查后再提升稳定文件。使用 `build_report.py` 时调用 `Report.save_candidate()` 与 `Report.promote_candidate()`；目标被占用或权限不足时保留候选并停止，不强制关闭 Word/LibreOffice。
+首次装配或严格黑白要求按 `docx` 技能的 `references/delivery-requirements.md` 把上述版式写入机器可读清单，由 `docx` 执行有效颜色、结构和适用页面检查，复用同一份验收证据。采用 `build_report.py` 时使用 `Report.save_candidate()` 与 `Report.promote_candidate()` 完成 `docx` 规定的候选文件验收及替换，不另建第二套报告文件检查。
 
 ## 5. 语体
 

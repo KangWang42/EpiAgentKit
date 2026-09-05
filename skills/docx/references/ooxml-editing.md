@@ -2,6 +2,26 @@
 
 只有确定性局部修订脚本正确拒绝当前操作，且任务确实需要直接修改字段、书签、批注、既有修订、绘图或复杂混合格式时使用本参考。普通文字、图片或格式修改不加载本文件。
 
+## 操作入口
+
+先记录唯一定位与允许改动范围，使用项目 workbench 的隔离目录。保留输入包，关闭会改动无关内容的运行合并和修订简化：
+
+```bash
+python scripts/office/unpack.py document.docx isolated/unpacked/ --merge-runs false --simplify-redlines false
+```
+
+按定位执行结构化 XML 修改，不对全文使用正则替换。作者名称沿用用户或既有流程；缺省用 `Reviewer` 并说明，不使用助手或模型名称。
+
+批注工具接收已转义的 XML 文本，创建部件后仍需按本参考补齐正文标记：
+
+```bash
+python scripts/comment.py isolated/unpacked/ 0 "Comment text with &amp; and &#x2019;" --author "Reviewer"
+python scripts/comment.py isolated/unpacked/ 1 "Reply text" --parent 0
+python scripts/office/pack.py isolated/unpacked/ output.docx --original document.docx
+```
+
+打包器执行验证并可修复超界 `durableId` 和缺失的 `xml:space="preserve"`；不能修复错误嵌套、关系缺失或任意 schema 违规。正式输出不跳过验证；修复后按原技能的范围和显示要求核验。
+
 ## 1. 结构要求
 
 - `<w:pPr>` 中常用元素顺序为 `<w:pStyle>`、`<w:numPr>`、`<w:spacing>`、`<w:ind>`、`<w:jc>`，`<w:rPr>` 最后。

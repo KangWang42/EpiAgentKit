@@ -1,82 +1,21 @@
 # Output Patterns
 
-Use these patterns when skills need to produce consistent, high-quality output.
+Read only when a fixed format or example improves the requested output.
 
-## Template Pattern
+## Fixed Formats
 
-Provide templates for output format. Match the level of strictness to your needs.
+Use a fixed schema for a machine consumer or an actual institutional template. Point to the maintained schema or template and validator; do not duplicate it across prompts. State required fields, missing-evidence behavior and rejection conditions.
 
-**For strict requirements (like API responses or data formats):**
+A human-readable report does not require a fixed executive-summary/findings/recommendations structure merely for consistency. Its content workflow determines the sections needed to answer the reader's question.
 
-```markdown
-## Report structure
+## Examples
 
-ALWAYS use this exact template structure:
+Use the smallest example that clarifies a difficult distinction. A Conventional Commit example can demonstrate format:
 
-# [Analysis Title]
-
-## Executive summary
-[One-paragraph overview of key findings]
-
-## Key findings
-- Finding 1 with supporting data
-- Finding 2 with supporting data
-- Finding 3 with supporting data
-
-## Recommendations
-1. Specific actionable recommendation
-2. Specific actionable recommendation
+```text
+fix(reports): preserve date values during export
 ```
 
-**For flexible guidance (when adaptation is useful):**
+Add a body when motivation, validation or compatibility needs explanation. Preserve repository and user requirements.
 
-```markdown
-## Report structure
-
-Here is a sensible default format, but use your best judgment:
-
-# [Analysis Title]
-
-## Executive summary
-[Overview]
-
-## Key findings
-[Adapt sections based on what you discover]
-
-## Recommendations
-[Tailor to the specific context]
-
-Adjust sections as needed for the specific analysis type.
-```
-
-## Examples Pattern
-
-For skills where output quality depends on seeing examples, provide input/output pairs:
-
-```markdown
-## Commit message format
-
-Generate commit messages following these examples:
-
-**Example 1:**
-Input: Added user authentication with JWT tokens
-Output:
-```
-feat(auth): implement JWT-based authentication
-
-Add login endpoint and token validation middleware
-```
-
-**Example 2:**
-Input: Fixed bug where dates displayed incorrectly in reports
-Output:
-```
-fix(reports): correct date formatting in timezone conversion
-
-Use UTC timestamps consistently across report generation
-```
-
-Follow this style: type(scope): brief description, then detailed explanation.
-```
-
-Examples help Claude understand the desired style and level of detail more clearly than descriptions alone.
+Examples describe format and decision boundaries, not facts to copy into outputs. Label synthetic fixtures as tests. Never manufacture study findings, references or approvals to fill a template.

@@ -173,7 +173,11 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("至少两份可独立打开、分别验收的真实成果", maintenance)
         self.assertIn("既有 skill 时，默认使用代表性实跑和回归测试验收", maintenance)
         self.assertIn("只有用户当轮明确要求时才生成", maintenance)
-        self.assertIn("验证日志、validator 成功和测试通过只能作为证据", maintenance)
+        review = (ROOT / "skills/epiagentkit-maintenance/references/review-artifacts.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("(references/review-artifacts.md)", maintenance)
+        self.assertIn("验证日志、validator 成功和测试通过只能作为证据", review)
         self.assertIn("只有用户明确确认当前成果无误并同意提交", maintenance)
         self.assertIn("成果审阅只属于新建 skill 或用户明确要求的维护任务", maintenance)
         self.assertIn("不得只写进当轮说明、临时提示词或审阅文档", maintenance)
@@ -598,7 +602,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         }
 
         for fragment in (
-            "同时完成正文与文件工作项",
+            "把内容与文件分别列为工作项",
             "报告装配与当前任务验收清单",
             "内容来源、版式母版、两者兼具还是仅供背景",
             "用户要求根据或参照同一研究的 Word 生成、续写报告时记为内容与版式来源",
