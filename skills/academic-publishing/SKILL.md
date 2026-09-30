@@ -1,6 +1,6 @@
 ---
 name: academic-publishing
-description: 基于已验证的代码、结果数字唯一来源和表图生成或结构性重写中英文期刊论文、学位论文部件、摘要、题名、cover letter、审稿回复、highlights 和投稿正式往来，并完成正式投稿或返修提交前确认。开工先用 biostat-principles；完整稿或论文级结构性重写同时用 evidence-research 核验证据与报告要求，终审用 academic-humanizer；实际 Word 操作再配合 docx。研究生学位论文开题报告使用 graduate-opening-report；已有文本的局部润色或压缩只用 academic-humanizer。
+description: "起草或结构性重写论文、学位论文部件和投稿材料，完成投稿或返修提交前核对。已有文字的局部润色使用 academic-humanizer；开题报告使用 graduate-opening-report。"
 ---
 
 # 学术论文与投稿材料

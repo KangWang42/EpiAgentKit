@@ -27,7 +27,9 @@ from config_core import (
     SKILL_MANIFEST,
     active_manifest,
     available_skills,
+    local_skill_excludes,
     load_json,
+    preserve_global_rules,
     resolve_codex_skill_dirs,
 )
 
@@ -177,6 +179,20 @@ def check_platform(
         source_rule = root / "CLAUDE.md"
         ok = target_rule.is_file() and digest(target_rule) == digest(source_rule)
         record(ok, f"{platform}.rules", str(target_rule))
+    elif preserve_global_rules(root):
+        target_rule = platform_home / ("CLAUDE.md" if platform == "claude" else "AGENTS.md")
+        source_rule = root / "CLAUDE.md"
+        matches = target_rule.is_file() and source_rule.is_file() and digest(target_rule) == digest(source_rule)
+        checks.append({
+            "status": "PASS" if matches else "WARN",
+            "item": f"{platform}.rules.preserved",
+            "detail": (
+                f"{target_rule}: preserved rules match the repository"
+                if matches else
+                f"{target_rule}: rules are preserved by local policy and differ or are missing; "
+                "new repository rules are not confirmed active"
+            ),
+        })
 
     if platform == "codex" and ({"rules", "runtime"} & components):
         config_path = platform_home / "config.toml"
@@ -255,6 +271,14 @@ def check_platform(
                 name in command for name in legacy for command in commands
             )
             record(ok, f"{platform}.hook_config", str(config_path))
+            if platform == "codex":
+                checks.append({
+                    "status": "INFO",
+                    "item": "codex.hook_activation",
+                    "detail": "Registration and launcher checks do not verify session activation. "
+                    "Review new or changed non-managed hooks with /hooks; local command hooks "
+                    "require a supported local orchestration runtime.",
+                })
         except (OSError, ValueError, json.JSONDecodeError) as error:
             record(False, f"{platform}.hook_config", str(error))
     return checks
@@ -273,6 +297,13 @@ def run_doctor(argv: list[str]) -> int:
         layout=args.codex_layout,
     )
     checks: list[dict[str, str]] = []
+    excluded = local_skill_excludes(root)
+    if excluded:
+        checks.append({
+            "status": "INFO",
+            "item": "skills.local_exclusions",
+            "detail": "Not synchronized by local policy: " + ", ".join(sorted(excluded)),
+        })
     if args.target in {"claude", "all"}:
         checks.extend(check_platform("claude", root, claude_home, [claude_home / "skills"]))
     if args.target in {"codex", "all"}:

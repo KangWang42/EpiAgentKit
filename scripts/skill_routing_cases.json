@@ -28,7 +28,7 @@
       "primary": "chatgpt-web-collaboration",
       "companions": [],
       "excluded": ["build-web-ui"],
-      "expected_action": "activate_session_bind_edge_then_chrome_prepare_exact_batch_and_confirm_only_at_browser_action_time"
+      "expected_action": "activate_session_detect_adapter_edge_then_chrome_reuse_authorization_confirm_only_if_tool_requires"
     },
     {
       "id": "active_session_manuscript_web_review",
@@ -263,11 +263,27 @@
     },
     {
       "id": "generic_presentation_template_unspecified",
-      "prompt": "帮我制作一份开题 PPT，模板来源还没有确定",
+      "prompt": "按已确认的研究方案制作一份通用开题 PPT，没有指定学校品牌或模板",
       "primary": "academic-ppt",
       "companions": ["pptx"],
       "excluded": ["sysu-ppt"],
-      "expected_action": "clarify_template_source_before_creation"
+      "expected_action": "use_neutral_design_and_continue_without_template_approval"
+    },
+    {
+      "id": "institution_template_missing",
+      "prompt": "必须使用学院官方模板制作答辩 PPT，但当前工作区没有模板文件，也没有可核验的下载来源",
+      "primary": "academic-ppt",
+      "companions": ["pptx"],
+      "excluded": ["sysu-ppt"],
+      "expected_action": "request_missing_official_template_without_fabricating_brand"
+    },
+    {
+      "id": "claude_chatgpt_collaboration_available_tools",
+      "prompt": "在这个 Claude Code 会话启用 ChatGPT 网页协作，使用当前已提供的浏览器工具辅助检查公开段落，不上传文件",
+      "primary": "chatgpt-web-collaboration",
+      "companions": [],
+      "excluded": ["build-web-ui"],
+      "expected_action": "detect_available_browser_adapter_and_reuse_session_authorization"
     },
     {
       "id": "other_institution_presentation",

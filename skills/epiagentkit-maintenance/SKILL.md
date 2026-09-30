@@ -71,6 +71,8 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 
 每项规则只在一处维护。更新该处时，同步修改所有调用者、模板、测试和文档；删除被替代的旧表述。不要把 skill 的条件参数复制进全局 `CLAUDE.md`，也不要把全局优先级在各 skill 重写一遍。
 
+修改跨客户端元数据、规则加载、工具适配或 hooks 时，读取 [平台兼容性](references/platform-compatibility.md)，并按当前官方资料与实际环境核验。领域流程不写死客户端专有工具名；确需工具时在对应分支说明可用条件与缺失处理。
+
 ## 4. 按组件修改
 
 ### CLAUDE.md 与 AGENTS.md

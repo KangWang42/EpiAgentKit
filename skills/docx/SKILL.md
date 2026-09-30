@@ -1,6 +1,6 @@
 ---
 name: docx
-description: "Create, read, edit, render or validate Word .docx files, including layout, comments and tracked changes. Use when a Word file is an input or deliverable. Do not use for prose-only requests or other file formats."
+description: "Read, create, edit, render or validate Word .docx files, including comments and tracked changes. Use for actual Word input or output, not prose-only requests."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 

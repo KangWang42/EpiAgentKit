@@ -1,6 +1,6 @@
 ---
 name: epi-study-design
-description: 流行病学研究设计与统计分析计划工作流。用于把研究想法转成可执行的 PICO/PECO、目标人群、estimand、终点、纳排、偏倚控制、样本量或精度依据、PROTOCOL 和 SAP，或审查既有方案。开工先对齐 biostat-principles；需要方法、指标或报告规范依据时调用 evidence-research。不用于创建项目目录、运行统计模型、撰写结果或论文正文。
+description: "制定或审查流行病学研究设计、estimand、终点、纳排、偏倚控制、样本量/精度、PROTOCOL 和 SAP。不用于目录初始化、模型实跑或论文结果写作。"
 ---
 
 # 流行病学研究设计

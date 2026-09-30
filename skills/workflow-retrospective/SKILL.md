@@ -1,6 +1,6 @@
 ---
 name: workflow-retrospective
-description: 从当前会话、用户纠正、已查看产物和可定位的项目证据中复盘未遵循工作流的问题，分析最早失效环节，并在当前工作目录生成或更新 `workflow.txt` 交接报告。用于用户要求总结本次工作发现的规范缺口、解释为什么没有遵循、把问题带回 EpiAgentKit 后续改进时；也用于在生成报告前整理多个零散纠正。只记录有来源和置信度的事实、推断及候选调整，不替代当前任务的内容 skill，不直接修改 EpiAgentKit 或正式研究产物；在 EpiAgentKit 中依据报告改规则时改用 `epiagentkit-maintenance`，并以完整仓库核验为准。
+description: "根据当前会话的用户纠正和可定位证据，在 workflow.txt 解释工作流为何未阻止问题并提出待核验调整。用于明确复盘或交接请求；不直接修改 EpiAgentKit 或正式研究产物。"
 ---
 
 # 工作流问题复盘

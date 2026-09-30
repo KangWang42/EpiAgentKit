@@ -505,7 +505,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         }
 
         for fragment in (
-            "当前工作目录生成或更新 `workflow.txt`",
+            "只创建或更新用户指定位置的 `workflow.txt`；未指定时使用当前工作目录",
             "为什么现有流程没有阻止",
             "不得声称知道模型未公开的思维过程",
             "用户确认",
@@ -768,7 +768,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         )
         self.assertEqual(
             cases["generic_presentation_template_unspecified"]["expected_action"],
-            "clarify_template_source_before_creation",
+            "use_neutral_design_and_continue_without_template_approval",
         )
         self.assertIn(
             "sysu-ppt",
@@ -893,7 +893,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("不设置通用页数、字数、章节数", chinese_thesis)
         self.assertIn("do not require four paragraphs", english)
         self.assertIn("Do not begin from a stock sentence", phrasebank)
-        self.assertIn("内容功能、论证结构、段落节奏", humanizer)
+        self.assertIn("写作目的、所用证据、段落作用和读者应得到的结论", humanizer)
+        self.assertIn("段落功能与信息密度", editorial)
         self.assertIn("不把原有句法、段落习惯或措辞质量作为标准", humanizer)
         self.assertIn("优先符合学科通行写法", humanizer)
         for text in (publishing, humanizer, report):
@@ -1652,7 +1653,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         body = (ROOT / "skills" / "publication-figures" / "SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("发表级统计图、数据图", body)
+        self.assertIn("本 skill 只处理统计量通过坐标位置、长度、面积、角度、颜色、大小或连续比例等视觉通道表达的统计图和诊断图", body)
         self.assertIn(
             "流程、病例筛选、机制、架构、技术路线与图形摘要转 `research-visuals`",
             body,

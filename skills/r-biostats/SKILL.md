@@ -1,7 +1,6 @@
 ---
 name: r-biostats
-description: |
-  R 流行病学与生物统计的主要执行层，用于 R 数据清洗、描述统计、回归、生存、中介、Meta 分析、统计表图和代码调试；用户未指定且项目没有既定分析语言时也使用。开工先遵循 biostat-principles；统计图配合 publication-figures，客户外发再用 consulting-delivery。不用于已明确采用 Python 的分析、研究设计定稿或论文写作。
+description: "用 R 完成生物统计清洗、描述、回归、生存、中介、Meta 分析、统计表和代码修复。未指定且无既定语言时默认使用；明确 Python 流程、研究设计或论文写作不触发。"
 ---
 
 # R 生物统计执行

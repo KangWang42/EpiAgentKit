@@ -40,7 +40,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 | 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录                 |
 | 制作发表级统计图               | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图                                                     | PDF、PNG 或 SVG 图件及对应出图代码                           |
 | 生成科研非统计视觉             | 为论文、PPT、标书、报告、README 和技术文档生成流程、路线、框架、机制与图形摘要，并区分内容图、真实截图和氛围图                | 经来源、结构、文字和嵌入后显示复核的完整图件                 |
-| 调用 ChatGPT 网页协作           | 在用户启用的当前 Codex 会话中复用 Edge 或 Chrome 的已登录 GPT 网页，辅助寻找文献线索、逐段审校文字、扩展思路和交叉检查      | 候选线索、逐段修改建议、独立检查结果及本地核验结论           |
+| 调用 ChatGPT 网页协作           | 在用户启用的当前 Claude Code 或 Codex 会话中，使用可用浏览器工具复用已登录的 GPT 网页，辅助文献线索、文字审查和交叉检查      | 候选线索、逐段修改建议、独立检查结果及本地核验结论           |
 | 写论文与投稿材料               | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校                         | Markdown 或 Word 稿件、投稿材料与自检记录                    |
 | 评审论文与生成审稿报告         | 以同行评审人身份核对稿件中的数据与论断是否对应，并审查设计、偏倚、统计、解释、报告规范、语言和伦理，区分报告缺项与方法错误    | 可定位、分 major/minor、说明未核验内容的完整 reviewer report |
 | 写报告与制作学术汇报           | 把分析结果转成面向读者的报告，或按用户模板、机构/会议模板或中性设计生成组会、开题、中期与答辩汇报                  | 报告正文、DOCX、可直接汇报的 PPTX                            |
@@ -358,7 +358,9 @@ python scripts/epiagentkit.py check-project <项目根>
 
 Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。
 
-源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md`，并将规则文件从 doctor 的受管组件中移除。Codex 的 `runtime` 组件独立保留：只要本次请求同步规则，仍会管理和检查 `allow_login_shell`；只同步 skills 时不修改该设置。这两个本机策略文件不进入 release。
+源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md`，并将规则文件从受管组件中移除。doctor 仍只读核对：保留规则与源仓库不同或缺失时报告 WARN，不自动覆盖，也不把新版规则称为已生效；本机排除的技能报告 INFO。Codex 的 `runtime` 组件独立保留：只要本次请求同步规则，仍会管理和检查 `allow_login_shell`；只同步 skills 时不修改该设置。这两个本机策略文件不进入 release。
+
+doctor 对 hooks 检查文件、注册与启动器，不证明当前会话已激活。Codex 新增或变更的非受管 hooks 仍需按实际客户端的 `/hooks` 流程审阅；云端编排不能据此认定会执行本机命令 hooks。两端当前加载与工具能力的区别见 [平台兼容性](skills/epiagentkit-maintenance/references/platform-compatibility.md)。
 
 </details>
 
@@ -405,6 +407,8 @@ Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--c
 正式归档只处理已经确认的非原始文件：先用 dry-run 列出将要移动的文件，再移动到 `09_backup/archive/` 中不会覆盖旧批次的位置，同时生成 `MANIFEST.json`（文件及其哈希值清单）和 `INDEX.md`（正式归档索引）。来源、当前版本或引用关系不清时停止并请用户决定。Git 可用时可额外保留恢复历史；没有 Git 时工作流会跳过 Git，不会代为安装。项目约定来自作者的研究与咨询实践，不是领域唯一标准，可按团队规范删改。
 
 ## 维护与贡献
+
+截至 2026-09-30 的官方资料、逐项 skills 检查与本轮优化范围见 [技能与工作流优化记录](docs/skills-workflow-review.md)。本轮重点是缩短发现描述、减少无实质分歧的确认、适配实际可用工具，以及让安装检查如实报告生效边界；不把规则压缩或静态检查称为模型性能提高。
 
 ### 从其它项目交接工作流问题
 

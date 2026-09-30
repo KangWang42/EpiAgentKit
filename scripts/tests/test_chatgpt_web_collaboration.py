@@ -35,14 +35,25 @@ class ChatGPTWebCollaborationTests(unittest.TestCase):
 
     def test_session_authorization_is_sticky_but_not_persisted(self) -> None:
         for fragment in (
-            "本 Codex 对话内保持启用",
+            "本次对话内保持启用",
             "不再询问启用、继续、准备材料、读取回复或本地核验",
             "直到再次明确启用",
             "不把授权写入项目",
-            "不带到新的 Codex 对话",
+            "不带到新的对话",
             "一次说明 `chatgpt.com` 和发送内容",
             "不为同一批重复或逐条确认",
-            "不把会话授权当作未确定未来消息的批准",
+            "未确定内容的未来消息仍需在发送前核对范围与隐私",
+            "不另设发送审批",
+        ):
+            self.assertIn(fragment, self.skill)
+
+    def test_available_browser_tools_define_the_adapter(self) -> None:
+        for fragment in (
+            "先核对当前会话实际提供的浏览器工具和技能",
+            "unified-computer-use",
+            "没有可用连接时说明实际缺口",
+            "继续原任务的本地工作",
+            "指出该确认要求的来源",
         ):
             self.assertIn(fragment, self.skill)
 
@@ -96,7 +107,8 @@ class ChatGPTWebCollaborationTests(unittest.TestCase):
         enabled = self.cases["enable_chatgpt_web_for_session"]
         self.assertEqual(enabled["primary"], "chatgpt-web-collaboration")
         self.assertIn("edge_then_chrome", enabled["expected_action"])
-        self.assertIn("confirm_only_at_browser_action_time", enabled["expected_action"])
+        self.assertIn("reuse_authorization", enabled["expected_action"])
+        self.assertIn("confirm_only_if_tool_requires", enabled["expected_action"])
 
         continued = self.cases["active_session_manuscript_web_review"]
         self.assertEqual(continued["primary"], "academic-humanizer")

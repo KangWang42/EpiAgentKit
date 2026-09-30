@@ -11,7 +11,7 @@ import yaml
 from pathlib import Path
 
 
-MAX_DESCRIPTION_CHARS = 512
+MAX_DESCRIPTION_CHARS = 1024
 PLACEHOLDER_FILES = {
     "scripts/example.py",
     "references/api_reference.md",
@@ -87,6 +87,7 @@ def validate_skill(skill_path):
         'name',
         'description',
         'license',
+        'compatibility',
         'allowed-tools',
         'disable-model-invocation',
         'metadata',
@@ -105,6 +106,12 @@ def validate_skill(skill_path):
         return False, "Missing 'name' in frontmatter"
     if 'description' not in frontmatter:
         return False, "Missing 'description' in frontmatter"
+
+    compatibility = frontmatter.get('compatibility')
+    if 'compatibility' in frontmatter and (
+        not isinstance(compatibility, str) or len(compatibility) > 500
+    ):
+        return False, "'compatibility' must be a string of at most 500 characters"
 
     disable_model_invocation = frontmatter.get('disable-model-invocation')
     if disable_model_invocation is not None and not isinstance(

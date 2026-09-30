@@ -1,6 +1,6 @@
 ---
 name: python-biostats
-description: Python 流行病学与生物统计分析的可选执行层，仅用于用户明确要求 Python，或既有项目已经以 Python 为主流程时的数据清洗、描述统计、回归、生存分析、预测验证、统计表图、代码调试和结果复现。开工先遵循 biostat-principles；统计图配合 publication-figures，客户外发再用 consulting-delivery。未指定语言的普通统计分析、R 环境或依赖缺失、研究设计定稿、论文写作或仅操作 xlsx 文件不触发。
+description: "用 Python 完成生物统计清洗、描述、回归、生存、预测验证、统计表和代码修复。仅在用户明确选 Python 或项目已有 Python 主流程时使用；不因 R 依赖缺失触发。"
 ---
 
 # Python 生物统计执行

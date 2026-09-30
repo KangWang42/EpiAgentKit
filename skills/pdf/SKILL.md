@@ -1,6 +1,6 @@
 ---
 name: pdf
-description: 读取、提取、创建、合并、拆分、旋转、裁切、加水印、OCR、加密、检查或填写实际 PDF 文件。PDF 是主要输入或指定输出时使用；论文、报告、表格和统计内容仍由相应内容 skill 决定。不用于只处理 Word、PPT、Excel、网页或聊天正文。
+description: "读取、提取、创建或处理实际 PDF 的页面、OCR、表单、水印、加密与显示。PDF 是输入或指定输出时使用；专业内容由对应内容技能负责。"
 license: Proprietary. LICENSE.txt has complete terms
 ---
 

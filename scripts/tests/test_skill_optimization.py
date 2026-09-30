@@ -389,11 +389,11 @@ class SkillOptimizationTests(unittest.TestCase):
         python_skill = (ROOT / "skills/python-biostats/SKILL.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("用户未指定且项目没有既定分析语言时也使用", r_skill)
+        self.assertIn("未指定且无既定语言时默认使用", r_skill)
         self.assertIn("普通 R 包缺失时", r_skill)
         self.assertIn("项目隔离环境补齐", r_skill)
-        self.assertIn("仅用于用户明确要求 Python", python_skill)
-        self.assertIn("未指定语言的普通统计分析", python_skill)
+        self.assertIn("仅在用户明确选择 Python 或既有项目以 Python 为主流程时执行", python_skill)
+        self.assertIn("不因 R 依赖缺失触发", python_skill)
         self.assertIn("Python 运行时缺失时先询问是否安装", python_skill)
         self.assertIn("现有 R 环境中的经核验等价实现", python_skill)
 

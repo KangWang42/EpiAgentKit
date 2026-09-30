@@ -1,7 +1,6 @@
 ---
 name: manuscript-peer-review
-description: |
-  以期刊同行评审人身份审查生物医学、临床、公共卫生、流行病学与生物统计稿件，建立稿件内数据和论断证据链，区分报告缺项与方法缺陷，评价研究设计、偏倚、统计、结果解释、透明度、语言和伦理，并生成可定位、分级、可行动的完整审稿报告。用于用户明确要求同行评审、审稿、评审稿件、major/minor comments、reviewer report 或投稿评议。开工先用 biostat-principles；需核验文献或方法依据时用 evidence-research；Word/PDF 文件操作加 docx/pdf，最终措辞可用 academic-humanizer。论文总结、文献综述、作者侧润色或改稿、response to reviewers、投稿前项目审计分别转相应 skill，不用于替编辑作最终录用决定或在无原始数据时声称验证数据真实性。
+description: "按期刊同行评审要求审查生物医学与公共卫生稿件，生成可定位的 major/minor comments 或 reviewer report。用于明确审稿请求；不用于作者侧改稿、审稿回复或项目审计。"
 ---
 
 # 论文同行评审
@@ -98,7 +97,7 @@ description: |
 
 完整同行评审使用 [references/report-template.md](references/report-template.md) 的结构，至少包含审查依据与限制、稿件概述、优点、major comments、minor comments、覆盖矩阵和未核验项。L 局部审查只交付可定位意见、依据、影响、最小修订请求及明确的未审范围，不补写全文概述、优点、覆盖矩阵或推荐结论来伪装成完整报告。
 
-- 只有期刊表单或用户明确要求时给 accept/revise/reject 或数字评分，并严格使用该期刊定义；有效性与期刊优先级分开说明。
+- 只有期刊表单或用户明确要求时给 accept/revise/reject 或数字评分，并严格使用该期刊定义；有效性与期刊优先级分开说明。推荐意见不用于替编辑作最终录用决定。
 - 只有存在真实敏感事项或期刊要求时写 confidential comments to the editor；科学评价原则上同时出现在作者可见部分，二者不得矛盾。
 - 语言意见聚焦可理解性、术语、逻辑和论断强度，不逐句改写基本清楚的稿件，不把非母语表达当作科学质量替代指标。
 - 输出 Word 或 PDF 时分别交给 `docx` 或 `pdf`；交付前可用 `academic-humanizer` 仅校准专业语气、结构和论断强度，不得改变事实、严重度或科学判断。

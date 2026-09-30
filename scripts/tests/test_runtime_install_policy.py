@@ -32,8 +32,7 @@ class RuntimeInstallPolicyTests(unittest.TestCase):
         expected = {
             "skills/git-commit-helper/SKILL.md": (
                 "Git is already available",
-                "Do not install Git",
-                "do not run `git init`",
+                "do not install Git or run `git init` for this skill",
             ),
             "skills/project-init/SKILL.md": (
                 "不安装 Git",

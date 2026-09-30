@@ -381,9 +381,10 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("不切换 SVG", svg_fallback)
         self.assertIn("不存在有用参考图时直接省略", body)
         self.assertIn(
-            "只有 imagegen 实际不可用、用户明确要求 SVG/矢量源",
+            "只读检查确认当前没有可用 imagegen 路径时",
             body,
         )
+        self.assertIn("用户明确要求 SVG、矢量源、完全可编辑图形、编辑现有 SVG 或目标格式强制矢量", body)
         self.assertIn("第二次修改后停止自动修改", body)
         self.assertIn("把该图保存为当前结果", body)
         self.assertIn("内容硬伤，包括错误", recipes)

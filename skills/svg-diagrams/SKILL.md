@@ -1,6 +1,6 @@
 ---
 name: svg-diagrams
-description: 创建、审校或修改可编辑且内容精确的 SVG 非统计图解。仅在用户明确要求 SVG、矢量源或完全可编辑图形，编辑现有 SVG，目标格式强制矢量，或只读检查确认 imagegen 实际不可用时使用。普通科研非统计视觉先走 research-visuals 与 imagegen；imagegen 已返回但内容或美学不合格、HTTP 524、文字密集或预计生成困难均不能触发本技能；统计图走 publication-figures。
+description: "创建或修改精确、可编辑的 SVG 非统计图解。仅用于明确 SVG/矢量需求、现有 SVG 编辑、强制矢量格式或已核实 imagegen 不可用；不因生成图质量不合格而触发。"
 ---
 
 # SVG 图解

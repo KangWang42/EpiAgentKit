@@ -1,6 +1,6 @@
 ---
 name: pptx
-description: "Create, read, edit, render or validate .pptx files, including templates, layouts, notes and comments. Use when a presentation file is an input or deliverable, not for discussion of a talk without file work."
+description: "Read, create, edit, render or validate .pptx files, including templates, layouts, notes and comments. Use for actual presentation files, not talk planning alone."
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
@@ -10,14 +10,14 @@ license: Proprietary. LICENSE.txt has complete terms
 
 ## 模板来源分流
 
-新建或大幅重建前，确认模板来源：中大官方模板、其他学校/机构或特定汇报类型、用户提供的模板，还是无模板的中性设计。已有 PPTX 的读取和局部修改不重复询问；多个合理当前模板且无法判断时才询问。
+新建或大幅重建前，从材料确定模板来源：中大官方模板、其他学校/机构或特定汇报类型、用户提供的模板，还是无模板的中性设计。未指定机构或模板且材料充分时直接采用中性设计并说明选择；明确机构模板但缺少文件，或多个合理当前模板且无法判断时才询问。已有 PPTX 的读取和局部修改不重复询问。
 
 | 来源 | 内容与文件路径 |
 | --- | --- |
 | 中大官方模板 | 加载 `sysu-ppt`，使用其已确认模板和工具，再由本 skill 做文件检查 |
 | 其它机构/汇报类型 | 学术内容 load `academic-ppt` as the content workflow，沿用项目或用户确认的 PPTX |
 | 用户模板 | 以该文件为权威，保留母版、版式、主题、品牌和固定组件 |
-| 无模板 | 学术内容加载 `academic-ppt`；确认中性设计后读取 `design-reference.md` 和 `pptxgenjs.md` |
+| 无模板 | 学术内容加载 `academic-ppt`；采用中性设计并读取 `design-reference.md` 和 `pptxgenjs.md` |
 
 模板派生的全新或大幅重建文件必须先检查模板，再编辑内容；完成后确认模板仍可见、版式关系和品牌资源未丢失、没有占位文字。
 使用模板编辑工作流（Use the template-editing workflow, not the from-scratch workflow），不把模板任务改走从零生成工作流。
