@@ -1,0 +1,268 @@
+{
+  "author": "wang4286",
+  "package_version": "1.1",
+  "skills": {
+    "academic-humanizer": {
+      "title": "Academic Humanizer",
+      "description_en": "Edits, condenses and final-checks existing Chinese or English academic texts, research reports, grant applications and journal correspondence while locking every number, statistic, citation and claim boundary. Use when the user asks to polish, shorten, de-template or final-review a research text rather than draft it from scratch.",
+      "tags": ["academic writing", "editing", "chinese academic writing", "manuscript revision", "research"],
+      "price_usd": 12,
+      "highlights": [
+        "Locks numbers, effect sizes, CIs, P values, citations and claim direction before any edit",
+        "Separates drafting, structural rewrite, local revision, format repair and final review",
+        "Chinese academic style gate plus English phrase-level evidence checks",
+        "Scripts to verify revision invariants and reviewer-response closure"
+      ],
+      "requirements": "Python 3.9+ (standard library only) for the optional checking scripts."
+    },
+    "academic-ppt": {
+      "title": "Academic PPT Storyboard",
+      "description_en": "Plans and rebuilds academic slide decks for lab meetings, journal clubs, method talks, thesis proposals and defenses with a slide-by-slide storyboard and content-first layout rules. Use when the user asks to create or restructure a research presentation; actual .pptx editing is done with any PowerPoint file skill.",
+      "tags": ["presentation", "powerpoint", "thesis defense", "journal club", "academic"],
+      "price_usd": 10,
+      "highlights": [
+        "Template-source decision before design: user template, institution template or neutral academic style",
+        "Slide-by-slide storyboard with one message and one visual focus per slide",
+        "Separate playbooks for meetings/journal clubs and proposal/defense talks",
+        "Content-first visual contract that avoids poster-style card walls"
+      ],
+      "requirements": "A PowerPoint (.pptx) file skill or library in your agent for writing the actual file."
+    },
+    "academic-publishing": {
+      "title": "Academic Manuscript Writer",
+      "description_en": "Drafts or structurally rewrites research papers, thesis chapters and submission materials (cover letters, response letters, declarations) for epidemiology and biostatistics, and runs pre-submission checks. Use when the user asks to write a paper, a manuscript section or submission package from verified results.",
+      "tags": ["manuscript", "scientific writing", "epidemiology", "journal submission", "thesis"],
+      "price_usd": 25,
+      "highlights": [
+        "Writes only from verified results, tables and figures, with one declared source per number",
+        "Section-function playbook, statistical reporting rules and reporting-guideline mapping",
+        "Chinese journal, Chinese thesis and English manuscript tracks",
+        "Machine-checkable manuscript contract and pre-submission sign-off checklist"
+      ],
+      "requirements": "Python 3.9+ (standard library only) for the contract and table reconciliation scripts."
+    },
+    "biostat-principles": {
+      "title": "Biostatistics Working Principles",
+      "description_en": "Shared working principles for study design, biostatistical analysis, scientific writing, consulting delivery and project review: scope triage, minimal verifiable implementation, data safety and anomaly reporting. Use when definitions are disputed, results disagree, a new method is being tried, or before any formal analysis.",
+      "tags": ["biostatistics", "reproducibility", "data analysis", "research workflow", "epidemiology"],
+      "price_usd": 0,
+      "highlights": [
+        "Q / L / P / R scope triage so small tasks stay small",
+        "Change-impact-verification mapping before touching an existing project",
+        "Data readiness checks and stop-and-ask rules for NA, sample-size drift and warnings",
+        "Isolated experiment rules for trying new methods without polluting the main analysis"
+      ],
+      "requirements": "Optional: R 4.1+ or Python 3.9+ for the data readiness scripts."
+    },
+    "build-web-ui": {
+      "title": "Build Web UI",
+      "description_en": "Creates, redesigns, repairs or beautifies real web pages and web app interfaces with page contracts, responsive layout, interaction states and browser-based acceptance checks. Use for static sites, Quarto sites and web apps; not for backend-only work, native apps or standalone images.",
+      "tags": ["frontend", "web design", "responsive design", "ui", "accessibility"],
+      "price_usd": 15,
+      "highlights": [
+        "Page, visual and component contracts before coding",
+        "Site archetypes, color systems, interaction components and personal/cultural site guidance",
+        "Static HTML audit and optional headless Chromium desktop/mobile screenshot audit",
+        "Quality gates for performance, SEO and accessibility"
+      ],
+      "requirements": "Python 3.9+. The browser audit additionally needs a locally installed Chromium or Chrome.",
+      "network_note": "`scripts/audit_browser.py` only opens the URLs you pass (typically a local dev server such as http://127.0.0.1:8000) through a locally launched headless browser and a DevTools connection on 127.0.0.1. Screenshots are returned by the browser as base64 and written to the output directory you choose. No other network access."
+    },
+    "consulting-delivery": {
+      "title": "Biostat Consulting Delivery",
+      "description_en": "Packages a finished and verified R or Python analysis into a readable, reproducible and traceable client delivery pack with README, contents list, pipeline script, outputs and run records. Use when the user asks to prepare formal results for a client; not for unfinished analyses or single tables.",
+      "tags": ["consulting", "reproducibility", "biostatistics", "deliverables", "r"],
+      "price_usd": 12,
+      "highlights": [
+        "Minimal delivery structure with explicit data-sharing policy (reference or include)",
+        "R scaffold that generates the pack skeleton and a runnable pipeline",
+        "Delivery contents list tied to verified results and run records",
+        "Pre-delivery checks for authorization, privacy and current version"
+      ],
+      "requirements": "R 4.1+ for the scaffold script.",
+      "env_note": "The generated pipeline sets the variable `EPI_RUN_ID` for its own child processes so each result can be traced to one run, and restores the previous value afterwards. It does not read any other environment variables."
+    },
+    "epi-project-audit": {
+      "title": "Epidemiology Project Audit",
+      "description_en": "Audits an epidemiology or biostatistics project across six layers (data and design, code and execution, results, tables and figures, text, delivery) and decides whether it is ready for formal release. Use for project review, full quality control or pre-submission checks; single-file checks belong to the matching file skill.",
+      "tags": ["quality control", "audit", "reproducibility", "epidemiology", "research integrity"],
+      "price_usd": 20,
+      "highlights": [
+        "ERROR / WARN / INFO severity tied to scientific validity, integrity and traceability",
+        "Six-layer evidence-chain checklist with read-only audit mode",
+        "Claim calibration guide for causal language and evidence strength",
+        "Deterministic project consistency checker with JSON output"
+      ],
+      "requirements": "Python 3.9+ (standard library only)."
+    },
+    "epi-study-design": {
+      "title": "Epidemiologic Study Design",
+      "description_en": "Develops or reviews epidemiologic study designs, estimands, endpoints, eligibility criteria, bias control, sample size or precision, PROTOCOL and SAP documents. Use before looking at results or writing main analysis code; not for project setup, model fitting or results writing.",
+      "tags": ["study design", "epidemiology", "statistical analysis plan", "protocol", "estimand"],
+      "price_usd": 15,
+      "highlights": [
+        "Structured research question, causal versus descriptive target and estimand",
+        "Time zero, eligibility, exposure, outcome and bias-control checklist",
+        "Sample size or precision justification",
+        "PROTOCOL and SAP specification template"
+      ],
+      "requirements": "None."
+    },
+    "evidence-research": {
+      "title": "Scientific Evidence Verification",
+      "description_en": "Verifies scientific facts, citations, DOIs and PMIDs, searches for current evidence, guidelines and method references, and appraises whether indicators, scales or methods fit the project. Use when the user asks to check a reference, find evidence or justify a method; it does not replace data checks or analysis.",
+      "tags": ["literature search", "citation check", "doi", "pubmed", "evidence synthesis"],
+      "price_usd": 15,
+      "highlights": [
+        "Rapid verification mode and full evidence-matrix mode",
+        "Source routing across PubMed, Crossref, guidelines and official documentation",
+        "Reporting-guideline routing (CONSORT, STROBE, PRISMA, TRIPOD and more)",
+        "Batch DOI/PMID metadata verification script with tests"
+      ],
+      "requirements": "Python 3.9+ (standard library only).",
+      "network_note": "`scripts/verify_sources.py` queries only the public Crossref API (https://api.crossref.org) and NCBI E-utilities (https://eutils.ncbi.nlm.nih.gov) to verify the DOIs and PMIDs you supply. It sends identifiers only, never manuscript text.",
+      "env_note": "Optionally reads `NCBI_EMAIL` (or `--email`) as the contact address that NCBI asks API users to provide. No other environment variables are read."
+    },
+    "git-commit-helper": {
+      "title": "Git Commit Helper",
+      "description_en": "Reviews the full diff and writes a coherent, reversible Conventional Commit message or commit; pushes only on explicit request. Use when the user asks to commit, write a commit message or split changes into commits in an existing Git repository.",
+      "tags": ["git", "conventional commits", "commit message", "version control"],
+      "price_usd": 0,
+      "highlights": [
+        "Separates requested changes from pre-existing work",
+        "Stages explicit paths or reviewed hunks only",
+        "Conventional Commit format with motivation, behavior and validation in the body",
+        "Never installs Git, initializes repositories or force-pushes"
+      ],
+      "requirements": "An existing Git installation and repository."
+    },
+    "graduate-opening-report": {
+      "title": "Graduate Thesis Proposal Report",
+      "description_en": "Drafts, restructures or final-reviews master's and doctoral thesis opening (proposal) reports and their official forms from a confirmed study plan and the school template. Use when the user asks for a thesis proposal report; not for full dissertations, single-paragraph polishing or Word-only formatting.",
+      "tags": ["thesis proposal", "graduate school", "research proposal", "academic writing", "chinese"],
+      "price_usd": 20,
+      "highlights": [
+        "Locks school template, degree level, research question and design before writing",
+        "Full report blueprint with section functions and evidence requirements",
+        "Template profiling from sample reports without copying their text",
+        "Archive checklist and .docx validator for formal submission"
+      ],
+      "requirements": "Python 3.9+ (standard library only) for the .docx validator; a Word (.docx) file skill or library for writing the file."
+    },
+    "manuscript-peer-review": {
+      "title": "Manuscript Peer Review",
+      "description_en": "Reviews biomedical and public health manuscripts to journal peer-review standards and produces locatable major and minor comments or a full reviewer report. Use when the user explicitly asks for a peer review; not for author-side revision, response letters or project audits.",
+      "tags": ["peer review", "manuscript review", "biomedical", "public health", "reporting guidelines"],
+      "price_usd": 15,
+      "highlights": [
+        "Confidentiality and AI-use authorization checks before reviewing",
+        "Evidence-chain review of design, methods, statistics and claims",
+        "Reporting-guideline mapping by study type",
+        "Reviewer report template with locatable major and minor comments"
+      ],
+      "requirements": "None."
+    },
+    "project-init": {
+      "title": "Research Project Init",
+      "description_en": "Initializes the minimal folder structure for an analysis, paper, consulting, teaching or one-off research project on explicit request, with pipeline runner, run records and decision logs. Use when the user asks to create or set up a new project; not for existing projects or quick checks, and it never enables Git automatically.",
+      "tags": ["project setup", "reproducibility", "research workflow", "r", "python"],
+      "price_usd": 10,
+      "highlights": [
+        "Five profiles from full analysis to one-off task, choosing the smallest that fits",
+        "R and Python pipeline runners that record commands, hashes and environment per run",
+        "Project hygiene rules for raw data, archives and workbench experiments",
+        "Deliverable archiving script that keeps one current version"
+      ],
+      "requirements": "R 4.1+ for the initializer; Python 3.9+ for the archiving script and Python pipeline runner.",
+      "env_note": "The pipeline runners set `EPI_RUN_ID` for their own child processes. `init_project.R` optionally reads `EPIAGENTKIT_SKILLS` or `EPICLAUDE_SKILLS` only to locate this skill's own template folder."
+    },
+    "publication-figures": {
+      "title": "Publication Statistical Figures",
+      "description_en": "Draws, revises or reviews publication-quality statistical figures and model diagnostic plots in R or Python from real data or verified results, including forest plots, survival curves, ROC curves and heatmaps. Use for any data-driven figure; flowcharts, mechanisms and frameworks are not covered.",
+      "tags": ["data visualization", "ggplot2", "forest plot", "survival curve", "scientific figures"],
+      "price_usd": 15,
+      "highlights": [
+        "Chart choice by estimand and data structure, not by fashion",
+        "Manuscript layout rules for size, fonts, panels and color-vision safety",
+        "Font and export setup script for R (ragg/showtext)",
+        "Vetting procedure before reusing any third-party plotting example"
+      ],
+      "requirements": "R 4.1+ with ggplot2, ragg, showtext and sysfonts for the setup script."
+    },
+    "python-biostats": {
+      "title": "Python Biostatistics",
+      "description_en": "Performs biostatistical cleaning, description, regression, survival analysis, prediction validation, statistical tables and code repair in Python. Use only when the user chooses Python or the project already runs on Python.",
+      "tags": ["python", "biostatistics", "statsmodels", "survival analysis", "data analysis"],
+      "price_usd": 12,
+      "highlights": [
+        "Confirms analysis set, exposure, endpoint and time zero before coding",
+        "Checks fields, keys, duplicates, missingness and stepwise sample size from the earliest input",
+        "Reproducible seeds and fresh-process execution",
+        "Result summary writer that records every key number with its source"
+      ],
+      "requirements": "Python 3.9+ with PyYAML for the result summary script; analysis libraries as used by your project."
+    },
+    "r-biostats": {
+      "title": "R Biostatistics",
+      "description_en": "Performs biostatistical cleaning, description, regression, survival, mediation and meta-analysis, statistical tables and code repair in R. Use by default for statistical analysis when no other language is established.",
+      "tags": ["r", "biostatistics", "survival analysis", "meta-analysis", "regression"],
+      "price_usd": 15,
+      "highlights": [
+        "Method references for descriptive, regression, survival, mediation, meta-analysis and prognostic models",
+        "R code style guide for readable, auditable analysis scripts",
+        "Package selection guidance from official sources",
+        "Result summary writer that records every key number with its source"
+      ],
+      "requirements": "R 4.1+ with the yaml package for the result summary script."
+    },
+    "report-writing": {
+      "title": "Professional Report Writing",
+      "description_en": "Writes, continues or restructures Chinese analysis reports, progress reports, operating guides, memos and minutes, delivering either the text or a complete file. Use when the user asks for a report; papers, submission materials and consulting packs are not covered.",
+      "tags": ["report writing", "analysis report", "chinese", "documentation", "epidemiology"],
+      "price_usd": 12,
+      "highlights": [
+        "Confirms reader, purpose, fact source and scope before writing",
+        "Epidemiology report blueprint",
+        "Report assembly checklist for tables, figures, captions and cross-references",
+        "Example python-docx build script"
+      ],
+      "requirements": "Python 3.9+ with python-docx for the example build script."
+    },
+    "research-visuals": {
+      "title": "Research Visuals",
+      "description_en": "Generates or redraws scientific flowcharts, frameworks, mechanisms, model architectures, technical roadmaps, graphical abstracts and content illustrations using the agent's image generation tool. Use for non-statistical research figures; statistical charts, raw research images and real screenshots are handled by their own evidence type.",
+      "tags": ["scientific illustration", "graphical abstract", "flowchart", "image generation", "research figures"],
+      "price_usd": 15,
+      "highlights": [
+        "Carrier-specific specs for papers, slides, grant documents, reports and web",
+        "Visual strategy, iconography and figure planning references",
+        "Prompt recipes and research figure patterns",
+        "Strict rules against fabricating data or redrawing raw research images"
+      ],
+      "requirements": "An image generation tool available in your agent session. Includes MIT and Apache-2.0 licensed third-party references with their licenses."
+    },
+    "svg-diagrams": {
+      "title": "SVG Research Diagrams",
+      "description_en": "Creates or edits precise, editable native SVG diagrams for research such as study flowcharts, frameworks and mechanisms. Use when the user explicitly needs SVG or vector output, edits an existing SVG, or a vector source is mandatory.",
+      "tags": ["svg", "vector graphics", "flowchart", "diagram", "scientific figures"],
+      "price_usd": 12,
+      "highlights": [
+        "Journal-style flow and editorial design systems",
+        "Layout recipes and request template",
+        "Two ready-made SVG flowchart templates",
+        "SVG validator for overlap, text fit and structure"
+      ],
+      "requirements": "Python 3.9+ (standard library only) for the validator."
+    }
+  },
+  "external_companions": {
+    "docx": "Word (.docx) file operations. Use any Word/.docx skill or library available in your agent (for example python-docx); this marketplace package does not include one.",
+    "pdf": "PDF file operations. Use any PDF skill or library available in your agent (for example pypdf or pdfplumber); this marketplace package does not include one.",
+    "pptx": "PowerPoint (.pptx) file operations. Use any .pptx skill or library available in your agent (for example python-pptx); this marketplace package does not include one.",
+    "xlsx": "Excel/CSV file operations. Use any spreadsheet skill or library available in your agent (for example openpyxl); this marketplace package does not include one.",
+    "imagegen": "The image generation tool of your agent session. If none is available, stop and tell the user instead of calling another API.",
+    "sysu-ppt": "An institution-specific slide template skill that is not sold here. Use the template file the user provides, or a neutral academic design.",
+    "skill-creator": "Skill authoring tooling; not needed for normal use.",
+    "chatgpt-web-collaboration": "An optional browser collaboration workflow that is not sold here; skip the step."
+  }
+}

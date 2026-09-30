@@ -455,6 +455,8 @@ python -m unittest scripts.tests.test_workflow_routing -v  # 示例：替换为�
 
 维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.1/EpiAgentKit-release-1.1.zip` 及外部 SHA-256 文件。
 
+在 Agensi 上架时运行 `python scripts/build_agensi.py`。它按 `scripts/agensi_listings.json` 中的可售清单为每个 skill 生成一个独立 zip（单一顶层文件夹，SKILL.md 位于其根目录），附双语 README、`references/core-rules.md` 与 `references/companion-skills.md`，并把被引用的其它 skill 文件复制到 `shared/`；输出 `releases/agensi/*.zip`、`SHA256SUMS` 和逐项填写用的 `LISTINGS.md`。Anthropic 专有或来源于 Anthropic 的 skill、中山大学模板、仓库维护 skill 和会员专享绘图示例不进入可售清单。
+
 行为发生变化时，还需要对受影响的 R、Python 或 Bash 脚本做语法检查和代表性实跑。详细 contributor 约定见 [`AGENTS.md`](AGENTS.md)，全局规则迁移说明见 [`docs/global-rule-migration.md`](docs/global-rule-migration.md)。
 
 <details>
