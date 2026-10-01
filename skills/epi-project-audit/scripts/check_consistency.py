@@ -155,7 +155,10 @@ def main():
         for fp in glob.glob(os.path.join(root, pat), recursive=True):
             rp = os.path.normpath(fp)
             base = os.path.basename(rp).lower()
-            if rp in seen or "09_backup" in rp.replace("\\", "/"):
+            # Only the project's own backup tree is skipped; a project that itself lives under some
+            # 09_backup folder (for example a workbench reproduction) is still checked.
+            relative_parts = os.path.relpath(rp, root).replace("\\", "/").split("/")
+            if rp in seen or "09_backup" in relative_parts:
                 continue
             if base in ("0_result_summaries.md", "results.yaml"):
                 continue
