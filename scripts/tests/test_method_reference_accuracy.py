@@ -98,6 +98,24 @@ class CodeStyleTests(unittest.TestCase):
             self.assertNotIn(superseded, code)
 
 
+class RevisionInvariantTests(unittest.TestCase):
+    def test_added_causal_wording_requires_review_but_weakening_passes(self) -> None:
+        spec = importlib.util.spec_from_file_location(
+            "check_revision_invariants", ROOT / "skills/academic-humanizer/scripts/check_revision_invariants.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        related = "吸烟与死亡风险相关（HR 1.45）。Smoking was associated with mortality."
+        causal = "吸烟导致死亡风险升高（HR 1.45）。Smoking leads to mortality."
+        strengthened = module.compare_texts(related, causal)
+        self.assertEqual(strengthened["status"], "REVIEW_REQUIRED")
+        added = {item["value"] for item in strengthened["categories"]["claim_strength"]["added"]}
+        self.assertEqual(added, {"导致", "leads to"})
+        self.assertEqual(module.compare_texts(causal, related)["status"], "PASS")
+
+
 class PythonAndDesignTests(unittest.TestCase):
     def test_python_code_style_is_linked_and_guards_merges(self) -> None:
         self.assertIn("references/code-style.md", read("skills/python-biostats/SKILL.md"))

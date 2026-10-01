@@ -52,12 +52,23 @@ CHINESE_CROSS_REFERENCE_PATTERN = re.compile(
     r"(?:(?:补充|附)?(?:图|表)|补充材料|附录)\s*"
     r"(?:[A-Za-z]?\d+[A-Za-z]?|[A-Za-z])"
 )
+# Causal verbs and strong-claim wording; only additions are reported, because weakening a claim is a
+# legitimate edit while strengthening it can exceed the study design.
+CLAIM_TERM_PATTERN = re.compile(
+    r"导致|引起|造成|致使|证实|证明|确证|明确表明|保护作用|"
+    r"(?<![-\w])(?:caus(?:e|es|ed|ing|al)|leads?\s+to|led\s+to|results?\s+in|"
+    r"prov(?:e|es|ed|en)|confirm(?:s|ed)?|establish(?:es|ed)?|demonstrat(?:e|es|ed)|"
+    r"protective\s+effect)\b",
+    re.IGNORECASE,
+)
 CATEGORY_RULES = {
     "numbers": "invariant.numbers_changed",
     "citations": "invariant.citations_changed",
     "cross_references": "invariant.cross_references_changed",
     "protected_terms": "invariant.protected_terms_changed",
+    "claim_strength": "invariant.claim_strength_increased",
 }
+ADDITION_ONLY_CATEGORIES = {"claim_strength"}
 
 
 def normalize_source(text: str) -> str:
@@ -133,6 +144,14 @@ def extract_protected_terms(text: str, protected_terms: Iterable[str]) -> Counte
     return values
 
 
+def extract_claim_terms(text: str) -> Counter[str]:
+    normalized = normalize_source(text)
+    return Counter(
+        re.sub(r"\s+", " ", match.group(0)).casefold()
+        for match in CLAIM_TERM_PATTERN.finditer(normalized)
+    )
+
+
 def counter_delta(before: Counter[str], after: Counter[str]) -> dict[str, object]:
     removed = before - after
     added = after - before
@@ -163,11 +182,14 @@ def compare_texts(
         "citations": extract_citations,
         "cross_references": extract_cross_references,
         "protected_terms": lambda text: extract_protected_terms(text, protected_terms),
+        "claim_strength": extract_claim_terms,
     }
     categories = {
         name: counter_delta(extractor(original), extractor(revised))
         for name, extractor in extractors.items()
     }
+    for name in ADDITION_ONLY_CATEGORIES:
+        categories[name]["changed"] = bool(categories[name]["added"])
     findings = [
         {
             "level": "REVIEW_REQUIRED",
@@ -186,7 +208,7 @@ def compare_texts(
         "categories": categories,
         "findings": findings,
         "limitations": [
-            "不变量相同只能说明所检查项目的多重集相同，不能证明语义、因果强度或结论方向未变。",
+            "不变量相同只能说明所检查项目的多重集相同，不能证明语义、因果强度或结论方向未变；claim_strength 只按词表发现新增的因果或强论断措辞。",
             "交换两个数值的位置可能仍会通过；必须结合原文位置、授权范围和证据来源复核。",
             "脚本发现的授权修改仍显示为 REVIEW_REQUIRED，由任务范围或 revision-state.json 记录决定能否接受。",
         ],
