@@ -537,9 +537,20 @@ def hook_command(
     client: str = "claude",
     windows: bool | None = None,
 ) -> str:
-    """Return a hook command that works even when bash is absent from PATH."""
+    """Return the hook command for the shell that the client uses to run it.
+
+    Claude Code runs Windows hooks in Git Bash (pinned with ``"shell": "bash"``), where
+    MSYS path conversion rewrites ``cmd.exe /d /s /c`` and breaks the cmd launcher, so
+    Claude gets a plain bash command. Codex keeps the cmd launcher, which also works when
+    bash is absent from PATH.
+    """
     windows = os.name == "nt" if windows is None else windows
     script_path = hooks_dir / script
+    if windows and client == "claude":
+        return (
+            f"EPIAGENTKIT_HOOK_CLIENT={shlex.quote(client)} PYTHONUTF8=1 "
+            f"bash {shlex.quote(script_path.as_posix())}"
+        )
     if windows:
         wrapper = (hooks_dir / "run_hook.cmd").as_posix()
         return (
@@ -555,6 +566,8 @@ def hook_groups(
     edit_matcher = (
         "Write|Edit|MultiEdit" if platform == "claude" else "Edit|Write|apply_patch"
     )
+    windows = os.name == "nt" if windows is None else windows
+    shell = {"shell": "bash"} if platform == "claude" and windows else {}
     groups: dict[str, list[dict]] = {}
     for event, definitions in HOOK_DEFINITIONS.items():
         groups[event] = []
@@ -570,6 +583,7 @@ def hook_groups(
                             ),
                             "timeout": timeout,
                             "statusMessage": status,
+                            **shell,
                         }
                         for script, timeout, status in scripts
                     ],

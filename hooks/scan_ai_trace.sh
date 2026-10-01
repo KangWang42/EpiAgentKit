@@ -2,7 +2,7 @@
 # PostToolUse(Edit|Write|apply_patch)：扫文本里的高确定性助手口吻、过程痕迹与明确 emoji。
 # 科研符号 → ↔ ↑ ↓ ± × ≥ ≤ ℃ 允许；✅ 仅允许在 BACKLOG 状态列。
 source "$(dirname "$0")/_resolve_path.sh"
-hook_dir=$(cd "$(dirname "$0")" && pwd)
+hook_dir=$(cd "$(dirname "$0")" && { pwd -W 2>/dev/null || pwd; })
 while IFS= read -r f; do
   fn="${f//\\//}"
   case "$fn" in

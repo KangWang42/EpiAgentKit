@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PostToolUse(Bash)：聚合图件与结果格式检查，只向客户端发送一条非阻断提醒。
-hook_dir=$(cd "$(dirname "$0")" && pwd)
+hook_dir=$(cd "$(dirname "$0")" && { pwd -W 2>/dev/null || pwd; })
 notice=""
 
 collect_notice() {

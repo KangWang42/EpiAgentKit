@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import string
 import subprocess
@@ -2349,12 +2350,41 @@ def main() -> int:
                 problems.append("hook sync self-test: registered hook count is incorrect")
             if any(any(name in command for name in legacy) for command in commands):
                 problems.append("hook sync self-test: legacy checks remain separately registered")
-            if any("run_hook.cmd" not in command for command in managed):
-                problems.append("hook sync self-test: Windows hook bypasses run_hook.cmd")
-            if any(not command.startswith("cmd.exe /d /s /c call ") for command in managed):
-                problems.append("hook sync self-test: Windows hook is shell-dependent")
-            if any('"claude"' not in command for command in managed):
-                problems.append("hook sync self-test: client identity is not forwarded")
+            managed_entries = [
+                hook
+                for groups in second.get("hooks", {}).values()
+                for group in groups
+                if isinstance(group, dict)
+                for hook in group.get("hooks", [])
+                if isinstance(hook, dict)
+                and any(name in hook.get("command", "") for name in MANAGED_HOOK_SCRIPTS)
+            ]
+            # Claude Code runs Windows hooks in Git Bash, where MSYS rewrites `cmd.exe /d /s /c`.
+            if any(hook.get("shell") != "bash" for hook in managed_entries):
+                problems.append("hook sync self-test: Claude Windows hook does not pin shell bash")
+            if any("cmd.exe" in command or "run_hook.cmd" in command for command in managed):
+                problems.append("hook sync self-test: Claude Windows hook routes through cmd")
+            if any(not command.startswith("EPIAGENTKIT_HOOK_CLIENT=claude PYTHONUTF8=1 bash ") for command in managed):
+                problems.append("hook sync self-test: client identity or UTF-8 mode is not forwarded")
+            codex_command = hook_command(hooks_dir, "fig_selfcheck.sh", client="codex", windows=True)
+            if not codex_command.startswith("cmd.exe /d /s /c call ") or "run_hook.cmd" not in codex_command:
+                problems.append("hook sync self-test: Codex Windows hook bypasses run_hook.cmd")
+            bash = shutil.which("bash")
+            if os.name == "nt" and bash:
+                # Execute the generated Claude command the way Claude Code does: through Git Bash.
+                for script in ("post_bash_checks.sh", "post_edit_checks.sh", "protect_rawdata.sh"):
+                    live = subprocess.run(
+                        [bash, "-c", hook_command(ROOT / "hooks", script, client="claude", windows=True)],
+                        cwd=ROOT, input="{}", capture_output=True, text=True,
+                        encoding="utf-8", errors="replace",
+                    )
+                    if live.returncode != 0 or re.search(
+                        r"not recognized|不是内部或外部命令|can't open file|No such file", live.stderr
+                    ):
+                        problems.append(
+                            f"hook sync self-test: Claude command fails under Git Bash ({script}): "
+                            f"rc={live.returncode} {live.stderr.strip()[:200]}"
+                        )
             if not config_path.with_name("settings.json.epiagentkit.bak").is_file():
                 problems.append("hook sync self-test: config backup was not created")
             if not hook_command(hooks_dir, "fig_selfcheck.sh", windows=False).startswith(

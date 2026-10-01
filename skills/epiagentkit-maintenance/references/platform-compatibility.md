@@ -20,6 +20,8 @@ Claude Code 从 v2.1.277 起支持直接读取 `AGENTS.md`。默认在工作目�
 
 ## Hooks 的实际边界
 
+Claude Code 在 Windows 上默认用 Git Bash 执行 hook 命令（未安装 Git Bash 时才用 PowerShell），hook 可用 `shell` 字段指定。Git Bash 会把以 `/` 开头的参数当作路径转换，`cmd.exe /d /s /c call ...` 因此失效并报“`run_hook.cmd` 不是内部或外部命令”。同步器为 Claude 生成 `"shell": "bash"` 和直接调用脚本的命令，Codex 保留 `run_hook.cmd` 启动器；hook 脚本传给 Windows Python 的路径用 `pwd -W` 取得。修改启动方式后，必须按客户端的实际 shell 执行生成的命令字符串验证，不能只用 Python 直接启动 cmd。来源：[Claude Code Hooks](https://code.claude.com/docs/en/hooks)（`shell` 字段说明，2026-10-01 核对）。
+
 Codex 非受管 hooks 需要在 `/hooks` 中审阅并信任当前定义；新增或变更会要求重新审阅。不能写入虚构信任状态，也不把安装成功称为安全检查已经激活。Shell 与 unified exec 按 `Bash` 匹配，`apply_patch` 可按 `apply_patch`、`Edit` 或 `Write` 匹配；MCP 工具以实际工具名匹配。必须继续用本地代表性输入验证脚本解析，不能仅凭事件同名认定兼容。
 
 本地命令 hooks 适用于受支持的本地编排和执行环境；云端编排即使连接本地计算机，也不能据此认定会运行这些 hooks。原始数据保护仍须落实到实际文件操作和分析入口，不能只依赖未确认激活的 hook。
