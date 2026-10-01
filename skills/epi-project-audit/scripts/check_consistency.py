@@ -2,19 +2,25 @@
 # -*- coding: utf-8 -*-
 """Cross-check downstream statistics against the result manifest.
 
-把交付文档（论文/报告/PPT）里出现的统计量（CI、P 值）与
-results/results.yaml 双向比对；旧项目可读取 07_paper/results.yaml。
-  方向A 文中→源：文中每个 CI/P 统计量必须能在 results.yaml 的 display 或旧版 rendered 中找到同值匹配；
+把交付文档（论文/报告/PPT）里出现的统计量与 results/results.yaml 双向比对；
+旧项目可读取 07_paper/results.yaml。
+  方向A 文中→源：文中每个 95% CI（连同紧挨在前面的点估计）和 P 值，都必须能在
+                results.yaml 的 display 或旧版 rendered 中找到数值相同的结果；
                 找不到 = 疑似手敲/陈旧/下游私改未回写（高信号）。
   方向B 源→文中：results.yaml 里有、却没在任何交付文档出现的结果（信息，可能是漏用或仅内部）。
-匹配前对标点做归一（全角→半角、− → -、去空格、P 小写），只比"值"不比格式，
-故同值不同标点不会误报，值不同才报。
+比较的是数值而不是格式：区间上下限可用逗号、短横线、长横线、to、~ 或“至”分隔，
+全角标点、数学减号 −、P 值省略前导 0 都会先归一；1.2 与 1.20 视为同一数值。
 
 用法：
   python check_consistency.py [项目根=.] [--yaml results/results.yaml]
-退出码：发现数字不一致 → 1；全过 → 0。
+退出码：发现数字不一致 → 1；全过 → 0；缺少结果文件或依赖 → 2。
 """
-import sys, os, re, glob, argparse
+import argparse
+import glob
+import os
+import re
+import sys
+from decimal import Decimal, InvalidOperation
 
 try:
     import yaml
@@ -26,23 +32,47 @@ except ImportError:
     sys.exit(2)
 
 
-def norm(s):
-    """归一化一个统计量串，只保留可比的值。"""
-    if s is None:
+FULLWIDTH = {"：": ":", "，": ",", "（": "(", "）": ")", "＜": "<", "＞": ">",
+             "＝": "=", "−": "-", "–": "–", "　": " ", "％": "%", "Ｐ": "P", "ｐ": "p",
+             "～": "~", "［": "[", "］": "]"}
+NUMBER = r"-?(?:\d+(?:\.\d+)?|\.\d+)"
+SEPARATOR = r"\s*(?:,|–|—|-|~|to|至)\s*"
+# 95% CI 及其上下限；可选地捕获紧挨在前面的点估计，例如 “1.45 (95% CI 1.12–1.87)”。
+RE_EST_CI = re.compile(
+    rf"(?:({NUMBER})\s*[(\[]?\s*)?95\s*%\s*ci\s*[:,]?\s*({NUMBER}){SEPARATOR}({NUMBER})",
+    re.IGNORECASE,
+)
+RE_P = re.compile(rf"\bp\s*([=<>])\s*({NUMBER})", re.IGNORECASE)
+
+
+def normalize(text):
+    if text is None:
         return ""
-    s = str(s)
-    table = {"：": ":", "，": ",", "（": "(", "）": ")", "＜": "<", "＞": ">",
-             "＝": "=", "−": "-", "　": "", "％": "%", "Ｐ": "P", "ｐ": "p"}
-    for k, v in table.items():
-        s = s.replace(k, v)
-    s = s.replace(" ", "").lower()
-    return s
+    text = str(text)
+    for key, value in FULLWIDTH.items():
+        text = text.replace(key, value)
+    return text
 
 
-# 文中提取：CI 子串 与 P 子串（两类最易出错、最可溯源的统计量）
-RE_CI = re.compile(r"\(?95%\s*ci\s*[:：]?\s*[−\-]?\d+\.?\d*\s*[,，]\s*[−\-]?\d+\.?\d*\)?",
-                   re.IGNORECASE)
-RE_P = re.compile(r"\bp\s*[=＝<＜>＞]\s*0?\.?\d+", re.IGNORECASE)
+def number(value):
+    try:
+        return Decimal(value).normalize()
+    except (InvalidOperation, TypeError):
+        return None
+
+
+def extract_statistics(text):
+    """Return (estimate_ci, ci_only, p_values) sets of comparable numeric tuples."""
+    text = normalize(text)
+    estimate_ci, ci_only, p_values = set(), set(), set()
+    for match in RE_EST_CI.finditer(text):
+        estimate, low, high = (number(v) if v else None for v in match.groups())
+        ci_only.add((low, high))
+        if estimate is not None:
+            estimate_ci.add((estimate, low, high))
+    for match in RE_P.finditer(text):
+        p_values.add((match.group(1), number(match.group(2))))
+    return estimate_ci, ci_only, p_values
 
 
 def extract_text(path):
@@ -75,27 +105,27 @@ def extract_text(path):
     return ""
 
 
-def source_value_set(doc):
-    """Return comparable CI and P values from schema v2 or legacy manifests."""
-    ci, pv, full_norms = set(), set(), {}
-    for key, r in (doc.get("results") or {}).items():
-        rend = r.get("display") or r.get("rendered") or {}
-        numeric_fields = (
-            ("estimate", "interval", "p_value", "full")
-            if r.get("display")
-            else ("est", "ci", "p", "full")
-        )
-        for which in numeric_fields:
-            s = rend.get(which)
-            n = norm(s)
-            if not n:
-                continue
-            full_norms.setdefault(n, key)
-            for m in RE_CI.findall(n):
-                ci.add(norm(m))
-            for m in RE_P.findall(n):
-                pv.add(norm(m))
-    return ci, pv, full_norms
+def source_statistics(doc):
+    """Collect comparable values and per-result display strings from v2 or legacy manifests."""
+    estimate_ci, ci_only, p_values, displays = set(), set(), set(), {}
+    for key, result in (doc.get("results") or {}).items():
+        rendered = result.get("display") or result.get("rendered") or {}
+        fields = ("estimate", "interval", "p_value", "full") if result.get("display") else ("est", "ci", "p", "full")
+        values = [normalize(rendered.get(field)) for field in fields if rendered.get(field)]
+        joined = " ".join(values)
+        est_ci, ci, p = extract_statistics(joined)
+        ci_only |= ci
+        p_values |= p
+        estimate = number(normalize(rendered.get(fields[0]) or "").strip()) if rendered.get(fields[0]) else None
+        estimate_ci |= est_ci
+        if estimate is not None:
+            estimate_ci |= {(estimate, low, high) for low, high in ci}
+        displays[key] = values
+    return estimate_ci, ci_only, p_values, displays
+
+
+def show(values):
+    return ", ".join(str(v) for v in values)
 
 
 def main():
@@ -110,10 +140,11 @@ def main():
         if os.path.exists(legacy):
             yaml_path = legacy
     if not os.path.exists(yaml_path):
-        print(f"找不到结果唯一来源：{yaml_path}"); sys.exit(2)
+        print(f"找不到结果唯一来源：{yaml_path}")
+        sys.exit(2)
     with open(yaml_path, encoding="utf-8") as f:
         doc = yaml.safe_load(f) or {}
-    src_ci, src_p, full_norms = source_value_set(doc)
+    src_est_ci, src_ci, src_p, displays = source_statistics(doc)
 
     # 待审计交付文档（排除唯一来源、派生 md、备份）
     pats = ["paper/**/*.docx", "paper/**/*.md", "07_paper/**/*.docx", "07_paper/**/*.md",
@@ -128,7 +159,8 @@ def main():
                 continue
             if base in ("0_result_summaries.md", "results.yaml"):
                 continue
-            seen.add(rp); files.append(rp)
+            seen.add(rp)
+            files.append(rp)
 
     problems = 0
     used_keys = set()
@@ -139,26 +171,29 @@ def main():
         text = extract_text(fp)
         if not text:
             continue
-        ntext = norm(text)
-        for n, key in full_norms.items():
-            if n and n in ntext:
+        compact = normalize(text).replace(" ", "")
+        for key, values in displays.items():
+            if any(v.replace(" ", "") in compact for v in values if v):
                 used_keys.add(key)
+        est_ci, ci, p_values = extract_statistics(text)
         bad = []
-        for m in set(RE_CI.findall(ntext)):
-            if norm(m) not in src_ci:
-                bad.append(("CI", m))
-        for m in set(RE_P.findall(ntext)):
-            if norm(m) not in src_p:
-                bad.append(("P", m))
+        for low, high in sorted(ci, key=str):
+            if (low, high) not in src_ci:
+                bad.append(("CI", f"{low}, {high}"))
+        for triple in sorted(est_ci, key=str):
+            if triple[1:] in src_ci and triple not in src_est_ci:
+                bad.append(("估计值", f"{triple[0]}（区间 {show(triple[1:])} 在源中对应的估计值不同）"))
+        for p in sorted(p_values, key=str):
+            if p not in src_p:
+                bad.append(("P", f"P {p[0]} {p[1]}"))
         if bad:
             problems += len(bad)
             print(f"[方向A 文中无源匹配] {os.path.relpath(fp, root)}")
-            for kind, tok in bad:
-                print(f"    {kind}: {tok}  ← 疑似手敲/陈旧/未回写源")
+            for kind, token in bad:
+                print(f"    {kind}: {token}  ← 疑似手敲/陈旧/未回写源")
 
     # 方向B：源里有、文档全未用
-    all_keys = set((doc.get("results") or {}).keys())
-    unused = sorted(all_keys - used_keys)
+    unused = sorted(set(displays) - used_keys)
     if unused:
         print(f"\n[方向B 源有文档未用]（信息，非必错）：{'、'.join(unused)}")
 

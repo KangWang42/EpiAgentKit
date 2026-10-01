@@ -52,7 +52,7 @@ python <epi-project-audit>/scripts/run_check_project.py <项目根> --json
 
 ## 4. 结果一致性
 
-可运行 [scripts/check_consistency.py](scripts/check_consistency.py) 比较 `results/results.yaml` 与论文、报告、PPT 中的置信区间和 P 值。它支持第 2 版结构的 `display` 和旧版结构的 `rendered`，但自动文本匹配只能发现可能的差异，必须回到生成脚本、相应运行记录和实际使用结果的位置判断。
+可运行 [scripts/check_consistency.py](scripts/check_consistency.py) 比较 `results/results.yaml` 与论文、报告、PPT 中的 95% 置信区间、紧挨在区间前的点估计和 P 值；它按数值比较，区间用逗号、短横线、`to` 等不同写法不影响判断。它支持第 2 版结构的 `display` 和旧版结构的 `rendered`，但自动文本匹配只能发现可能的差异，必须回到生成脚本、相应运行记录和实际使用结果的位置判断。
 
 新的 `results/results.yaml` 不保存解释或总体结论。审查正文解释时，应按每项结果的固定名称核对论断与依据，并结合 `DECISIONS.md` 判断；不得用 `interp_review` 或人工清除标记代替作者判断。
 

@@ -427,7 +427,7 @@ class SkillOptimizationTests(unittest.TestCase):
             "result_consistency",
             ROOT / "skills/epi-project-audit/scripts/check_consistency.py",
         )
-        ci, p_values, full_norms = consistency.source_value_set(
+        _est_ci, ci, p_values, displays = consistency.source_statistics(
             {
                 "results": {
                     "effect": {
@@ -443,9 +443,10 @@ class SkillOptimizationTests(unittest.TestCase):
                 }
             }
         )
-        self.assertEqual(ci, {"(95%ci:1.12,1.87)"})
-        self.assertEqual(p_values, {"p=0.004"})
-        self.assertNotIn("连续指标（每10单位）", full_norms)
+        decimal = consistency.number
+        self.assertEqual(ci, {(decimal("1.12"), decimal("1.87"))})
+        self.assertEqual(p_values, {("=", decimal("0.004"))})
+        self.assertFalse(any("连续指标" in value for value in displays["effect"]))
         report_helper = (
             ROOT / "skills/report-writing/references/build_report.py"
         ).read_text(encoding="utf-8")
