@@ -91,6 +91,7 @@ x_i = M + i*(w + gap)
 - 母线水平居中后，由一条带箭头的垂线进入核心节点。
 - 核心节点再由一条垂直箭头进入结局节点。
 - 顶层支线可设置 `data-arrow="false"`；进入核心和结局的线设置 `data-arrow="true"`。
+- 分叉前共用的无箭头干线写 `data-relation="branch-trunk"`、`data-arrow="false"` 和出发节点 `data-source`，不写 `data-target`；事实关系由进入各分支节点的箭头表达，示例见 `assets/journal-flow-branching.svg`。
 - 不从每个顶层节点分别画长箭头挤入核心节点。
 
 ### 2.4 色彩

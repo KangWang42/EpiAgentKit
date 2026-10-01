@@ -122,6 +122,33 @@ class SvgDiagramValidatorTests(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("required edge missing", result.stderr)
 
+    def test_shipped_templates_pass_strict_semantic_validation(self) -> None:
+        for name in ("journal-flow-screening.svg", "journal-flow-branching.svg"):
+            result = self.run_validator(
+                ROOT / "skills" / "svg-diagrams" / "assets" / name,
+                "--profile", "journal-flow", "--purpose", "paper",
+                "--max-circles", "0", "--require-semantic-graph",
+            )
+            self.assertEqual(result.returncode, 0, f"{name}: {result.stderr}")
+            self.assertIn("semantic_edges=6", result.stdout)
+
+    def test_branch_trunk_must_be_arrowless_and_leave_a_real_node(self) -> None:
+        template = (ROOT / "skills" / "svg-diagrams" / "assets" / "journal-flow-branching.svg").read_text(
+            encoding="utf-8"
+        )
+        trunk = 'data-arrow="false" data-source="followup" data-relation="branch-trunk" d="M650 485 V590"'
+        self.assertIn(trunk, template)
+        for broken, message in (
+            (trunk.replace('data-arrow="false"', 'data-arrow="true"'), "must set data-arrow='false'"),
+            (trunk.replace('data-source="followup"', 'data-source="nowhere"'), "is not a semantic node"),
+        ):
+            with tempfile.TemporaryDirectory() as directory:
+                svg = Path(directory) / "broken.svg"
+                svg.write_text(template.replace(trunk, broken), encoding="utf-8")
+                result = self.run_validator(svg, "--profile", "journal-flow", "--require-semantic-graph")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(message, result.stderr)
+
     def test_semantic_layer_does_not_force_equal_sizes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             svg = Path(directory) / "natural-sizes.svg"

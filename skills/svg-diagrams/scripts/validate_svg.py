@@ -291,6 +291,7 @@ def validate_semantic_graph(
     problems: list[str] = []
     node_elements: dict[str, str] = {}
     edges: list[tuple[str, str, str, str]] = []
+    trunk_sources: list[tuple[str, str]] = []
 
     for element in root.iter():
         role = element.get("data-role")
@@ -312,6 +313,16 @@ def validate_semantic_graph(
             source = (element.get("data-source") or "").strip()
             target = (element.get("data-target") or "").strip()
             relation = (element.get("data-relation") or "").strip()
+            if relation == "branch-trunk":
+                # A shared arrowless trunk before a fork carries no fact of its own; the arrows into
+                # each branch node carry the relations. It still names the node it leaves from.
+                if element.get("data-arrow") != "false":
+                    problems.append(f"branch-trunk connector must set data-arrow='false' on {label}")
+                if not source:
+                    problems.append(f"branch-trunk connector lacks data-source on {label}")
+                else:
+                    trunk_sources.append((source, label))
+                continue
             has_any = bool(source or target or relation)
             if require_complete or has_any:
                 missing = [
@@ -335,6 +346,10 @@ def validate_semantic_graph(
         problems.append("semantic graph requires at least one data-node-id")
     if require_complete and not edges:
         problems.append("semantic graph requires at least one fully described connector")
+
+    for source, label in trunk_sources:
+        if source not in node_elements:
+            problems.append(f"branch-trunk source {source!r} is not a semantic node on {label}")
 
     for source, target, _, label in edges:
         if source not in node_elements:
