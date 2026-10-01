@@ -16,18 +16,21 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 
-VERSION = "1.1"
+VERSION = "1.2"
 PACKAGE_NAME = f"EpiAgentKit-release-{VERSION}"
 INCLUDED_SKILLS = (
     "academic-humanizer",
     "academic-ppt",
     "academic-publishing",
     "biostat-principles",
+    "build-web-ui",
+    "chatgpt-web-collaboration",
     "consulting-delivery",
     "epi-project-audit",
     "epi-study-design",
     "evidence-research",
     "git-commit-helper",
+    "graduate-opening-report",
     "manuscript-peer-review",
     "project-init",
     "publication-figures",
@@ -37,6 +40,7 @@ INCLUDED_SKILLS = (
     "research-visuals",
     "skill-creator",
     "svg-diagrams",
+    "workflow-retrospective",
 )
 PUBLICATION_FIGURE_FILES = (
     "SKILL.md",

@@ -1589,7 +1589,7 @@ class WorkflowRoutingTests(unittest.TestCase):
 
     def test_release_bundle_keeps_source_archive_and_runtime_separate(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        usage = (ROOT / "docs" / "release-1.1-usage.md").read_text(
+        usage = (ROOT / "docs" / "release-1.2-usage.md").read_text(
             encoding="utf-8"
         )
         notice = (ROOT / "docs" / "release-notice.md").read_text(
@@ -1602,7 +1602,7 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "请把 EpiAgentKit 安装到当前 Claude Code",
             "请把 EpiAgentKit 安装到当前 Codex",
-            "releases/tag/v1.1",
+            "releases/tag/v1.2",
             "保留我现有的个人配置",
             "只在明确需要自己操作时查看命令行方式",
             "python scripts/build_release.py",

@@ -300,15 +300,15 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 
 需要同时配置两端时，把“当前 Claude Code / Codex”改为“Claude Code 与 Codex”。获取仓库、选择安装目标、备份、同步和检查由 Agent 按仓库说明完成。用户不需要先处理 Git、Python、目录或复制命令。
 
-### release 1.1
+### release 1.2
 
-只需要规则和 18 个可分发 skills 时，可以把 [EpiAgentKit 1.1 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1) 直接交给当前 Agent：
+只需要规则和 22 个可分发 skills 时，可以把 [EpiAgentKit 1.2 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.2) 直接交给当前 Agent：
 
 ```text
-请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.1。保留我现有的个人配置，安装完成后检查 skills 是否可用。
+请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.2。保留我现有的个人配置，安装完成后检查 skills 是否可用。
 ```
 
-release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex` 或 `~/.agents`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.1 使用说明](docs/release-1.1-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
+release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex` 或 `~/.agents`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.2 使用说明](docs/release-1.2-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
 
 <details>
 <summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
@@ -453,7 +453,7 @@ python -m unittest scripts.tests.test_workflow_routing -v  # 示例：替换为�
 
 根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同合同发生变化时，再运行完整单元测试和 `python scripts/audit_workflow_contracts.py`。提交成功后才运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`。
 
-维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.1/EpiAgentKit-release-1.1.zip` 及外部 SHA-256 文件。
+维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.2/EpiAgentKit-release-1.2.zip` 及外部 SHA-256 文件。
 
 在 Agensi 上架时运行 `python scripts/build_agensi.py`。它按 `scripts/agensi_listings.json` 中的可售清单为每个 skill 生成一个独立 zip（单一顶层文件夹，SKILL.md 位于其根目录），附双语 README、`references/core-rules.md` 与 `references/companion-skills.md`，并把被引用的其它 skill 文件复制到 `shared/`；输出 `releases/agensi/*.zip`、`SHA256SUMS` 和逐项填写用的 `LISTINGS.md`。Anthropic 专有或来源于 Anthropic 的 skill、中山大学模板、仓库维护 skill 和会员专享绘图示例不进入可售清单。
 

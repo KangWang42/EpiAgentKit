@@ -22,8 +22,8 @@ SPEC.loader.exec_module(build_release)
 
 class ReleaseBuilderTests(unittest.TestCase):
     def test_release_version_is_current(self):
-        self.assertEqual(build_release.VERSION, "1.1")
-        self.assertEqual(build_release.PACKAGE_NAME, "EpiAgentKit-release-1.1")
+        self.assertEqual(build_release.VERSION, "1.2")
+        self.assertEqual(build_release.PACKAGE_NAME, "EpiAgentKit-release-1.2")
 
     def test_dirty_tree_requires_explicit_override(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -73,7 +73,7 @@ class ReleaseBuilderTests(unittest.TestCase):
                 first.sha256,
                 hashlib.sha256(first.archive.read_bytes()).hexdigest(),
             )
-            self.assertEqual(first.skill_count, 18)
+            self.assertEqual(first.skill_count, 22)
 
             with self.assertRaisesRegex(
                 build_release.ReleaseError,
@@ -142,7 +142,6 @@ class ReleaseBuilderTests(unittest.TestCase):
                 "/xlsx/",
                 "/sysu-ppt/",
                 "/python-ecg-analysis/",
-                "/build-web-ui/",
                 "/epiagentkit-maintenance/",
                 "recipes_common_50",
                 "recipes_advanced/",
