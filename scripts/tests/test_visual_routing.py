@@ -466,7 +466,9 @@ class VisualRoutingTests(unittest.TestCase):
             "调用前确认完整提示词、全部输入图片、目标用途和验收条件",
             "不修改会话历史",
             "不把 data URL、base64 或内联图像内容写入项目文件",
-            "工具不可用或缺少必要输入图片时",
+            "缺少必要输入图片时，说明缺失条件并停止",
+            "精确结构图记录证据后转 `svg-diagrams`",
+            "SVG 无法替代的图件说明缺失条件并停止",
             "不另写 API 脚本",
         ):
             self.assertIn(fragment, body)
