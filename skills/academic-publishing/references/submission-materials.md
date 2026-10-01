@@ -3,7 +3,7 @@
 > Cover Letter · Response to Reviewers · Highlights · Graphical Abstract · Title Page · Declarations ·
 > Editorial and research correspondence.
 > Prerequisite: a near-final manuscript with locked data. Author info / ethics / funding missing →
-> `[NEED CONFIRMATION]`, never invent. Files go to `07_paper/submission/`.
+> `[NEED CONFIRMATION: item]`, never invent. Files go to `paper/submission/` (legacy projects: `07_paper/submission/`).
 
 ## Contents
 1. Cover Letter
@@ -144,7 +144,7 @@ vector output; do not switch merely because imagegen remains inaccurate.
 ## 5 Title Page & Declarations
 
 Title page items: see `english-writing.md` §2. Standard declaration blocks (fill from project; missing →
-`[NEED CONFIRMATION]`):
+`[NEED CONFIRMATION: item]`):
 - Ethics approval & consent: "The study was approved by [IRB/Ethics Committee], approval number [###].
   Informed consent was obtained from all participants."
 - Conflict of interest: "The authors declare no conflicts of interest."

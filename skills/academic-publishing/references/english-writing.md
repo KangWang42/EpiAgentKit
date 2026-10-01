@@ -57,7 +57,7 @@ Include: study population/object · core exposure/intervention/method · core ou
 
 Title page items (per journal): Full title · Running title · Authors · Affiliations · Corresponding
 author · Author contributions · Word count · No. of tables/figures · Funding · Conflicts of interest ·
-Ethics approval · Data availability · Acknowledgements. Missing author info → `[NEED CONFIRMATION]`.
+Ethics approval · Data availability · Acknowledgements. Missing author info → `[NEED CONFIRMATION: item]`.
 
 Self-check: not too long; no unnecessary abbreviations; accurately reflects design; no causal over-claim;
 matches journal capitalization/word/running-title rules.
@@ -93,7 +93,7 @@ evidence, a specific gap, and the study purpose, but they do not require four pa
 (non-linearity, lag, interaction, causal inference) / mechanism / practice (policy or clinical decision).
 
 Self-check: each paragraph serves the aim; gap is specific not vague; purpose
-maps 1-to-1 to the gap; does not over-report results; `[ref]` placeholders mark needed citations.
+maps 1-to-1 to the gap; does not over-report results; `[NEED CONFIRMATION: citation]` marks needed citations.
 
 ---
 
