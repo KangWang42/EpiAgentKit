@@ -34,11 +34,11 @@ library(survival); library(rms); library(riskRegression); library(timeROC)
 比较两套预后系统（如新分期 vs 临床 TNM），**只给两个 C-index 点估计不够**，必须给 95% CI 与正式差异检验：
 
 ```r
-f1 <- coxph(Surv(time, event) ~ new_stage,      data = df)
-f2 <- coxph(Surv(time, event) ~ clinical_stage, data = df)
+f1 <- coxph(Surv(time, event) ~ new_stage,      data = df, x = TRUE)  # x = TRUE 供 Score() 使用
+f2 <- coxph(Surv(time, event) ~ clinical_stage, data = df, x = TRUE)
 cc <- concordance(f1, f2)                 # 同一数据两相关 concordance
 est <- cc$concordance; V <- cc$var
-d <- est[1] - est[2]; se <- sqrt(c(1,-1) %*% V %*% c(1,-1))
+d <- est[1] - est[2]; se <- sqrt(drop(c(1,-1) %*% V %*% c(1,-1)))
 p_diff <- 2 * pnorm(-abs(d / se))         # 差异检验 P
 ci <- function(k) sprintf("%.3f (%.3f-%.3f)", est[k], est[k]-1.96*sqrt(V[k,k]), est[k]+1.96*sqrt(V[k,k]))
 # 时间依赖 AUC: timeROC(T, delta, marker=predict(fit,type="lp"), cause=1, times=...)
@@ -52,7 +52,8 @@ ci <- function(k) sprintf("%.3f (%.3f-%.3f)", est[k], est[k]-1.96*sqrt(V[k,k]), 
 
 ```r
 dd <- datadist(df[, model_vars]); options(datadist="dd")   # 只放模型变量, 否则 datadist 抓到坏列报错
-fit <- cph(Surv(t_yr, event) ~ ., data = df, x=TRUE, y=TRUE, surv=TRUE)
+# 公式逐项写出模型变量；用 `~ .` 会把 id、原始时间等列一并纳入
+fit <- cph(Surv(t_yr, event) ~ age + new_stage, data = df, x=TRUE, y=TRUE, surv=TRUE)
 v <- validate(fit, B=1000)
 c_corrected <- (v["Dxy","index.corrected"] + 1) / 2
 slope_corrected <- v["Slope","index.corrected"]
@@ -66,18 +67,21 @@ sc <- Score(list(New=f1, Clinical=f2), Surv(time,event)~1, data=df,
 sc$Brier$score   # 每模型每时点的 Brier
 ```
 
-## bootstrap 重抽样中的优势比例
+## C-index 差值的 bootstrap 置信区间
 
 ```r
-win <- 0; B <- 1000
-for (b in 1:B) { db <- df[sample(nrow(df), replace=TRUE), ]
-  if (concordance(coxph(Surv(time,event)~new_stage, db))$concordance >
-      concordance(coxph(Surv(time,event)~clinical_stage, db))$concordance) win <- win+1 }
-# 报告 "新系统 C-index 在 win/B (xx%) 次重抽样中高于旧系统"
+B <- 1000
+delta <- replicate(B, {
+  db <- df[sample(nrow(df), replace = TRUE), ]
+  concordance(coxph(Surv(time, event) ~ new_stage,      data = db))$concordance -
+    concordance(coxph(Surv(time, event) ~ clinical_stage, data = db))$concordance
+})
+quantile(delta, c(0.025, 0.975))   # 与上文基于方差的差异检验互为补充
 ```
-> 优势比例只有在模型推导独立于重抽样比较时才具有可解释性。若分期在全队列中推导，优势比例会受到内部乐观偏倚影响；此时不报告该指标，改用预先确定且方法上成立的 C-index 差异检验等结果。
+
+> 分期或切点在全队列推导时，这一区间仍受内部乐观偏倚影响，只能作为内部比较，不能称为独立验证。不要报告“新系统在多少比例的重抽样中占优”这类没有公认推断含义的统计量。
 >
-> 只把方法上可解释、与预设研究目的相关的结果写入结论。内部验证、完全病例分析等重要方法限制必须如实报告；明显受内部乐观偏倚影响且没有独立解释价值的统计量，不作为正式结果或结论。
+> 只把方法上可解释、与预设研究目的相关的结果写入结论。内部验证、完全病例分析等重要方法限制必须如实报告。
 
 ---
 
@@ -86,9 +90,9 @@ for (b in 1:B) { db <- df[sample(nrow(df), replace=TRUE), ]
 新旧分期同入一个模型时往往**高度共线**（都反映同一负荷/分期信息）。此时某系统系数不显著**可能只是共线性导致系数不稳定**，**NEVER** 直接解读为"该系统无独立预后价值"。
 
 ```r
-rms::vif(coxph(Surv(time,event) ~ new_stage + clinical_stage + covars, df))  # VIF>10 即严重共线
+rms::vif(coxph(Surv(time,event) ~ new_stage + clinical_stage + covars, df))
 ```
-报告 VIF；结论主要依据分别建模后的判别能力比较，联合模型仅作为补充，并说明共线性限制。
+报告 VIF 并结合系数与标准误的变化整体判断，不用固定阈值机械定性；结论主要依据分别建模后的判别能力比较，联合模型仅作为补充，并说明共线性限制。
 
 ## 决策曲线分析：报告具体阈值和净获益
 
