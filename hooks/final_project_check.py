@@ -89,6 +89,10 @@ UUID_PATTERN = re.compile(
     re.I,
 )
 DOI_PATTERN = re.compile(r"10\.\d{4,9}/\S+", re.I)
+# Ordinary file-system paths (font files, system libraries) are long and mixed-case but not secrets.
+FILE_PATH_PATTERN = re.compile(
+    r"(?:[A-Za-z]:/|~/|\.{1,2}/|/)(?:[A-Za-z0-9_.-]{1,40}/)+[A-Za-z0-9_.-]{0,40}"
+)
 LOCKFILE_NAMES = {
     "cargo.lock",
     "composer.lock",
@@ -859,7 +863,16 @@ def benign_high_entropy(value: str, path: Path) -> bool:
         or bool(UUID_PATTERN.fullmatch(stripped))
         or bool(DOI_PATTERN.fullmatch(stripped))
         or stripped.casefold().startswith(("http://", "https://", "sha256-", "sha512-"))
+        or is_plain_file_path(stripped)
     )
+
+
+def is_plain_file_path(value: str) -> bool:
+    if not FILE_PATH_PATTERN.fullmatch(value):
+        return False
+    segments = [part for part in value.split("/") if part and not part.endswith(":")]
+    has_extension = bool(re.search(r"\.[A-Za-z0-9]{1,8}$", value))
+    return has_extension or len(segments) >= 3
 
 
 def benign_named_credential(value: str, path: Path) -> bool:
