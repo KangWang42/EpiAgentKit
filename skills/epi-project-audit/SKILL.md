@@ -48,7 +48,7 @@ python <epi-project-audit>/scripts/run_check_project.py <项目根> --json
 5. **解释与报告**：论断强度、局限、预设与探索性区分、适用报告规范、引用和披露。
 6. **交付、授权与隐私**：当前版、授权范围、隐私、凭证、交付内容清单、文件可打开性和接收方复现条件。
 
-校准斜率、效应方向和论断强度等解释按 [论断校准](references/claim-calibration.md) 核对；需要外部方法依据时用 `evidence-research`。
+效应方向、因果措辞和论断强度按 [论断强度校准](references/claim-calibration.md) 核对；校准斜率的方向解释按 `publication-figures` 第 4 节核对；需要外部方法依据时用 `evidence-research`。
 
 ## 4. 结果一致性
 
