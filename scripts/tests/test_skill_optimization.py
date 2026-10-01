@@ -837,7 +837,7 @@ class SkillOptimizationTests(unittest.TestCase):
         docx = (ROOT / "skills/docx/SKILL.md").read_text(encoding="utf-8")
         self.assertIn("只生成用户指定格式的文件，不擅自附加另一种格式", report)
         self.assertIn("用户只要正文时直接返回净稿，不创建文件", report)
-        self.assertIn("without making a gratuitous edit", pptx)
+        self.assertIn("不为显示检查过程而做无必要的修改", pptx)
         self.assertIn("经验证的统计结果或归档导出", xlsx)
         self.assertIn("neutral value `Reviewer`", docx)
         self.assertNotIn('Use "Claude" as the author', docx)
@@ -888,8 +888,8 @@ class SkillOptimizationTests(unittest.TestCase):
             docx_revision,
         )
 
-        self.assertIn("L bounded edit", pptx)
-        self.assertIn("does not trigger template remapping", pptx)
+        self.assertIn("**L 局部修改**", pptx)
+        self.assertIn("局部修改不触发模板重新匹配", pptx)
         self.assertIn("首次检查没有问题是有效证据", pptx)
         self.assertIn("For an L bounded edit", pptx_editing)
         self.assertIn("Do not run template selection", pptx_editing)

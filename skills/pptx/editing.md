@@ -23,31 +23,19 @@ When using an existing presentation as a template:
    ```
    Review `thumbnails.jpg` to see layouts, and markitdown output to see placeholder text.
 
-2. **Plan slide mapping**: For each content section, choose a template slide.
+2. **Plan slide mapping**: For each content section, choose the template layout that fits the slide's function in the storyboard from the content workflow (for example, a title-and-text layout for an argument, a figure layout for a result figure, a two-column layout only for a real side-by-side comparison).
 
-   ⚠️ **USE VARIED LAYOUTS** — monotonous presentations are a common failure mode. Don't default to basic title + bullet slides. Actively seek out:
-   - Multi-column layouts (2-column, 3-column)
-   - Image + text combinations
-   - Full-bleed images with text overlay
-   - Quote or callout slides
-   - Section dividers
-   - Stat/number callouts
-   - Icon grids or icon + text rows
-
-   **Avoid:** Repeating the same text-heavy layout for every slide.
-
-   Match content type to layout style (e.g., key points → bullet slide, team info → multi-column, testimonials → quote slide).
+   Do not add layout variety for its own sake. Stat callouts, icon grids, card walls and decorative quote slides are used only when the template fixes them or the content workflow asks for them; a plain text slide is often the correct choice for research content.
 
 3. **Unpack**: `python scripts/office/unpack.py template.pptx unpacked/`
 
-4. **Build presentation** (do this yourself, not with subagents):
+4. **Build presentation** (structural changes in one pass, not split across parallel workers):
    - Delete unwanted slides (remove from `<p:sldIdLst>`)
    - Duplicate slides you want to reuse (`add_slide.py`)
    - Reorder slides in `<p:sldIdLst>`
    - **Complete all structural changes before step 5**
 
-5. **Edit content**: Update text in each `slide{N}.xml`.
-   **Use subagents here if available** — slides are separate XML files, so subagents can edit in parallel.
+5. **Edit content**: Update text in each `slide{N}.xml`. Slides are separate XML files, so parallel workers may edit different slides if the client supports them.
 
 6. **Clean**: `python scripts/clean.py unpacked/`
 
@@ -106,7 +94,7 @@ python scripts/thumbnail.py input.pptx [output_prefix] [--cols N]
 
 Creates `thumbnails.jpg` with slide filenames as labels. Default 3 columns, max 12 per grid.
 
-**Use for template analysis only** (choosing layouts). For visual QA, use `soffice` + `pdftoppm` to create full-resolution individual slide images—see SKILL.md.
+**Use for template analysis only** (choosing layouts). For visual QA, render full-resolution individual slides with the renderer in SKILL.md section 3.
 
 ---
 
@@ -124,24 +112,18 @@ Slide order is in `ppt/presentation.xml` → `<p:sldIdLst>`.
 
 ## Editing Content
 
-**Subagents:** If available, use them here (after completing step 4). Each slide is a separate XML file, so subagents can edit in parallel. In your prompt to subagents, include:
-- The slide file path(s) to edit
-- **"Use the Edit tool for all changes"**
-- The formatting rules and common pitfalls below
+**Parallel workers:** If the client supports them, they may edit different slides after step 4. Give each worker the slide file path(s), the instruction to make targeted text edits, and the formatting rules and pitfalls below.
 
 For each slide:
 1. Read the slide's XML
 2. Identify ALL placeholder content—text, images, charts, icons, captions
 3. Replace each placeholder with final content
 
-**Use the Edit tool, not sed or Python scripts.** The Edit tool forces specificity about what to replace and where, yielding better reliability.
+**Make targeted text edits** with the client's file-edit tool (for example Edit in Claude Code or apply_patch in Codex), not bulk sed or ad-hoc Python rewrites. Targeted edits force specificity about what to replace and where.
 
 ### Formatting Rules
 
-- **Bold all headers, subheadings, and inline labels**: Use `b="1"` on `<a:rPr>`. This includes:
-  - Slide titles
-  - Section headers within a slide
-  - Inline labels like (e.g.: "Status:", "Description:") at the start of a line
+- **Keep heading emphasis from the template**: slide titles and in-slide section headers keep the template's weight (`b="1"` on `<a:rPr>` only when the template or content workflow uses bold headers). Do not turn prose into "Label: text" lines just to create bold labels.
 - **Never use unicode bullets (•)**: Use proper list formatting with `<a:buChar>` or `<a:buAutoNum>`
 - **Bullet consistency**: Let bullets inherit from the layout. Only specify `<a:buChar>` or `<a:buNone>`.
 
@@ -175,7 +157,7 @@ If source has multiple items (numbered lists, multiple sections), create separat
 </a:p>
 ```
 
-**✅ CORRECT** — separate paragraphs with bold headers:
+**✅ CORRECT** — separate paragraphs (headers keep the template's emphasis):
 ```xml
 <a:p>
   <a:pPr algn="l"><a:lnSpc><a:spcPts val="3919"/></a:lnSpc></a:pPr>
@@ -192,11 +174,11 @@ If source has multiple items (numbered lists, multiple sections), create separat
 <!-- continue pattern -->
 ```
 
-Copy `<a:pPr>` from the original paragraph to preserve line spacing. Use `b="1"` on headers.
+Copy `<a:pPr>` from the original paragraph to preserve line spacing.
 
 ### Smart Quotes
 
-Handled automatically by unpack/pack. But the Edit tool converts smart quotes to ASCII.
+Handled automatically by unpack/pack. Text edit tools may convert smart quotes to ASCII.
 
 **When adding new text with quotes, use XML entities:**
 

@@ -1,6 +1,6 @@
 ---
 name: xlsx
-description: "读取、清洗、创建、修改、格式化或转换 XLSX、XLSM、CSV、TSV 文件，核对公式与显示。用于实际表格输入或输出；不替代统计分析，也不控制实时 Excel 或 Google Sheets。"
+description: "读取、清洗、创建、修改、格式化或转换 XLSX、XLSM、CSV、TSV 文件，核对公式与显示。用于表格文件本身的读写与交付；统计分析中读入 CSV 数据不触发，也不控制实时 Excel 或 Google Sheets。"
 license: Proprietary. LICENSE.txt has complete terms
 ---
 
