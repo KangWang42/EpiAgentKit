@@ -258,8 +258,8 @@
       "id": "sysu_presentation_file",
       "prompt": "制作中山大学开题汇报并输出 pptx",
       "primary": "sysu-ppt",
-      "companions": ["pptx"],
-      "excluded": ["academic-ppt"]
+      "companions": ["academic-ppt", "pptx"],
+      "excluded": []
     },
     {
       "id": "generic_presentation_template_unspecified",
@@ -376,7 +376,7 @@
       "id": "template_adaptive_presentation",
       "prompt": "使用中大模板制作开题 PPT，但根据每页内容关系调整版式、图文比例和视觉层级",
       "primary": "sysu-ppt",
-      "companions": ["research-visuals", "pptx"],
+      "companions": ["academic-ppt", "research-visuals", "pptx"],
       "excluded": []
     },
     {

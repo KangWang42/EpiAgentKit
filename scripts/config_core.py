@@ -108,7 +108,7 @@ DEPENDENCIES = {
         "publication-figures",
         "docx",
     },
-    "sysu-ppt": {"research-visuals", "publication-figures", "pptx"},
+    "sysu-ppt": {"academic-ppt", "research-visuals", "publication-figures", "pptx"},
 }
 
 CODEX_COMPATIBILITY_WARNING = (

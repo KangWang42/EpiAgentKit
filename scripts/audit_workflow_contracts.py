@@ -1245,7 +1245,8 @@ def main() -> int:
         "skills/academic-ppt/references/meeting-and-journal-club.md": (
             "封面后直接进入第一张实质内容页",
             "不生成目录、Agenda",
-            "项目进展组会",
+            "结果进展组会",
+            "研究拓展讨论",
             "文献分享",
             "方法讲解",
         ),

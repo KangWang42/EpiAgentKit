@@ -32,6 +32,17 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertNotIn("image-diagrams", configured)
         self.assertEqual(LEGACY_SKILL_ALIASES["image-diagrams"], "research-visuals")
 
+    def test_sysu_only_selection_installs_shared_presentation_content(self) -> None:
+        expanded = expand_dependencies({"sysu-ppt"})
+        self.assertTrue({"sysu-ppt", "academic-ppt", "pptx"}.issubset(expanded))
+        shared_content = ROOT / "skills" / "academic-ppt"
+        for relative in (
+            "SKILL.md",
+            "references/meeting-and-journal-club.md",
+            "references/proposal-and-defense.md",
+        ):
+            self.assertTrue((shared_content / relative).is_file(), relative)
+
     def test_research_visuals_skill_has_required_progressive_disclosure_files(self) -> None:
         skill = ROOT / "skills" / "research-visuals"
         body = (skill / "SKILL.md").read_text(encoding="utf-8")
