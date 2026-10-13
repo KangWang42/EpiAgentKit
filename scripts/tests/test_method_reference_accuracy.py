@@ -130,6 +130,61 @@ class PythonAndDesignTests(unittest.TestCase):
             self.assertIn(fragment, spec)
 
 
+class SensitivityAnalysisProportionTests(unittest.TestCase):
+    REFERENCE = "skills/biostat-principles/references/sensitivity-analysis.md"
+
+    def test_selection_and_space_rules_have_single_source(self) -> None:
+        reference = read(self.REFERENCE)
+        for fragment in (
+            "能否指出被检验的假设",
+            "是否回答同一个问题",
+            "结果是否可能不同",
+            "结果不同时是否难以取舍",
+            "不是每篇论文的必备部分",
+            "结果不一致时必须展开",
+            "10.1186/1471-2288-14-11",
+        ):
+            self.assertIn(fragment, reference)
+        self.assertIn("references/sensitivity-analysis.md", read("skills/biostat-principles/SKILL.md"))
+
+    def test_callers_link_the_source_and_links_resolve(self) -> None:
+        for relative in (
+            "skills/epi-study-design/SKILL.md",
+            "skills/epi-study-design/references/protocol-sap-specification.md",
+            "skills/academic-publishing/SKILL.md",
+            "skills/academic-publishing/references/section-content-playbook.md",
+            "skills/academic-publishing/references/statistical-reporting.md",
+            "skills/graduate-opening-report/SKILL.md",
+            "skills/graduate-opening-report/references/full-report-blueprint.md",
+            "skills/manuscript-peer-review/references/review-criteria.md",
+        ):
+            path = ROOT / relative
+            links = re.findall(r"[(`]((?:\.\./)+biostat-principles/references/sensitivity-analysis\.md)[)`]", read(relative))
+            self.assertTrue(links, relative)
+            for link in links:
+                self.assertTrue((path.parent / link).resolve().is_file(), f"{relative}: {link}")
+
+    def test_sensitivity_analysis_is_not_a_mandatory_section(self) -> None:
+        self.assertNotIn(
+            "敏感性和稳健性分析", read("skills/epi-study-design/references/protocol-sap-specification.md")
+        )
+        self.assertNotIn("缺失与敏感性分析", read("skills/graduate-opening-report/SKILL.md"))
+        blueprint = read("skills/graduate-opening-report/references/full-report-blueprint.md")
+        self.assertNotIn("缺失与敏感性约", blueprint)
+        self.assertIn("不单设小节", blueprint)
+
+    def test_discordant_results_still_reach_the_main_text(self) -> None:
+        for relative in (
+            "skills/academic-publishing/references/section-content-playbook.md",
+            "skills/academic-publishing/references/statistical-reporting.md",
+        ):
+            self.assertRegex(read(relative), r"与主分析不一致的(项目|敏感性分析结果)", relative)
+        self.assertIn(
+            "预设了敏感性分析时，其结果不改变方向和大致大小",
+            read("skills/epi-project-audit/references/claim-calibration.md"),
+        )
+
+
 class FileSkillEntryTests(unittest.TestCase):
     def test_pptx_exposes_editing_and_rendering_tools(self) -> None:
         pptx = read("skills/pptx/SKILL.md")
