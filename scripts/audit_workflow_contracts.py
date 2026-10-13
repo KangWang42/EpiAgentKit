@@ -1917,7 +1917,7 @@ def main() -> int:
             "epiagentkit-maintenance",
             "请把 EpiAgentKit 安装到当前 Claude Code",
             "请把 EpiAgentKit 安装到当前 Codex",
-            "releases/tag/v1.2",
+            "releases/tag/v1.3",
             "保留我现有的个人配置",
             "只在明确需要自己操作时查看命令行方式",
             "TingxiYu/academic-figure-skill",
@@ -1965,7 +1965,7 @@ def main() -> int:
             "只同步 skills 时不修改该设置",
             "不负责选择或安装 PowerShell 7",
         ),
-        "docs/release-1.2-usage.md": (
+        "docs/release-1.3-usage.md": (
             "推荐交给当前 Agent 安装",
             "请把这个 EpiAgentKit release 安装到当前 Claude Code",
             "请把这个 EpiAgentKit release 安装到当前 Codex",
@@ -2053,7 +2053,7 @@ def main() -> int:
         "README.md": (
             '审查只看代码即可通过',
         ),
-        "docs/release-1.2-usage.md": (
+        "docs/release-1.3-usage.md": (
             "SHA-256",
             "Get-FileHash",
         ),

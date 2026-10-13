@@ -17,7 +17,9 @@ from urllib.parse import unquote, urlsplit
 
 SCHEMA = 1
 APPLICATION_ID = 0x4550494B
-DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = Path(__file__).resolve()
+DEFAULT_ROOT = (SCRIPT.parents[1] / "skills" if SCRIPT.parent.name == "tools"
+                else SCRIPT.parents[2])
 
 
 def terms(text: str) -> list[str]:

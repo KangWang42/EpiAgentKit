@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 
-VERSION = "1.2"
+VERSION = "1.3"
 PACKAGE_NAME = f"EpiAgentKit-release-{VERSION}"
 INCLUDED_SKILLS = (
     "academic-humanizer",
@@ -172,12 +172,18 @@ def collect_payload(repo_root: Path, source_commit: str) -> dict[str, bytes]:
         "CLAUDE.md": repo_root / "CLAUDE.md",
         "README_中文.md": repo_root / "docs" / f"release-{VERSION}-usage.md",
         "NOTICE_许可与外部依赖.md": repo_root / "docs" / "release-notice.md",
+        "tools/knowledge_index.py": repo_root / "skills" / "epiagentkit-maintenance" / "scripts" / "knowledge_index.py",
     }
     payload: dict[str, bytes] = {}
     for destination, source in mapped_sources.items():
         if not source.is_file():
             raise ReleaseError(f"Required release source is missing: {source}")
         payload[destination] = source.read_bytes()
+
+    # Keep the optional lookup entry executable in the standalone package.
+    payload["CLAUDE.md"] = payload["CLAUDE.md"].replace(
+        b"epiagentkit-maintenance/scripts/knowledge_index.py", b"tools/knowledge_index.py"
+    )
 
     for skill_name in INCLUDED_SKILLS:
         for destination, source in collect_skill_files(repo_root, skill_name):

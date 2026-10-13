@@ -1,5 +1,7 @@
 import hashlib
 import importlib.util
+import json
+import os
 import re
 import subprocess
 import sys
@@ -22,8 +24,8 @@ SPEC.loader.exec_module(build_release)
 
 class ReleaseBuilderTests(unittest.TestCase):
     def test_release_version_is_current(self):
-        self.assertEqual(build_release.VERSION, "1.2")
-        self.assertEqual(build_release.PACKAGE_NAME, "EpiAgentKit-release-1.2")
+        self.assertEqual(build_release.VERSION, "1.3")
+        self.assertEqual(build_release.PACKAGE_NAME, "EpiAgentKit-release-1.3")
 
     def test_dirty_tree_requires_explicit_override(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -116,6 +118,7 @@ class ReleaseBuilderTests(unittest.TestCase):
                 "SKILLS_INCLUDED.txt",
                 "SHA256SUMS",
                 "NOTICE_许可与外部依赖.md",
+                "tools/knowledge_index.py",
             ):
                 self.assertIn(required, relative_members)
 
@@ -180,6 +183,23 @@ class ReleaseBuilderTests(unittest.TestCase):
             archive.extractall(extract_root)
 
         package_root = extract_root / package_name
+        self.assertEqual(
+            (package_root / "tools/knowledge_index.py").read_bytes(),
+            (ROOT / "skills/epiagentkit-maintenance/scripts/knowledge_index.py").read_bytes(),
+        )
+        rules = (package_root / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertIn("tools/knowledge_index.py search", rules)
+        self.assertNotIn("epiagentkit-maintenance/scripts/knowledge_index.py", rules)
+        completed = subprocess.run(
+            [sys.executable, str(package_root / "tools/knowledge_index.py"),
+             "search", "缺失数据", "--skill", "r-biostats"],
+            cwd=extract_root, capture_output=True, encoding="utf-8",
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        output = json.loads(completed.stdout)
+        self.assertEqual(output["root"], str((package_root / "skills").resolve()))
+        self.assertIn("r-biostats/references/regression.md", [item["path"] for item in output["candidates"]])
         self._check_relative_markdown_links(package_root)
         validator = ROOT / "skills" / "skill-creator" / "scripts" / "quick_validate.py"
         for skill_name in build_release.INCLUDED_SKILLS:
