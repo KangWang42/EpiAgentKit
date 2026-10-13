@@ -248,6 +248,21 @@ Claude Code 与 Codex 共用同一套全局规则。系统先根据用户要求�
 
 ## 它如何工作
 
+### 按任务查找技能细则
+
+已知技能或文件路径时直接读取。需要在大量细则中定位时，可以先查 SQLite 元数据索引，再核对文件头和原文：
+
+```bash
+python scripts/epiagentkit.py lookup search "缺失数据" --skill r-biostats
+python scripts/epiagentkit.py lookup peek r-biostats/references/regression.md --lines 30
+```
+
+索引自动从技能描述、标题和开头说明生成，默认返回最多六个候选；变更增量更新，删除文件同步移除记录。Markdown 仍是唯一正文来源，数据库只保存可重建的检索信息，不收集会话、项目数据或历史记忆。安装后可直接运行 `epiagentkit-maintenance/scripts/knowledge_index.py`，查询当前安装的技能库；无需为此加载维护技能。没有 Python 或可用缓存时，仍可沿用文件链接和 `rg`。
+
+该入口限制提交给模型的候选数量，但不能保证语义分流或整体任务更快。当前文件规模下，简单关键词用 `rg` 更快；索引适合按技能筛选用途与章节，避免输出大量正文命中。适用细则仍须完整读取；[检索范围、缓存更新与用法](skills/epiagentkit-maintenance/references/knowledge-retrieval.md)说明了具体边界。这个做法也遵循 [Claude Code 对按需加载与简洁规则的建议](https://code.claude.com/docs/en/best-practices)。
+
+### 共享规则与执行组件
+
 EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex 的共同配置源。
 
 ![EpiAgentKit 仓库中的 CLAUDE.md、skills、hooks 和 scripts 通过 install、sync 与 doctor 同步到 Claude Code 和 Codex 的真实配置目录](docs/assets/platform-architecture.webp)

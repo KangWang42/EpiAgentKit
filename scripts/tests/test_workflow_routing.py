@@ -202,13 +202,17 @@ class WorkflowRoutingTests(unittest.TestCase):
         self.assertIn("`powershell.exe` 按 Windows PowerShell 5.1 对待", global_rules)
         self.assertIn("Optimize, Don't Accumulate", creator)
         self.assertIn("remove superseded text in the same edit", creator)
+        # A query helper is available to research tasks without invoking repository maintenance.
+        rules_without_lookup_path = global_rules.replace(
+            "epiagentkit-maintenance/scripts/knowledge_index.py", "knowledge_index.py"
+        )
         for maintenance_detail in (
             "Skill 优化不是只增不减",
             "epiagentkit-maintenance",
             "sync --target all",
             "doctor --target all",
         ):
-            self.assertNotIn(maintenance_detail, global_rules)
+            self.assertNotIn(maintenance_detail, rules_without_lookup_path)
 
     def test_backup_archive_and_workbench_have_separate_roles(self) -> None:
         global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")

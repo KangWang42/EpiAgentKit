@@ -19,6 +19,8 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 6. 按根 `AGENTS.md` 的 workbench 约定建立维护批次并先写 `PLAN.md`。只有新建 skill，或用户当轮明确要求审阅成果时，才建立 `review/`；修改、修复、重命名或删除既有 skill 时不自动生成。结束后保留 `FINDINGS.md`、实际生成的 `review/` 与需要追溯的试验依据，并按仓库规则清理可重建的 runtime。
 7. Windows 维护遵循全局与根 `AGENTS.md` 的 shell、编码和命令安全规则；临时多行逻辑放在本批次 workbench，长期工具放在职责匹配的 `scripts/`。
 
+需要跨技能定位细则时可先用 [知识索引工具](scripts/knowledge_index.py) 查询；维护索引、缓存或检索行为时先读 [技能知识检索](references/knowledge-retrieval.md)。已知的必读文件直接读取，不以检索结果替代本流程要求。
+
 ## 2. 记录变更依据
 
 编辑前明确记录：

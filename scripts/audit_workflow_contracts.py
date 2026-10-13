@@ -2216,6 +2216,9 @@ def main() -> int:
     }
     for relative, fragments in forbidden.items():
         body = read(relative)
+        if relative == "CLAUDE.md":
+            # The optional lookup helper does not invoke repository maintenance.
+            body = body.replace("epiagentkit-maintenance/scripts/knowledge_index.py", "knowledge_index.py")
         for fragment in fragments:
             if fragment in body:
                 problems.append(f"{relative}: forbidden workflow fragment {fragment!r}")

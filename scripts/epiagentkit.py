@@ -41,6 +41,7 @@ Usage:
   python scripts/epiagentkit.py sync [sync options]
   python scripts/epiagentkit.py doctor [doctor options]
   python scripts/epiagentkit.py check-project [project] [--json]
+  python scripts/epiagentkit.py lookup [--root skills] search "query" [--skill name]
   python scripts/epiagentkit.py list
 
 Run a subcommand with --help for details.
@@ -381,6 +382,9 @@ def main(argv: list[str] | None = None) -> int:
         return run_doctor(rest)
     if command == "check-project":
         return run_check_project(rest)
+    if command == "lookup":
+        helper = Path(__file__).resolve().parents[1] / "skills" / "epiagentkit-maintenance" / "scripts" / "knowledge_index.py"
+        return subprocess.run([sys.executable, str(helper), *rest]).returncode
     if command == "list":
         return show_list(Path(__file__).resolve().parents[1])
     raise SystemExit(f"Unknown command: {command}\n\n{HELP}")
