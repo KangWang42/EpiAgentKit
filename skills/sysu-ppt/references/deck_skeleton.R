@@ -95,8 +95,7 @@ cmp <- data.frame(
   主要优势 = c("适用场景/长处。", "适用场景/长处。"),
   主要局限 = c("失效条件/代价。", "失效条件/代价。"), check.names = FALSE)
 ppt <- sysu_add_table(ppt, "3.1 方法比较与选择依据",
-  sysu_flextable(cmp, widths = c(2.0, 3.2, 2.8, 2.8), fsize = 14),
-  note = "注：按核心思想、适用条件与局限三维比较。")
+  sysu_flextable(cmp, widths = c(2.0, 3.2, 2.8, 2.8), fsize = 14))
 
 # 3.2 实操：代码/示例页
 ppt <- sysu_add_code(ppt, "3.2 实现步骤与关键参数",

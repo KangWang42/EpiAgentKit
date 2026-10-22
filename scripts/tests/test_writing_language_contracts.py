@@ -140,6 +140,29 @@ class WritingLanguageContractTests(unittest.TestCase):
         ):
             self.assertIn(fragment, resampling)
 
+    def test_formal_text_states_results_without_defensive_negation(self) -> None:
+        for fragment in (
+            "不在结果、方法或结论后逐句追加否定式免责句",
+            "只在局限部分或限制页集中写一次",
+            "放在对话或内部核查记录中",
+            "不用“现行”“原”“新”“采用”“改进”等工作进度或取舍状态充当组名",
+            "只给作为对照的模型标出差异成分",
+        ):
+            self.assertIn(fragment, self.language_gate)
+        academic_ppt = (ROOT / "skills/academic-ppt/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        for fragment in (
+            "../academic-humanizer/references/chinese-academic-style.md",
+            "页脚只放来源引注，不放解释性脚注",
+            "方案选择、结论和下一步计划页默认写 1–3 个自然段",
+        ):
+            self.assertIn(fragment, academic_ppt)
+        skeleton = (
+            ROOT / "skills/sysu-ppt/references/deck_skeleton.R"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("注：按核心思想", skeleton)
+
     def test_existing_task_routing_is_preserved(self) -> None:
         cases = {
             case["id"]: case
