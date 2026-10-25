@@ -58,8 +58,15 @@ class WebUiWorkflowTests(unittest.TestCase):
             "不标已读、不触发外部抓取",
             "只对幂等读请求在新连接上重发一次",
             "immutable",
+            "调用栈",
+            "按输入内容的哈希缓存",
+            "沿用线上状态已经通过的检查",
+            "移出保存的关键路径",
+            "逐字节",
+            "每个测试模块单独进程运行",
         ):
             self.assertIn(fragment, fluency)
+        self.assertIn("保存或发布慢时", skill)
 
     def test_skill_contract_separates_static_and_browser_evidence(self) -> None:
         skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
