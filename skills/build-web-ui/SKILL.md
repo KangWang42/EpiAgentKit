@@ -19,6 +19,7 @@ description: "创建、改版、修复或美化真实网页与 Web UI，完成�
 6. 参考用户既有网页或在个人站、内容站与任务型工具之间选择设计语言时，读取 [local-reference-patterns.md](references/local-reference-patterns.md)。
 7. 用户要求外部案例、开源仓库或高级交互，实现可能新增依赖，或只给出“美观、现代、高级、有趣、不生硬”等抽象目标且没有已锁定品牌/设计稿时，读取 [external-design-research.md](references/external-design-research.md)。局部修复、完整品牌系统或精确设计稿不因本条强制联网。
 8. 开始性能、SEO、无障碍实现或交付前验证时，必须读取 [quality-gates.md](references/quality-gates.md)。
+9. 页面在登录后显示服务器数据并自动或按变更刷新（管理台、监测面板、邮件或消息列表），或用户反映读取、切换、刷新、滚动卡顿时，必须读取 [data-fluency.md](references/data-fluency.md)，先测量时间分布再决定改哪一层。
 
 静态构建产物运行 `python scripts/audit_static_html.py <html-or-directory> [--root <site-root>]`。需要可复现的桌面与手机浏览器证据且本机已有 Chromium 时，运行 `python scripts/audit_browser.py <url...> --output <directory>`；脚本使用 Chrome DevTools Protocol（CDP）设置真实布局视口，不自行安装浏览器，也不评价审美。
 

@@ -42,6 +42,25 @@ class WebUiWorkflowTests(unittest.TestCase):
         self.assertEqual(cases["audit_web_ui_in_real_browser"]["primary"], "build-web-ui")
         self.assertIn("research-visuals", cases["beautify_personal_website"]["excluded"])
 
+    def test_data_apps_measure_before_changing_and_render_incrementally(self) -> None:
+        skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
+        fluency = (ROOT / "skills/build-web-ui/references/data-fluency.md").read_text(encoding="utf-8")
+        quality = (ROOT / "skills/build-web-ui/references/quality-gates.md").read_text(encoding="utf-8")
+        self.assertIn("[data-fluency.md](references/data-fluency.md)，先测量时间分布", skill)
+        self.assertIn("[data-fluency.md](data-fluency.md)", quality)
+        for fragment in (
+            "改动前在同一条件下记录一组基线",
+            "If-None-Match",
+            "不解析、不重画",
+            "高频遥测",
+            "按稳定 ID 复用已渲染的行",
+            "推迟整页重画",
+            "不标已读、不触发外部抓取",
+            "只对幂等读请求在新连接上重发一次",
+            "immutable",
+        ):
+            self.assertIn(fragment, fluency)
+
     def test_skill_contract_separates_static_and_browser_evidence(self) -> None:
         skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
         quality = (ROOT / "skills/build-web-ui/references/quality-gates.md").read_text(
