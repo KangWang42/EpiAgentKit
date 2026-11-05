@@ -503,6 +503,23 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("与本研究的关系放在明确标为本研究的页面或答问中", meeting)
         self.assertIn("科研文本逐段核对依据来源是否属于所在部件", global_rules)
 
+    def test_structure_follows_template_then_same_type_exemplars(self) -> None:
+        # 回归：综述单设“局限与展望”章并以“结语”收束，同类范文实际以“总结（与展望）”收束；审查未读范文即判断结构。
+        style = (
+            ROOT / "skills/academic-humanizer/references/chinese-academic-style.md"
+        ).read_text(encoding="utf-8")
+        humanizer = (ROOT / "skills/academic-humanizer/SKILL.md").read_text(encoding="utf-8")
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("逐篇列出其实际章节标题、顺序和各章功能", style)
+        self.assertIn("不得用自行概括的框架代替范文的实际章节", style)
+        self.assertIn("比对前须实际读取模板或范文，不凭印象判断", humanizer)
+        self.assertNotIn("用户提供参考论文时只学习信息密度、部件功能", humanizer)
+        self.assertIn("- **叙述性综述**", publishing)
+        self.assertIn("以“总结”或“总结与展望”收束", publishing)
+        self.assertIn("不另设“不足”或“局限”章", publishing)
+        self.assertIn("不套用原始研究的 estimand、统计报告和报告规范约定", publishing)
+
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
         <w:document xmlns:w="{DOCX_AUDITOR.W_NS}">
