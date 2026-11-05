@@ -143,7 +143,7 @@ class WritingLanguageContractTests(unittest.TestCase):
     def test_formal_text_states_results_without_defensive_negation(self) -> None:
         for fragment in (
             "不在结果、方法或结论后逐句追加否定式免责句",
-            "只在局限部分或限制页集中写一次",
+            "必要限定紧随其对应论断",
             "放在对话或内部核查记录中",
             "不用“现行”“原”“新”“采用”“改进”等工作进度或取舍状态充当组名",
             "只给作为对照的模型标出差异成分",
