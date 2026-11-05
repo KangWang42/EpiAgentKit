@@ -533,6 +533,20 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("以及作者纠正结构、内容来源或篇幅之后", humanizer)
         self.assertIn("一次报告全部偏离，不等作者逐处指出", humanizer)
 
+    def test_outlook_is_grounded_and_not_a_restated_plan(self) -> None:
+        # 回归：展望写成与问题一一对应的清单，三条恰为作者方法的组成部分，关键词扫描未发现。
+        editorial = (
+            ROOT / "skills/academic-humanizer/references/patterns-and-preservation.md"
+        ).read_text(encoding="utf-8")
+        style = (
+            ROOT / "skills/academic-humanizer/references/chinese-academic-style.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("展望随对应问题写出已有文献提供的方法基础和尚存缺口", editorial)
+        self.assertIn("不另列与问题一一对应、只换说法的方向清单", editorial)
+        self.assertIn("作者方案换了措辞仍属同一内容，不以关键词扫描代替", editorial)
+        self.assertIn("不规范写法不随结构照搬", style)
+
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
         <w:document xmlns:w="{DOCX_AUDITOR.W_NS}">
