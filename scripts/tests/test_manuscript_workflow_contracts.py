@@ -511,7 +511,7 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         humanizer = (ROOT / "skills/academic-humanizer/SKILL.md").read_text(encoding="utf-8")
         publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("逐篇列出其实际章节标题、顺序和各章功能", style)
+        self.assertIn("逐篇列出其实际章节标题、顺序、各章功能", style)
         self.assertIn("不得用自行概括的框架代替范文的实际章节", style)
         self.assertIn("比对前须实际读取模板或范文，不凭印象判断", humanizer)
         self.assertNotIn("用户提供参考论文时只学习信息密度、部件功能", humanizer)
@@ -519,6 +519,19 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("以“总结”或“总结与展望”收束", publishing)
         self.assertIn("不另设“不足”或“局限”章", publishing)
         self.assertIn("不套用原始研究的 estimand、统计报告和报告规范约定", publishing)
+
+    def test_compression_has_baseline_floor_and_corrections_trigger_full_review(self) -> None:
+        # 回归：综述多轮“删重复”后仅为同类范文篇幅的六成，研究只剩名称；作者需逐处指出问题。
+        style = (
+            ROOT / "skills/academic-humanizer/references/chinese-academic-style.md"
+        ).read_text(encoding="utf-8")
+        humanizer = (ROOT / "skills/academic-humanizer/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("各章篇幅比例和代表研究的写法", style)
+        self.assertIn("压缩后各章篇幅和研究描述是否仍不低于结构基线", style)
+        self.assertIn("删除表图时，其承载的必要结果是否已转入正文", style)
+        self.assertIn("以及作者纠正结构、内容来源或篇幅之后", humanizer)
+        self.assertIn("一次报告全部偏离，不等作者逐处指出", humanizer)
 
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
