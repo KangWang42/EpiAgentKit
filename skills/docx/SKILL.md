@@ -88,7 +88,7 @@ python scripts/office/validate.py doc.docx
 
 ### Candidate-first delivery
 
-When creating or regenerating a stable DOCX, write the output to an isolated workbench candidate first. Run package validation, the task-specific audit, content reconciliation, and any required page rendering against that candidate. Promote it only after all applicable checks pass, using a same-volume atomic replace such as `Report.promote_candidate()` from the report-writing helper. If the target is locked or replacement fails, keep the candidate, preserve the existing target, and stop with the target and candidate paths; do not force-close Word/LibreOffice or describe the candidate as the current delivery.
+When creating or regenerating a stable DOCX, write the output to an isolated workbench candidate first. When the same file is regenerated several times in one task, reuse that candidate directory, the same validation commands and one check record that each run overwrites; do not create a new check script or record file for every edit. Run package validation, the task-specific audit, content reconciliation, and any required page rendering against that candidate. Promote it only after all applicable checks pass, using a same-volume atomic replace such as `Report.promote_candidate()` from the report-writing helper. If the target is locked or replacement fails, keep the candidate, preserve the existing target, and stop with the target and candidate paths; do not force-close Word/LibreOffice or describe the candidate as the current delivery.
 
 ## Editing Existing Documents
 

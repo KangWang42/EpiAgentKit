@@ -470,6 +470,39 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("不把论文删短后改名为报告", report)
         self.assertIn("不为此给普通项目增加锁文件、PID 文件或新的状态机制", principles)
 
+    def test_review_and_background_parts_exclude_author_unpublished_methods(self) -> None:
+        # 回归：叙述性综述第5章曾把作者未发表的方法写成“改进方向”，而数字、引文和样式检查全部通过。
+        editorial = (
+            ROOT / "skills/academic-humanizer/references/patterns-and-preservation.md"
+        ).read_text(encoding="utf-8")
+        style = (
+            ROOT / "skills/academic-humanizer/references/chinese-academic-style.md"
+        ).read_text(encoding="utf-8")
+        callers = {
+            path: (ROOT / path).read_text(encoding="utf-8")
+            for path in (
+                "skills/academic-publishing/SKILL.md",
+                "skills/academic-humanizer/SKILL.md",
+                "skills/academic-humanizer/references/chinese-academic-style.md",
+            )
+        }
+        meeting = (
+            ROOT / "skills/academic-ppt/references/meeting-and-journal-club.md"
+        ).read_text(encoding="utf-8")
+        global_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+
+        self.assertNotIn("支持研究思路", editorial)
+        self.assertIn("### 内容来源与材料取舍", editorial)
+        self.assertIn("作者本人未发表的方法设计、参数、流程、结果和拟采用方案", editorial)
+        self.assertIn("开题报告的研究内容、技术路线、可行性与预期结果", editorial)
+        self.assertIn("写到“现有研究尚未……”这一问题层面", editorial)
+        for path, text in callers.items():
+            self.assertNotIn("材料取舍与作者反馈", text, path)
+            self.assertIn("内容来源与材料取舍", text, path)
+        self.assertIn("各段依据是否属于该部件允许的内容来源", style)
+        self.assertIn("与本研究的关系放在明确标为本研究的页面或答问中", meeting)
+        self.assertIn("科研文本逐段核对依据来源是否属于所在部件", global_rules)
+
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
         <w:document xmlns:w="{DOCX_AUDITOR.W_NS}">
