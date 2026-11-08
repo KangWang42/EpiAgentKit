@@ -603,6 +603,20 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("参考文献数量与中外文构成", contract)
         self.assertIn("明显长于范文的部分压缩，明显短于范文的部分据实补足", contract)
 
+    def test_discussion_interprets_variables_by_measurement(self) -> None:
+        # 回归：被照护者累计接受照护的时间在讨论中被解释为照护者本人的照护年限；
+        # 说明该差异的句子在“够用即可”的压缩中被删除。
+        playbook = (
+            ROOT / "skills/academic-publishing/references/section-content-playbook.md"
+        ).read_text(encoding="utf-8")
+        contract = (
+            ROOT / "skills/academic-publishing/references/manuscript-contract.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("解释每个变量时与其测量定义一致", playbook)
+        self.assertIn("不写成研究对象本人的特征或经历", playbook)
+        self.assertIn("说明变量实际测量含义且决定主要结果解释的句子", contract)
+
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
         <w:document xmlns:w="{DOCX_AUDITOR.W_NS}">
