@@ -586,6 +586,23 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("使用前先查作者既往稿件、原始数据字段与问卷原文", publishing)
         self.assertIn("须以所比较的同一语言版本原文为依据，并经作者确认后才写入正文", publishing)
 
+    def test_user_material_list_claim_subjects_and_two_way_length_check(self) -> None:
+        # 回归：候选文献摘要中的“自评健康”实指被照护者；引言写成范文两倍长、参考文献明显少于范文均未被发现；
+        # 作者表示需要的材料可以提供，要求以可发表论文为目的一次说明所需材料。
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(encoding="utf-8")
+        contract = (
+            ROOT / "skills/academic-publishing/references/manuscript-contract.md"
+        ).read_text(encoding="utf-8")
+        evidence = (ROOT / "skills/evidence-research/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("写作以形成符合目标期刊发表要求的论文为目的", publishing)
+        self.assertIn("一次性列出需要用户提供的材料清单", publishing)
+        self.assertIn("逐项写明内容（题名、期刊、年卷期、DOI 或待确认的具体事实）、用途和当前核验状态", publishing)
+        self.assertIn("核对论断所指的对象、人群、测量和比较与引用处一致", evidence)
+        self.assertIn("摘要无法确定时以全文为准", evidence)
+        self.assertIn("参考文献数量与中外文构成", contract)
+        self.assertIn("明显长于范文的部分压缩，明显短于范文的部分据实补足", contract)
+
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
         <w:document xmlns:w="{DOCX_AUDITOR.W_NS}">
