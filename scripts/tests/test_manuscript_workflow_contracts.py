@@ -547,6 +547,45 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("作者方案换了措辞仍属同一内容，不以关键词扫描代替", editorial)
         self.assertIn("不规范写法不随结构照搬", style)
 
+    def test_full_manuscripts_are_written_from_journal_exemplars(self) -> None:
+        # 回归：目标期刊须知超时后按通用规范成稿，回归表、单因素检验、附表和 STROBE 声明均不合该刊惯例；
+        # 作者要求列出题名由其下载全文，写作必须有参考论文，正文详略够用即可。
+        contract = (
+            ROOT / "skills/academic-publishing/references/manuscript-contract.md"
+        ).read_text(encoding="utf-8")
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(encoding="utf-8")
+        playbook = (
+            ROOT / "skills/academic-publishing/references/section-content-playbook.md"
+        ).read_text(encoding="utf-8")
+        style = (
+            ROOT / "skills/academic-humanizer/references/chinese-academic-style.md"
+        ).read_text(encoding="utf-8")
+        evidence = (ROOT / "skills/evidence-research/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("完整论文和论文级结构性重写必须以同类已发表论文为参考写作", contract)
+        self.assertIn("把题名、期刊、年卷期和 DOI 列给用户，请其下载全文", contract)
+        self.assertIn("取得全文之前，只做不依赖范文的准备工作", contract)
+        self.assertIn("官方投稿须知取不到时同样执行", contract)
+        self.assertIn("结果正文报告哪些统计量而哪些只放表中", contract)
+        self.assertIn("正文详略以同类论文为准，写到读者需要的程度即可", contract)
+        self.assertIn("不得为迎合惯例写成“以单因素分析有统计学意义的变量为自变量”", contract)
+        self.assertIn("正文是否写“参照某规范报告”、是否附核对表", contract)
+        self.assertIn("取得之前不起草正文", publishing)
+        self.assertIn("官方须知取不到时不跳过同类论文", publishing)
+        self.assertIn("分析请求产生的全部输出不等于论文的报告范围", playbook)
+        self.assertIn("未确认前不写入稿件", playbook)
+        self.assertIn("详略以同类论文为准，够用即可", playbook)
+        self.assertIn("第6节列出题名，请用户下载全文", style)
+        self.assertIn("请其下载全文放入项目", evidence)
+
+    def test_missing_and_adverse_facts_require_source_search_and_author_confirmation(self) -> None:
+        # 回归：作者既往稿件和原始数据已载明的方法事实被写成整段待核验；
+        # 依据英文版得出的条目“差异”被写成与中文版不同，作者确认实际一致。
+        publishing = (ROOT / "skills/academic-publishing/SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("使用前先查作者既往稿件、原始数据字段与问卷原文", publishing)
+        self.assertIn("须以所比较的同一语言版本原文为依据，并经作者确认后才写入正文", publishing)
+
     def test_docx_inventory_rejects_duplicate_internal_field_ids(self) -> None:
         document_xml = f"""
         <w:document xmlns:w="{DOCX_AUDITOR.W_NS}">
