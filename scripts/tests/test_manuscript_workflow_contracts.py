@@ -563,7 +563,7 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         evidence = (ROOT / "skills/evidence-research/SKILL.md").read_text(encoding="utf-8")
 
         self.assertIn("完整论文和论文级结构性重写必须以同类已发表论文为参考写作", contract)
-        self.assertIn("把题名、期刊、年卷期和 DOI 列给用户，请其下载全文", contract)
+        self.assertIn("从期刊官网或数据库自行取得全文；取不到时把题名、期刊、年卷期和 DOI 列给用户", contract)
         self.assertIn("取得全文之前，只做不依赖范文的准备工作", contract)
         self.assertIn("官方投稿须知取不到时同样执行", contract)
         self.assertIn("结果正文报告哪些统计量而哪些只放表中", contract)
@@ -575,8 +575,9 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("分析请求产生的全部输出不等于论文的报告范围", playbook)
         self.assertIn("未确认前不写入稿件", playbook)
         self.assertIn("详略以同类论文为准，够用即可", playbook)
-        self.assertIn("第6节列出题名，请用户下载全文", style)
-        self.assertIn("请其下载全文放入项目", evidence)
+        self.assertIn("第6节由执行者取得同类文章", style)
+        self.assertIn("需要全文时先自行从期刊官网、数据库或开放获取来源取得", evidence)
+        self.assertIn("以摘要核验即可，不要求全文", evidence)
 
     def test_missing_and_adverse_facts_require_source_search_and_author_confirmation(self) -> None:
         # 回归：作者既往稿件和原始数据已载明的方法事实被写成整段待核验；
@@ -597,6 +598,7 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
 
         self.assertIn("写作以形成符合目标期刊发表要求的论文为目的", publishing)
         self.assertIn("一次性列出需要用户提供的材料清单", publishing)
+        self.assertIn("同类论文、待引文献和期刊要求先由执行者自行检索取得", publishing)
         self.assertIn("逐项写明内容（题名、期刊、年卷期、DOI 或待确认的具体事实）、用途和当前核验状态", publishing)
         self.assertIn("核对论断所指的对象、人群、测量和比较与引用处一致", evidence)
         self.assertIn("摘要无法确定时以全文为准", evidence)
