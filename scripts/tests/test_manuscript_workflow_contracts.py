@@ -603,7 +603,8 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("核对论断所指的对象、人群、测量和比较与引用处一致", evidence)
         self.assertIn("摘要无法确定时以全文为准", evidence)
         self.assertIn("参考文献数量与中外文构成", contract)
-        self.assertIn("明显长于范文的部分压缩，明显短于范文的部分据实补足", contract)
+        self.assertIn("超出部分承载本研究新发现时向作者说明篇幅差异，由作者决定是否保留", contract)
+        self.assertIn("明显短于范文的部分据实补足", contract)
 
     def test_discussion_interprets_variables_by_measurement(self) -> None:
         # 回归：被照护者累计接受照护的时间在讨论中被解释为照护者本人的照护年限；
