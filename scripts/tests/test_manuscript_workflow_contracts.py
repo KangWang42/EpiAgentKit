@@ -666,5 +666,31 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         )
 
 
+    def test_fit_to_exemplar_elements_over_defensive_completeness(self) -> None:
+        # 回归：统计学方法写入“强制进入法”、异方差检验与 HC3 辩护句和节间回指，表注冗长；
+        # 质性主题与联合展示却明显薄于范文；方法偏离期刊惯例；纠正后只改点名处并以附和开头。
+        root_rules = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        principles = (ROOT / "skills/biostat-principles/SKILL.md").read_text(encoding="utf-8")
+        contract = (
+            ROOT / "skills/academic-publishing/references/manuscript-contract.md"
+        ).read_text(encoding="utf-8")
+        playbook = (
+            ROOT / "skills/academic-publishing/references/section-content-playbook.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("成品以“适合”而非“无可指摘”为目标", root_rules)
+        self.assertIn("同类成品写得充实的分析、阐释和整合也不能写薄", root_rules)
+        self.assertIn("先找出导致错误的判断", root_rules)
+        self.assertIn("答复不以“您说得对”、道歉或复述要求开头", root_rules)
+        self.assertIn("主要分析默认采用研究领域和目标期刊同类研究的常规方法", principles)
+        self.assertIn("`部件 | 范文要素与形式 | 当前研究对应内容", contract)
+        self.assertIn("本稿有而范文没有的要素直接删除", contract)
+        self.assertNotIn("因异方差改用稳健标准误", contract)
+        self.assertNotIn("放表注、补充材料或不写", playbook)
+        self.assertIn("新旧要求冲突时，在决定该行为的环节调整或重构并删去被取代的内容", root_rules)
+        self.assertIn("以更广的科研视野检查设计、时间线、口径与结论是否自洽", root_rules)
+        self.assertIn("段内句子数量与长短、句子的组成方式和常用词", contract)
+        self.assertIn("不为效果采用刻意复杂的做法", contract)
+
 if __name__ == "__main__":
     unittest.main()

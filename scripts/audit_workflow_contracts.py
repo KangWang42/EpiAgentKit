@@ -691,7 +691,7 @@ def main() -> int:
             "Rapid verification",
             "Formal evidence review",
             "跨领域可迁移性",
-            "无法取得全文或无法核对关键结论时标记“未核验”",
+            "取得前标记“未核验”，不得作为正式论断依据",
             "文献只能说明合理范围或核查方向",
             "scripts/verify_sources.py",
         ),
