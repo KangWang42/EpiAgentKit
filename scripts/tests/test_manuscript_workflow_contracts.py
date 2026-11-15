@@ -691,6 +691,9 @@ class ManuscriptWorkflowContractTests(unittest.TestCase):
         self.assertIn("以更广的科研视野检查设计、时间线、口径与结论是否自洽", root_rules)
         self.assertIn("段内句子数量与长短、句子的组成方式和常用词", contract)
         self.assertIn("不为效果采用刻意复杂的做法", contract)
+        self.assertIn("任何部件被纠正后，按同一规格复查全文，而不只修改被指出处", contract)
+        maintenance = (ROOT / "skills/epiagentkit-maintenance/SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("提交后回到该成品，按修订后的规则完整复查一次并改正", maintenance)
 
 if __name__ == "__main__":
     unittest.main()
