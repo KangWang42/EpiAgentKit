@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 
-VERSION = "1.3"
+VERSION = "1.4"
 PACKAGE_NAME = f"EpiAgentKit-release-{VERSION}"
 INCLUDED_SKILLS = (
     "academic-humanizer",

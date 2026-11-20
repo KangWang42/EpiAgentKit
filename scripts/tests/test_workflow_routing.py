@@ -1593,7 +1593,7 @@ class WorkflowRoutingTests(unittest.TestCase):
 
     def test_release_bundle_keeps_source_archive_and_runtime_separate(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        usage = (ROOT / "docs" / "release-1.3-usage.md").read_text(
+        usage = (ROOT / "docs" / "release-1.4-usage.md").read_text(
             encoding="utf-8"
         )
         notice = (ROOT / "docs" / "release-notice.md").read_text(
@@ -1606,7 +1606,8 @@ class WorkflowRoutingTests(unittest.TestCase):
         for fragment in (
             "请把 EpiAgentKit 安装到当前 Claude Code",
             "请把 EpiAgentKit 安装到当前 Codex",
-            "releases/tag/v1.3",
+            "请把 EpiAgentKit 安装到当前 Antigravity (agy)",
+            "releases/tag/v1.4",
             "保留我现有的个人配置",
             "只在明确需要自己操作时查看命令行方式",
             "python scripts/build_release.py",
@@ -1620,14 +1621,17 @@ class WorkflowRoutingTests(unittest.TestCase):
             "推荐交给当前 Agent 安装",
             "请把这个 EpiAgentKit release 安装到当前 Claude Code",
             "请把这个 EpiAgentKit release 安装到当前 Codex",
+            "请把这个 EpiAgentKit release 安装到当前 Antigravity (agy)",
             "Agent 无法代为安装时的人工备用命令",
             "源仓库、release 和实际安装目录应彼此分开",
             "SKILLS_INCLUDED.txt",
             "~/.claude/CLAUDE.md",
             "~/.codex/AGENTS.md",
             "~/.agents/skills/",
+            "~/.gemini/config/skills/",
             "安装到 Claude Code",
             "安装到 Codex",
+            "安装到 Antigravity (agy)",
             "更新与回退",
         ):
             self.assertIn(fragment, usage)

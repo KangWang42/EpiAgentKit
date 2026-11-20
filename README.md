@@ -9,11 +9,12 @@ Shared research workflow kit for Claude Code, Codex, and Antigravity (agy), buil
 [![Claude Code](https://img.shields.io/badge/Claude_Code-supported-5B4B8A?style=flat-square)](https://code.claude.com/docs)
 [![OpenAI Codex](https://img.shields.io/badge/OpenAI_Codex-supported-111827?style=flat-square)](https://openai.com/codex/)
 [![Google Antigravity](https://img.shields.io/badge/Antigravity_agy-supported-1A73E8?style=flat-square)](https://antigravity.google/docs)
+[![Release v1.4](https://img.shields.io/badge/Release-v1.4-0F766E?style=flat-square)](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.4)
 ![R workflows](https://img.shields.io/badge/R-statistical_workflows-276DC3?style=flat-square)
 ![Python workflows](https://img.shields.io/badge/Python-statistical_workflows-3776AB?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-progressive_disclosure-0F766E?style=flat-square)
 
-[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [实际示例](#从命令到输出) · [任务范围](#工作流怎样随任务变化) · [多平台架构](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
+[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [实际示例](#从命令到输出) · [任务范围](#工作流怎样随任务变化) · [三平台架构](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
 
 </div>
 
@@ -275,6 +276,14 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code、Codex 与 
 | 确定性 hooks | [`hooks/`](hooks/)                                 | 保护原始数据，检查 R 语法、文本痕迹、图件与结果文件                      |
 | 配置管理器   | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、三端一致性验收与项目终检                           |
 
+#### 三平台目录与机制对照
+
+| 平台 | 全局规则 | 全局 Skills | Hooks 配置与脚本 | 平台专属处理 |
+| --- | --- | --- | --- | --- |
+| Claude Code | `~/.claude/CLAUDE.md` | `~/.claude/skills/` | `~/.claude/settings.json` 与 `~/.claude/hooks/` | Windows hooks 以 `"shell": "bash"` 直接运行 Git Bash |
+| Codex | `~/.codex/AGENTS.md` | `~/.agents/skills/` | `~/.codex/hooks.json` 与 `~/.codex/hooks/` | 规则同步时在 `config.toml` 安全合并 `allow_login_shell = false`；检查 `~/.codex/skills/` 重复副本 |
+| Antigravity (`agy`) | `~/.gemini/config/rules/epiagentkit-rules-*.md` | `~/.gemini/config/skills/` | `~/.gemini/config/hooks.json`（顶层 `"epiagentkit"`）与 `~/.gemini/config/hooks/` | 按二级标题确定性拆分至单文件 `<= 24,000` 字节（带 `trigger: always_on`），保留个人 `GEMINI.md`；兼容 CLI 与 App/IDE 工具名及工作区 `cwd` 传入 |
+
 ### 四类任务范围
 
 | 范围       | 什么时候使用                 | 系统行为                                                                 |
@@ -322,15 +331,15 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code、Codex 与 
 
 需要同时配置多个客户端时，把“当前 Claude Code / Codex / Antigravity”改为需要同步的平台或“全部平台”。获取仓库、选择安装目标、备份、同步和检查由 Agent 按仓库说明完成。用户不需要先处理 Git、Python、目录或复制命令。
 
-### release 1.3
+### release 1.4
 
-只需要规则和 22 个可分发 skills 时，可以把 [EpiAgentKit 1.3 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.3) 直接交给当前 Agent：
+只需要规则、独立技能索引工具和 22 个可分发 skills 时，可以把 [EpiAgentKit 1.4 release](https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.4) 直接交给当前 Agent：
 
 ```text
-请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.3。保留我现有的个人配置，安装完成后检查 skills 是否可用。
+请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.4。保留我现有的个人配置，安装完成后检查 skills 是否可用。
 ```
 
-release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex`、`~/.agents` 或 `~/.gemini/config`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.3 使用说明](docs/release-1.3-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
+release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex`、`~/.agents` 或 `~/.gemini/config`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.4 使用说明](docs/release-1.4-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
 
 <details>
 <summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
@@ -450,11 +459,11 @@ $workflow-retrospective
 只修改当前 EpiAgentKit 仓库。读取 <workflow.txt 的路径>，使用 epiagentkit-maintenance 和 skill-creator 核对完整工作流。把报告作为现场证据而不是最终方案，合并同源问题，保留旧行为和合法例外，并完成能够实现要求的最小有效调整。
 ```
 
-### 用 Codex 快速完善 skills
+### 参与共建与完善 skills
 
 如果你有新的研究场景、补充方法或希望加入的 skill，欢迎一起参与共建。请尽量同时提供实际输入、期望结果、需要保留的旧行为和可靠参考。新建 skill 在提交前应附至少两份内容与验收重点不同的真实成果；修改既有 skill 默认以代表性实跑和回归测试验收，只有你明确要求时才另外生成审阅成果。
 
-从本仓库根目录启动 Codex，把实际失败、正确示例、必须保留的旧行为和希望改变的结果一起给出。Codex 官方支持用 `$skill-creator` 显式选择 skill 创建与更新流程；长期仓库规范放在 `AGENTS.md`，任务流程放在各 skill 的 `SKILL.md`、`references/` 和 `scripts/` 中。可直接发送：
+从本仓库根目录启动 Claude Code、Codex 或 Antigravity (`agy`)，把实际失败、正确示例、必须保留的旧行为和希望改变的结果一起给出。Codex 官方支持用 `$skill-creator` 显式选择 skill 创建与更新流程；长期仓库规范放在 `AGENTS.md`，任务流程放在各 skill 的 `SKILL.md`、`references/` 和 `scripts/` 中。可直接发送：
 
 ```text
 $skill-creator
@@ -478,7 +487,7 @@ python -m unittest scripts.tests.test_workflow_routing -v  # 示例：替换为�
 
 根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同合同发生变化时，再运行完整单元测试和 `python scripts/audit_workflow_contracts.py`。提交成功后才运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`。
 
-维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.3/EpiAgentKit-release-1.3.zip` 及外部 SHA-256 文件。
+维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.4/EpiAgentKit-release-1.4.zip` 及外部 SHA-256 文件。
 
 在 Agensi 上架时运行 `python scripts/build_agensi.py`。它按 `scripts/agensi_listings.json` 中的可售清单为每个 skill 生成一个独立 zip（单一顶层文件夹，SKILL.md 位于其根目录），附双语 README、`references/core-rules.md` 与 `references/companion-skills.md`，并把被引用的其它 skill 文件复制到 `shared/`；输出 `releases/agensi/*.zip`、`SHA256SUMS` 和逐项填写用的 `LISTINGS.md`。Anthropic 专有或来源于 Anthropic 的 skill、中山大学模板、仓库维护 skill 和会员专享绘图示例不进入可售清单。
 
