@@ -69,7 +69,7 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 | 条件细节、长规范、变体和示例 | 对应 `references/` |
 | 重复且需要确定性的操作 | 对应 `scripts/` |
 | 必须在固定生命周期执行或阻断的检查 | `hooks/` 与客户端配置 |
-| 安装、同步、需要同步的文件清单和双端对应关系 | `scripts/config_core.py`、同步器及工作流检查 |
+| 安装、同步、需要同步的文件清单和多端对应关系 | `scripts/config_core.py`、同步器及工作流检查 |
 | 面向使用者的能力、安装与安全说明 | `README.md` |
 
 每项规则只在一处维护。更新该处时，同步修改所有调用者、模板、测试和文档；删除被替代的旧表述。不要把 skill 的条件参数复制进全局 `CLAUDE.md`，也不要把全局优先级在各 skill 重写一遍。
@@ -82,7 +82,7 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 
 - 先核对 Claude Code 官方 [memory](https://code.claude.com/docs/en/memory) 与 [best practices](https://code.claude.com/docs/en/best-practices)；只写入当前任务需要且经核验的规则。
 - 根 `CLAUDE.md` 目标不超过 200 行，使用短段落、标题、列表和可验证措辞。只保留广泛适用且删除后会造成错误的规则；领域流程转 skill，目录或语言专属规则转项目或路径级规则。
-- `AGENTS.md` 只保留本仓库开发约定，不复制领域规则。Claude Code 与 Codex 需要同一行为时，从仓库唯一来源同步，不手工维护两份不同正文。
+- `AGENTS.md` 只保留本仓库开发约定，不复制领域规则。Claude Code、Codex 与 Antigravity 需要同一行为时，从仓库唯一来源同步，不手工维护多份不同正文。
 - “简洁、优雅、规范”必须落到可检查标准：目的适配、事实准确、层级清楚、结构紧凑、术语一致、版式克制、命令可执行、验收明确。
 
 ### Skills 与 references
@@ -106,7 +106,7 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 
 - 需要确定性阻断时用 hook，不用提示词模拟强制执行；同时控制误报、漏报、重复输出和上下文噪声。
 - Python 运行 `python -m py_compile` 并以代表性输入实跑；Shell 运行 `bash -n` 并做安全样例；R 多行代码写入文件后用 `Rscript 文件.R` 实跑。
-- Hook 变更同时核对 Claude Code 与 Codex 的事件名、匹配器、启动器、冲突清理和安装清单。Windows 路径与编码必须有代表性验证。
+- Hook 变更同时核对 Claude Code、Codex 与 Antigravity 的事件名、匹配器、启动器、冲突清理和安装清单。Windows 路径与编码必须有代表性验证。
 - 安装器、同步器、依赖闭包或工作流规则变更后，运行 `python scripts/audit_workflow_contracts.py`；不得只凭退出码，必须扫描完整输出中的异常词。
 
 ## 5. 验证与完成确认
@@ -119,7 +119,7 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 4. 扫描本轮实际验证输出中的 `error|warning|traceback|failed|nan` 并逐项归因；不额外运行无关命令来制造扫描对象，也不能把预期提示、库噪声或真实失败混为一类。
 5. 在受影响范围内检查占位文件、失效引用、重复维护位置、生成过程痕迹和来源不明的既有改动。中文修改按全局中文终审要求逐句检查目标读者、主体、动作、依据、条件和确认责任；词面扫描只用于发现高确定性线索，不能代替语境审查。
 
-适用检查通过后进入交付；只有新改动、新失败或明确未覆盖的影响才扩大或重跑。提示词、模型或技能分流调整同时比较旧新代表任务的实际选择、完成范围与确认次数；字符量只证明加载量变化，静态关键词和依赖检查不证明模型行为或耗时改善。共享规则继续兼容 Claude Code 与 Codex，不在领域 skill 中写死模型、推理强度或 API 参数。
+适用检查通过后进入交付；只有新改动、新失败或明确未覆盖的影响才扩大或重跑。提示词、模型或技能分流调整同时比较旧新代表任务的实际选择、完成范围与确认次数；字符量只证明加载量变化，静态关键词和依赖检查不证明模型行为或耗时改善。共享规则继续兼容 Claude Code、Codex 与 Antigravity，不在领域 skill 中写死模型、推理强度或 API 参数。
 
 Git 可用且当前目录为仓库时，最后审查完整差异。新建 skill 或用户当轮明确要求成果审阅时，先完成审阅并等待用户明确同意当前版本，未获同意时保持未提交；其余提交、push、提交后同步和 doctor 按根 `CLAUDE.md` 与 `AGENTS.md` 执行。Git 不可用或当前目录不是仓库时报告“Git 已跳过”，并在完成前按仓库规则运行同步和 doctor。
 

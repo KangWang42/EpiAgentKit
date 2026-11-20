@@ -15,6 +15,9 @@ from pathlib import Path
 import configure_user
 import sync_user_configs
 from config_core import (
+    AGY_HOOK_NAME,
+    AGY_RULE_MAX_BYTES,
+    AGY_RULE_PREFIX,
     CODEX_COMPATIBILITY_WARNING,
     HOOK_MANIFEST,
     INSTALL_MANIFEST,
@@ -24,17 +27,21 @@ from config_core import (
     LEGACY_SKILL_MANIFEST,
     PRESETS,
     PROJECT_NAME,
+    RULE_MANIFEST,
     SKILL_MANIFEST,
     active_manifest,
+    agy_skill_discovery_roots,
     available_skills,
     local_skill_excludes,
     load_json,
     preserve_global_rules,
+    render_agy_rule_files,
+    resolve_agy_home,
     resolve_codex_skill_dirs,
 )
 
 
-HELP = """EpiAgentKit dual-platform configuration manager
+HELP = """EpiAgentKit multi-platform configuration manager (Claude Code, Codex, Antigravity)
 
 Usage:
   python scripts/epiagentkit.py install [configure options]
@@ -120,16 +127,62 @@ def codex_skill_duplicates(home: Path, codex_home: Path) -> dict[str, list[Path]
     return {name: paths for name, paths in locations.items() if len(paths) > 1}
 
 
+def agy_skill_duplicates(home: Path, agy_home: Path) -> dict[str, list[Path]]:
+    """Find same-named skills visible across Antigravity global discovery roots."""
+    locations: dict[str, list[Path]] = {}
+    for root in agy_skill_discovery_roots(home, agy_home):
+        if not root.is_dir():
+            continue
+        for item in root.iterdir():
+            if item.is_dir() and (item / "SKILL.md").is_file():
+                locations.setdefault(item.name, []).append(item)
+    return {name: paths for name, paths in locations.items() if len(paths) > 1}
+
+
+def agy_rules_match(root: Path, rules_dir: Path, *, require_manifest: bool = True) -> tuple[bool, str]:
+    """Verify Antigravity modular always_on rule files match CLAUDE.md and stay <= 24 KB."""
+    source_rule = root / "CLAUDE.md"
+    if not source_rule.is_file():
+        return False, f"missing source {source_rule}"
+    expected = render_agy_rule_files(source_rule.read_text(encoding="utf-8-sig"))
+    if not rules_dir.is_dir():
+        return False, f"missing {rules_dir}"
+    if require_manifest:
+        manifest_path = rules_dir / RULE_MANIFEST
+        try:
+            managed = load_json(manifest_path).get("managed", [])
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            return False, f"{manifest_path}: {error}"
+        if not isinstance(managed, list) or sorted(managed) != sorted(expected):
+            return False, f"{manifest_path}: managed rule list mismatch"
+    existing_prefixed = {
+        item.name
+        for item in rules_dir.iterdir()
+        if item.is_file() and item.name.startswith(AGY_RULE_PREFIX) and item.suffix == ".md"
+    }
+    if existing_prefixed != set(expected):
+        return False, f"{rules_dir}: expected {sorted(expected)}, found {sorted(existing_prefixed)}"
+    for name, content in expected.items():
+        target = rules_dir / name
+        raw = target.read_bytes()
+        if len(raw) > AGY_RULE_MAX_BYTES:
+            return False, f"{target}: {len(raw)} bytes exceeds {AGY_RULE_MAX_BYTES}"
+        if raw != content.encode("utf-8"):
+            return False, f"{target}: content differs from repository CLAUDE.md"
+    return True, f"{rules_dir} ({len(expected)} file(s), <= {AGY_RULE_MAX_BYTES} B each)"
+
+
 def doctor_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=f"{Path(sys.argv[0]).name} doctor",
-        description="Verify an installed dual-platform configuration.",
+        description="Verify an installed Claude Code, Codex, and Antigravity configuration.",
     )
-    parser.add_argument("--target", choices=("claude", "codex", "all"), default="all")
+    parser.add_argument("--target", choices=("claude", "codex", "agy", "all"), default="all")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--home", type=Path, default=Path.home())
     parser.add_argument("--claude-home", type=Path)
     parser.add_argument("--codex-home", type=Path)
+    parser.add_argument("--agy-home", type=Path)
     parser.add_argument("--codex-skills-dir", type=Path, action="append")
     parser.add_argument(
         "--codex-layout",
@@ -176,24 +229,42 @@ def check_platform(
     components = set(manifest.get("components", []))
 
     if "rules" in components:
-        target_rule = platform_home / ("CLAUDE.md" if platform == "claude" else "AGENTS.md")
-        source_rule = root / "CLAUDE.md"
-        ok = target_rule.is_file() and digest(target_rule) == digest(source_rule)
-        record(ok, f"{platform}.rules", str(target_rule))
+        if platform == "agy":
+            ok, detail = agy_rules_match(root, platform_home / "rules", require_manifest=True)
+            record(ok, "agy.rules", detail)
+        else:
+            target_rule = platform_home / ("CLAUDE.md" if platform == "claude" else "AGENTS.md")
+            source_rule = root / "CLAUDE.md"
+            ok = target_rule.is_file() and digest(target_rule) == digest(source_rule)
+            record(ok, f"{platform}.rules", str(target_rule))
     elif preserve_global_rules(root):
-        target_rule = platform_home / ("CLAUDE.md" if platform == "claude" else "AGENTS.md")
-        source_rule = root / "CLAUDE.md"
-        matches = target_rule.is_file() and source_rule.is_file() and digest(target_rule) == digest(source_rule)
-        checks.append({
-            "status": "PASS" if matches else "WARN",
-            "item": f"{platform}.rules.preserved",
-            "detail": (
-                f"{target_rule}: preserved rules match the repository"
-                if matches else
-                f"{target_rule}: rules are preserved by local policy and differ or are missing; "
-                "new repository rules are not confirmed active"
-            ),
-        })
+        if platform == "agy":
+            rules_dir = platform_home / "rules"
+            matches, _detail = agy_rules_match(root, rules_dir, require_manifest=False)
+            checks.append({
+                "status": "PASS" if matches else "WARN",
+                "item": "agy.rules.preserved",
+                "detail": (
+                    f"{rules_dir}: preserved rules match the repository"
+                    if matches else
+                    f"{rules_dir}: rules are preserved by local policy and differ or are missing; "
+                    "new repository rules are not confirmed active"
+                ),
+            })
+        else:
+            target_rule = platform_home / ("CLAUDE.md" if platform == "claude" else "AGENTS.md")
+            source_rule = root / "CLAUDE.md"
+            matches = target_rule.is_file() and source_rule.is_file() and digest(target_rule) == digest(source_rule)
+            checks.append({
+                "status": "PASS" if matches else "WARN",
+                "item": f"{platform}.rules.preserved",
+                "detail": (
+                    f"{target_rule}: preserved rules match the repository"
+                    if matches else
+                    f"{target_rule}: rules are preserved by local policy and differ or are missing; "
+                    "new repository rules are not confirmed active"
+                ),
+            })
 
     if platform == "codex" and ({"rules", "runtime"} & components):
         config_path = platform_home / "config.toml"
@@ -252,14 +323,31 @@ def check_platform(
         config_path = platform_home / ("settings.json" if platform == "claude" else "hooks.json")
         try:
             config = load_json(config_path)
-            commands = [
-                str(hook.get("command", ""))
-                for groups in config.get("hooks", {}).values()
-                for group in groups
-                if isinstance(group, dict)
-                for hook in group.get("hooks", [])
-                if isinstance(hook, dict)
-            ]
+            if platform == "agy":
+                named = config.get(AGY_HOOK_NAME)
+                handlers = [
+                    hook
+                    for groups in (named.values() if isinstance(named, dict) else [])
+                    if isinstance(groups, list)
+                    for group in groups
+                    if isinstance(group, dict)
+                    for hook in group.get("hooks", [])
+                    if isinstance(hook, dict)
+                ]
+                commands = [str(hook.get("command", "")) for hook in handlers]
+                unsupported_fields = any(
+                    "statusMessage" in hook or "shell" in hook for hook in handlers
+                )
+            else:
+                commands = [
+                    str(hook.get("command", ""))
+                    for groups in config.get("hooks", {}).values()
+                    for group in groups
+                    if isinstance(group, dict)
+                    for hook in group.get("hooks", [])
+                    if isinstance(hook, dict)
+                ]
+                unsupported_fields = False
             counts = {
                 name: sum(name in command for command in commands)
                 for name in sync_user_configs.REGISTERED_HOOK_SCRIPTS
@@ -268,8 +356,10 @@ def check_platform(
                 sync_user_configs.MANAGED_HOOK_SCRIPTS
                 - sync_user_configs.REGISTERED_HOOK_SCRIPTS
             )
-            ok = all(value == 1 for value in counts.values()) and not any(
-                name in command for name in legacy for command in commands
+            ok = (
+                all(value == 1 for value in counts.values())
+                and not any(name in command for name in legacy for command in commands)
+                and not unsupported_fields
             )
             record(ok, f"{platform}.hook_config", str(config_path))
             if platform == "codex":
@@ -279,6 +369,14 @@ def check_platform(
                     "detail": "Registration and launcher checks do not verify session activation. "
                     "Review new or changed non-managed hooks with /hooks; local command hooks "
                     "require a supported local orchestration runtime.",
+                })
+            elif platform == "agy":
+                checks.append({
+                    "status": "INFO",
+                    "item": "agy.hook_activation",
+                    "detail": "Registration and launcher checks do not verify session activation. "
+                    "Inspect active hooks with /hooks in Antigravity CLI or Customizations > Hooks "
+                    "in Antigravity App/IDE.",
                 })
         except (OSError, ValueError, json.JSONDecodeError) as error:
             record(False, f"{platform}.hook_config", str(error))
@@ -291,6 +389,7 @@ def run_doctor(argv: list[str]) -> int:
     home = args.home.expanduser().resolve()
     claude_home = (args.claude_home or home / ".claude").expanduser().resolve()
     codex_home = (args.codex_home or home / ".codex").expanduser().resolve()
+    agy_home = resolve_agy_home(home, args.agy_home)
     codex_dirs = resolve_codex_skill_dirs(
         home,
         codex_home,
@@ -340,6 +439,29 @@ def run_doctor(argv: list[str]) -> int:
                     "status": "WARN",
                     "item": "codex.skills.compatibility_layout",
                     "detail": CODEX_COMPATIBILITY_WARNING,
+                }
+            )
+    if args.target in {"agy", "all"}:
+        checks.extend(check_platform("agy", root, agy_home, [agy_home / "skills"]))
+        agy_duplicates = agy_skill_duplicates(home, agy_home)
+        if agy_duplicates:
+            detail = "; ".join(
+                f"{name}: {', '.join(map(str, paths))}"
+                for name, paths in sorted(agy_duplicates.items())
+            )
+            checks.append(
+                {
+                    "status": "FAIL",
+                    "item": "agy.skills.duplicate_roots",
+                    "detail": detail,
+                }
+            )
+        else:
+            checks.append(
+                {
+                    "status": "PASS",
+                    "item": "agy.skills.duplicate_roots",
+                    "detail": "no duplicate skill names across discovery roots",
                 }
             )
     failed = [check for check in checks if check["status"] == "FAIL"]

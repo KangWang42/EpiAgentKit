@@ -4,15 +4,16 @@
 
 **把流行病学与卫生统计任务，变成快慢自适应、可执行、可复核、可发表或交付的工作流。**
 
-Shared research workflow kit for Claude Code and Codex, built for epidemiology and biostatistics.
+Shared research workflow kit for Claude Code, Codex, and Antigravity (agy), built for epidemiology and biostatistics.
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-supported-5B4B8A?style=flat-square)](https://code.claude.com/docs)
 [![OpenAI Codex](https://img.shields.io/badge/OpenAI_Codex-supported-111827?style=flat-square)](https://openai.com/codex/)
+[![Google Antigravity](https://img.shields.io/badge/Antigravity_agy-supported-1A73E8?style=flat-square)](https://antigravity.google/docs)
 ![R workflows](https://img.shields.io/badge/R-statistical_workflows-276DC3?style=flat-square)
 ![Python workflows](https://img.shields.io/badge/Python-statistical_workflows-3776AB?style=flat-square)
 ![Agent Skills](https://img.shields.io/badge/Agent_Skills-progressive_disclosure-0F766E?style=flat-square)
 
-[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [实际示例](#从命令到输出) · [任务范围](#工作流怎样随任务变化) · [双平台架构](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
+[30 秒安装](#30-秒安装) · [项目能做什么](#项目能做到什么) · [实际示例](#从命令到输出) · [任务范围](#工作流怎样随任务变化) · [多平台架构](#它如何工作) · [安全边界](#安全边界) · [维护指南](#维护与贡献)
 
 </div>
 
@@ -20,9 +21,9 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 
 > EpiAgentKit 不是新的统计软件，也不是一组万能提示词。它是一套面向科研 Agent 的规则、技能、工具和确定性检查，让研究者能够在同一套约束下组织项目、运行分析、制作成果并完成审查。
 
-| 按任务增加必要步骤                                                   | 结果可追溯                                                                       | 双平台一致                                              |
+| 按任务增加必要步骤                                                   | 结果可追溯                                                                       | 三平台一致                                              |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| 问答、局部修改和快速尝试立即执行，只在进入主分析或发布时增加必要检查 | 关键结果由生成脚本写入结果清单，并关联输入、分析集、运行编号和实际使用结果的文件 | Claude Code 与 Codex 从同一仓库安装、同步并接受相同检查 |
+| 问答、局部修改和快速尝试立即执行，只在进入主分析或发布时增加必要检查 | 关键结果由生成脚本写入结果清单，并关联输入、分析集、运行编号和实际使用结果的文件 | Claude Code、Codex 与 Antigravity (agy) 从同一仓库安装、同步并接受相同检查 |
 
 ## 项目能做到什么
 
@@ -40,7 +41,7 @@ Shared research workflow kit for Claude Code and Codex, built for epidemiology a
 | 完成明确选择的 Python 统计分析 | 在用户指定 Python 或既有 Python 项目中执行数据清洗、描述统计、回归、生存分析、预测验证与异常核查，并与 R 共用结果数字唯一来源 | 可复现 Python 脚本、结果对象、表图与方法记录                 |
 | 制作发表级统计图               | 按真实数据和最终物理尺寸生成森林图、生存曲线、ROC、热图、回归诊断等结果图                                                     | PDF、PNG 或 SVG 图件及对应出图代码                           |
 | 生成科研非统计视觉             | 为论文、PPT、标书、报告、README 和技术文档生成流程、路线、框架、机制与图形摘要，并区分内容图、真实截图和氛围图                | 经来源、结构、文字和嵌入后显示复核的完整图件                 |
-| 调用 ChatGPT 网页协作           | 在用户启用的当前 Claude Code 或 Codex 会话中，使用可用浏览器工具复用已登录的 GPT 网页，辅助文献线索、文字审查和交叉检查      | 候选线索、逐段修改建议、独立检查结果及本地核验结论           |
+| 调用 ChatGPT 网页协作           | 在用户启用的当前 Claude Code、Codex 或 Antigravity 会话中，使用可用浏览器工具复用已登录的 GPT 网页，辅助文献线索、文字审查和交叉检查 | 候选线索、逐段修改建议、独立检查结果及本地核验结论           |
 | 写论文与投稿材料               | 基于项目已有结果起草中英文论文部件、学位论文、Cover Letter、Highlights 和审稿回复，并执行证据约束审校                         | Markdown 或 Word 稿件、投稿材料与自检记录                    |
 | 评审论文与生成审稿报告         | 以同行评审人身份核对稿件中的数据与论断是否对应，并审查设计、偏倚、统计、解释、报告规范、语言和伦理，区分报告缺项与方法错误    | 可定位、分 major/minor、说明未核验内容的完整 reviewer report |
 | 写报告与制作学术汇报           | 把分析结果转成面向读者的报告，或按用户模板、机构/会议模板或中性设计生成组会、开题、中期与答辩汇报                  | 报告正文、DOCX、可直接汇报的 PPTX                            |
@@ -227,7 +228,7 @@ README 和正式交付位置只引用一组当前版。预览 PNG、可编辑 Wo
 
 ## 工作流怎样随任务变化
 
-Claude Code 与 Codex 共用同一套全局规则。系统先根据用户要求和现有工作区确定本轮范围，领域技能只完成这个范围内的工作；自动检查用于保护原始数据、结果来源、敏感信息和正式发布要求。简单问题不会因为调用某个技能而变成完整项目，正式投稿或外发也不会省略必要核验。
+Claude Code、Codex 与 Antigravity (agy) 共用同一套全局规则。系统先根据用户要求和现有工作区确定本轮范围，领域技能只完成这个范围内的工作；自动检查用于保护原始数据、结果来源、敏感信息和正式发布要求。简单问题不会因为调用某个技能而变成完整项目，正式投稿或外发也不会省略必要核验。
 
 | 范围       | 何时使用                           | 记录与验证                                                                             |
 | ---------- | ---------------------------------- | -------------------------------------------------------------------------------------- |
@@ -263,16 +264,16 @@ python scripts/epiagentkit.py lookup peek r-biostats/references/regression.md --
 
 ### 共享规则与执行组件
 
-EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex 的共同配置源。
+EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code、Codex 与 Antigravity (agy) 的共同配置源。
 
-![EpiAgentKit 仓库中的 CLAUDE.md、skills、hooks 和 scripts 通过 install、sync 与 doctor 同步到 Claude Code 和 Codex 的真实配置目录](docs/assets/platform-architecture.webp)
+![EpiAgentKit 仓库中的 CLAUDE.md、skills、hooks 和 scripts 通过 install、sync 与 doctor 同步到 Claude Code、Codex 和 Antigravity 的真实配置目录](docs/assets/platform-architecture.webp)
 
 | 层           | 组件                                                | 作用                                                                     |
 | ------------ | --------------------------------------------------- | ------------------------------------------------------------------------ |
 | 全局规则     | [`CLAUDE.md`](CLAUDE.md)                           | 每个会话必须遵守的安全要求、任务分流、唯一来源说明与完成条件             |
 | 领域技能     | [`skills/`](skills/)                               | 按需加载分析、证据、写作、视觉、交付与审查流程，避免把所有规范塞进上下文 |
 | 确定性 hooks | [`hooks/`](hooks/)                                 | 保护原始数据，检查 R 语法、文本痕迹、图件与结果文件                      |
-| 配置管理器   | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、双端一致性验收与项目终检                           |
+| 配置管理器   | [`scripts/epiagentkit.py`](scripts/epiagentkit.py) | 安装、同步、冲突清理、三端一致性验收与项目终检                           |
 
 ### 四类任务范围
 
@@ -313,7 +314,13 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 请把 EpiAgentKit 安装到当前 Codex：https://github.com/KangWang42/EpiAgentKit。保留我现有的个人配置，安装完成后检查是否可用。
 ```
 
-需要同时配置两端时，把“当前 Claude Code / Codex”改为“Claude Code 与 Codex”。获取仓库、选择安装目标、备份、同步和检查由 Agent 按仓库说明完成。用户不需要先处理 Git、Python、目录或复制命令。
+### 在 Antigravity (agy) 中
+
+```text
+请把 EpiAgentKit 安装到当前 Antigravity (agy)：https://github.com/KangWang42/EpiAgentKit。保留我现有的个人配置，安装完成后检查是否可用。
+```
+
+需要同时配置多个客户端时，把“当前 Claude Code / Codex / Antigravity”改为需要同步的平台或“全部平台”。获取仓库、选择安装目标、备份、同步和检查由 Agent 按仓库说明完成。用户不需要先处理 Git、Python、目录或复制命令。
 
 ### release 1.3
 
@@ -323,7 +330,7 @@ EpiAgentKit 把 Agent 的行为分成四层，仓库是 Claude Code 与 Codex �
 请把这个 EpiAgentKit release 安装到我当前使用的 Agent：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.3。保留我现有的个人配置，安装完成后检查 skills 是否可用。
 ```
 
-release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex` 或 `~/.agents`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.3 使用说明](docs/release-1.3-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
+release 使用普通版本目录解压，不直接作为 `~/.claude`、`~/.codex`、`~/.agents` 或 `~/.gemini/config`。完整的 Agent 安装要求、人工备用命令、更新和回退方法见 [release 1.3 使用说明](docs/release-1.3-usage.md)，排除范围与外部依赖见 [许可说明](docs/release-notice.md)。轻量 release 不分发 `docx`、`pdf`、`pptx`、`xlsx`、机构模板和 imagegen 系统能力。
 
 <details>
 <summary><strong>只在明确需要自己操作时查看命令行方式</strong></summary>
@@ -337,8 +344,11 @@ python scripts/epiagentkit.py install
 ```
 
 ```bash
-# Claude Code 与 Codex 完整安装
+# Claude Code、Codex 与 Antigravity (agy) 完整安装
 python scripts/epiagentkit.py install --target all --preset full --yes
+
+# 仅为 Antigravity (agy) 安装完整环境
+python scripts/epiagentkit.py install --target agy --preset full --yes
 
 # 只安装统计分析技能包
 python scripts/epiagentkit.py install --target all --preset analysis --yes
@@ -357,7 +367,7 @@ python scripts/epiagentkit.py install --target all --preset full --yes --dry-run
 ```
 
 ```bash
-# 从仓库同步已安装内容，并复核 Claude Code 与 Codex 一致性
+# 从仓库同步已安装内容，并复核 Claude Code、Codex 与 Antigravity 一致性
 python scripts/epiagentkit.py sync --target all
 python scripts/epiagentkit.py doctor --target all
 
@@ -371,11 +381,11 @@ python scripts/epiagentkit.py install --target all --preset custom --skills acad
 python scripts/epiagentkit.py check-project <项目根>
 ```
 
-Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。
+Codex 默认把自定义 skills 安装到官方目录 `~/.agents/skills/`。`--codex-layout codex` 与 `both` 仅用于兼容旧布局，并会提示重复技能风险。Antigravity (agy CLI、App 2.0 与 IDE) 统一使用 `~/.gemini/config/`：规则由 `CLAUDE.md` 确定性拆分为 `~/.gemini/config/rules/epiagentkit-rules-*.md`（均带 `trigger: always_on` 且单文件不超过 24,000 字节，避免截断并保留用户个人 `~/.gemini/GEMINI.md`），skills 同步到 `~/.gemini/config/skills/` 并检查 CLI 额外目录中的同名重复，hooks 以顶层 `"epiagentkit"` 项合并写入 `~/.gemini/config/hooks.json`。
 
-源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md`，并将规则文件从受管组件中移除。doctor 仍只读核对：保留规则与源仓库不同或缺失时报告 WARN，不自动覆盖，也不把新版规则称为已生效；本机排除的技能报告 INFO。Codex 的 `runtime` 组件独立保留：只要本次请求同步规则，仍会管理和检查 `allow_login_shell`；只同步 skills 时不修改该设置。这两个本机策略文件不进入 release。
+源仓库也支持两个不进入 Git 的本机选项：在根目录的 `.epiagentkit-local-skills` 中逐行写入只供本机保留、不同步的 skill 名；创建空文件 `.epiagentkit-preserve-global-rules` 后，安装器和同步器保留现有全局 `CLAUDE.md`/`AGENTS.md` 与 Antigravity 规则，并将规则文件从受管组件中移除。doctor 仍只读核对：保留规则与源仓库不同或缺失时报告 WARN，不自动覆盖，也不把新版规则称为已生效；本机排除的技能报告 INFO。Codex 的 `runtime` 组件独立保留：只要本次请求同步规则，仍会管理和检查 `allow_login_shell`；只同步 skills 时不修改该设置。这两个本机策略文件不进入 release。
 
-doctor 对 hooks 检查文件、注册与启动器，不证明当前会话已激活。Codex 新增或变更的非受管 hooks 仍需按实际客户端的 `/hooks` 流程审阅；云端编排不能据此认定会执行本机命令 hooks。两端当前加载与工具能力的区别见 [平台兼容性](skills/epiagentkit-maintenance/references/platform-compatibility.md)。
+doctor 对 hooks 检查文件、注册与启动器，不证明当前会话已激活。Codex 新增或变更的非受管 hooks 仍需按实际客户端的 `/hooks` 流程审阅；Antigravity 可在 CLI 运行 `/hooks` 或在 App/IDE 的 Customizations > Hooks 核对生效状态；云端编排不能据此认定会执行本机命令 hooks。各端当前加载与工具能力的区别见 [平台兼容性](skills/epiagentkit-maintenance/references/platform-compatibility.md)。
 
 </details>
 
@@ -408,7 +418,7 @@ doctor 对 hooks 检查文件、注册与启动器，不证明当前会话已激
 - **中文以读者能直接理解为准**：逐句写清科研动作、证据、条件和确认责任；词面扫描只发现线索，不用软件内部简写替代科研表达。
 - **当前版保持唯一**：含义明确且长期不变的文件名只保留一组当前交付物；被替代的正式文件进入 `09_backup/archive/`，试验与一次性工作进入 `09_backup/workbench/`，两类索引不混用。
 - **修订范围可以逐项核对**：已有论文和 Word 稿先确认唯一输入、用户纠正、允许修改和不得改动的内容；只有正式的多轮修订或需要多个交付文件时，才建立 `revision-state.json`，并由同一组修改记录生成净稿、标注稿和审稿回复。
-- **双平台共用正文**：Claude Code 和 Codex 读取同一份规则与技能，不维护两套容易漂移的内容。
+- **三平台共用正文**：Claude Code、Codex 与 Antigravity (agy) 读取同一份规则与技能，不维护多套容易漂移的内容。
 
 ## 安全边界
 

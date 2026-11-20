@@ -16,6 +16,10 @@ def main() -> int:
     ).lower()
     if client == "codex":
         payload = {"systemMessage": message}
+    elif client == "agy":
+        if message:
+            print(message, file=sys.stderr)
+        payload = {}
     else:
         payload = {
             "hookSpecificOutput": {

@@ -20,6 +20,7 @@ except ModuleNotFoundError:  # Python 3.10 compatibility
     tomllib = None
 
 from config_core import (
+    AGY_HOOK_NAME,
     CODEX_COMPATIBILITY_WARNING,
     HOOK_MANIFEST,
     INSTALL_MANIFEST,
@@ -28,19 +29,24 @@ from config_core import (
     LEGACY_INSTALL_MANIFEST,
     LEGACY_SKILL_MANIFEST,
     PROJECT_NAME,
+    RULE_MANIFEST,
     SKILL_MANIFEST,
     SYNC_EXCLUDES,
     active_manifest,
+    agy_skill_discovery_roots,
     csv_values,
     load_json,
     local_skill_excludes,
     preserve_global_rules,
+    render_agy_rule_files,
+    resolve_agy_home,
     resolve_codex_skill_dirs,
 )
 from hook_conflicts import reconcile_hook_conflicts
 from skill_conflicts import remove_skill_conflicts, remove_tree, scan_skill_conflicts
 
 CODEX_EXCLUDES = {"skill-creator"}
+AGY_EXCLUDES: set[str] = set()
 LEGACY_SKILL_ALIASES = {"image-diagrams": "research-visuals"}
 COPY_IGNORES = {"__pycache__", ".DS_Store"}
 VALID_COMPONENTS = {"rules", "skills", "hooks", "runtime"}
@@ -142,6 +148,33 @@ def sync_file(source: Path, target: Path, dry_run: bool) -> None:
     print(f"COPY   {source} -> {target}")
     if not dry_run:
         atomic_copy_file(source, target)
+
+
+def sync_agy_rules(source: Path, rules_dir: Path, dry_run: bool) -> None:
+    """Split global rules into Antigravity modular always_on files within 24 KB each."""
+    expected = render_agy_rule_files(source.read_text(encoding="utf-8-sig"))
+    manifest = rules_dir / RULE_MANIFEST
+    previous = read_manifest(manifest)
+    if not dry_run:
+        rules_dir.mkdir(parents=True, exist_ok=True)
+    for stale in sorted(previous - set(expected)):
+        stale_path = rules_dir / stale
+        if stale_path.is_file():
+            print(f"REMOVE {stale_path}")
+            if not dry_run:
+                stale_path.unlink()
+    for name, content in expected.items():
+        target = rules_dir / name
+        encoded = content.encode("utf-8")
+        if target.is_file() and target.read_bytes() == encoded:
+            print(f"SKIP   {target} (unchanged)")
+            continue
+        print(f"WRITE  {target}")
+        if not dry_run:
+            atomic_write_bytes(target, encoded)
+    print(f"WRITE  {manifest}")
+    if not dry_run:
+        atomic_write_json(manifest, {"managed": sorted(expected)})
 
 
 def source_skills(
@@ -541,8 +574,9 @@ def hook_command(
 
     Claude Code runs Windows hooks in Git Bash (pinned with ``"shell": "bash"``), where
     MSYS path conversion rewrites ``cmd.exe /d /s /c`` and breaks the cmd launcher, so
-    Claude gets a plain bash command. Codex keeps the cmd launcher, which also works when
-    bash is absent from PATH.
+    Claude gets a plain bash command. Codex and Antigravity run Windows command hooks
+    through cmd.exe, so both use the cmd launcher, which also works when bash is absent
+    from PATH.
     """
     windows = os.name == "nt" if windows is None else windows
     script_path = hooks_dir / script
@@ -563,40 +597,54 @@ def hook_command(
 def hook_groups(
     platform: str, hooks_dir: Path, windows: bool | None = None
 ) -> dict[str, list[dict]]:
-    edit_matcher = (
-        "Write|Edit|MultiEdit" if platform == "claude" else "Edit|Write|apply_patch"
-    )
+    if platform == "claude":
+        edit_matcher = "Write|Edit|MultiEdit"
+        shell_matcher = "Bash"
+    elif platform == "agy":
+        edit_matcher = (
+            "write_file|edit_file|write_to_file|"
+            "replace_file_content|multi_replace_file_content"
+        )
+        shell_matcher = "run_command"
+    else:
+        edit_matcher = "Edit|Write|apply_patch"
+        shell_matcher = "Bash"
     windows = os.name == "nt" if windows is None else windows
     shell = {"shell": "bash"} if platform == "claude" and windows else {}
     groups: dict[str, list[dict]] = {}
     for event, definitions in HOOK_DEFINITIONS.items():
         groups[event] = []
         for matcher, scripts in definitions:
+            resolved_matcher = (
+                edit_matcher
+                if matcher == "edit"
+                else shell_matcher if matcher == "Bash" else matcher
+            )
+            handlers = []
+            for script, timeout, status in scripts:
+                entry: dict[str, object] = {
+                    "type": "command",
+                    "command": hook_command(
+                        hooks_dir, script, client=platform, windows=windows
+                    ),
+                    "timeout": timeout,
+                }
+                if platform != "agy":
+                    entry["statusMessage"] = status
+                    entry.update(shell)
+                handlers.append(entry)
             groups[event].append(
                 {
-                    "matcher": edit_matcher if matcher == "edit" else matcher,
-                    "hooks": [
-                        {
-                            "type": "command",
-                            "command": hook_command(
-                                hooks_dir, script, client=platform, windows=windows
-                            ),
-                            "timeout": timeout,
-                            "statusMessage": status,
-                            **shell,
-                        }
-                        for script, timeout, status in scripts
-                    ],
+                    "matcher": resolved_matcher,
+                    "hooks": handlers,
                 }
             )
     return groups
 
 
-def remove_managed_hook_commands(config: dict) -> None:
-    """Remove prior EpiAgentKit hook commands while preserving unrelated hooks."""
-    hooks = config.setdefault("hooks", {})
-    if not isinstance(hooks, dict):
-        raise ValueError("Existing 'hooks' setting must be a JSON object")
+def _strip_managed_from_events(hooks: dict) -> bool:
+    """Remove EpiAgentKit-managed hook commands from an event map; return whether any were removed."""
+    removed = False
     for event, groups in tuple(hooks.items()):
         if not isinstance(groups, list):
             continue
@@ -608,13 +656,38 @@ def remove_managed_hook_commands(config: dict) -> None:
             retained_commands = []
             for item in group["hooks"]:
                 command = item.get("command", "") if isinstance(item, dict) else ""
-                if not any(name in str(command) for name in MANAGED_HOOK_SCRIPTS):
+                if any(name in str(command) for name in MANAGED_HOOK_SCRIPTS):
+                    removed = True
+                else:
                     retained_commands.append(item)
             if retained_commands:
                 preserved = dict(group)
                 preserved["hooks"] = retained_commands
                 retained_groups.append(preserved)
         hooks[event] = retained_groups
+    return removed
+
+
+def remove_managed_hook_commands(config: dict, *, platform: str = "") -> None:
+    """Remove prior EpiAgentKit hook commands while preserving unrelated hooks."""
+    if platform == "agy":
+        for name, spec in tuple(config.items()):
+            if not isinstance(spec, dict):
+                continue
+            removed = _strip_managed_from_events(spec)
+            if name == AGY_HOOK_NAME:
+                del config[name]
+            elif removed:
+                for event in tuple(spec):
+                    if isinstance(spec[event], list) and not spec[event]:
+                        del spec[event]
+                if not any(isinstance(value, list) for value in spec.values()):
+                    del config[name]
+        return
+    hooks = config.setdefault("hooks", {})
+    if not isinstance(hooks, dict):
+        raise ValueError("Existing 'hooks' setting must be a JSON object")
+    _strip_managed_from_events(hooks)
 
 
 def sync_hook_config(
@@ -643,11 +716,14 @@ def sync_hook_config(
             legacy_backup.replace(backup)
 
     updated = json.loads(json.dumps(current))
-    remove_managed_hook_commands(updated)
+    remove_managed_hook_commands(updated, platform=platform)
     generated = hook_groups(platform, hooks_dir, windows)
-    hooks = updated.setdefault("hooks", {})
-    for event, groups in generated.items():
-        hooks.setdefault(event, []).extend(groups)
+    if platform == "agy":
+        updated[AGY_HOOK_NAME] = generated
+    else:
+        hooks = updated.setdefault("hooks", {})
+        for event, groups in generated.items():
+            hooks.setdefault(event, []).extend(groups)
 
     if updated == current:
         print(f"SKIP   {config_path} (hook config unchanged)")
@@ -684,7 +760,11 @@ def update_install_manifest(
     installed_dirs = [Path(value) for value in current.get("skill_dirs", [])]
     if "skills" in components:
         installed_dirs = skill_dirs
-        exclude = CODEX_EXCLUDES if platform == "codex" else set()
+        exclude = (
+            CODEX_EXCLUDES
+            if platform == "codex"
+            else AGY_EXCLUDES if platform == "agy" else set()
+        )
         managed_sets = [
             set(source_skills(root, exclude))
             if same_path(root / "skills", directory)
@@ -695,6 +775,11 @@ def update_install_manifest(
             for directory in skill_dirs
         ]
         installed_skills = set.intersection(*managed_sets) if managed_sets else set()
+    rule_file = (
+        "CLAUDE.md"
+        if platform == "claude"
+        else "rules/" if platform == "agy" else "AGENTS.md"
+    )
     payload = {
         "schema": INSTALL_SCHEMA,
         "project": PROJECT_NAME,
@@ -703,7 +788,7 @@ def update_install_manifest(
         "components": sorted(installed_components),
         "skills": sorted(installed_skills),
         "skill_dirs": [str(path) for path in dict.fromkeys(installed_dirs)],
-        "rule_file": "CLAUDE.md" if platform == "claude" else "AGENTS.md",
+        "rule_file": rule_file,
         "hook_config": "settings.json" if platform == "claude" else "hooks.json",
     }
     atomic_write_json(path, payload)
@@ -724,7 +809,9 @@ def parse_args(
     argv: list[str] | None = None, prog: str | None = None
 ) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog=prog, description=__doc__)
-    parser.add_argument("--target", choices=("all", "claude", "codex"), default="all")
+    parser.add_argument(
+        "--target", choices=("all", "claude", "codex", "agy"), default="all"
+    )
     parser.add_argument(
         "--components",
         action="append",
@@ -743,6 +830,7 @@ def parse_args(
     parser.add_argument("--home", type=Path, default=Path.home(), help="User home; useful for tests")
     parser.add_argument("--claude-home", type=Path)
     parser.add_argument("--codex-home", type=Path)
+    parser.add_argument("--agy-home", type=Path)
     parser.add_argument("--codex-skills-dir", type=Path, action="append")
     parser.add_argument(
         "--codex-layout",
@@ -761,6 +849,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
     home = args.home.expanduser().resolve()
     claude_home = (args.claude_home or home / ".claude").expanduser().resolve()
     codex_home = (args.codex_home or home / ".codex").expanduser().resolve()
+    agy_home = resolve_agy_home(home, args.agy_home)
     if args.codex_layout in {"codex", "both"}:
         print(CODEX_COMPATIBILITY_WARNING)
     codex_skill_dirs = resolve_codex_skill_dirs(
@@ -785,7 +874,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
     unknown_components = components - VALID_COMPONENTS
     if unknown_components:
         raise ValueError("Unknown components: " + ", ".join(sorted(unknown_components)))
-    if args.target == "claude" and "runtime" in components:
+    if args.target in {"claude", "agy"} and "runtime" in components:
         raise ValueError("The runtime component applies only to Codex")
     if args.target in {"all", "codex"} and "rules" in components:
         components.add("runtime")
@@ -829,6 +918,17 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
                         *codex_skill_dirs,
                     ],
                     target_roots=codex_skill_dirs,
+                )
+            )
+        if args.target in {"all", "agy"}:
+            agy_incoming = set(source_skills(root, AGY_EXCLUDES, selected_skills))
+            conflicts.extend(
+                scan_skill_conflicts(
+                    platform="agy",
+                    source_root=root,
+                    incoming=agy_incoming,
+                    discovery_roots=agy_skill_discovery_roots(home, agy_home),
+                    target_roots=[agy_home / "skills"],
                 )
             )
         remove_skill_conflicts(
@@ -923,6 +1023,46 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> None:
             root,
             components,
             codex_skill_dirs if "skills" in components else [],
+            dry_run=args.dry_run,
+            unmanaged_components={"rules"} if keep_local_rules else set(),
+        )
+
+    if args.target in {"all", "agy"}:
+        agy_components = components - {"runtime"}
+        print("\n[Antigravity (agy)]")
+        if "rules" in agy_components:
+            sync_agy_rules(root / "CLAUDE.md", agy_home / "rules", args.dry_run)
+        if "skills" in agy_components:
+            sync_skills(
+                root,
+                agy_home / "skills",
+                AGY_EXCLUDES,
+                args.dry_run,
+                include=selected_skills,
+                prune_stale=prune_stale,
+            )
+        if "hooks" in agy_components:
+            reconcile_hook_conflicts(
+                platform="agy",
+                json_config=agy_home / "hooks.json",
+                hooks_dir=agy_home / "hooks",
+                home=home,
+                protected_names={item.name for item in (root / "hooks").iterdir()},
+                dry_run=args.dry_run,
+            )
+            sync_hooks(root / "hooks", agy_home / "hooks", args.dry_run)
+            sync_hook_config(
+                "agy",
+                agy_home / "hooks.json",
+                agy_home / "hooks",
+                args.dry_run,
+            )
+        update_install_manifest(
+            "agy",
+            agy_home,
+            root,
+            agy_components,
+            [agy_home / "skills"] if "skills" in agy_components else [],
             dry_run=args.dry_run,
             unmanaged_components={"rules"} if keep_local_rules else set(),
         )

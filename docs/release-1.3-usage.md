@@ -1,6 +1,6 @@
 # EpiAgentKit release 1.3 使用说明
 
-本压缩包提供 22 个可安装到 Claude Code 或 Codex 的流行病学与生物统计 skills，以及两端共用的 `CLAUDE.md`。它不包含运行时、统计软件、用户配置、凭据、研究数据或机构模板。
+本压缩包提供 22 个可安装到 Claude Code、Codex 或 Antigravity (agy) 的流行病学与生物统计 skills，以及三端共用的 `CLAUDE.md`。它不包含运行时、统计软件、用户配置、凭据、研究数据或机构模板。
 
 本版改进学术 PPT 的场景分流：组会、文献分享、方法讲解、开题和答辩分别按汇报目的组织内容；已有 PPTX 的局部修改继续保留原模板和范围。新增可选的 SQLite 技能索引工具，先查询文件用途、标题和章节，再核对文件头并读取原文；索引随文件变更更新，不保存会话记忆或研究数据。
 
@@ -20,7 +20,13 @@
 请把这个 EpiAgentKit release 安装到当前 Codex：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.3。保留我现有的个人配置，安装完成后检查 skills 是否可用。
 ```
 
-如果 ZIP 已经下载，把提示词中的 release 地址替换为本地 ZIP 路径。默认只安装到当前客户端；只有明确需要时才要求同时处理 Claude Code 与 Codex。下载、解压、备份、安装位置和完成检查由 Agent 按包内说明处理。
+在 Antigravity (agy) 中发送：
+
+```text
+请把这个 EpiAgentKit release 安装到当前 Antigravity (agy)：https://github.com/KangWang42/EpiAgentKit/releases/tag/v1.3。保留我现有的个人配置，安装完成后检查 skills 是否可用。
+```
+
+如果 ZIP 已经下载，把提示词中的 release 地址替换为本地 ZIP 路径。默认只安装到当前客户端；只有明确需要时才要求同时处理多个客户端。下载、解压、备份、安装位置和完成检查由 Agent 按包内说明处理。
 
 ## 二、解压位置
 
@@ -30,7 +36,7 @@
 D:\tools\EpiAgentKit\1.3\EpiAgentKit-release-1.3\
 ```
 
-不要把解压目录直接当作 `~/.claude`、`~/.codex` 或 `~/.agents`，也不要在运行目录中继续开发。源仓库、release 和实际安装目录应彼此分开。
+不要把解压目录直接当作 `~/.claude`、`~/.codex`、`~/.agents` 或 `~/.gemini/config`，也不要在运行目录中继续开发。源仓库、release 和实际安装目录应彼此分开。
 
 <details>
 <summary><strong>Agent 无法代为安装时的人工备用命令</strong></summary>
@@ -90,7 +96,30 @@ foreach ($skill in $skills) {
 }
 ```
 
-需要双端安装时，依次执行两个平台的命令。复制前应先关闭正在修改这些配置文件的编辑器或 Agent 会话，安装完成后新开会话验证 skill 是否可见。
+### 安装到 Antigravity (agy)
+
+Antigravity CLI、App 与 IDE 共用 `~/.gemini/config/`。全局 skills 位于 `~/.gemini/config/skills/`；单规则文件有 24,000 字节上限，建议按二级标题拆分为 `~/.gemini/config/rules/epiagentkit-rules-01.md` 等带 `trigger: always_on` 的规则文件，或直接通过源仓库配置管理器 `python scripts/epiagentkit.py install --target agy` 自动拆分并验收（保留个人 `~/.gemini/GEMINI.md`）：
+
+```powershell
+$releaseRoot = (Resolve-Path ".\EpiAgentKit-release-1.3").Path
+$agyRoot = Join-Path $env:USERPROFILE ".gemini\config"
+$skillRoot = Join-Path $agyRoot "skills"
+$backupRoot = Join-Path $env:USERPROFILE (".epiagentkit-backup\" + (Get-Date -Format "yyyyMMdd_HHmmss") + "\agy")
+$skills = Get-Content -LiteralPath (Join-Path $releaseRoot "SKILLS_INCLUDED.txt") -Encoding utf8
+
+New-Item -ItemType Directory -Force -Path $agyRoot, $skillRoot, (Join-Path $agyRoot "rules"), $backupRoot | Out-Null
+foreach ($skill in $skills) {
+    $source = Join-Path (Join-Path $releaseRoot "skills") $skill
+    $target = Join-Path $skillRoot $skill
+    if (Test-Path -LiteralPath $target) {
+        Copy-Item -LiteralPath $target -Destination $backupRoot -Recurse
+        Remove-Item -LiteralPath $target -Recurse
+    }
+    Copy-Item -LiteralPath $source -Destination $target -Recurse
+}
+```
+
+需要多端安装时，依次执行对应平台的命令。复制前应先关闭正在修改这些配置文件的编辑器或 Agent 会话，安装完成后新开会话验证 skill 是否可见。
 
 </details>
 
@@ -104,7 +133,7 @@ foreach ($skill in $skills) {
 
 更新时把新 release 解压到新的版本目录，再按上面的安装流程备份并替换清单内的 skills。不要覆盖旧的解压目录；旧 release 与安装前备份共同用于回退。
 
-回退时先关闭 Claude Code 和 Codex 会话，确认要恢复的备份批次，再删除该批次所对应的 22 个当前 skill 目录，并把备份目录中的同名文件和 skill 复制回原位置。若备份中不存在某个 skill，表示安装前没有该目录，回退时不应凭空补建。
+回退时先关闭 Claude Code、Codex 和 Antigravity 会话，确认要恢复的备份批次，再删除该批次所对应的 22 个当前 skill 目录，并把备份目录中的同名文件和 skill 复制回原位置。若备份中不存在某个 skill，表示安装前没有该目录，回退时不应凭空补建。
 
 ## 四、按任务查询技能细则
 

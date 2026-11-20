@@ -6,7 +6,7 @@ license: Complete terms in LICENSE.txt
 
 # Skill Creator
 
-Write task-specific guidance for Claude Code and Codex. Follow the root rules' priority order and use `epiagentkit-maintenance` for EpiAgentKit changes. Preserve user choices, scope and existing authorization.
+Write task-specific guidance for Claude Code, Codex, and Antigravity. Follow the root rules' priority order and use `epiagentkit-maintenance` for EpiAgentKit changes. Preserve user choices, scope and existing authorization.
 
 ## Optimize, Don't Accumulate
 

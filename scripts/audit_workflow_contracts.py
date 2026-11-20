@@ -461,7 +461,7 @@ def main() -> int:
             "Use `-LiteralPath` only for cmdlets that support it",
             "Avoid nested `powershell|pwsh -Command`",
             "After every successful commit in this repository",
-            "local Claude Code and Codex installations match the committed source",
+            "local Claude Code, Codex, and Antigravity installations match the committed source",
             "pre-commit review gate",
             "New skill additions follow the pre-commit review gate",
             "existing skills use that gate only when the user explicitly requests review artifacts",
@@ -1917,6 +1917,8 @@ def main() -> int:
             "epiagentkit-maintenance",
             "请把 EpiAgentKit 安装到当前 Claude Code",
             "请把 EpiAgentKit 安装到当前 Codex",
+            "请把 EpiAgentKit 安装到当前 Antigravity (agy)",
+            "--target agy",
             "releases/tag/v1.3",
             "保留我现有的个人配置",
             "只在明确需要自己操作时查看命令行方式",
@@ -1969,14 +1971,17 @@ def main() -> int:
             "推荐交给当前 Agent 安装",
             "请把这个 EpiAgentKit release 安装到当前 Claude Code",
             "请把这个 EpiAgentKit release 安装到当前 Codex",
+            "请把这个 EpiAgentKit release 安装到当前 Antigravity (agy)",
             "Agent 无法代为安装时的人工备用命令",
             "源仓库、release 和实际安装目录应彼此分开",
             "SKILLS_INCLUDED.txt",
             "~/.claude/CLAUDE.md",
             "~/.codex/AGENTS.md",
             "~/.agents/skills/",
+            "~/.gemini/config/skills/",
             "安装到 Claude Code",
             "安装到 Codex",
+            "安装到 Antigravity (agy)",
             "更新与回退",
         ),
         "docs/release-notice.md": (
@@ -2527,10 +2532,14 @@ def main() -> int:
             expected_paths = (
                 home / ".claude/CLAUDE.md",
                 home / ".codex/AGENTS.md",
+                home / ".gemini/config/rules/epiagentkit-rules-01.md",
                 home / ".claude/skills/academic-humanizer/SKILL.md",
                 home / ".agents/skills/academic-humanizer/SKILL.md",
+                home / ".gemini/config/skills/academic-humanizer/SKILL.md",
                 home / ".claude/.epiagentkit-install.json",
                 home / ".codex/.epiagentkit-install.json",
+                home / ".gemini/config/.epiagentkit-install.json",
+                home / ".gemini/config/hooks.json",
                 home / ".epiagentkit/state",
                 home / ".claude/settings.json.epiagentkit.bak",
                 home / ".codex/hooks.json.epiagentkit.bak",
@@ -2653,9 +2662,13 @@ def main() -> int:
                 for check in doctor_payload.get("checks", [])
                 if check.get("status") == "PASS"
             }
-            if not {"claude.hook_runtime", "codex.hook_runtime"} <= runtime_checks:
+            if not {"claude.hook_runtime", "codex.hook_runtime", "agy.hook_runtime"} <= runtime_checks:
                 problems.append(
-                    "dual-platform doctor self-test did not execute both Windows hook launchers"
+                    "multi-platform doctor self-test did not execute all Windows hook launchers"
+                )
+            if not {"agy.rules", "agy.hook_config", "agy.skills.duplicate_roots"} <= runtime_checks:
+                problems.append(
+                    "multi-platform doctor self-test did not verify Antigravity rules, hooks, and duplicate roots"
                 )
             if "codex.runtime.allow_login_shell" not in runtime_checks:
                 problems.append(
@@ -2748,6 +2761,23 @@ def main() -> int:
             payload = {}
         if result.returncode or expected_key not in payload:
             problems.append(f"hook notice self-test: invalid {client} success payload")
+    agy_env = os.environ.copy()
+    agy_env["EPIAGENTKIT_HOOK_CLIENT"] = "agy"
+    agy_notice = subprocess.run(
+        [sys.executable, str(notice_helper)],
+        input="quality reminder",
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=agy_env,
+    )
+    try:
+        agy_payload = json.loads(agy_notice.stdout)
+    except json.JSONDecodeError:
+        agy_payload = None
+    if agy_notice.returncode or agy_payload != {} or "quality reminder" not in agy_notice.stderr:
+        problems.append("hook notice self-test: invalid agy PostToolUse payload")
 
     with tempfile.TemporaryDirectory(prefix="epiagentkit_raw_guard_") as directory:
         project = Path(directory) / "project"

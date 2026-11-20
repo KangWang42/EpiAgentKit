@@ -21,16 +21,33 @@ def canonical(path: str, project: Path) -> Path:
     return value.resolve(strict=False)
 
 
-def edit_paths(payload: str) -> list[str]:
-    paths: list[str] = []
-    explicit = os.environ.get("CLAUDE_TOOL_FILE_PATH", "")
-    paths.extend(line for line in explicit.splitlines() if line.strip())
+def parse_payload(payload: str) -> dict:
     try:
         data = json.loads(payload or "{}")
     except json.JSONDecodeError:
-        data = {}
-    if not isinstance(data, dict):
-        data = {}
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def payload_project(data: dict) -> Path:
+    cwd = data.get("cwd")
+    if isinstance(cwd, str) and cwd.strip():
+        return Path(cwd.strip()).expanduser().resolve(strict=False)
+    workspaces = data.get("workspacePaths")
+    if isinstance(workspaces, list):
+        for entry in workspaces:
+            if isinstance(entry, str) and entry.strip():
+                return Path(entry.strip()).expanduser().resolve(strict=False)
+    return Path(
+        os.environ.get("EPIAGENTKIT_PROJECT_ROOT", Path.cwd())
+    ).expanduser().resolve(strict=False)
+
+
+def edit_paths(payload: str, data: dict | None = None) -> list[str]:
+    paths: list[str] = []
+    explicit = os.environ.get("CLAUDE_TOOL_FILE_PATH", "")
+    paths.extend(line for line in explicit.splitlines() if line.strip())
+    data = parse_payload(payload) if data is None else data
     tool_input = data.get("tool_input") or {}
     tool_response = data.get("tool_response") or {}
     if not isinstance(tool_input, dict):
@@ -42,6 +59,14 @@ def edit_paths(payload: str) -> list[str]:
         paths.append(str(direct))
     command = str(tool_input.get("command") or "")
     paths.extend(PATCH_PATH.findall(command))
+    tool_call = data.get("toolCall") or {}
+    if isinstance(tool_call, dict):
+        args = tool_call.get("args") or {}
+        if isinstance(args, dict):
+            for key in ("Path", "path", "TargetFile", "target_file", "file_path"):
+                value = args.get(key)
+                if isinstance(value, str) and value.strip():
+                    paths.append(value)
     return list(dict.fromkeys(paths))
 
 
@@ -61,11 +86,10 @@ def inside(path: Path, root: Path) -> bool:
 
 
 def main() -> int:
-    project = Path(
-        os.environ.get("EPIAGENTKIT_PROJECT_ROOT", Path.cwd())
-    ).expanduser().resolve(strict=False)
     payload = sys.stdin.read()
-    targets = [canonical(path, project) for path in edit_paths(payload)]
+    data = parse_payload(payload)
+    project = payload_project(data)
+    targets = [canonical(path, project) for path in edit_paths(payload, data)]
     protected = raw_roots(project)
     for target in targets:
         if any(inside(target, root) for root in protected):

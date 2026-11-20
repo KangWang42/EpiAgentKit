@@ -60,7 +60,8 @@ description: "使用中山大学官方模板制作组会、开题、中期和答
 Sys.setlocale("LC_ALL", "Chinese (Simplified)_China.utf8")
 skill_roots <- path.expand(c(
   Sys.getenv("EPIAGENTKIT_SKILLS"), Sys.getenv("EPICLAUDE_SKILLS"),
-  "~/.claude/skills", "~/.agents/skills", "~/.codex/skills"
+  "~/.claude/skills", "~/.agents/skills", "~/.codex/skills",
+  "~/.gemini/config/skills"
 ))
 skill_dirs <- file.path(skill_roots[nzchar(skill_roots)], "sysu-ppt")
 SKILL <- skill_dirs[dir.exists(skill_dirs)][1]

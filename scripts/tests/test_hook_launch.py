@@ -38,6 +38,19 @@ class HookLaunchTests(unittest.TestCase):
         ]
         self.assertTrue(all("shell" not in hook for hook in entries))
 
+    def test_agy_windows_hooks_use_cmd_launcher_without_unsupported_fields(self) -> None:
+        command = hook_command(Path("C:/Users/u/.gemini/config/hooks"), "post_bash_checks.sh", client="agy", windows=True)
+        self.assertTrue(command.startswith('cmd.exe /d /s /c call "C:/Users/u/.gemini/config/hooks/run_hook.cmd"'))
+        self.assertTrue(command.endswith('"agy"'))
+        entries = [
+            hook
+            for groups in hook_groups("agy", Path("C:/Users/u/.gemini/config/hooks"), windows=True).values()
+            for group in groups
+            for hook in group["hooks"]
+        ]
+        self.assertTrue(entries)
+        self.assertTrue(all("shell" not in hook and "statusMessage" not in hook for hook in entries))
+
     def test_hook_scripts_pass_windows_paths_to_python(self) -> None:
         for script in (ROOT / "hooks").glob("*.sh"):
             text = script.read_text(encoding="utf-8")

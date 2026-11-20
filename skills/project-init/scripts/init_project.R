@@ -34,7 +34,8 @@ init_project <- function(name,
 
   skill_roots <- unique(path.expand(c(
     Sys.getenv("EPIAGENTKIT_SKILLS"), Sys.getenv("EPICLAUDE_SKILLS"),
-    "~/.claude/skills", "~/.agents/skills", "~/.codex/skills"
+    "~/.claude/skills", "~/.agents/skills", "~/.codex/skills",
+    "~/.gemini/config/skills"
   )))
   skill_roots <- skill_roots[nzchar(skill_roots)]
   find_skill_file <- function(skill, relative_path) {
@@ -110,7 +111,7 @@ init_project <- function(name,
       "CLAUDE.md"
     )
     write_utf8(
-      c("# Codex 项目指引", "", "开始项目工作前完整读取同目录 CLAUDE.md；本文件不复制项目口径。"),
+      c("# Codex 与 Antigravity 项目指引", "", "开始项目工作前完整读取同目录 CLAUDE.md；本文件不复制项目口径。"),
       "AGENTS.md"
     )
     write_utf8(

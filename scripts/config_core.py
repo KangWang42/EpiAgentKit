@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared configuration model for EpiAgentKit's Claude Code and Codex installers."""
+"""Shared configuration model for EpiAgentKit's Claude Code, Codex, and Antigravity installers."""
 
 from __future__ import annotations
 
@@ -11,12 +11,16 @@ PROJECT_NAME = "EpiAgentKit"
 INSTALL_MANIFEST = ".epiagentkit-install.json"
 SKILL_MANIFEST = ".epiagentkit-managed-skills.json"
 HOOK_MANIFEST = ".epiagentkit-managed-hooks.json"
+RULE_MANIFEST = ".epiagentkit-managed-rules.json"
 LEGACY_INSTALL_MANIFEST = ".epiclaude-install.json"
 LEGACY_SKILL_MANIFEST = ".epiclaude-managed-skills.json"
 LEGACY_HOOK_MANIFEST = ".epiclaude-managed-hooks.json"
 INSTALL_SCHEMA = 1
 LOCAL_SKILL_EXCLUDES_FILE = ".epiagentkit-local-skills"
 LOCAL_RULES_PRESERVE_FILE = ".epiagentkit-preserve-global-rules"
+AGY_RULE_MAX_BYTES = 24000
+AGY_RULE_PREFIX = "epiagentkit-rules-"
+AGY_HOOK_NAME = "epiagentkit"
 
 # Repository skills that remain available for local development but must not be
 # advertised, installed, or synchronized into user runtime skill directories.
@@ -223,3 +227,102 @@ def resolve_codex_skill_dirs(
         raise ValueError(f"Unknown Codex skill layout: {layout}")
 
     return unique_paths([official])
+
+
+def resolve_agy_home(home: Path, explicit: Path | None = None) -> Path:
+    """Resolve Antigravity's shared global customization root (~/.gemini/config)."""
+    return (explicit or home / ".gemini" / "config").expanduser().resolve()
+
+
+def agy_skill_discovery_roots(home: Path, agy_home: Path) -> list[Path]:
+    """Return global skill roots scanned by Antigravity CLI, App, and IDE."""
+    return unique_paths(
+        [
+            agy_home / "skills",
+            home / ".gemini" / "antigravity-cli" / "skills",
+            home / ".gemini" / "skills",
+        ]
+    )
+
+
+def _agy_rule_frontmatter(index: int, total: int) -> str:
+    label = (
+        "EpiAgentKit 全局规则"
+        if total == 1
+        else f"EpiAgentKit 全局规则（第 {index}/{total} 部分）"
+    )
+    return f'---\ntrigger: always_on\ndescription: "{label}"\n---\n\n'
+
+
+def render_agy_rule_files(
+    source_text: str, *, max_bytes: int = AGY_RULE_MAX_BYTES
+) -> dict[str, str]:
+    """Split global rules deterministically so every Antigravity rule file fits within 24 KB."""
+    normalized = source_text.replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff")
+    if normalized and not normalized.endswith("\n"):
+        normalized += "\n"
+
+    header_budget = len(_agy_rule_frontmatter(99, 99).encode("utf-8"))
+    body_limit = max_bytes - header_budget
+    if body_limit <= 0:
+        raise ValueError(f"Antigravity rule byte limit is too small: {max_bytes}")
+
+    sections: list[str] = []
+    current_lines: list[str] = []
+    for line in normalized.splitlines(keepends=True):
+        if line.startswith("## ") and current_lines:
+            sections.append("".join(current_lines))
+            current_lines = [line]
+        else:
+            current_lines.append(line)
+    if current_lines:
+        sections.append("".join(current_lines))
+
+    units: list[str] = []
+    for section in sections:
+        if len(section.encode("utf-8")) <= body_limit:
+            units.append(section)
+            continue
+        piece: list[str] = []
+        piece_bytes = 0
+        for line in section.splitlines(keepends=True):
+            line_bytes = len(line.encode("utf-8"))
+            if line_bytes > body_limit:
+                raise ValueError(
+                    "Single rule line exceeds Antigravity's per-file byte limit"
+                )
+            if piece and piece_bytes + line_bytes > body_limit:
+                units.append("".join(piece))
+                piece = [line]
+                piece_bytes = line_bytes
+            else:
+                piece.append(line)
+                piece_bytes += line_bytes
+        if piece:
+            units.append("".join(piece))
+
+    chunks: list[str] = []
+    current_chunk: list[str] = []
+    current_bytes = 0
+    for unit in units:
+        unit_bytes = len(unit.encode("utf-8"))
+        if current_chunk and current_bytes + unit_bytes > body_limit:
+            chunks.append("".join(current_chunk))
+            current_chunk = [unit]
+            current_bytes = unit_bytes
+        else:
+            current_chunk.append(unit)
+            current_bytes += unit_bytes
+    if current_chunk or not chunks:
+        chunks.append("".join(current_chunk))
+
+    total = len(chunks)
+    rendered: dict[str, str] = {}
+    for index, body in enumerate(chunks, start=1):
+        content = _agy_rule_frontmatter(index, total) + body
+        if len(content.encode("utf-8")) > max_bytes:
+            raise ValueError(
+                f"Rendered Antigravity rule part {index} exceeds {max_bytes} bytes"
+            )
+        rendered[f"{AGY_RULE_PREFIX}{index:02d}.md"] = content
+    return rendered

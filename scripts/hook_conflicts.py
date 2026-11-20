@@ -28,12 +28,24 @@ DOMAIN_NAMES = {
     "edit_checks": {"post_edit_checks"},
     "bash_checks": {"post_bash_checks"},
 }
+EDIT_TOOLS = (
+    "Edit",
+    "Write",
+    "MultiEdit",
+    "apply_patch",
+    "write_file",
+    "edit_file",
+    "write_to_file",
+    "replace_file_content",
+    "multi_replace_file_content",
+)
+SHELL_TOOLS = ("Bash", "run_command")
 DOMAIN_TARGETS = {
-    RAW_DOMAIN: ("PreToolUse", ("Edit", "Write", "MultiEdit", "apply_patch")),
-    "r_syntax": ("PostToolUse", ("Edit", "Write", "MultiEdit", "apply_patch")),
-    "ai_trace": ("PostToolUse", ("Edit", "Write", "MultiEdit", "apply_patch")),
-    "figure_check": ("PostToolUse", ("Bash",)),
-    "rds_check": ("PostToolUse", ("Bash",)),
+    RAW_DOMAIN: ("PreToolUse", EDIT_TOOLS),
+    "r_syntax": ("PostToolUse", EDIT_TOOLS),
+    "ai_trace": ("PostToolUse", EDIT_TOOLS),
+    "figure_check": ("PostToolUse", SHELL_TOOLS),
+    "rds_check": ("PostToolUse", SHELL_TOOLS),
 }
 SCRIPT_PATTERN = re.compile(
     r'''(?i)(?:"([^"]+\.(?:py|sh|cmd|ps1))"|'([^']+\.(?:py|sh|cmd|ps1))'|([^\s"']+\.(?:py|sh|cmd|ps1)))'''
@@ -359,21 +371,26 @@ def _normalize_inline_groups(hooks: dict) -> None:
                     handler["commandWindows"] = handler.pop("command_windows")
 
 
-def _referenced_scripts(config: dict, hooks_dir: Path) -> set[Path]:
+def _referenced_scripts(
+    config: dict, hooks_dir: Path, *, platform: str = ""
+) -> set[Path]:
     result: set[Path] = set()
-    hooks = config.get("hooks", {})
-    if not isinstance(hooks, dict):
-        return result
-    for groups in hooks.values():
-        if not isinstance(groups, list):
-            continue
-        for group in groups:
-            if not isinstance(group, dict):
+    if platform == "agy":
+        hook_maps = [spec for spec in config.values() if isinstance(spec, dict)]
+    else:
+        hooks = config.get("hooks", {})
+        hook_maps = [hooks] if isinstance(hooks, dict) else []
+    for hooks in hook_maps:
+        for groups in hooks.values():
+            if not isinstance(groups, list):
                 continue
-            for handler in group.get("hooks", []):
-                if isinstance(handler, dict):
-                    for command in _commands(handler):
-                        result.update(_script_paths(command, hooks_dir))
+            for group in groups:
+                if not isinstance(group, dict):
+                    continue
+                for handler in group.get("hooks", []):
+                    if isinstance(handler, dict):
+                        for command in _commands(handler):
+                            result.update(_script_paths(command, hooks_dir))
     return result
 
 
@@ -410,15 +427,47 @@ def reconcile_hook_conflicts(
 ) -> Path | None:
     """Delete conflicting local hooks and consolidate Codex inline hooks."""
     current_json = _load_json(json_config)
-    current_hooks = current_json.get("hooks", {})
-    if not isinstance(current_hooks, dict):
-        raise ValueError(f"Existing 'hooks' setting must be a JSON object: {json_config}")
-    filtered, conflicts, candidates = _filter_groups(
-        platform, json_config, current_hooks, hooks_dir, protected_names
-    )
     updated_json = json.loads(json.dumps(current_json))
-    if filtered or "hooks" in updated_json:
-        updated_json["hooks"] = filtered
+    conflicts: list[HookConflict] = []
+    candidates: set[Path] = set()
+
+    if platform == "agy":
+        retained_named: dict = {}
+        for hook_name, spec in current_json.items():
+            if not isinstance(spec, dict):
+                retained_named[hook_name] = spec
+                continue
+            event_map = {
+                key: value for key, value in spec.items() if isinstance(value, list)
+            }
+            filtered_events, found, paths = _filter_groups(
+                platform, json_config, event_map, hooks_dir, protected_names
+            )
+            conflicts.extend(found)
+            candidates.update(paths)
+            if not found:
+                retained_named[hook_name] = spec
+                continue
+            new_spec = {
+                key: value for key, value in spec.items() if not isinstance(value, list)
+            }
+            for event, groups in filtered_events.items():
+                if groups:
+                    new_spec[event] = groups
+            if any(isinstance(value, list) for value in new_spec.values()):
+                retained_named[hook_name] = new_spec
+        updated_json = retained_named
+    else:
+        current_hooks = current_json.get("hooks", {})
+        if not isinstance(current_hooks, dict):
+            raise ValueError(
+                f"Existing 'hooks' setting must be a JSON object: {json_config}"
+            )
+        filtered, conflicts, candidates = _filter_groups(
+            platform, json_config, current_hooks, hooks_dir, protected_names
+        )
+        if filtered or "hooks" in updated_json:
+            updated_json["hooks"] = filtered
 
     updated_toml: str | None = None
     migrated_count = 0
@@ -437,7 +486,7 @@ def reconcile_hook_conflicts(
         if stripped != original_toml:
             updated_toml = stripped
 
-    retained_scripts = _referenced_scripts(updated_json, hooks_dir)
+    retained_scripts = _referenced_scripts(updated_json, hooks_dir, platform=platform)
     removable = {
         path
         for path in candidates - retained_scripts

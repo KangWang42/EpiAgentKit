@@ -6,7 +6,7 @@ hook_dir=$(cd "$(dirname "$0")" && { pwd -W 2>/dev/null || pwd; })
 while IFS= read -r f; do
   fn="${f//\\//}"
   case "$fn" in
-    */.claude/*|*/.codex/*|*/.agents/*) continue ;;
+    */.claude/*|*/.codex/*|*/.agents/*|*/.gemini/*) continue ;;
   esac
   case "$fn" in
     *.md|*.R|*.r|*.txt|*.csv|*.yaml|*.yml|*.py)

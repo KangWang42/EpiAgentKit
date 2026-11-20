@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install shared rules, skills, and hooks for Claude Code, Codex, or both."""
+"""Install shared rules, skills, and hooks for Claude Code, Codex, Antigravity (agy), or all."""
 
 from __future__ import annotations
 
@@ -22,10 +22,10 @@ def parse_args(
     argv: list[str] | None = None, prog: str | None = None
 ) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog=prog, description=__doc__)
-    parser.add_argument("--target", choices=("claude", "codex", "all"))
+    parser.add_argument("--target", choices=("claude", "codex", "agy", "all"))
     parser.add_argument(
         "--preset",
-        choices=("rules", "ppt", "writing", "analysis", "custom", "full"),
+        choices=("rules", "ppt", "writing", "analysis", "web", "custom", "full"),
     )
     parser.add_argument("--skills", action="append", help="Comma-separated custom skills")
     parser.add_argument("--with-rules", action="store_true")
@@ -34,6 +34,7 @@ def parse_args(
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--home", type=Path)
+    parser.add_argument("--agy-home", type=Path)
     parser.add_argument("--codex-skills-dir", type=Path, action="append")
     parser.add_argument(
         "--codex-layout",
@@ -71,9 +72,14 @@ def interactive_values(
     if target is None:
         key = ask_choice(
             "选择目标平台：",
-            {"1": "Claude Code", "2": "Codex", "3": "Claude Code + Codex"},
+            {
+                "1": "Claude Code",
+                "2": "Codex",
+                "3": "Antigravity (agy)",
+                "4": "Claude Code + Codex + Antigravity（全部）",
+            },
         )
-        target = {"1": "claude", "2": "codex", "3": "all"}[key]
+        target = {"1": "claude", "2": "codex", "3": "agy", "4": "all"}[key]
 
     preset = args.preset
     if preset is None:
@@ -172,7 +178,7 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
     print(f"- Skills：{'全部' if skills is None else ', '.join(sorted(skills))}")
     print("- 行为：覆盖同名 EpiAgentKit 文件，保留无关个人配置")
     if keep_local_rules:
-        print("- 本机规则：保留现有全局 CLAUDE.md/AGENTS.md，不由本仓库覆盖")
+        print("- 本机规则：保留现有全局 CLAUDE.md/AGENTS.md 及 Antigravity 规则，不由本仓库覆盖")
     print("- 本机环境：只安装 EpiAgentKit 文件，不安装或升级 R、Python 及其它运行环境或依赖")
     if "skills" in components:
         print(
@@ -188,6 +194,11 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
             )
         if args.codex_layout in {"codex", "both"}:
             print(f"- {CODEX_COMPATIBILITY_WARNING}")
+    if target in {"agy", "all"}:
+        print(
+            "- Antigravity (agy) 配置：写入 ~/.gemini/config/ 下的模块化 always_on 规则"
+            "（单文件 <= 24 KB，避免截断且不改写个人 GEMINI.md）、skills/ 与 hooks.json"
+        )
     if "hooks" in components:
         print("- Hooks：复制脚本并合并客户端配置；Windows 自动使用 Git Bash 启动器")
 
@@ -214,6 +225,8 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
         command.extend(("--skills", ",".join(sorted(skills))))
     if args.home:
         command.extend(("--home", str(args.home)))
+    if args.agy_home:
+        command.extend(("--agy-home", str(args.agy_home)))
     for directory in args.codex_skills_dir or []:
         command.extend(("--codex-skills-dir", str(directory)))
     command.extend(("--codex-layout", args.codex_layout))
@@ -240,12 +253,14 @@ def main(argv: list[str] | None = None, prog: str | None = None) -> int:
             ]
             if args.home:
                 doctor.extend(("--home", str(args.home)))
+            if args.agy_home:
+                doctor.extend(("--agy-home", str(args.agy_home)))
             for directory in args.codex_skills_dir or []:
                 doctor.extend(("--codex-skills-dir", str(directory)))
             checked = subprocess.run(doctor, cwd=root)
             if checked.returncode:
                 return checked.returncode
-        print("配置与双端验收完成。若客户端未刷新，请重启对应客户端。")
+        print("配置与平台验收完成。若客户端未刷新，请重启对应客户端。")
     return 0
 
 
