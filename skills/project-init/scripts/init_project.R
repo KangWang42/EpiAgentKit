@@ -97,6 +97,8 @@ init_project <- function(name,
         "- 权威分析输入：待确定",
         "- 数据就绪状态：尚未生成",
         "- 当前结果数据文件：尚未由正式分析脚本生成",
+        "- 当前正式产物与入口：待生成",
+        "- 最近已确认边界与待接手事项：无",
         "- 后续待解决事项：见 BACKLOG.md", "",
         "## 已经确认的研究口径", "",
         paste0("- 研究类型：", type_name),
@@ -111,7 +113,10 @@ init_project <- function(name,
       "CLAUDE.md"
     )
     write_utf8(
-      c("# Codex 与 Antigravity 项目指引", "", "开始项目工作前完整读取同目录 CLAUDE.md；本文件不复制项目口径。"),
+      c(
+        "# 通用 Agent 项目指引", "",
+        "适用于任意 AI / Agent 新会话：开始工作前先完整读取同目录 CLAUDE.md，再按需查阅其指向的当前正式入口、DECISIONS.md 与 BACKLOG.md；本文件不复制项目口径。"
+      ),
       "AGENTS.md"
     )
     write_utf8(
