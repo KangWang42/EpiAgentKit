@@ -19,7 +19,7 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 6. 按根 `AGENTS.md` 的 workbench 约定建立维护批次并先写 `PLAN.md`。只有新建 skill，或用户当轮明确要求审阅成果时，才建立 `review/`；修改、修复、重命名或删除既有 skill 时不自动生成。结束后保留 `FINDINGS.md`、实际生成的 `review/` 与需要追溯的试验依据，并按仓库规则清理可重建的 runtime。
 7. Windows 维护遵循全局与根 `AGENTS.md` 的 shell、编码和命令安全规则；临时多行逻辑放在本批次 workbench，长期工具放在职责匹配的 `scripts/`。
 
-需要跨技能定位细则时可先用 [知识索引工具](scripts/knowledge_index.py) 查询；维护索引、缓存或检索行为时先读 [技能知识检索](references/knowledge-retrieval.md)。已知的必读文件直接读取，不以检索结果替代本流程要求。需要跨 Claude Code、Codex 与 Antigravity 历史对话增量蒸馏用户反馈时，使用 [跨端历史索引工具](scripts/history_index.py)（本地只读扫描、字节偏移增量同步、脱敏 FTS5 查询与检查点 `mark`/`--since-last`），避免重复整份扫描；蒸馏出的线索仍须按本流程核对现有唯一维护位置并经确认后再修改 skill。
+需要跨技能定位细则时可先用 [知识索引工具](scripts/knowledge_index.py) 查询；维护索引、缓存或检索行为时先读 [技能知识检索](references/knowledge-retrieval.md)。已知的必读文件直接读取，不以检索结果替代本流程要求。需要跨 Claude Code、Codex 与 Antigravity 历史对话增量蒸馏用户反馈时，使用 [跨端历史索引工具](scripts/history_index.py)（本地只读扫描、字节偏移增量同步、脱敏 FTS5 查询与检查点 `mark`/`--since-last`），避免重复整份扫描；蒸馏出的线索仍须按本流程核对现有唯一维护位置并经确认后再修改 skill。进行整库优化、定期精简、上下文预算瘦身、评测驱动调优或吸收外部项目实践时，先读 [库、Skills 与工作流优化手册](references/optimization-playbook.md)，并结合 `python scripts/audit_skill_contracts.py --budget` 建立客观基线。
 
 ## 2. 记录变更依据
 
