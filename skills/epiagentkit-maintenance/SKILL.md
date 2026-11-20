@@ -114,8 +114,8 @@ description: 维护 EpiAgentKit 的规则、skills、hooks、安装同步和维�
 验证采用最低充分层级，不为防御性完整而自动升级：
 
 1. 每次修改均运行目标组件的语法、validator、引用检查和能覆盖行为变化的代表性实跑。
-2. 运行直接覆盖受影响组件或合同的测试模块。只有修改根规则、任务分流、共享依赖、hooks、安装/同步器、跨多个 skill 的共同合同，或聚焦测试无法覆盖影响面时，才运行完整 `python -m unittest discover -s scripts/tests -v`。
-3. 只有修改安装器、同步器、依赖闭包、跨客户端文件清单、根工作流规则或共享分流合同时，才运行 `python scripts/audit_workflow_contracts.py`；孤立 skill 的正文、reference 或局部脚本变更不因此自动运行双平台安装审计。
+2. 运行直接覆盖受影响组件或规则的测试模块。只有修改根规则、任务分流、共享依赖、hooks、安装/同步器、跨多个 skill 的共同规则，或聚焦测试无法覆盖影响面时，才运行完整 `python -m unittest discover -s scripts/tests -v`。
+3. 只有修改安装器、同步器、依赖闭包、跨客户端文件清单、根工作流规则或共享分流规则时，才运行 `python scripts/audit_workflow_contracts.py`；孤立 skill 的正文、reference 或局部脚本变更不因此自动运行双平台安装审计。
 4. 扫描本轮实际验证输出中的 `error|warning|traceback|failed|nan` 并逐项归因；不额外运行无关命令来制造扫描对象，也不能把预期提示、库噪声或真实失败混为一类。
 5. 在受影响范围内检查占位文件、失效引用、重复维护位置、生成过程痕迹和来源不明的既有改动。中文修改按全局中文终审要求逐句检查目标读者、主体、动作、依据、条件和确认责任；词面扫描只用于发现高确定性线索，不能代替语境审查。
 

@@ -77,7 +77,7 @@ class WebUiWorkflowTests(unittest.TestCase):
             encoding="utf-8"
         )
         for fragment in (
-            "建立可检查的视觉合同",
+            "建立可检查的视觉方案",
             "效果堆叠候选",
             "公开页与后台页分别验收",
             "CDP 仿真的 390 像素手机布局视口",
@@ -178,7 +178,7 @@ class WebUiWorkflowTests(unittest.TestCase):
         ):
             self.assertIn(fragment, colors)
         for fragment in (
-            "组件合同",
+            "明确组件规格",
             "默认、hover、focus、pressed、selected、disabled、loading、empty、success、error、permission",
             "动效可以在任意时刻被新输入中断",
             "触控滑动不是唯一操作",
@@ -203,7 +203,7 @@ class WebUiWorkflowTests(unittest.TestCase):
         ):
             self.assertIn(fragment, external)
         for fragment in (
-            "独立的人工视觉门禁",
+            "独立的人工视觉验收",
             "竞争色相",
             "不生成自动审美评分",
             "候选审阅与部署状态",

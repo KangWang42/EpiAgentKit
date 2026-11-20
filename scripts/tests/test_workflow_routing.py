@@ -46,10 +46,17 @@ class WorkflowRoutingTests(unittest.TestCase):
             ),
             (),
         )
-        flagged = " ".join(RESEARCH_TERMINOLOGY[index] for index in (0, 6, 7))
+        flagged = " ".join(RESEARCH_TERMINOLOGY[index] for index in (0, 1, 2))
         self.assertEqual(
             research_term_violations("skills/example/SKILL.md", flagged),
-            tuple(RESEARCH_TERMINOLOGY[index] for index in (0, 6, 7)),
+            tuple(RESEARCH_TERMINOLOGY[index] for index in (0, 1, 2)),
+        )
+        self.assertEqual(
+            research_term_violations(
+                "skills/build-web-ui/SKILL.md",
+                "修改组件契约或视觉门禁后按路由与锚点核对。",
+            ),
+            ("契约", "门禁"),
         )
         self.assertEqual(
             research_term_violations(
@@ -475,7 +482,7 @@ class WorkflowRoutingTests(unittest.TestCase):
             "代表性验证",
             "每项规则只在一处维护",
             "验证采用最低充分层级",
-            "直接覆盖受影响组件或合同的测试模块",
+            "直接覆盖受影响组件或规则的测试模块",
             "其余提交、push、提交后同步和 doctor",
             "普通研究项目的数据分析、写作或项目初始化不触发本 skill",
             "review/INDEX.md",

@@ -127,8 +127,8 @@ class VisualRoutingTests(unittest.TestCase):
             "容器深度",
             "密度节奏",
             "轻量浮层、柔和彩色表示或不对称分区只是可选组合",
-            "纯色平涂是单独的表面合同",
-            "真实时相图、概率图、热区图和连续强度图不套用纯色合同",
+            "纯色平涂是单独的表面填充要求",
+            "真实时相图、概率图、热区图和连续强度图不套用纯色填充要求",
         ):
             self.assertIn(fragment, strategy)
         self.assertIn("Aesthetic system:", recipes)
@@ -143,7 +143,7 @@ class VisualRoutingTests(unittest.TestCase):
             encoding="utf-8"
         )
         for fragment in (
-            "像素、最终尺寸与 DPI 合同",
+            "像素、最终尺寸与 DPI 要求",
             "像素 = 毫米 ÷ 25.4 × ppi",
             "不能把元数据当作像素充分性的替代",
             "不得通过插值放大后声称原生达到 300 dpi",

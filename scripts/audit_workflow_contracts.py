@@ -38,6 +38,24 @@ ROOT = Path(__file__).resolve().parents[1]
 LINE_BUDGET = 200
 RESEARCH_TERMINOLOGY = (
     "契约",
+    "门禁",
+    "视觉合同",
+    "组件合同",
+    "页面合同",
+    "依赖合同",
+    "技术合同",
+    "配色合同",
+    "表面合同",
+    "纯色合同",
+    "DPI 合同",
+    "数据合同",
+    "输入合同",
+    "输出合同",
+    "行为合同",
+    "展示合同",
+    "共同合同",
+    "分流合同",
+    "项目级合同",
     "真源",
     "单源",
     "闭环",
@@ -71,10 +89,12 @@ RESEARCH_TERMINOLOGY = (
 )
 RESEARCH_TEXT_SUFFIXES = {".md", ".py", ".R", ".json", ".txt"}
 RESEARCH_TEXT_EXCLUDED_PREFIXES = (
-    "skills/build-web-ui/",
     "skills/research-visuals/references/external/academic-figure-skill/",
     "skills/research-visuals/references/external/academic-figure-generator/",
 )
+RESEARCH_PREFIX_TERM_ALLOWLIST: dict[str, tuple[str, ...]] = {
+    "skills/build-web-ui/": ("路由", "锚点", "锚定"),
+}
 RESEARCH_TERM_ALLOWLIST: dict[tuple[str, str], tuple[str, ...]] = {
     (
         "skills/research-visuals/references/carrier-specs.md",
@@ -108,11 +128,19 @@ def read(relative: str) -> str:
 
 def research_term_violations(relative: str, line: str) -> tuple[str, ...]:
     """Find high-confidence wording clues; contextual Chinese review remains required."""
+    prefix_allowed: set[str] = set()
+    for prefix, allowed_terms in RESEARCH_PREFIX_TERM_ALLOWLIST.items():
+        if relative.startswith(prefix):
+            prefix_allowed.update(allowed_terms)
     checked = line
     for term in RESEARCH_TERMINOLOGY:
         for allowed in RESEARCH_TERM_ALLOWLIST.get((relative, term), ()):
             checked = checked.replace(allowed, "")
-    return tuple(term for term in RESEARCH_TERMINOLOGY if term in checked)
+    return tuple(
+        term
+        for term in RESEARCH_TERMINOLOGY
+        if term not in prefix_allowed and term in checked
+    )
 
 
 def research_text_files() -> list[Path]:
@@ -480,7 +508,7 @@ def main() -> int:
             "按根 `AGENTS.md` 的 workbench 约定",
             "Windows 维护遵循全局与根 `AGENTS.md`",
             "验证采用最低充分层级",
-            "直接覆盖受影响组件或合同的测试模块",
+            "直接覆盖受影响组件或规则的测试模块",
             "孤立 skill 的正文、reference 或局部脚本变更",
             "其余提交、push、提交后同步和 doctor",
             "同类问题边界",
@@ -554,7 +582,7 @@ def main() -> int:
             "用户明确在实际页面接手视觉验收",
             "部署后只做只读健康检查",
             "不得声称全套测试通过",
-            "建立可检查的视觉合同",
+            "建立可检查的视觉方案",
             "效果堆叠候选",
             "公开页与后台页分别验收",
             "CDP 仿真的 390 像素手机布局视口",
@@ -581,7 +609,7 @@ def main() -> int:
             "局部样式修复不为此新增",
         ),
         "skills/build-web-ui/references/design-playbook.md": (
-            "把视觉命题写成可检查合同",
+            "把视觉命题写成可检查标准",
             "控制效果预算",
             "同一视口出现两类或更多时",
             "先删除效果",
@@ -880,7 +908,7 @@ def main() -> int:
             "E1 决策实验",
             "E2 正式比较",
             "不创建或补写 `SESSION_LOG.md`",
-            "必须按 [分析就绪数据合同]",
+            "必须按 [分析就绪数据要求]",
             "机器可检查的停止条件",
         ),
         "skills/biostat-principles/references/data-readiness.md": (
@@ -1678,7 +1706,7 @@ def main() -> int:
             "网页",
             "响应式图片资源",
             "README 与技术文档",
-            "像素、最终尺寸与 DPI 合同",
+            "像素、最终尺寸与 DPI 要求",
             "像素 = 毫米 ÷ 25.4 × ppi",
             "不能把元数据当作像素充分性的替代",
             "不得通过插值放大后声称原生达到 300 dpi",

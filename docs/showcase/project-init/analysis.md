@@ -53,7 +53,7 @@ cohort_analysis_demo/
 - 已创建所选 profile 的最小正式研究结构。
 - 01_data/rawdata/ 仅含保护占位文件，未写入研究数据。
 - 总运行脚本与 02_code/00_setup.R 已生成；数据准备与正式分析分别登记，后者受分析就绪状态检查约束。
-- 项目设置与数据说明保留权威分析输入、格式、工作表或对象及镜像角色的待确认合同，不预设 Excel、RDS 或文件名。
+- 项目设置与数据说明保留权威分析输入、格式、工作表或对象及镜像角色的待确认设置，不预设 Excel、RDS 或文件名。
 - .epiagentkit-layout.json 仅声明目录和正式产物类别。
 - 09_backup/ 两个本地分支均已创建，目录内无 .gitkeep，且由 .gitignore 整体排除。
 - 尚未提前创建 results/results.yaml、SESSION_LOG.md、EXPERIMENTS.md。

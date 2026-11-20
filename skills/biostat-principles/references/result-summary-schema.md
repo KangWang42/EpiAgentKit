@@ -77,7 +77,7 @@ render_summary_md("results/results.yaml", "results/result_summaries.md")
 
 Python 使用 `python-biostats/scripts/emit_summary.py`，参数名和写入内容相同。调用脚本必须提供 `producer`、`source`、`analysis_set`、非空 `run_id`、`consumers`，并提供 `input` 或 `input_hash`。缺少任一必要来源信息时，写入函数停止，不生成内容不完整的文件。
 
-`val(path, key, which="full")` 按固定结果名称读取 `display`；数值可选 `estimate|interval|p_value|full`，已写入展示合同的结果还可读取 `term_label|short_label|scale_label|change_definition`。`render_summary_md()` 只生成便于人工核对的数字和来源摘要，并在文件中注明内容由 `results/results.yaml` 自动生成、不可单独修改。
+`val(path, key, which="full")` 按固定结果名称读取 `display`；数值可选 `estimate|interval|p_value|full`，已写入展示字段的结果还可读取 `term_label|short_label|scale_label|change_definition`。`render_summary_md()` 只生成便于人工核对的数字和来源摘要，并在文件中注明内容由 `results/results.yaml` 自动生成、不可单独修改。
 
 ## 兼容与一致性
 

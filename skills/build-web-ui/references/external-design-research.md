@@ -26,7 +26,7 @@
 
 ## 先核验来源再提取模式
 
-1. 先读用户给出的页面、当前项目和已有设计系统，再搜索外部案例。外部参考不能覆盖项目技术合同、真实内容和既有行为。
+1. 先读用户给出的页面、当前项目和已有设计系统，再搜索外部案例。外部参考不能覆盖项目技术约束、真实内容和既有行为。
 2. 视觉案例优先原作者网站、作品说明和实际页面；实现资料优先官方文档、官方仓库、发布页和许可证。聚合站、截图站和短视频只作发现线索，不能单独证明实现方式或授权范围。
 3. 对每个候选记录名称、原始链接、用途、查看日期、当前版本或提交状态、代码许可证、图片/字体等资产授权、框架与依赖、维护状态和目标浏览器。无法核验的项目只作灵感，不复制代码或资产。
 4. 克隆或运行陌生仓库前检查许可证、包清单、安装脚本、构建命令和网络/凭据需求；不执行来源不明的脚本，不把示例密钥、遥测或远程资源带进产品。
@@ -62,17 +62,17 @@ Radix、Primer、Carbon 和 USWDS 带有各自产品语境。学习角色、状�
 
 ## 项目级前端参考
 
-这些项目适合核验组件组织、主题契约和交互状态；它们不是可直接套用的页面皮肤。采用前重新检查当前版本、仓库许可、框架、目标浏览器和生产包影响，并在决策记录中写明采用、缩减或拒绝的原因。
+这些项目适合核验组件组织、主题变量结构和交互状态；它们不是可直接套用的页面皮肤。采用前重新检查当前版本、仓库许可、框架、目标浏览器和生产包影响，并在决策记录中写明采用、缩减或拒绝的原因。
 
 | 项目 | 已核验来源与许可 | 可迁移模式 | 采用边界 |
 | --- | --- | --- | --- |
-| [shadcn/ui](https://ui.shadcn.com/docs) / [仓库](https://github.com/shadcn-ui/ui) | 官方文档与仓库；MIT | 开放源码归属、组合式接口、registry 分发和可直接改造的组件 | 学习组件契约和分发方式；不要复制其常见的灰色圆角默认外观，也不要把 registry 当成未经审阅的依赖源 |
+| [shadcn/ui](https://ui.shadcn.com/docs) / [仓库](https://github.com/shadcn-ui/ui) | 官方文档与仓库；MIT | 开放源码归属、组合式接口、registry 分发和可直接改造的组件 | 学习组件接口设计与分发方式；不要复制其常见的灰色圆角默认外观，也不要把 registry 当成未经审阅的依赖源 |
 | [Ant Design](https://ant.design/docs/react/introduce) / [仓库](https://github.com/ant-design/ant-design) | 官方文档与仓库；MIT | 企业组件状态、主题定制、国际化、SSR 和完整文档 | 适合已有 Ant Design 或确需企业级组件覆盖的项目；同一页面不要再混入另一套有样式组件库 |
-| [MUI](https://mui.com/) / [仓库](https://github.com/mui/material-ui) | 官方仓库；MIT | 广覆盖组件、主题和版本迁移契约 | 仅在既有 MUI 体系或需求确有依据时采用；迁移时先锁定版本和主题 token，不把 Material Design 的品牌语气误当成通用现代感 |
-| [Headless UI](https://headlessui.com/) / [仓库](https://github.com/tailwindlabs/headlessui) | 官方站点与仓库；MIT | React/Vue 无样式、可访问组件和状态模型 | 适合已有 Tailwind 或需要从零建立视觉层的项目；必须自行完成视觉合同、焦点、错误和响应式状态 |
+| [MUI](https://mui.com/) / [仓库](https://github.com/mui/material-ui) | 官方仓库；MIT | 广覆盖组件、主题和版本迁移指南 | 仅在既有 MUI 体系或需求确有依据时采用；迁移时先锁定版本和主题 token，不把 Material Design 的品牌语气误当成通用现代感 |
+| [Headless UI](https://headlessui.com/) / [仓库](https://github.com/tailwindlabs/headlessui) | 官方站点与仓库；MIT | React/Vue 无样式、可访问组件和状态模型 | 适合已有 Tailwind 或需要从零建立视觉层的项目；必须自行完成视觉方案、焦点、错误和响应式状态 |
 | [Radix Primitives](https://www.radix-ui.com/primitives/docs/overview/introduction) / [仓库](https://github.com/radix-ui/primitives) | 官方文档与仓库；MIT | 无样式、组合式部件、受控/非受控状态、焦点和键盘行为 | 适合已有 React 设计系统逐组件采用；采用方仍负责可访问名称、视觉、表单错误和业务状态，不把“基于 Radix”写成整页可访问性已通过 |
-| [Next.js](https://nextjs.org/docs) / [仓库](https://github.com/vercel/next.js) | 官方文档与仓库；MIT | 静态、服务端、客户端与路由边界 | 只沿用既有 Next.js 项目的渲染和数据合同；它是应用框架，不是视觉参考或为改版自动迁移的理由 |
-| [Tailwind CSS](https://tailwindcss.com/docs) / [仓库](https://github.com/tailwindlabs/tailwindcss) | 官方文档与仓库；MIT | 低层样式组合、响应式与 token 消费 | 适合项目已经采用时复用；工具类不能替代语义组件、状态合同、可访问性和视觉身份 |
+| [Next.js](https://nextjs.org/docs) / [仓库](https://github.com/vercel/next.js) | 官方文档与仓库；MIT | 静态、服务端、客户端与路由边界 | 只沿用既有 Next.js 项目的渲染与数据边界；它是应用框架，不是视觉参考或为改版自动迁移的理由 |
+| [Tailwind CSS](https://tailwindcss.com/docs) / [仓库](https://github.com/tailwindlabs/tailwindcss) | 官方文档与仓库；MIT | 低层样式组合、响应式与 token 消费 | 适合项目已经采用时复用；工具类不能替代语义组件、状态规范、可访问性和视觉身份 |
 
 非科研管理台可进一步查看以下完整任务界面，而不只查看底层组件文档（2026-09-05 核验，实际采用时重新核对）：
 
@@ -114,7 +114,7 @@ shadcn/ui 的 registry 分发的是会写入项目的代码和配置，不是免
 
 - [Storybook](https://github.com/storybookjs/storybook) 的官方文档把 story 作为组件在特定参数和状态下的可复用测试输入；[args](https://storybook.js.org/docs/writing-stories/args) 表达变体，[play function 与组件测试](https://storybook.js.org/docs/writing-tests) 表达交互。项目已经使用 Storybook 或同等组件夹具时，为新增或重构的共享组件补齐真实适用的默认、长内容、加载、空、错、权限、暗色、窄宽和减少动效状态；不得为了故事矩阵虚构业务能力。
 - [Playwright](https://github.com/microsoft/playwright) 的[视觉比较](https://playwright.dev/docs/test-snapshots)以参考截图为基线，并明确提示不同操作系统、浏览器版本和环境会改变渲染。项目已经有截图回归框架时复用其视口、浏览器、字体、时区、数据和动画稳定策略；第一次基线和每次有意变化都要人工审阅，失败时保留实际图和差异图，禁止自动更新基线让测试转绿。
-- 组件故事证明隔离状态，页面浏览器矩阵证明真实路由、数据、容器、鉴权和组合关系，两者不能互相代替。现有项目没有组件故事或截图框架时，仍按本 skill 的页面合同和 CDP 审计完成当前任务；局部样式修复不为此新增 Storybook、Playwright、Chromatic 或云服务。
+- 组件故事证明隔离状态，页面浏览器矩阵证明真实路由、数据、容器、鉴权和组合关系，两者不能互相代替。现有项目没有组件故事或截图框架时，仍按本 skill 的页面清单和 CDP 审计完成当前任务；局部样式修复不为此新增 Storybook、Playwright、Chromatic 或云服务。
 
 ## 选择原生实现或依赖
 

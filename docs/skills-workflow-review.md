@@ -74,8 +74,8 @@ python scripts/epiagentkit.py sync --target all
 python scripts/epiagentkit.py doctor --target all
 ```
 
-提交前验证结果：28 个可分发技能的结构、引用和依赖检查通过；65 个分流合同样例通过；203 项仓库单元测试通过；双端隔离安装、重复同步和工作流合同审计通过；本轮修改的 Python 文件语法检查及 `git diff --check` 通过。异常词扫描中的 5 处匹配均为通过的测试名称，没有运行异常。
+提交前验证结果：28 个可分发技能的结构、引用和依赖检查通过；65 个分流规则样例通过；203 项仓库单元测试通过；双端隔离安装、重复同步和工作流规范审计通过；本轮修改的 Python 文件语法检查及 `git diff --check` 通过。异常词扫描中的 5 处匹配均为通过的测试名称，没有运行异常。
 
 本机原有策略仍保留个人全局规则，并排除 `academic-ppt`。同步不覆盖这些设置，因此仓库新版全局规则和该技能不能仅凭同步成功视为已在本机启用；doctor 会报告实际限制。其它受管技能按同一源同步到两端。Codex hooks 的实际激活仍需受支持会话及当前定义的信任状态，文件检查不能代替它。
 
-分流样例是可审查的合同样例，不是模型语义选择的实测。尚未用同一批真实科研输入在 Claude 与 Codex 上完成对照执行，因而不声称准确率、耗时或确认次数已经改善。官方建议与本地确定性验证分别作为依据。[Agent Skills 评测](https://agentskills.io/skill-creation/evaluating-skills)。
+分流样例是可审查的规则样例，不是模型语义选择的实测。尚未用同一批真实科研输入在 Claude 与 Codex 上完成对照执行，因而不声称准确率、耗时或确认次数已经改善。官方建议与本地确定性验证分别作为依据。[Agent Skills 评测](https://agentskills.io/skill-creation/evaluating-skills)。

@@ -180,7 +180,7 @@ README 仅并排展示两份文档的第一页，Word 与 PDF 包含连续单栏
 
 [打开实际 HTML 页面](docs/showcase/build-web-ui/index.html) · [桌面端截图](docs/showcase/build-web-ui/desktop.png) · [手机端截图](docs/showcase/build-web-ui/mobile.png) · [浏览器渲染脚本](docs/demo/render_build_web_ui_showcase.py)
 
-示例属于管理台与科研工具界面，使用模拟名称和数字展示对象、状态、异常、动作与复核路径；未引入前端组件库，桌面与手机截图均来自已有 Chromium 的真实页面渲染。当前浅色蓝灰只服务这个管理台示例，不是 `build-web-ui` 的默认主题；实际网页必须按目的、读者、内容、使用环境、品牌与用户偏好重新建立配色合同。
+示例属于管理台与科研工具界面，使用模拟名称和数字展示对象、状态、异常、动作与复核路径；未引入前端组件库，桌面与手机截图均来自已有 Chromium 的真实页面渲染。当前浅色蓝灰只服务这个管理台示例，不是 `build-web-ui` 的默认主题；实际网页必须按目的、读者、内容、使用环境、品牌与用户偏好重新建立配色方案。
 
 </details>
 
@@ -473,7 +473,7 @@ $skill-creator
 正确结果：<说明希望得到什么，最好附一个可靠示例>
 必须保留：<列出不能被这次修改破坏的旧行为>
 
-请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。先运行目标组件验证和直接相关的测试；只有变更根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同合同时，才运行完整单元测试和 audit_workflow_contracts.py。新建 skill 时生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查，并在我明确确认当前成果前不要 commit、sync 或 doctor；修改既有 skill 时不要自动生成这些成果，除非我本轮明确要求。不要 push，除非我本轮明确要求。
+请先复现并找到最早失效的工作流步骤，再确定保留、重写、合并、移动、脚本化或删除哪些内容。修改适用的规则、skill、reference、模板、调用者和回归测试，不要只追加同义提醒或只替换点名词语。先运行目标组件验证和直接相关的测试；只有变更根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同规则时，才运行完整单元测试和 audit_workflow_contracts.py。新建 skill 时生成至少两份可独立打开、要求不同且分别合格的验收成果，连同 review/INDEX.md 交给我检查，并在我明确确认当前成果前不要 commit、sync 或 doctor；修改既有 skill 时不要自动生成这些成果，除非我本轮明确要求。不要 push，除非我本轮明确要求。
 ```
 
 启用成果审阅时，成果可以是图片、渲染截图、文档、表格、报告、代码产物或其它能直接检查的真实文件；同一结果的换色、格式转换、修订前后版或日志拆分不能替代两个代表性任务。确认提交后再运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`，并新开 Codex 会话验证已安装的新 skill。Codex 关于 [`AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md) 与 [skills](https://learn.chatgpt.com/docs/build-skills) 的当前说明以官方文档为准。
@@ -485,7 +485,7 @@ python scripts/audit_skill_contracts.py
 python -m unittest scripts.tests.test_workflow_routing -v  # 示例：替换为受影响的测试模块
 ```
 
-根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同合同发生变化时，再运行完整单元测试和 `python scripts/audit_workflow_contracts.py`。提交成功后才运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`。
+根规则、任务分流、共享依赖、hooks、安装/同步器或跨 skill 共同规则发生变化时，再运行完整单元测试和 `python scripts/audit_workflow_contracts.py`。提交成功后才运行 `python scripts/epiagentkit.py sync --target all` 与 `python scripts/epiagentkit.py doctor --target all`。
 
 维护者需要重新生成轻量包时运行 `python scripts/build_release.py`。构建器只接受固定白名单，遇到未提交修改或既有目标时停止；完成许可核对后才分别使用 `--allow-dirty` 或 `--force`。默认输出 `releases/1.4/EpiAgentKit-release-1.4.zip` 及外部 SHA-256 文件。
 
