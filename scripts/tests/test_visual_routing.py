@@ -55,6 +55,8 @@ class VisualRoutingTests(unittest.TestCase):
             "references/computer-science-visuals.md",
             "references/figure-planning.md",
             "references/diagram-iconography.md",
+            "references/edit-and-retry.md",
+            "references/visual-and-text-rules.md",
             "references/external/SOURCE.md",
             "references/external/academic-figure-skill/figure-contract.md",
             "references/external/academic-figure-skill/multipanel-layout.md",
@@ -67,6 +69,9 @@ class VisualRoutingTests(unittest.TestCase):
     def test_computer_science_visuals_use_domain_specific_grammar_and_task_scoped_outputs(self) -> None:
         skill = ROOT / "skills" / "research-visuals"
         body = (skill / "SKILL.md").read_text(encoding="utf-8")
+        edit_retry = (skill / "references" / "edit-and-retry.md").read_text(
+            encoding="utf-8"
+        )
         computer = (skill / "references" / "computer-science-visuals.md").read_text(
             encoding="utf-8"
         )
@@ -85,11 +90,16 @@ class VisualRoutingTests(unittest.TestCase):
             "成果数量、覆盖范围和使用位置服从用户当前请求",
             "不擅自增加近似版本",
             "内容来源图",
+            "references/edit-and-retry.md",
+        ):
+            self.assertIn(fragment, body)
+        for fragment in (
+            "内容来源图",
             "不附带内容来源图",
             "表现身份",
             "非目标文字、结构、图元、表示类型、裁切或已认可质量",
         ):
-            self.assertIn(fragment, body)
+            self.assertIn(fragment, edit_retry)
         self.assertNotIn("epiagentkit-maintenance", body)
         self.assertNotIn("skill 维护", body)
         for fragment in (
@@ -210,7 +220,10 @@ class VisualRoutingTests(unittest.TestCase):
         self.assertIn("根据原图定向修改", body)
         self.assertIn("所有目标图片都有本地路径时传入这些路径", body)
         self.assertIn("最小 `num_last_images_to_include`", body)
-        self.assertIn("两者不得并用", body)
+        edit_retry = (skill / "references" / "edit-and-retry.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("两者不得并用", edit_retry)
         self.assertIn("参考图解构与编辑目标", planning)
         self.assertIn("根据原图修改或按内容重构的要求", planning)
         self.assertIn("确定文档或页面中的待修改图件", planning)
@@ -312,6 +325,9 @@ class VisualRoutingTests(unittest.TestCase):
     def test_image_editing_uses_no_regression_contract_and_524_split(self) -> None:
         skill = ROOT / "skills" / "research-visuals"
         body = (skill / "SKILL.md").read_text(encoding="utf-8")
+        edit_retry = (skill / "references" / "edit-and-retry.md").read_text(
+            encoding="utf-8"
+        )
         planning = (skill / "references" / "figure-planning.md").read_text(
             encoding="utf-8"
         )
@@ -325,6 +341,13 @@ class VisualRoutingTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         for fragment in (
+            "references/edit-and-retry.md",
+            "不计入两轮内容修改",
+            "导出文件名和媒体序号仅作存储线索",
+            "项目专属的正式图号",
+        ):
+            self.assertIn(fragment, body)
+        for fragment in (
             "待修改原图为内容核对依据",
             "事实与语义忠实度",
             "必须保持的文字、数字、公式",
@@ -332,10 +355,8 @@ class VisualRoutingTests(unittest.TestCase):
             "不得添加、删除、纠正、推断、合并、替换或简化的内容",
             "第二次 524",
             "不计入两轮内容修改",
-            "导出文件名和媒体序号仅作存储线索",
-            "项目专属的正式图号",
         ):
-            self.assertIn(fragment, body)
+            self.assertIn(fragment, edit_retry)
         for fragment in (
             "Use the attached target image to verify the edit",
             "A more attractive image is not acceptable",
@@ -390,14 +411,15 @@ class VisualRoutingTests(unittest.TestCase):
         )
         self.assertIn("目标格式强制矢量", svg_fallback)
         self.assertIn("不切换 SVG", svg_fallback)
-        self.assertIn("不存在有用参考图时直接省略", body)
+        self.assertIn("不存在有用参考图时直接省略", edit_retry)
         self.assertIn(
             "只读检查确认当前没有可用 imagegen 路径时",
             body,
         )
         self.assertIn("用户明确要求 SVG、矢量源、完全可编辑图形、编辑现有 SVG 或目标格式强制矢量", body)
-        self.assertIn("第二次修改后停止自动修改", body)
+        self.assertIn("第二次修改后停止自动修改", edit_retry)
         self.assertIn("把该图保存为当前结果", body)
+        self.assertIn("把该图保存为当前结果", edit_retry)
         self.assertIn("内容硬伤，包括错误", recipes)
         self.assertIn("表现身份漂移，包括写实/示意类型", recipes)
         self.assertIn("审美问题，包括比例", recipes)
@@ -452,11 +474,15 @@ class VisualRoutingTests(unittest.TestCase):
         body = (ROOT / "skills/research-visuals/SKILL.md").read_text(
             encoding="utf-8"
         )
+        visual_rules = (
+            ROOT / "skills/research-visuals/references/visual-and-text-rules.md"
+        ).read_text(encoding="utf-8")
         planning = (
             ROOT / "skills/research-visuals/references/figure-planning.md"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("不能因从图中删除就机械转移到图注或正文", body)
+        self.assertIn("references/visual-and-text-rules.md", body)
+        self.assertIn("不能因从图中删除就机械转移到图注或正文", visual_rules)
         self.assertIn("不把它自动转移到图注或正文", planning)
         for fragment in (
             "会改变科学解释的重要局限",
@@ -464,7 +490,7 @@ class VisualRoutingTests(unittest.TestCase):
             "伦理合规披露",
             "期刊强制信息",
         ):
-            self.assertIn(fragment, body)
+            self.assertIn(fragment, visual_rules)
 
     def test_codex_builtin_imagegen_uses_current_tool_without_session_mutation(self) -> None:
         body = (

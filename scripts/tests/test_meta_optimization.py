@@ -64,6 +64,30 @@ class MetaOptimizationCapabilityTests(unittest.TestCase):
         self.assertIn("Skill contract audit: PASS", human.stdout)
         self.assertIn("Context budget:", human.stdout)
 
+    def test_round1_progressive_disclosure_skills_stay_under_16kb_budget(self) -> None:
+        proc = subprocess.run(
+            [sys.executable, "scripts/audit_skill_contracts.py", "--budget", "--json"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        data = json.loads(proc.stdout)
+        by_skill = {item["skill"]: item for item in data["skills"]}
+        for skill_name in ("sysu-ppt", "research-visuals", "build-web-ui"):
+            entry = by_skill[skill_name]
+            self.assertLessEqual(
+                entry["bytes"],
+                data["heavy_threshold_bytes"],
+                f"{skill_name} exceeded Layer-2 budget: {entry['bytes']} B",
+            )
+            self.assertEqual(
+                entry["unreferenced_top_refs"],
+                [],
+                f"{skill_name} has unreferenced top-level references",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
