@@ -223,6 +223,42 @@ class WebUiWorkflowTests(unittest.TestCase):
         self.assertEqual(cases["repair_mobile_visual_balance"]["primary"], "build-web-ui")
         self.assertEqual(cases["design_commerce_flow"]["primary"], "build-web-ui")
 
+    def test_design_conception_and_multi_skin_surface_architecture(self) -> None:
+        skill = (ROOT / "skills/build-web-ui/SKILL.md").read_text(encoding="utf-8")
+        design = (ROOT / "skills/build-web-ui/references/design-playbook.md").read_text(
+            encoding="utf-8"
+        )
+        colors = (ROOT / "skills/build-web-ui/references/color-systems.md").read_text(
+            encoding="utf-8"
+        )
+        patterns = (ROOT / "skills/build-web-ui/references/local-reference-patterns.md").read_text(
+            encoding="utf-8"
+        )
+        for fragment in (
+            "编码前完成设计构思",
+            "带气质的中性色盘",
+            "联排发丝线 KPI",
+            "柔和着色胶囊",
+            "凹陷轨道分段",
+        ):
+            self.assertIn(fragment, skill)
+        for fragment in (
+            "编码前的设计构思：现代精致界面的四项方法",
+            "三层表面阶梯与发丝边材质",
+            "光学字重与等宽数据排版",
+            "联排发丝线 KPI 带",
+            "画布底色抽屉与柔和图标入口",
+        ):
+            self.assertIn(fragment, design)
+        for fragment in (
+            "避免死黑与死灰",
+            "语义三元组与柔和强调洗色",
+            "多皮肤与零闪烁热切换",
+            "data-skin",
+        ):
+            self.assertIn(fragment, colors)
+        self.assertIn("现代多皮肤桌面与移动工作台", patterns)
+
     def test_web_ui_showcase_is_renderable_and_explicitly_simulated(self) -> None:
         showcase = (ROOT / "docs/showcase/build-web-ui/index.html").read_text(
             encoding="utf-8"
